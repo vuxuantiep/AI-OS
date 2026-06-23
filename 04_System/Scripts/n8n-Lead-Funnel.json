@@ -1,0 +1,117 @@
+{
+  "name": "KI-Lead-Funnel",
+  "nodes": [
+    {
+      "id": "webhook_lead",
+      "name": "Webhook Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "parameters": {
+        "path": "lead-intake",
+        "httpMethod": "POST",
+        "responseMode": "onReceived",
+        "responseData": "default"
+      }
+    },
+    {
+      "id": "set_lead_data",
+      "name": "Lead Daten aufbereiten",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [400, 300],
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "name", "value": "={{$json[\"name\"]}}" },
+            { "name": "email", "value": "={{$json[\"email\"]}}" },
+            { "name": "message", "value": "={{$json[\"message\"]}}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http_langgraph",
+      "name": "LangGraph Agent (Lead-Analyse)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [600, 300],
+      "parameters": {
+        "url": "https://dein-langgraph-endpoint/lead-analyse",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "body": {
+          "name": "={{$json[\"name\"]}}",
+          "email": "={{$json[\"email\"]}}",
+          "message": "={{$json[\"message\"]}}"
+        }
+      }
+    },
+    {
+      "id": "postgres_store",
+      "name": "Lead speichern (PostgreSQL)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [800, 260],
+      "parameters": {
+        "operation": "insert",
+        "table": "leads",
+        "columns": [
+          "name",
+          "email",
+          "message",
+          "cluster",
+          "priority"
+        ],
+        "values": "={{[{\"name\": $json[\"name\"], \"email\": $json[\"email\"], \"message\": $json[\"message\"], \"cluster\": $json[\"cluster\"], \"priority\": $json[\"priority\"]}]}}"
+      }
+    },
+    {
+      "id": "email_reply",
+      "name": "Antwort an Lead senden",
+      "type": "n8n-nodes-base.smtp",
+      "typeVersion": 1,
+      "position": [800, 340],
+      "parameters": {
+        "fromEmail": "leads@dein-biz.de",
+        "toEmail": "={{$json[\"email\"]}}",
+        "subject": "Vielen Dank für Ihre Anfrage",
+        "text": "={{$json[\"reply_text\"]}}"
+      }
+    },
+    {
+      "id": "telegram_notify",
+      "name": "Telegram Notify",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1000, 300],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "DEIN_CHAT_ID",
+        "text": "={{\"Neuer Lead: \" + $json[\"name\"] + \" (\" + $json[\"email\"] + \") – Cluster: \" + $json[\"cluster\"] + \", Priorität: \" + $json[\"priority\"]}}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Lead": {
+      "main": [
+        [{ "node": "Lead Daten aufbereiten", "type": "main", "index": 0 }]
+      ]
+    },
+    "Lead Daten aufbereiten": {
+      "main": [
+        [{ "node": "LangGraph Agent (Lead-Analyse)", "type": "main", "index": 0 }]
+      ]
+    },
+    "LangGraph Agent (Lead-Analyse)": {
+      "main": [
+        [
+          { "node": "Lead speichern (PostgreSQL)", "type": "main", "index": 0 },
+          { "node": "Antwort an Lead senden", "type": "main", "index": 0 },
+          { "node": "Telegram Notify", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
+}

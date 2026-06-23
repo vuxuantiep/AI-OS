@@ -1,0 +1,57 @@
+# AI Operating System - .gitignore
+# Diese Dateien und Ordner werden NICHT in Git/GitHub gespeichert
+
+# Secrets und sensible Daten
+01_Connections/APIs/Secrets/
+01_Connections/Secrets/
+*.key
+*.pem
+.env
+.env.local
+config.json
+secrets.json
+credentials.json
+token.json
+
+# Obsidian-spezifisch (optional, falls du Obsidian Sync nicht nutzt)
+.obsidian/workspace.json
+.obsidian/workspaces.json
+.obsidian/cache
+.obsidian/graph.json
+
+# Logs und temporäre Dateien
+04_System/Logs/
+*.log
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Node.js / Python (falls du Tools installierst)
+node_modules/
+__pycache__/
+*.pyc
+.Python
+env/
+venv/
+.venv/
+
+# Backup-Dateien
+*.bak
+*.backup
+*~
+*.swp
+*.swo
+
+# Große Dateien
+*.zip
+*.tar.gz
+*.mp4
+*.mp3
+*.mov
+
+# Private Notizen (falls du private Dinge nicht teilen willst)
+00_Knowledge/01_About_Me/Personal/Private/
+
+# Claude-spezifisch (falls nötig)
+.claude/
