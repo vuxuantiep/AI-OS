@@ -33,14 +33,31 @@ Die KI-Fabrik V2 ist ein **6-schichtiges Multi-Agent-System**, das auf Ollama (l
 └───────────────────────────────────────────────────────────┘
 ```
 
-## System starten
+## Schnellstart
 
-**Alle Komponenten starten:**
-```bash
-python 04_System/Scripts/start_ai_os.py
-```
+### 🚀 Erste Schritte
 
-**Oder einzeln:**
+1. **System starten:**
+   ```bash
+   python 04_System/Scripts/start_ai_os.py
+   ```
+
+2. **CLAUDE.md ausfüllen:**
+   Öffne `CLAUDE.md` und trag deinen Namen, deine Rolle und deinen Arbeitsstil ein.
+
+3. **Obsidian Vault öffnen:**
+   - Obsidian starten
+   - "Open folder as vault" wählen
+   - Diesen Ordner (`AI-OS`) auswählen
+
+4. **Git initialisieren (bei Bedarf):**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   ```
+
+### Einzelne Komponenten starten
 ```bash
 python 04_System/Scripts/ai_os_dashboard.py   # Dashboard (Port 5000)
 python 04_System/Scripts/api_gateway.py        # API Gateway (Port 5100)
@@ -48,6 +65,12 @@ python 04_System/Scripts/agent_system.py       # Agent System (Port 5300)
 python 04_System/Scripts/workflow_engine.py    # Workflow Engine (Port 5200)
 python 04_System/Scripts/monitoring_service.py # Monitoring (Port 5400)
 ```
+
+### Mit Claude Desktop nutzen
+1. Claude Desktop öffnen
+2. Auf "Select Project" / "Projekt auswählen" klicken
+3. Diesen Ordner wählen
+4. Fertig!
 
 ## Architektur
 
@@ -76,8 +99,6 @@ python 04_System/Scripts/monitoring_service.py # Monitoring (Port 5400)
 
 ## API Gateway (Zentraler Einstieg)
 
-Der einfachste Weg, mit der KI-Fabrik zu interagieren:
-
 ```bash
 # Chat mit Orchestrator
 curl -X POST http://localhost:5100/chat \
@@ -105,53 +126,55 @@ curl -X POST http://localhost:5100/query \
   -d '{"query": "Was ist in meiner Wissensdatenbank zu KI?"}'
 ```
 
-## Monitoring
-
-Das Monitoring ist unter http://localhost:5400/status erreichbar und zeigt:
-- Health-Status aller 7 Dienste + Ollama
-- Latenz und Uptime
-- Logs und Traces
-- System-Metriken
-
 ## Ordnerstruktur
 
-| Ordner | Inhalt | Zweck |
-|--------|--------|-------|
-| `00_Knowledge/` | Persönliches Wissen, Projekte, Referenzen, Wiki | Wissensdatenbank für RAG |
-| `01_Connections/` | MCP, CLI und API Konfigurationen | Verbindungen zu externen Tools |
-| `02_Skills/` | Wiederverwendbare Arbeitsanleitungen | Prozesse einmal erklärt, immer nutzbar |
-| `03_Routines/` | Automatisierte Abläufe | Zeitgesteuerte Aufgaben |
-| `04_System/` | Skripte, Logs, Templates | Systemdateien und Hilfsmittel |
-| `06_KI-Gedächtnis/` | Architektur-Dokumentation | KI-Fabrik Design |
-
-## Schnellstart
-
-### Als Obsidian Vault öffnen
-1. Obsidian starten
-2. "Open folder as vault" wählen
-3. Diesen Ordner (`AI-OS`) auswählen
-4. Fertig!
-
-### Mit Claude Desktop nutzen
-1. Claude Desktop öffnen
-2. Auf "Select Project" / "Projekt auswählen" klicken
-3. Diesen Ordner wählen
-4. Claude hat jetzt Zugriff auf alles
-
-### Per SSH auf Server
-```bash
-ssh root@[SERVER-IP]
-cd /AI-OS
-claude
+```
+AI-OS/
+├── 00_Wissen/              ← Wissensdatenbank für RAG (Obsidian Vault)
+│   ├── 01_Persönlich/      ← Infos, Ziele, Vorlieben
+│   ├── 02_Projekte/        ← Kunden, Produkte, abgeschlossene Projekte
+│   ├── 03_Aktuelles/       ← Aktuelle Arbeiten, Tagesnotizen, Backlog
+│   ├── 04_Referenzen/      ← Recherche, Notizen, Wiki-Dokumente
+│   ├── 05_Archiv/          ← Alte Notizen, abgeschlossenes
+│   └── 06_Transkripte/     ← Gesprächsaufzeichnungen
+├── 01_Verbindungen/        ← MCP, CLI und API Konfigurationen
+├── 02_Fähigkeiten/         ← Wiederverwendbare Arbeitsanleitungen
+├── 03_Abläufe/             ← Automatisierte Routinen
+├── 04_System/              ← Skripte, Logs, Vorlagen, Architektur
+└── README.md               ← Diese Datei
+    AGENTS.md               ← Claude-Systemanweisungen (Ordner-Kontext)
+    CLAUDE.md               ← Zentrale Systemanweisungen
+    AI-OS.code-workspace    ← VS Code Workspace
 ```
 
-## Wichtige Dateien
+## Wissen aufbauen
 
-| Datei | Zweck |
-|-------|-------|
-| `CLAUDE.md` | Zentrale Systemanweisungen für Claude - **Immer aktuell halten!** |
-| `README.md` | Diese Datei - Übersicht des Systems |
-| `.gitignore` | Dateien, die nicht ins Repository gehören |
+So startest du mit deinem persönlichen Wissensspeicher:
+
+1. **Profil anlegen:** `00_Wissen/01_Persönlich/`
+2. **Projekt starten:** `00_Wissen/02_Projekte/`
+3. **Tagesnotiz:** `00_Wissen/03_Aktuelles/Aktiv/`
+4. **Referenz speichern:** `00_Wissen/04_Referenzen/`
+
+Nutze immer die Vorlagen aus `04_System/Vorlagen/` für neue Notizen und Projekte.
+
+## Fähigkeiten (Skills)
+
+Skills findest du in `02_Fähigkeiten/Aktiv/`. Um einen Skill zu nutzen:
+1. In Claude: "Nutze den Skill [Name] für [Aufgabe]"
+2. Oder direkt den Inhalt des Skills referenzieren
+
+## Abläufe (Routines)
+
+- **Lokale Routinen:** `03_Abläufe/Lokal/` – werden auf diesem PC ausgeführt
+- **Remote Routinen:** `03_Abläufe/Remote/` – laufen auf dem Server
+
+## Verbindungen
+
+Neue Tool-Verbindungen werden in `01_Verbindungen/` konfiguriert:
+- **APIs:** Externe API-Zugänge
+- **CLI:** Kommandozeilen-Tools
+- **MCP:** MCP-Server-Verbindungen
 
 ## Git-Workflow
 
@@ -167,27 +190,19 @@ git commit -m "Beschreibung der Änderung"
 git push
 ```
 
-## Skills verwenden
+## Wichtige Dateien
 
-Skills findest du in `02_Skills/Active/`. Um einen Skill zu nutzen:
-
-1. In Claude: "Nutze den Skill [Name] für [Aufgabe]"
-2. Oder direkt den Inhalt des Skills referenzieren
-
-## Routinen einrichten
-
-Lokale Routinen werden in `03_Routines/Local/` definiert und über Cronjobs ausgeführt.
-
-Remote Routinen laufen auf dem Server und werden über GitHub Actions oder Server-Cronjobs gesteuert.
-
-## Verbindungen hinzufügen
-
-Neue Tool-Verbindungen werden in `01_Connections/` konfiguriert.
+| Datei | Zweck |
+|-------|-------|
+| `CLAUDE.md` | Zentrale Systemanweisungen für Claude |
+| `AGENTS.md` | Ordner-spezifische Anweisungen für KI-Agenten |
+| `README.md` | Diese Datei – Übersicht des Systems |
+| `.gitignore` | Ausgeschlossene Dateien für Git |
 
 ## Sicherheit
 
 - **API-Keys und Secrets** gehören NIE ins Git-Repository
-- Sie werden in `01_Connections/APIs/Secrets/` gespeichert (`.gitignore` schützt diese)
+- Sie werden in `01_Verbindungen/APIs/Geheimnisse/` gespeichert (`.gitignore` schützt diese)
 - Alternativ: Umgebungsvariablen nutzen
 
 ---

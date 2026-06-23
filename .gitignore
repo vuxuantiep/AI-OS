@@ -2,8 +2,8 @@
 # Diese Dateien und Ordner werden NICHT in Git/GitHub gespeichert
 
 # Secrets und sensible Daten
-01_Connections/APIs/Secrets/
-01_Connections/Secrets/
+01_Verbindungen/APIs/Secrets/
+01_Verbindungen/Secrets/
 *.key
 *.pem
 .env
@@ -51,7 +51,7 @@ venv/
 *.mov
 
 # Private Notizen (falls du private Dinge nicht teilen willst)
-00_Knowledge/01_About_Me/Personal/Private/
+00_Wissen/01_Persönlich/Personal/Private/
 
 # Claude-spezifisch (falls nötig)
 .claude/

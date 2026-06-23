@@ -9,7 +9,7 @@ Dies ist meine **KI-Fabrik V2** - ein vollständiges Multi-Agent-System mit Work
 - **RAG Pipeline** mit Vektorsuche über die Wissensdatenbank
 - **Monitoring** mit Health-Checks, Metriken und Logging
 - **Web Dashboard** (Flask) als Benutzeroberfläche
-- **MCP Server** für AI-Clients (Codex Desktop, etc.)
+- **MCP Server** für AI-Clients (Claude Desktop, etc.)
 
 ## Architektur (6 Schichten)
 
@@ -78,16 +78,15 @@ Dies ist meine **KI-Fabrik V2** - ein vollständiges Multi-Agent-System mit Work
 ### System starten
 **Einfach (empfohlen):**
 ```bash
-# Dashboard starten (automatisch im Browser öffnen)
-python 04_System/Scripts/ai_os_dashboard.py
+python 04_System/Skripte/ai_os_dashboard.py
 ```
 
 **Alle Komponenten:**
 ```bash
-python 04_System/Scripts/start_ai_os.py
+python 04_System/Skripte/start_ai_os.py
 ```
 
-**Windows:** Doppelklick auf `04_System/Scripts/start_ai_os.bat`
+**Windows:** Doppelklick auf `04_System/Skripte/start_ai_os.bat`
 
 ### Ports & URLs (KI-Fabrik V2)
 | Komponente | Port | URL |
@@ -104,15 +103,15 @@ python 04_System/Scripts/start_ai_os.py
 ## Meine Identität & Arbeitsweise
 
 ### Über mich
-- Name: [HIER EINTRAGEN]
-- Rolle/Beruf: [HIER EINTRAGEN]
-- Hauptfokus: [HIER EINTRAGEN]
-- Arbeitsstil: [HIER EINTRAGEN - z.B. strukturiert, kreativ, schnell, gründlich]
+- Name: Xuan Tiep Vu
+- Rolle/Beruf: IT System- & Applikationsmanager
+- Hauptfokus: KI-Automatisierung, Cloud-Infrastruktur, System-Architektur
+- Arbeitsstil: Strukturiert, analytisch, lösungsorientiert
 
 ### Sprache & Kommunikation
 - Primärsprache: Deutsch
-- Sekundärsprache: [HIER EINTRAGEN falls vorhanden]
-- Schreibstil: [HIER EINTRAGEN - z.B. professionell, locker, prägnant, ausführlich]
+- Sekundärsprache: Englisch (Grundkenntnisse)
+- Schreibstil: Professionell, präzise, strukturiert
 
 ## Wichtige Arbeitsregeln
 
@@ -129,9 +128,9 @@ git push
 ```
 
 ### 2. Dateiorganisation
-- Neue Notizen in `00_Knowledge/03_Work_In_Progress/Active/`
-- Fertige Projekte nach `00_Knowledge/02_Business/Projects/`
-- Archiviertes nach `00_Knowledge/05_Archive/`
+- Neue Notizen in `00_Wissen/03_Aktuelles/Aktiv/`
+- Fertige Projekte nach `00_Wissen/02_Projekte/`
+- Archiviertes nach `00_Wissen/05_Archiv/`
 
 ### 3. Links & Verknüpfungen
 - Nutze Obsidian-Links `[[Dateiname]]` für interne Verbindungen
@@ -139,7 +138,7 @@ git push
 
 ### 4. Secrets & Sicherheit
 - API-Keys und Passwörter NIE direkt in Dateien speichern
-- Stattdessen in `01_Connections/APIs/Secrets/` (wird nicht versioniert)
+- Stattdessen in `01_Verbindungen/APIs/Secrets/` (wird nicht versioniert)
 - Oder Umgebungsvariablen verwenden
 
 ## Verbindungen & Tools
@@ -170,7 +169,7 @@ Wenn ich einen Skill aufrufe, erwarte ich:
 ## Routinen & Automatisierung
 
 ### Lokale Routinen (laufen auf diesem PC)
-- [x] **AI-OS Dashboard starten** → `03_Routines/Local/ROUTINE_start_ai_os.md`
+- [x] **AI-OS Dashboard starten** → `03_Abläufe/Lokal/ROUTINE_start_ai_os.md`
 - [ ] [HIER EINTRAGEN]
 
 ### Remote Routinen (laufen auf Server)
@@ -195,14 +194,16 @@ Der MCP-Server unter Port 5001 bietet diese Tools:
 
 ## Wichtige Orte im Vault
 
-- Tagesnotizen: `00_Knowledge/03_Work_In_Progress/Active/`
-- Projekte: `00_Knowledge/02_Business/Projects/`
-- Aktive Skills: `02_Skills/Active/`
-- Templates: `04_System/Templates/`
-- Skripte: `04_System/Scripts/`
+- Tagesnotizen: `00_Wissen/03_Aktuelles/Aktiv/`
+- Projekte: `00_Wissen/02_Projekte/`
+- Aktive Fähigkeiten: `02_Fähigkeiten/Aktiv/`
+- Vorlagen: `04_System/Vorlagen/`
+- Skripte: `04_System/Skripte/`
+- Wiki/Referenzen: `00_Wissen/04_Referenzen/Wiki/`
+- Architektur-Dokumente: `04_System/Dokumentation/Architektur/`
 - Vektordatenbank: `04_System/Data/vector_store.json`
 
 ---
 
-*Letzte Aktualisierung: 19.06.2026*
+*Letzte Aktualisierung: 23.06.2026*
 *Diese Datei wird regelmäßig aktualisiert, um die Arbeitsweise zu verbessern*
