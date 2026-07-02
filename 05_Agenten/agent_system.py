@@ -17,8 +17,12 @@ from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from collections import deque
 
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # Konfiguration
-AI_OS_ROOT = Path(os.environ.get("AI_OS_ROOT", Path(__file__).parent.parent.parent))
+AI_OS_ROOT = Path(os.environ.get("AI_OS_ROOT", Path(__file__).parent.parent))
 OLLAMA_HOST = "127.0.0.1"
 OLLAMA_PORT = 11434
 AGENT_PORT = int(os.environ.get("AGENT_PORT", 5300))

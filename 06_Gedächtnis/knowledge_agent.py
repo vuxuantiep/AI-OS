@@ -16,6 +16,10 @@ from pathlib import Path
 from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # Konfiguration
 AI_OS_ROOT = Path(os.environ.get("AI_OS_ROOT", Path(__file__).parent.parent))
 OLLAMA_HOST = "127.0.0.1"
@@ -436,14 +440,9 @@ def main():
     except:
         print(f"⚠️ Konnte Embedding-Modell nicht testen")
     
-    # Starte Server mit eigener Handler-Klasse
-    handler = type('Handler', (KnowledgeAgentHandler,), {
-        '__init__': lambda self, *args, **kwargs: KnowledgeAgentHandler.__init__(self, *args, **kwargs)
-    })
-    
-    # Korrigiere: Erstelle eine Instanz mit der VectorStore-Referenz
+    # Starte Server mit eigener Handler-Klasse (vector_store als Klassenattribut gebunden)
     class AgentHandler(BaseHTTPRequestHandler):
-        vector_store = vector_store
+        pass
         
         def _set_headers(self, status=200, content_type="application/json"):
             self.send_response(status)
@@ -552,6 +551,7 @@ def main():
                 self._set_headers(404)
                 self.wfile.write(json.dumps({"error": "Unknown endpoint"}).encode())
     
+    AgentHandler.vector_store = vector_store
     server = HTTPServer(("127.0.0.1", AGENT_PORT), AgentHandler)
     print(f"✅ Knowledge Agent läuft auf Port {AGENT_PORT}")
     print(f"📋 Verfügbare Endpunkte:")

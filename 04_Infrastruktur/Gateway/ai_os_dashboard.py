@@ -11,6 +11,7 @@ import subprocess
 import urllib.request
 from pathlib import Path
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -29,6 +30,64 @@ FLASK_PORT = int(os.environ.get("FLASK_PORT", 5000))
 
 app = Flask(__name__)
 
+# ========== DIENSTE-REGISTRY (Ebenen-Struktur) ==========
+SERVICES = [
+    {"key": "dashboard", "name": "Dashboard", "icon": "🖥️", "port": FLASK_PORT,
+     "desc": "Zentrale Weboberfläche (diese Seite)", "layer": "04_Infrastruktur", "script": None, "env_key": None},
+    {"key": "mcp", "name": "MCP Server", "icon": "🔌", "port": 5001,
+     "desc": "AI-Client-Schnittstelle (Claude Desktop u.a.)", "layer": "04_Infrastruktur",
+     "script": "04_Infrastruktur/Gateway/mcp_server.py", "env_key": "MCP_PORT"},
+    {"key": "rag", "name": "Gedächtnis / RAG", "icon": "🧠", "port": 5002,
+     "desc": "Wissens-Indexer & Vektorsuche", "layer": "06_Gedächtnis",
+     "script": "06_Gedächtnis/knowledge_agent.py", "env_key": None},
+    {"key": "gateway", "name": "API Gateway", "icon": "🌐", "port": 5100,
+     "desc": "Zentraler Einstiegspunkt für alle Dienste", "layer": "04_Infrastruktur",
+     "script": "04_Infrastruktur/Gateway/api_gateway.py", "env_key": "GATEWAY_PORT"},
+    {"key": "workflow", "name": "Workflow Engine", "icon": "🔄", "port": 5200,
+     "desc": "DAG-basierte Aufgaben-Pipelines", "layer": "05_Agenten",
+     "script": "05_Agenten/workflow_engine.py", "env_key": "WORKFLOW_PORT"},
+    {"key": "agents", "name": "Agent System", "icon": "🤖", "port": 5300,
+     "desc": "7 spezialisierte KI-Agenten", "layer": "05_Agenten",
+     "script": "05_Agenten/agent_system.py", "env_key": "AGENT_PORT"},
+    {"key": "monitoring", "name": "Monitoring", "icon": "📊", "port": 5400,
+     "desc": "Health-Checks, Metriken, Logs", "layer": "08_Monitoring",
+     "script": "08_Monitoring/monitoring_service.py", "env_key": "MONITOR_PORT"},
+]
+
+KNOWLEDGE_CATEGORIES = [
+    {"key": "business", "name": "Business-Knowledge", "icon": "💼", "path": "Business-Knowledge",
+     "desc": "Produkte, Kunden, Strategien"},
+    {"key": "technical", "name": "Technical-Knowledge", "icon": "🛠️", "path": "Technical-Knowledge",
+     "desc": "APIs, Docker, FastAPI, Python"},
+    {"key": "agent", "name": "Agent-Knowledge", "icon": "🤖", "path": "Agent-Knowledge",
+     "desc": "Rollen, Fähigkeiten, Grenzen"},
+    {"key": "project", "name": "Project-Knowledge", "icon": "📋", "path": "Project-Knowledge",
+     "desc": "Entscheidungen, ADRs, Architektur"},
+    {"key": "short_memory", "name": "Short-Memory", "icon": "⚡", "path": "Memory/Short-Memory",
+     "desc": "Kurzfristiger Session-Kontext"},
+    {"key": "long_memory", "name": "Long-Memory", "icon": "🗄️", "path": "Memory/Long-Memory",
+     "desc": "Dauerhaftes, konsolidiertes Wissen"},
+    {"key": "episodic_memory", "name": "Episodic-Memory", "icon": "📖", "path": "Memory/Episodic-Memory",
+     "desc": "Konkrete vergangene Ereignisse"},
+    {"key": "prompts", "name": "Prompt-Library", "icon": "✍️", "path": "Prompt-Library",
+     "desc": "Wiederverwendbare Prompts"},
+    {"key": "sop", "name": "SOP-Library", "icon": "📑", "path": "SOP-Library",
+     "desc": "Standard Operating Procedures"},
+    {"key": "vector", "name": "Vector-Database", "icon": "🧬", "path": "Vector-Database",
+     "desc": "Vektor-Index für semantische Suche"},
+]
+
+
+def check_service_health(port, timeout=1.2):
+    """Prüft per HTTP, ob ein Dienst auf dem gegebenen Port antwortet."""
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/health")
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.status == 200
+    except Exception:
+        return False
+
+
 # ========== HTML TEMPLATE ==========
 TEMPLATE = """
 <!DOCTYPE html>
@@ -41,15 +100,22 @@ TEMPLATE = """
         :root {
             --bg-primary: #0a0e17;
             --bg-secondary: #111827;
-            --bg-card: #1e293b;
-            --text-primary: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
+            --bg-card: #1a2333;
+            --bg-hover: #202b40;
+            --text-primary: #e8edf5;
+            --text-secondary: #8a97ab;
+            --accent: #4f7cff;
+            --accent-hover: #3d67ea;
+            --accent-soft: rgba(79,124,255,0.12);
             --success: #22c55e;
+            --success-soft: rgba(34,197,94,0.12);
             --warning: #eab308;
             --danger: #ef4444;
-            --border: #334155;
+            --danger-soft: rgba(239,68,68,0.12);
+            --border: #26324a;
+            --radius: 14px;
+            --radius-sm: 8px;
+            --shadow: 0 8px 30px rgba(0,0,0,0.35);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -58,294 +124,358 @@ TEMPLATE = """
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        .header {
+        .app { display: flex; height: 100vh; }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: 230px;
+            flex-shrink: 0;
             background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border);
-            padding: 1.5rem 2rem;
+            border-right: 1px solid var(--border);
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(10px);
+            flex-direction: column;
+            padding: 1.25rem 0.9rem;
         }
 
-        .header h1 {
-            font-size: 1.5rem;
+        .brand {
+            font-size: 1.15rem;
+            font-weight: 700;
+            padding: 0.5rem 0.6rem 1.25rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .header-right {
+        .nav-item {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.65rem;
+            width: 100%;
+            text-align: left;
+            padding: 0.65rem 0.75rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            margin-bottom: 0.15rem;
         }
 
+        .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .nav-item.active { background: var(--accent-soft); color: var(--accent); }
+
+        .nav-badge {
+            margin-left: auto;
+            font-size: 0.7rem;
+            padding: 0.1rem 0.4rem;
+            border-radius: 999px;
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+        }
+        .nav-badge.warn { background: var(--danger-soft); color: var(--danger); }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 0.75rem 0.6rem 0.25rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* ===== Main ===== */
+        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+        .topbar {
+            padding: 1.1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .topbar h2 { font-size: 1.2rem; font-weight: 600; }
+
+        .topbar-actions { display: flex; align-items: center; gap: 0.75rem; }
+
+        .pill {
+            font-size: 0.8rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        .pill.ok { color: var(--success); border-color: rgba(34,197,94,0.3); }
+        .pill.warn { color: var(--danger); border-color: rgba(239,68,68,0.3); }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.75rem 2rem 3rem;
+        }
+
+        .tab-panel { display: none; animation: fadein 0.18s ease; }
+        .tab-panel.active { display: block; }
+
+        @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
         .status-dot {
-            width: 10px;
-            height: 10px;
+            width: 9px;
+            height: 9px;
             border-radius: 50%;
             display: inline-block;
+            flex-shrink: 0;
         }
 
         .status-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
-        .status-dot.offline { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+        .status-dot.offline { background: var(--danger); }
+        .status-dot.pending { background: var(--warning); animation: pulse 1s infinite; }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 1.1rem;
             margin-bottom: 2rem;
         }
 
         .stat-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: var(--radius);
+            padding: 1.25rem 1.4rem;
+            transition: transform 0.15s, box-shadow 0.15s;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
         }
 
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+        .stat-icon {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            background: var(--accent-soft);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
         }
 
         .stat-card h3 {
             color: var(--text-secondary);
-            font-size: 0.875rem;
+            font-size: 0.78rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.3rem;
+            font-weight: 600;
         }
 
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--text-primary);
-        }
-
-        .stat-detail {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-top: 0.25rem;
-        }
+        .stat-value { font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
+        .stat-detail { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.2rem; }
 
         .section-title {
-            font-size: 1.25rem;
-            margin: 2rem 0 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0 0 1rem;
             color: var(--text-primary);
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .models-grid {
+        .section-title .muted { font-weight: 400; color: var(--text-secondary); font-size: 0.85rem; }
+
+        /* ===== Services ===== */
+        .services-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
             gap: 1rem;
-            margin-bottom: 2rem;
         }
 
-        .model-card {
+        .service-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1.25rem;
-            transition: all 0.2s;
+            border-radius: var(--radius);
+            padding: 1.1rem 1.25rem;
+            transition: border-color 0.15s;
         }
+        .service-card:hover { border-color: #364160; }
 
-        .model-card:hover {
-            border-color: var(--accent);
-            box-shadow: 0 0 15px rgba(59,130,246,0.1);
-        }
-
-        .model-card .name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-primary);
+        .service-card .head {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
             margin-bottom: 0.5rem;
         }
 
-        .model-card .size {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
+        .service-card .icon { font-size: 1.2rem; }
+        .service-card .name { font-weight: 600; font-size: 0.95rem; flex: 1; }
+        .service-card .desc { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.85rem; min-height: 2.2em; }
+        .service-card .meta { display: flex; justify-content: space-between; align-items: center; }
+        .service-card .port { font-size: 0.75rem; color: var(--text-secondary); font-family: 'Courier New', monospace; }
+
+        /* ===== Models / Knowledge grids ===== */
+        .models-grid, .knowledge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
         }
 
-        .model-actions {
-            display: flex;
-            gap: 0.5rem;
+        .model-card, .knowledge-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.1rem 1.25rem;
+            transition: all 0.15s;
         }
+
+        .model-card:hover, .knowledge-card:hover { border-color: var(--accent); }
+
+        .model-card .name, .knowledge-card .name { font-size: 1rem; font-weight: 600; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.4rem; }
+        .model-card .size { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem; }
+        .knowledge-card .desc { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem; }
+        .knowledge-card .count { font-size: 1.4rem; font-weight: 700; }
+        .knowledge-card .count-label { font-size: 0.75rem; color: var(--text-secondary); }
+
+        .model-actions { display: flex; gap: 0.5rem; }
 
         .btn {
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 0.9rem;
             border: none;
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s;
+            font-size: 0.83rem;
+            font-weight: 600;
+            transition: all 0.15s;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 0.3rem;
+            gap: 0.35rem;
         }
 
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-        }
+        .btn-primary { background: var(--accent); color: white; }
         .btn-primary:hover { background: var(--accent-hover); }
 
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
+        .btn-success { background: var(--success); color: white; }
         .btn-success:hover { opacity: 0.9; }
 
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-        }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-primary); }
         .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
 
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        .btn-danger:hover { opacity: 0.9; }
+        .btn-danger { background: var(--danger-soft); color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: white; }
 
+        .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.75rem; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ===== Chat ===== */
         .chat-section {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            margin-bottom: 2rem;
+            border-radius: var(--radius);
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 220px);
         }
 
         .chat-header {
-            padding: 1rem 1.5rem;
+            padding: 1rem 1.25rem;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .chat-messages {
-            padding: 1.5rem;
-            max-height: 400px;
+            padding: 1.25rem;
+            flex: 1;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.9rem;
         }
 
-        .message {
-            padding: 1rem;
-            border-radius: 10px;
-            max-width: 80%;
-        }
+        .message { padding: 0.85rem 1rem; border-radius: 12px; max-width: 78%; line-height: 1.5; }
 
-        .message.user {
-            background: var(--accent);
-            color: white;
-            align-self: flex-end;
-        }
-
-        .message.assistant {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            align-self: flex-start;
-        }
+        .message.user { background: var(--accent); color: white; align-self: flex-end; }
+        .message.assistant { background: var(--bg-secondary); border: 1px solid var(--border); align-self: flex-start; }
 
         .message .role {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.3rem;
             opacity: 0.7;
         }
+
+        .thinking { display: flex; gap: 0.25rem; align-items: center; }
+        .thinking span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-secondary); animation: bounce 1.2s infinite; }
+        .thinking span:nth-child(2) { animation-delay: 0.15s; }
+        .thinking span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes bounce { 0%,60%,100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-4px); opacity: 1; } }
 
         .chat-input-area {
             display: flex;
             gap: 0.5rem;
-            padding: 1rem 1.5rem;
+            padding: 0.9rem 1.25rem;
             border-top: 1px solid var(--border);
+            flex-shrink: 0;
         }
 
         .chat-input {
             flex: 1;
             background: var(--bg-secondary);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
+            border-radius: var(--radius-sm);
+            padding: 0.7rem 0.9rem;
             color: var(--text-primary);
             font-size: 0.9rem;
             resize: none;
             font-family: inherit;
         }
 
-        .chat-input:focus {
-            outline: none;
-            border-color: var(--accent);
+        .chat-input:focus { outline: none; border-color: var(--accent); }
+
+        select {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.4rem 0.7rem;
+            font-size: 0.83rem;
         }
 
+        /* ===== Files ===== */
         .file-system {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+            border-radius: var(--radius);
+            padding: 1.4rem;
         }
 
-        .file-tree {
-            margin-top: 1rem;
-            font-family: 'Courier New', monospace;
-            font-size: 0.875rem;
-        }
+        .file-tree { font-family: 'Courier New', monospace; font-size: 0.85rem; }
+        .file-tree .dir { color: var(--accent); cursor: pointer; padding: 0.25rem 0; user-select: none; }
+        .file-tree .file { color: var(--text-secondary); padding: 0.15rem 0 0.15rem 1.5rem; }
+        .file-tree .indent { padding-left: 1.5rem; }
 
-        .file-tree .dir {
-            color: var(--accent);
-            cursor: pointer;
-            padding: 0.25rem 0;
-        }
+        .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-secondary); }
+        .empty-state.error { color: var(--danger); }
 
-        .file-tree .file {
-            color: var(--text-secondary);
-            padding: 0.15rem 0 0.15rem 1.5rem;
-        }
-
-        .file-tree .indent {
-            padding-left: 1.5rem;
-        }
-
-        .status-bar {
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-            padding: 0.75rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
-
+        /* ===== Modal ===== */
         .modal {
             display: none;
             position: fixed;
@@ -361,109 +491,186 @@ TEMPLATE = """
         .modal-content {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 2rem;
-            max-width: 500px;
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            max-width: 460px;
             width: 90%;
         }
 
-        .modal-content h2 {
-            margin-bottom: 1rem;
-        }
+        .modal-content h2 { margin-bottom: 0.5rem; font-size: 1.1rem; }
+        .modal-content p { color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1.1rem; }
 
-        .modal-content input,
-        .modal-content select {
+        .modal-content input {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.7rem;
             margin-bottom: 1rem;
             background: var(--bg-secondary);
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
             color: var(--text-primary);
             font-size: 0.9rem;
         }
 
-        .modal-actions {
+        .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+
+        /* ===== Toasts ===== */
+        #toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
             display: flex;
-            gap: 0.5rem;
-            justify-content: flex-end;
+            flex-direction: column;
+            gap: 0.6rem;
+            z-index: 2000;
         }
 
-        @media (max-width: 768px) {
-            .container { padding: 1rem; }
-            .stats-grid { grid-template-columns: 1fr; }
-            .models-grid { grid-template-columns: 1fr; }
-            .message { max-width: 90%; }
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            border-radius: var(--radius-sm);
+            padding: 0.75rem 1.1rem;
+            font-size: 0.85rem;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.25s, transform 0.25s;
+            max-width: 320px;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+
+        @media (max-width: 900px) {
+            .sidebar { width: 72px; }
+            .sidebar .nav-item span.label { display: none; }
+            .brand span.label { display: none; }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🧠 AI-OS Dashboard</h1>
-        <div class="header-right">
-            <span id="connection-status">
+    <div class="app">
+        <aside class="sidebar">
+            <div class="brand">🧠 <span class="label">AI-OS</span></div>
+            <nav>
+                <button class="nav-item active" data-tab="overview" onclick="showTab('overview')">📊 <span class="label">Übersicht</span></button>
+                <button class="nav-item" data-tab="services" onclick="showTab('services')">🧩 <span class="label">Dienste</span><span class="nav-badge" id="services-badge">-</span></button>
+                <button class="nav-item" data-tab="chat" onclick="showTab('chat')">💬 <span class="label">Chat</span></button>
+                <button class="nav-item" data-tab="models" onclick="showTab('models')">📦 <span class="label">Modelle</span></button>
+                <button class="nav-item" data-tab="knowledge" onclick="showTab('knowledge')">🧠 <span class="label">Gedächtnis</span></button>
+                <button class="nav-item" data-tab="files" onclick="showTab('files')">📂 <span class="label">Dateien</span></button>
+            </nav>
+            <div class="sidebar-footer">
                 <span class="status-dot" id="ollama-dot"></span>
-                Ollama
-            </span>
-            <button class="btn btn-outline" onclick="window.location.reload()">🔄 Neu laden</button>
-        </div>
-    </div>
+                <span class="label">Ollama</span>
+            </div>
+        </aside>
 
-    <div class="container">
-        <!-- Stats -->
-        <div class="stats-grid" id="stats">
-            <div class="stat-card">
-                <h3>🧠 KI Modelle</h3>
-                <div class="stat-value" id="model-count">-</div>
-                <div class="stat-detail" id="models-detail">Lade...</div>
-            </div>
-            <div class="stat-card">
-                <h3>📁 Dateien</h3>
-                <div class="stat-value" id="file-count">-</div>
-                <div class="stat-detail">Im Wissensspeicher</div>
-            </div>
-            <div class="stat-card">
-                <h3>⚡ Status</h3>
-                <div class="stat-value" id="system-status">-</div>
-                <div class="stat-detail" id="uptime-detail">System bereit</div>
-            </div>
-            <div class="stat-card">
-                <h3>💾 Speicher</h3>
-                <div class="stat-value" id="memory-usage">-</div>
-                <div class="stat-detail">Verfügbarer RAM</div>
-            </div>
-        </div>
-
-        <!-- KI Chat -->
-        <div class="section-title">💬 KI Chat</div>
-        <div class="chat-section">
-            <div class="chat-header">
-                <span>Unterhaltung mit lokaler KI</span>
-                <select id="model-select" style="background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.75rem;font-size:0.85rem;">
-                </select>
-            </div>
-            <div class="chat-messages" id="chat-messages">
-                <div class="message assistant">
-                    <div class="role">🤖 System</div>
-                    Hallo! Ich bin deine lokale KI. Stelle mir eine Frage oder wähle ein Modell aus.
+        <div class="main">
+            <div class="topbar">
+                <h2 id="topbar-title">📊 Übersicht</h2>
+                <div class="topbar-actions">
+                    <span class="pill" id="services-summary">Dienste werden geprüft...</span>
+                    <button class="btn btn-outline btn-sm" onclick="refreshAll()">🔄 Aktualisieren</button>
                 </div>
             </div>
-            <div class="chat-input-area">
-                <textarea class="chat-input" id="chat-input" rows="1" placeholder="Nachricht eingeben..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
-                <button class="btn btn-primary" onclick="sendMessage()">Senden</button>
+
+            <div class="content">
+                <!-- === Übersicht === -->
+                <section class="tab-panel active" id="tab-overview">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">🧠</div>
+                            <div>
+                                <h3>KI Modelle</h3>
+                                <div class="stat-value" id="model-count">-</div>
+                                <div class="stat-detail" id="models-detail">Lade...</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🧩</div>
+                            <div>
+                                <h3>Dienste online</h3>
+                                <div class="stat-value" id="services-count">-</div>
+                                <div class="stat-detail">von 7 Ebenen-Diensten</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📁</div>
+                            <div>
+                                <h3>Dateien</h3>
+                                <div class="stat-value" id="file-count">-</div>
+                                <div class="stat-detail">Im Wissensspeicher (00_Wissen)</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💾</div>
+                            <div>
+                                <h3>Speicher</h3>
+                                <div class="stat-value" id="memory-usage">-</div>
+                                <div class="stat-detail" id="uptime-detail">System bereit</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">🧩 Dienste-Status <span class="muted">– Klick auf "Dienste" für Details & Start-Optionen</span></div>
+                    <div class="services-grid" id="overview-services-grid">
+                        <div class="empty-state">Lade Dienste...</div>
+                    </div>
+                </section>
+
+                <!-- === Dienste === -->
+                <section class="tab-panel" id="tab-services">
+                    <div class="section-title">🧩 Alle Dienste der AI-OS Ebenen-Struktur</div>
+                    <div class="services-grid" id="services-grid">
+                        <div class="empty-state">Lade Dienste...</div>
+                    </div>
+                </section>
+
+                <!-- === Chat === -->
+                <section class="tab-panel" id="tab-chat">
+                    <div class="chat-section">
+                        <div class="chat-header">
+                            <span>💬 Unterhaltung mit lokaler KI</span>
+                            <select id="model-select"></select>
+                        </div>
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="message assistant">
+                                <div class="role">🤖 System</div>
+                                Hallo! Ich bin deine lokale KI. Stelle mir eine Frage oder wähle ein Modell aus.
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <textarea class="chat-input" id="chat-input" rows="1" placeholder="Nachricht eingeben..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+                            <button class="btn btn-primary" onclick="sendMessage()">Senden</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- === Modelle === -->
+                <section class="tab-panel" id="tab-models">
+                    <div class="section-title">📦 Installierte Ollama-Modelle</div>
+                    <div class="models-grid" id="models-grid">
+                        <div class="empty-state">Lade Modelle...</div>
+                    </div>
+                </section>
+
+                <!-- === Gedächtnis === -->
+                <section class="tab-panel" id="tab-knowledge">
+                    <div class="section-title">🧠 Wissensmodell (06_Gedächtnis) <span class="muted">– bewusst getrennte Kategorien statt einem einzigen Vektorindex</span></div>
+                    <div class="knowledge-grid" id="knowledge-grid">
+                        <div class="empty-state">Lade Gedächtnis-Übersicht...</div>
+                    </div>
+                </section>
+
+                <!-- === Dateien === -->
+                <section class="tab-panel" id="tab-files">
+                    <div class="section-title">📂 Wissensspeicher (00_Wissen)</div>
+                    <div class="file-system">
+                        <div class="file-tree" id="file-tree">Lade Dateistruktur...</div>
+                    </div>
+                </section>
             </div>
-        </div>
-
-        <!-- Modelle -->
-        <div class="section-title">📦 Installierte Modelle</div>
-        <div class="models-grid" id="models-grid">
-            <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-secondary);">Lade Modelle...</div>
-        </div>
-
-        <!-- Dateisystem -->
-        <div class="section-title">📂 Wissensspeicher</div>
-        <div class="file-system">
-            <div class="file-tree" id="file-tree">Lade Dateistruktur...</div>
         </div>
     </div>
 
@@ -489,14 +696,62 @@ TEMPLATE = """
         </div>
     </div>
 
-    <div class="status-bar">
-        <span id="status-left">🧠 AI-OS v1.0 | Lokales KI-Betriebssystem</span>
-        <span id="status-right">Läuft auf localhost:{{ port }}</span>
+    <!-- Confirm Modal -->
+    <div class="modal" id="confirm-modal">
+        <div class="modal-content">
+            <h2 id="confirm-title">Bist du sicher?</h2>
+            <p id="confirm-text"></p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeConfirmModal()">Abbrechen</button>
+                <button class="btn btn-danger" id="confirm-action-btn">Bestätigen</button>
+            </div>
+        </div>
     </div>
+
+    <div id="toast-container"></div>
 
     <script>
         // === State ===
         let chatHistory = [];
+        let knownServices = [];
+
+        // === Tabs ===
+        function showTab(tab) {
+            document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
+            const titles = {overview: '📊 Übersicht', services: '🧩 Dienste', chat: '💬 Chat', models: '📦 Modelle', knowledge: '🧠 Gedächtnis', files: '📂 Dateien'};
+            document.getElementById('topbar-title').textContent = titles[tab] || tab;
+        }
+
+        // === Toasts ===
+        function toast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = 'toast ' + type;
+            el.textContent = msg;
+            container.appendChild(el);
+            requestAnimationFrame(() => el.classList.add('show'));
+            setTimeout(() => {
+                el.classList.remove('show');
+                setTimeout(() => el.remove(), 300);
+            }, 3800);
+        }
+
+        // === Confirm Modal ===
+        function askConfirm(title, text, onConfirm) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-text').textContent = text;
+            const btn = document.getElementById('confirm-action-btn');
+            const freshBtn = btn.cloneNode(true);
+            btn.replaceWith(freshBtn);
+            freshBtn.addEventListener('click', () => { closeConfirmModal(); onConfirm(); });
+            document.getElementById('confirm-modal').classList.add('active');
+        }
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.remove('active');
+        }
 
         // === Load Models ===
         async function loadModels() {
@@ -505,47 +760,41 @@ TEMPLATE = """
                 const data = await resp.json();
                 const grid = document.getElementById('models-grid');
                 const select = document.getElementById('model-select');
-                
+
                 if (data.error) {
-                    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--danger);">❌ ${data.error}</div>`;
+                    grid.innerHTML = `<div class="empty-state error">❌ ${data.error}</div>`;
+                    document.getElementById('ollama-dot').className = 'status-dot offline';
                     return;
                 }
 
-                // Stats
                 document.getElementById('model-count').textContent = data.models.length;
-                document.getElementById('models-detail').textContent = 
-                    data.models.map(m => m.name.split(':')[0]).join(', ');
+                document.getElementById('models-detail').textContent =
+                    data.models.length ? data.models.map(m => m.name.split(':')[0]).join(', ') : 'Keine Modelle installiert';
 
-                // Grid
-                grid.innerHTML = data.models.map(m => `
+                grid.innerHTML = (data.models.length ? data.models.map(m => `
                     <div class="model-card">
-                        <div class="name">${m.name}</div>
+                        <div class="name">🧠 ${m.name}</div>
                         <div class="size">${m.size}</div>
                         <div class="model-actions">
-                            <button class="btn btn-primary" onclick="useModel('${m.name}')">▶ Nutzen</button>
-                            <button class="btn btn-danger" onclick="deleteModel('${m.name}')">🗑 Löschen</button>
+                            <button class="btn btn-primary btn-sm" onclick="useModel('${m.name}')">▶ Nutzen</button>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDeleteModel('${m.name}')">🗑 Löschen</button>
                         </div>
                     </div>
-                `).join('') + `
+                `).join('') : '') + `
                     <div class="model-card" style="border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="openModelModal()">
                         <div style="text-align:center;color:var(--text-secondary);">
-                            <div style="font-size:2rem;margin-bottom:0.5rem;">+</div>
-                            <div>Neues Modell laden</div>
+                            <div style="font-size:1.6rem;margin-bottom:0.3rem;">+</div>
+                            <div style="font-size:0.85rem;">Neues Modell laden</div>
                         </div>
                     </div>
                 `;
 
-                // Select
                 select.innerHTML = data.models.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
 
-                // Connection status
                 document.getElementById('ollama-dot').className = 'status-dot online';
-                document.getElementById('system-status').textContent = '✅ Online';
-            } catch(e) {
+            } catch (e) {
                 document.getElementById('ollama-dot').className = 'status-dot offline';
-                document.getElementById('system-status').textContent = '❌ Offline';
-                document.getElementById('models-grid').innerHTML = 
-                    `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--danger);">❌ Verbindung zu Ollama fehlgeschlagen</div>`;
+                document.getElementById('models-grid').innerHTML = `<div class="empty-state error">❌ Verbindung zu Ollama fehlgeschlagen</div>`;
             }
         }
 
@@ -557,7 +806,94 @@ TEMPLATE = """
                 document.getElementById('file-count').textContent = data.files;
                 document.getElementById('memory-usage').textContent = data.memory;
                 document.getElementById('uptime-detail').textContent = data.os;
-            } catch(e) {}
+            } catch (e) {}
+        }
+
+        // === Load Services ===
+        function renderServiceCard(svc) {
+            const statusClass = svc.online ? 'online' : 'offline';
+            const canStart = !svc.online && svc.key !== 'dashboard';
+            return `
+                <div class="service-card">
+                    <div class="head">
+                        <span class="icon">${svc.icon}</span>
+                        <span class="name">${svc.name}</span>
+                        <span class="status-dot ${statusClass}" title="${svc.online ? 'Online' : 'Offline'}"></span>
+                    </div>
+                    <div class="desc">${svc.desc}</div>
+                    <div class="meta">
+                        <span class="port">:${svc.port} · ${svc.layer}</span>
+                        ${canStart
+                            ? `<button class="btn btn-success btn-sm" onclick="startService('${svc.key}', this)">▶ Starten</button>`
+                            : (svc.online ? `<span class="pill ok" style="padding:0.2rem 0.6rem;">läuft</span>` : '')}
+                    </div>
+                </div>`;
+        }
+
+        async function loadServices() {
+            try {
+                const resp = await fetch('/api/services');
+                const data = await resp.json();
+                knownServices = data.services;
+                const html = data.services.map(renderServiceCard).join('');
+                document.getElementById('services-grid').innerHTML = html;
+                document.getElementById('overview-services-grid').innerHTML = html;
+
+                const online = data.services.filter(s => s.online).length;
+                const total = data.services.length;
+                document.getElementById('services-count').textContent = `${online}/${total}`;
+                document.getElementById('services-badge').textContent = `${online}/${total}`;
+                document.getElementById('services-badge').className = 'nav-badge' + (online < total ? ' warn' : '');
+
+                const summary = document.getElementById('services-summary');
+                summary.textContent = `${online}/${total} Dienste online`;
+                summary.className = 'pill ' + (online === total ? 'ok' : (online === 0 ? 'warn' : ''));
+            } catch (e) {
+                document.getElementById('services-grid').innerHTML = `<div class="empty-state error">❌ Dienste-Status konnte nicht geladen werden</div>`;
+            }
+        }
+
+        async function startService(key, btnEl) {
+            btnEl.disabled = true;
+            btnEl.textContent = '⏳ Startet...';
+            try {
+                const resp = await fetch('/api/services/start', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ key })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    toast('Dienst wird gestartet, prüfe in Kürze den Status...', 'success');
+                    setTimeout(loadServices, 2500);
+                } else {
+                    toast('Fehler: ' + data.error, 'error');
+                    btnEl.disabled = false;
+                    btnEl.textContent = '▶ Starten';
+                }
+            } catch (e) {
+                toast('Fehler: ' + e.message, 'error');
+                btnEl.disabled = false;
+                btnEl.textContent = '▶ Starten';
+            }
+        }
+
+        // === Load Knowledge Overview ===
+        async function loadKnowledge() {
+            try {
+                const resp = await fetch('/api/knowledge');
+                const data = await resp.json();
+                document.getElementById('knowledge-grid').innerHTML = data.categories.map(c => `
+                    <div class="knowledge-card">
+                        <div class="name">${c.icon} ${c.name}</div>
+                        <div class="desc">${c.desc}</div>
+                        <div class="count">${c.count}</div>
+                        <div class="count-label">Dateien</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('knowledge-grid').innerHTML = `<div class="empty-state error">❌ Gedächtnis-Übersicht konnte nicht geladen werden</div>`;
+            }
         }
 
         // === Load File Tree ===
@@ -566,19 +902,19 @@ TEMPLATE = """
                 const resp = await fetch('/api/files');
                 const data = await resp.json();
                 document.getElementById('file-tree').innerHTML = renderTree(data.tree);
-            } catch(e) {
-                document.getElementById('file-tree').textContent = '❌ Konnte Dateistruktur nicht laden';
+            } catch (e) {
+                document.getElementById('file-tree').innerHTML = `<div class="empty-state error">❌ Konnte Dateistruktur nicht laden</div>`;
             }
         }
 
-        function renderTree(items, depth=0) {
+        function renderTree(items, depth = 0) {
             if (!items || items.length === 0) return '<span style="color:var(--text-secondary)">(leer)</span>';
             const indent = ' '.repeat(depth * 2);
             return items.map(item => {
                 if (item.type === 'dir') {
                     return `<div class="dir" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'">
                         ${indent}📁 ${item.name}</div>
-                        <div class="indent" style="display:none">${renderTree(item.children, depth+1)}</div>`;
+                        <div class="indent" style="display:none">${renderTree(item.children, depth + 1)}</div>`;
                 } else {
                     return `<div class="file">${indent}📄 ${item.name}</div>`;
                 }
@@ -591,21 +927,20 @@ TEMPLATE = """
             const messages = document.getElementById('chat-messages');
             const model = document.getElementById('model-select').value;
             const text = input.value.trim();
-            
+
             if (!text) return;
             if (!model) {
-                messages.innerHTML += `<div class="message assistant"><div class="role">⚠️</div>Bitte wähle zuerst ein Modell aus.</div>`;
+                toast('Bitte wähle zuerst ein Modell aus.', 'error');
                 return;
             }
 
-            // Add user message
             messages.innerHTML += `<div class="message user"><div class="role">👤 Du</div>${escapeHtml(text)}</div>`;
             input.value = '';
             messages.scrollTop = messages.scrollHeight;
 
-            // Add loading
             const loadingId = 'loading-' + Date.now();
-            messages.innerHTML += `<div class="message assistant" id="${loadingId}"><div class="role">🤖 ${model}</div><div class="thinking">💭 Denke...</div></div>`;
+            messages.innerHTML += `<div class="message assistant" id="${loadingId}"><div class="role">🤖 ${model}</div><div class="thinking"><span></span><span></span><span></span></div></div>`;
+            messages.scrollTop = messages.scrollHeight;
 
             try {
                 const resp = await fetch('/api/chat', {
@@ -614,47 +949,40 @@ TEMPLATE = """
                     body: JSON.stringify({ model, message: text, history: chatHistory })
                 });
                 const data = await resp.json();
-                
+
                 document.getElementById(loadingId).remove();
-                
+
                 if (data.error) {
-                    messages.innerHTML += `<div class="message assistant"><div class="role">❌ Fehler</div>${data.error}</div>`;
+                    messages.innerHTML += `<div class="message assistant"><div class="role">❌ Fehler</div>${escapeHtml(data.error)}</div>`;
                 } else {
                     messages.innerHTML += `<div class="message assistant"><div class="role">🤖 ${model}</div>${escapeHtml(data.response)}</div>`;
                     chatHistory = data.history;
                 }
-            } catch(e) {
+            } catch (e) {
                 document.getElementById(loadingId).remove();
-                messages.innerHTML += `<div class="message assistant"><div class="role">❌ Fehler</div>Verbindung fehlgeschlagen: ${e.message}</div>`;
+                messages.innerHTML += `<div class="message assistant"><div class="role">❌ Fehler</div>Verbindung fehlgeschlagen: ${escapeHtml(e.message)}</div>`;
             }
-            
+
             messages.scrollTop = messages.scrollHeight;
         }
 
         // === Model Actions ===
         function useModel(name) {
             document.getElementById('model-select').value = name;
+            showTab('chat');
             document.getElementById('chat-input').focus();
         }
 
-        function openModelModal() {
-            document.getElementById('model-modal').classList.add('active');
-        }
-
-        function closeModelModal() {
-            document.getElementById('model-modal').classList.remove('active');
-        }
+        function openModelModal() { document.getElementById('model-modal').classList.add('active'); }
+        function closeModelModal() { document.getElementById('model-modal').classList.remove('active'); }
 
         async function pullModel() {
             const name = document.getElementById('model-name-input').value.trim();
             if (!name) return;
-            
+
             document.getElementById('model-modal').classList.remove('active');
-            
-            const grid = document.getElementById('models-grid');
-            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--accent);">
-                ⏳ Lade "${name}" herunter (kann einige Minuten dauern)...</div>`;
-            
+            toast(`Lade "${name}" herunter (kann einige Minuten dauern)...`);
+
             try {
                 const resp = await fetch('/api/pull', {
                     method: 'POST',
@@ -663,19 +991,23 @@ TEMPLATE = """
                 });
                 const data = await resp.json();
                 if (data.success) {
+                    toast(`"${name}" erfolgreich installiert.`, 'success');
                     loadModels();
                 } else {
-                    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--danger);">❌ ${data.error}</div>`;
+                    toast('Fehler: ' + data.error, 'error');
                 }
-            } catch(e) {
-                grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--danger);">❌ Fehler: ${e.message}</div>`;
+            } catch (e) {
+                toast('Fehler: ' + e.message, 'error');
             }
-            
+
             document.getElementById('model-name-input').value = '';
         }
 
+        function confirmDeleteModel(name) {
+            askConfirm('Modell löschen?', `"${name}" wird dauerhaft von der Festplatte entfernt.`, () => deleteModel(name));
+        }
+
         async function deleteModel(name) {
-            if (!confirm(`Modell "${name}" wirklich löschen?`)) return;
             try {
                 const resp = await fetch('/api/delete', {
                     method: 'POST',
@@ -683,9 +1015,14 @@ TEMPLATE = """
                     body: JSON.stringify({ name })
                 });
                 const data = await resp.json();
-                if (data.success) loadModels();
-            } catch(e) {
-                alert('Fehler beim Löschen: ' + e.message);
+                if (data.success) {
+                    toast(`"${name}" gelöscht.`, 'success');
+                    loadModels();
+                } else {
+                    toast('Fehler: ' + data.error, 'error');
+                }
+            } catch (e) {
+                toast('Fehler beim Löschen: ' + e.message, 'error');
             }
         }
 
@@ -695,12 +1032,23 @@ TEMPLATE = """
             return div.innerHTML;
         }
 
+        function refreshAll() {
+            loadModels();
+            loadStats();
+            loadServices();
+            loadKnowledge();
+            toast('Aktualisiert.');
+        }
+
         // === Init ===
         loadModels();
         loadStats();
+        loadServices();
+        loadKnowledge();
         loadFileTree();
         setInterval(loadModels, 30000);
         setInterval(loadStats, 30000);
+        setInterval(loadServices, 15000);
     </script>
 </body>
 </html>
@@ -734,7 +1082,6 @@ def get_models():
 def get_stats():
     """System-Statistiken"""
     try:
-        # Dateianzahl
         knowledge_dir = AI_OS_ROOT / "00_Wissen"
         file_count = 0
         if knowledge_dir.exists():
@@ -742,7 +1089,6 @@ def get_stats():
                 if f.is_file():
                     file_count += 1
 
-        # Speicher
         try:
             import psutil
             mem = psutil.virtual_memory()
@@ -759,6 +1105,59 @@ def get_stats():
         })
     except Exception as e:
         return jsonify({"files": 0, "memory": "N/A", "os": str(e)})
+
+@app.route("/api/services")
+def get_services():
+    """Prüft parallel den Online-Status aller AI-OS-Dienste (Ebenen-Struktur)."""
+    def check(svc):
+        online = True if svc["key"] == "dashboard" else check_service_health(svc["port"])
+        return {**{k: v for k, v in svc.items() if k not in ("script", "env_key")}, "online": online}
+
+    with ThreadPoolExecutor(max_workers=len(SERVICES)) as pool:
+        results = list(pool.map(check, SERVICES))
+
+    return jsonify({"services": results})
+
+@app.route("/api/services/start", methods=["POST"])
+def start_service_route():
+    """Startet einen einzelnen AI-OS-Dienst als Hintergrundprozess."""
+    key = (request.json or {}).get("key", "")
+    svc = next((s for s in SERVICES if s["key"] == key), None)
+    if not svc or not svc.get("script"):
+        return jsonify({"error": "Unbekannter oder nicht startbarer Dienst"})
+
+    script_path = AI_OS_ROOT / svc["script"]
+    if not script_path.exists():
+        return jsonify({"error": f"Skript nicht gefunden: {svc['script']}"})
+
+    try:
+        env = os.environ.copy()
+        env["AI_OS_ROOT"] = str(AI_OS_ROOT)
+        if svc.get("env_key"):
+            env[svc["env_key"]] = str(svc["port"])
+        subprocess.Popen(
+            [sys.executable, str(script_path)],
+            env=env,
+            cwd=str(AI_OS_ROOT),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/knowledge")
+def get_knowledge():
+    """Datei-Anzahl pro Wissenskategorie in 06_Gedächtnis."""
+    root = AI_OS_ROOT / "06_Gedächtnis"
+    categories = []
+    for cat in KNOWLEDGE_CATEGORIES:
+        p = root / cat["path"]
+        count = 0
+        if p.exists():
+            count = sum(1 for f in p.rglob("*") if f.is_file() and f.name != ".gitkeep")
+        categories.append({**cat, "count": count})
+    return jsonify({"categories": categories})
 
 @app.route("/api/files")
 def get_files():
@@ -799,18 +1198,15 @@ def chat():
     message = data.get("message", "")
     history = data.get("history", [])
 
-    # Begrenze Kontext auf letzte 20 Nachrichten
     if len(history) > 20:
         history = history[-20:]
 
-    # Erstelle Prompt mit Kontext
     messages = [{"role": "system", "content": "Du bist ein hilfreicher Assistent. Du bist Teil des AI-OS (AI Operating System), einem lokalen KI-Betriebssystem. Antworte auf Deutsch."}]
     for h in history:
         messages.append(h)
     messages.append({"role": "user", "content": message})
 
     try:
-        # Direkter API-Aufruf an Ollama
         payload = json.dumps({
             "model": model,
             "messages": messages,
@@ -832,7 +1228,6 @@ def chat():
             result = json.loads(resp.read())
             response = result.get("message", {}).get("content", "")
 
-        # Aktualisiere History
         history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": response})
 
@@ -859,7 +1254,6 @@ def pull_model():
             method="POST"
         )
         with urllib.request.urlopen(req, timeout=600) as resp:
-            # Warte auf vollständigen Download
             for line in resp:
                 pass
         return jsonify({"success": True})
@@ -891,4 +1285,4 @@ if __name__ == "__main__":
     print(f"🧠 AI-OS Dashboard startet auf http://localhost:{FLASK_PORT}")
     print(f"📁 Wissensbasis: {AI_OS_ROOT / '00_Wissen'}")
     print(f"🔧 Ollama: http://{OLLAMA_HOST}:{OLLAMA_PORT}")
-    app.run(host="127.0.0.1", port=FLASK_PORT, debug=False)
+    app.run(host="127.0.0.1", port=FLASK_PORT, debug=False, threaded=True)

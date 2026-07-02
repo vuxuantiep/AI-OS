@@ -16,6 +16,10 @@ from datetime import datetime, timedelta
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from collections import deque, defaultdict
 
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # Konfiguration
 MONITOR_PORT = int(os.environ.get("MONITOR_PORT", 5400))
 

@@ -18,8 +18,12 @@ from queue import PriorityQueue
 import urllib.request
 import urllib.error
 
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # Konfiguration
-AI_OS_ROOT = Path(os.environ.get("AI_OS_ROOT", Path(__file__).parent.parent.parent))
+AI_OS_ROOT = Path(os.environ.get("AI_OS_ROOT", Path(__file__).parent.parent))
 OLLAMA_HOST = "127.0.0.1"
 OLLAMA_PORT = 11434
 WORKFLOW_PORT = int(os.environ.get("WORKFLOW_PORT", 5200))
