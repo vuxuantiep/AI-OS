@@ -20,7 +20,7 @@ token.json
 .obsidian/graph.json
 
 # Logs und temporäre Dateien
-04_System/Logs/
+08_Monitoring/Logs/
 *.log
 *.tmp
 *.temp

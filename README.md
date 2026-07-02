@@ -39,7 +39,7 @@ Die KI-Fabrik V2 ist ein **6-schichtiges Multi-Agent-System**, das auf Ollama (l
 
 1. **System starten:**
    ```bash
-   python 04_System/Scripts/start_ai_os.py
+   python 04_Infrastruktur/Runtime/start_ai_os.py
    ```
 
 2. **CLAUDE.md ausfüllen:**
@@ -59,11 +59,11 @@ Die KI-Fabrik V2 ist ein **6-schichtiges Multi-Agent-System**, das auf Ollama (l
 
 ### Einzelne Komponenten starten
 ```bash
-python 04_System/Scripts/ai_os_dashboard.py   # Dashboard (Port 5000)
-python 04_System/Scripts/api_gateway.py        # API Gateway (Port 5100)
-python 04_System/Scripts/agent_system.py       # Agent System (Port 5300)
-python 04_System/Scripts/workflow_engine.py    # Workflow Engine (Port 5200)
-python 04_System/Scripts/monitoring_service.py # Monitoring (Port 5400)
+python 04_Infrastruktur/Gateway/ai_os_dashboard.py   # Dashboard (Port 5000)
+python 04_Infrastruktur/Gateway/api_gateway.py       # API Gateway (Port 5100)
+python 05_Agenten/agent_system.py                    # Agent System (Port 5300)
+python 05_Agenten/workflow_engine.py                 # Workflow Engine (Port 5200)
+python 08_Monitoring/monitoring_service.py           # Monitoring (Port 5400)
 ```
 
 ### Mit Claude Desktop nutzen
@@ -138,9 +138,15 @@ AI-OS/
 │   ├── 05_Archiv/          ← Alte Notizen, abgeschlossenes
 │   └── 06_Transkripte/     ← Gesprächsaufzeichnungen
 ├── 01_Verbindungen/        ← MCP, CLI und API Konfigurationen
-├── 02_Fähigkeiten/         ← Wiederverwendbare Arbeitsanleitungen
+├── 02_Fähigkeiten/         ← Wiederverwendbare Arbeitsanleitungen (inkl. Vorlagen)
 ├── 03_Abläufe/             ← Automatisierte Routinen
-├── 04_System/              ← Skripte, Logs, Vorlagen, Architektur
+├── 04_Infrastruktur/       ← Gateway, Runtime, Config, Architektur-Dokumentation
+├── 05_Agenten/             ← Agentenlayer (Agent-System, Workflow-Engine)
+├── 06_Gedächtnis/          ← Memory-Layer (RAG-Indexer, Wissenskategorien)
+├── 07_Sicherheit/          ← Security, Compliance
+├── 08_Monitoring/          ← Health-Checks, Metriken, Logs
+├── 09_Backup-Recovery/     ← Backup-Strategie, Disaster Recovery
+├── 10_Business/            ← Geschäftsprojekte
 └── README.md               ← Diese Datei
     AGENTS.md               ← Claude-Systemanweisungen (Ordner-Kontext)
     CLAUDE.md               ← Zentrale Systemanweisungen
@@ -156,7 +162,7 @@ So startest du mit deinem persönlichen Wissensspeicher:
 3. **Tagesnotiz:** `00_Wissen/03_Aktuelles/Aktiv/`
 4. **Referenz speichern:** `00_Wissen/04_Referenzen/`
 
-Nutze immer die Vorlagen aus `04_System/Vorlagen/` für neue Notizen und Projekte.
+Nutze immer die Vorlagen aus `02_Fähigkeiten/Vorlagen/` für neue Notizen und Projekte.
 
 ## Fähigkeiten (Skills)
 

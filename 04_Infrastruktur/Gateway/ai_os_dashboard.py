@@ -12,6 +12,10 @@ import urllib.request
 from pathlib import Path
 from datetime import datetime
 
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 try:
     from flask import Flask, render_template_string, jsonify, request
 except ImportError:

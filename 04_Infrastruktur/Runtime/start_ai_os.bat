@@ -34,6 +34,6 @@ echo   - Monitoring    (Port 5400)
 echo.
 
 start "" http://localhost:5000
-python 04_System/Skripte/start_ai_os.py
+python 04_Infrastruktur/Runtime/start_ai_os.py
 
 pause

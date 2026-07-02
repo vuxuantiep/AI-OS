@@ -18,15 +18,15 @@ AI_OS_ROOT = Path(__file__).parent.parent.parent
 OLLAMA_HOST = "127.0.0.1"
 OLLAMA_PORT = 11434
 
-# Service-Konfiguration
+# Service-Konfiguration (Pfade relativ zu AI_OS_ROOT, seit der Aufteilung in Ebenen)
 SERVICES = [
-    {"name": "Dashboard", "script": "ai_os_dashboard.py", "port": 5000, "env": {"FLASK_PORT": "5000"}},
-    {"name": "MCP Server", "script": "mcp_server.py", "port": 5001, "env": {"MCP_PORT": "5001"}},
-    {"name": "RAG Pipeline", "script": "knowledge_agent.py", "port": 5002, "env": {}},
-    {"name": "API Gateway", "script": "api_gateway.py", "port": 5100, "env": {"GATEWAY_PORT": "5100"}},
-    {"name": "Workflow Engine", "script": "workflow_engine.py", "port": 5200, "env": {"WORKFLOW_PORT": "5200"}},
-    {"name": "Agent System", "script": "agent_system.py", "port": 5300, "env": {"AGENT_PORT": "5300"}},
-    {"name": "Monitoring", "script": "monitoring_service.py", "port": 5400, "env": {"MONITOR_PORT": "5400"}},
+    {"name": "Dashboard", "script": "04_Infrastruktur/Gateway/ai_os_dashboard.py", "port": 5000, "env": {"FLASK_PORT": "5000"}},
+    {"name": "MCP Server", "script": "04_Infrastruktur/Gateway/mcp_server.py", "port": 5001, "env": {"MCP_PORT": "5001"}},
+    {"name": "RAG Pipeline", "script": "06_Gedächtnis/knowledge_agent.py", "port": 5002, "env": {}},
+    {"name": "API Gateway", "script": "04_Infrastruktur/Gateway/api_gateway.py", "port": 5100, "env": {"GATEWAY_PORT": "5100"}},
+    {"name": "Workflow Engine", "script": "05_Agenten/workflow_engine.py", "port": 5200, "env": {"WORKFLOW_PORT": "5200"}},
+    {"name": "Agent System", "script": "05_Agenten/agent_system.py", "port": 5300, "env": {"AGENT_PORT": "5300"}},
+    {"name": "Monitoring", "script": "08_Monitoring/monitoring_service.py", "port": 5400, "env": {"MONITOR_PORT": "5400"}},
 ]
 
 def check_ollama():
@@ -61,7 +61,7 @@ def check_ollama_connection():
 
 def start_service(service):
     """Startet einen einzelnen Service"""
-    script_path = Path(__file__).parent / service["script"]
+    script_path = AI_OS_ROOT / service["script"]
     if not script_path.exists():
         print(f"⚠️ {service['name']}: Skript nicht gefunden")
         return None
