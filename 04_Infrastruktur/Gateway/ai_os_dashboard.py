@@ -77,6 +77,31 @@ KNOWLEDGE_CATEGORIES = [
      "desc": "Vektor-Index für semantische Suche"},
 ]
 
+# Architektur-Stand: die 11 Ebenen im Repo-Root, gruppiert wie im Ebenen-Stapel
+ARCHITECTURE_LAYERS = [
+    {"key": "wissen", "name": "00_Wissen", "icon": "📚", "desc": "Obsidian Vault — Rohwissen, Notizen", "group": "Wissen & Organisation"},
+    {"key": "verbindungen", "name": "01_Verbindungen", "icon": "🔗", "desc": "APIs, CLI, MCP-Client-Configs", "group": "Wissen & Organisation"},
+    {"key": "faehigkeiten", "name": "02_Fähigkeiten", "icon": "🎯", "desc": "Skills & Vorlagen", "group": "Wissen & Organisation"},
+    {"key": "ablaeufe", "name": "03_Abläufe", "icon": "🔁", "desc": "Routinen & Automatisierung", "group": "Wissen & Organisation"},
+    {"key": "infrastruktur", "name": "04_Infrastruktur", "icon": "🏗️", "desc": "Gateway, Runtime, Config, Doku", "group": "Plattform"},
+    {"key": "agenten", "name": "05_Agenten", "icon": "🤖", "desc": "Agentenlayer", "group": "Plattform"},
+    {"key": "gedaechtnis", "name": "06_Gedächtnis", "icon": "🧠", "desc": "Memory-Layer (RAG)", "group": "Plattform"},
+    {"key": "sicherheit", "name": "07_Sicherheit", "icon": "🔒", "desc": "Security & Compliance", "group": "Plattform"},
+    {"key": "monitoring2", "name": "08_Monitoring", "icon": "📊", "desc": "Health, Metriken, Logs", "group": "Plattform"},
+    {"key": "backup", "name": "09_Backup-Recovery", "icon": "💾", "desc": "Backup & Disaster Recovery", "group": "Plattform"},
+    {"key": "business", "name": "10_Business", "icon": "💼", "desc": "Geschäftsprojekte", "group": "Business"},
+]
+
+WIKI_DIRS = [
+    {"key": "wiki", "name": "Wiki / Referenzen", "path": "00_Wissen/04_Referenzen/Wiki"},
+    {"key": "architektur", "name": "Architektur-Dokumentation", "path": "04_Infrastruktur/Dokumentation/Architektur"},
+]
+
+FILE_ICONS = {
+    ".pdf": "📕", ".png": "🖼️", ".jpg": "🖼️", ".jpeg": "🖼️",
+    ".docx": "📘", ".md": "📝", ".one": "📓", ".excalidraw": "✏️",
+}
+
 
 def check_service_health(port, timeout=1.2):
     """Prüft per HTTP, ob ein Dienst auf dem gegebenen Port antwortet."""
@@ -541,6 +566,88 @@ TEMPLATE = """
         .toast.success { border-left-color: var(--success); }
         .toast.error { border-left-color: var(--danger); }
 
+        /* ===== Architektur: Ebenen-Stapel ===== */
+        .layer-band {
+            background: linear-gradient(180deg, var(--bg-card), var(--bg-secondary));
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.1rem 1.3rem 1.3rem;
+        }
+
+        .layer-band-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-secondary);
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .layer-band-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .layer-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.65rem 0.85rem;
+        }
+
+        .layer-chip.missing { opacity: 0.45; border-style: dashed; }
+        .layer-chip .icon { font-size: 1.15rem; flex-shrink: 0; }
+        .layer-chip .name { font-size: 0.85rem; font-weight: 600; }
+        .layer-chip .desc { font-size: 0.72rem; color: var(--text-secondary); }
+        .layer-chip .count {
+            margin-left: auto;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--accent);
+            background: var(--accent-soft);
+            border-radius: 999px;
+            padding: 0.15rem 0.55rem;
+            flex-shrink: 0;
+        }
+
+        .layer-arrow {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            padding: 0.35rem 0;
+            opacity: 0.6;
+        }
+
+        /* ===== Architektur: Wiki-Dokumente ===== */
+        .wiki-doc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 0.6rem;
+        }
+
+        .wiki-doc {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.6rem 0.8rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: border-color 0.15s, transform 0.15s;
+            overflow: hidden;
+        }
+
+        .wiki-doc:hover { border-color: var(--accent); transform: translateY(-1px); }
+        .wiki-doc .icon { font-size: 1.1rem; flex-shrink: 0; }
+        .wiki-doc .name { font-size: 0.8rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .wiki-doc .size { font-size: 0.7rem; color: var(--text-secondary); flex-shrink: 0; }
+
         @media (max-width: 900px) {
             .sidebar { width: 72px; }
             .sidebar .nav-item span.label { display: none; }
@@ -559,6 +666,7 @@ TEMPLATE = """
                 <button class="nav-item" data-tab="models" onclick="showTab('models')">📦 <span class="label">Modelle</span></button>
                 <button class="nav-item" data-tab="knowledge" onclick="showTab('knowledge')">🧠 <span class="label">Gedächtnis</span></button>
                 <button class="nav-item" data-tab="files" onclick="showTab('files')">📂 <span class="label">Dateien</span></button>
+                <button class="nav-item" data-tab="architecture" onclick="showTab('architecture')">🏛️ <span class="label">Architektur</span></button>
             </nav>
             <div class="sidebar-footer">
                 <span class="status-dot" id="ollama-dot"></span>
@@ -670,6 +778,19 @@ TEMPLATE = """
                         <div class="file-tree" id="file-tree">Lade Dateistruktur...</div>
                     </div>
                 </section>
+
+                <!-- === Architektur === -->
+                <section class="tab-panel" id="tab-architecture">
+                    <div class="section-title">🏛️ Ebenen-Stapel <span class="muted">– Live-Stand deines AI-OS, kein statisches Diagramm</span></div>
+                    <div id="layer-stack">
+                        <div class="empty-state">Lade Architektur-Stand...</div>
+                    </div>
+
+                    <div class="section-title" style="margin-top:2.25rem;">📖 Referenz- & Architektur-Dokumente</div>
+                    <div id="wiki-docs">
+                        <div class="empty-state">Lade Dokumente...</div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
@@ -721,7 +842,7 @@ TEMPLATE = """
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
             document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
-            const titles = {overview: '📊 Übersicht', services: '🧩 Dienste', chat: '💬 Chat', models: '📦 Modelle', knowledge: '🧠 Gedächtnis', files: '📂 Dateien'};
+            const titles = {overview: '📊 Übersicht', services: '🧩 Dienste', chat: '💬 Chat', models: '📦 Modelle', knowledge: '🧠 Gedächtnis', files: '📂 Dateien', architecture: '🏛️ Architektur'};
             document.getElementById('topbar-title').textContent = titles[tab] || tab;
         }
 
@@ -921,6 +1042,57 @@ TEMPLATE = """
             }).join('');
         }
 
+        // === Architektur ===
+        async function loadArchitecture() {
+            try {
+                const resp = await fetch('/api/architecture');
+                const data = await resp.json();
+                const groups = {};
+                data.layers.forEach(l => { (groups[l.group] = groups[l.group] || []).push(l); });
+
+                document.getElementById('layer-stack').innerHTML = Object.entries(groups).map(([group, layers]) => `
+                    <div class="layer-band">
+                        <div class="layer-band-label">${group}</div>
+                        <div class="layer-band-items">
+                            ${layers.map(l => `
+                                <div class="layer-chip ${l.exists ? '' : 'missing'}">
+                                    <span class="icon">${l.icon}</span>
+                                    <div>
+                                        <div class="name">${l.name}</div>
+                                        <div class="desc">${l.desc}</div>
+                                    </div>
+                                    <span class="count">${l.exists ? l.count : '—'}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('<div class="layer-arrow">↓</div>');
+            } catch (e) {
+                document.getElementById('layer-stack').innerHTML = `<div class="empty-state error">❌ Architektur-Stand konnte nicht geladen werden</div>`;
+            }
+        }
+
+        async function loadWikiDocs() {
+            try {
+                const resp = await fetch('/api/wiki-docs');
+                const data = await resp.json();
+                document.getElementById('wiki-docs').innerHTML = data.dirs.map(d => `
+                    <div class="section-title" style="font-size:0.9rem;margin-top:1.25rem;">${d.name} <span class="muted">(${d.count})</span></div>
+                    <div class="wiki-doc-grid">
+                        ${d.files.length ? d.files.map(f => `
+                            <a class="wiki-doc" href="${f.url}" target="_blank" rel="noopener">
+                                <span class="icon">${f.icon}</span>
+                                <span class="name" title="${f.name}">${f.name}</span>
+                                <span class="size">${f.size}</span>
+                            </a>
+                        `).join('') : '<div class="empty-state" style="padding:1rem;">Keine Dokumente</div>'}
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('wiki-docs').innerHTML = `<div class="empty-state error">❌ Dokumente konnten nicht geladen werden</div>`;
+            }
+        }
+
         // === Chat ===
         async function sendMessage() {
             const input = document.getElementById('chat-input');
@@ -1037,6 +1209,7 @@ TEMPLATE = """
             loadStats();
             loadServices();
             loadKnowledge();
+            loadArchitecture();
             toast('Aktualisiert.');
         }
 
@@ -1046,6 +1219,8 @@ TEMPLATE = """
         loadServices();
         loadKnowledge();
         loadFileTree();
+        loadArchitecture();
+        loadWikiDocs();
         setInterval(loadModels, 30000);
         setInterval(loadStats, 30000);
         setInterval(loadServices, 15000);
@@ -1158,6 +1333,50 @@ def get_knowledge():
             count = sum(1 for f in p.rglob("*") if f.is_file() and f.name != ".gitkeep")
         categories.append({**cat, "count": count})
     return jsonify({"categories": categories})
+
+@app.route("/api/architecture")
+def get_architecture():
+    """Live-Stand der Ebenen-Struktur: Datei-Anzahl je Root-Ordner."""
+    layers = []
+    for layer in ARCHITECTURE_LAYERS:
+        p = AI_OS_ROOT / layer["name"]
+        exists = p.exists()
+        count = sum(1 for f in p.rglob("*") if f.is_file()) if exists else 0
+        layers.append({**layer, "count": count, "exists": exists})
+    return jsonify({"layers": layers})
+
+@app.route("/api/wiki-docs")
+def get_wiki_docs():
+    """Listet die Architektur-/Referenzdokumente aus Wiki und Dokumentation/Architektur."""
+    result = []
+    for d in WIKI_DIRS:
+        p = AI_OS_ROOT / d["path"]
+        files = []
+        if p.exists():
+            for f in sorted(p.iterdir()):
+                if f.is_file() and not f.name.startswith("."):
+                    size = f.stat().st_size
+                    size_str = f"{size/1024:.0f} KB" if size < 1024*1024 else f"{size/1024/1024:.1f} MB"
+                    files.append({
+                        "name": f.name,
+                        "icon": FILE_ICONS.get(f.suffix.lower(), "📄"),
+                        "size": size_str,
+                        "url": f"/api/wiki-file/{d['key']}/{f.name}",
+                    })
+        result.append({**d, "files": files, "count": len(files)})
+    return jsonify({"dirs": result})
+
+@app.route("/api/wiki-file/<dir_key>/<path:filename>")
+def get_wiki_file(dir_key, filename):
+    """Liefert eine Datei aus einem der beiden Wiki-/Architektur-Verzeichnisse (whitelisted, pfadsicher)."""
+    from flask import send_from_directory
+    d = next((x for x in WIKI_DIRS if x["key"] == dir_key), None)
+    if not d:
+        return jsonify({"error": "Unbekanntes Verzeichnis"}), 404
+    try:
+        return send_from_directory(str(AI_OS_ROOT / d["path"]), filename)
+    except Exception:
+        return jsonify({"error": "Datei nicht gefunden"}), 404
 
 @app.route("/api/files")
 def get_files():
