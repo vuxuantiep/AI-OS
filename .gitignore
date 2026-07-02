@@ -55,3 +55,5 @@ venv/
 
 # Claude-spezifisch (falls nötig)
 .claude/
+# Generierte Tages-Daten
+06_Gedächtnis/Memory/Short-Memory/news_cache.json
