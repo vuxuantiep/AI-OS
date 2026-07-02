@@ -17,7 +17,7 @@ from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 # Konfiguration
-AI_OS_ROOT = Path(os.environ.get("AI_OS_ROOT", Path(__file__).parent.parent.parent))
+AI_OS_ROOT = Path(os.environ.get("AI_OS_ROOT", Path(__file__).parent.parent))
 OLLAMA_HOST = "127.0.0.1"
 OLLAMA_PORT = 11434
 AGENT_PORT = 5002
@@ -25,7 +25,7 @@ EMBED_MODEL = "nomic-embed-text"
 CHAT_MODEL = "llama3"
 
 # Vektordatenbank (einfache JSON-basierte Implementierung)
-VECTOR_DB_PATH = AI_OS_ROOT / "04_System" / "Data" / "vector_store.json"
+VECTOR_DB_PATH = AI_OS_ROOT / "06_Gedächtnis" / "Vector-Database" / "vector_store.json"
 
 class SimpleVectorStore:
     """Einfache Vektordatenbank für semantische Suche"""

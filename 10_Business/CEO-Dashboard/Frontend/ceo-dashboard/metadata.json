@@ -1,0 +1,6 @@
+{
+  "name": "CEO Dashboard",
+  "description": "Ein Whitelabel CEO-Dashboard, das Sprachbefehle über eine API entgegennimmt und als Brücke für Terminal-Agenten dient.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

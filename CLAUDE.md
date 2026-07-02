@@ -79,15 +79,15 @@ Dies ist meine **KI-Fabrik V2** - ein vollständiges Multi-Agent-System mit Work
 **Einfach (empfohlen):**
 ```bash
 # Dashboard starten (automatisch im Browser öffnen)
-python 04_System/Scripts/ai_os_dashboard.py
+python 04_Infrastruktur/Gateway/ai_os_dashboard.py
 ```
 
 **Alle Komponenten:**
 ```bash
-python 04_System/Scripts/start_ai_os.py
+python 04_Infrastruktur/Runtime/start_ai_os.py
 ```
 
-**Windows:** Doppelklick auf `04_System/Scripts/start_ai_os.bat`
+**Windows:** Doppelklick auf `04_Infrastruktur/Runtime/start_ai_os.bat`
 
 ### Ports & URLs (KI-Fabrik V2)
 | Komponente | Port | URL |
@@ -145,14 +145,8 @@ git push
 ## Verbindungen & Tools
 
 ### Aktive Verbindungen (KI-Fabrik V2)
-- [x] **Ollama** (lokale KI-Modelle) - Port 11434
-- [x] **AI-OS Dashboard** (Web-UI) - Port 5000
-- [x] **AI-OS MCP Server** (für AI-Clients) - Port 5001
-- [x] **RAG Pipeline** (Vektorsuche) - Port 5002
-- [x] **API Gateway** (zentraler Einstieg) - Port 5100
-- [x] **Workflow Engine** (DAG-Pipelines) - Port 5200
-- [x] **Agent System** (7 KI-Agenten) - Port 5300
-- [x] **Monitoring** (Health/Metriken) - Port 5400
+Portdetails siehe Tabelle "Ports & URLs" oben.
+- [x] Ollama, AI-OS Dashboard, MCP Server, RAG Pipeline, API Gateway, Workflow Engine, Agent System, Monitoring
 - [x] GitHub (CLI installiert)
 - [ ] Google Workspace (Gmail, Calendar, Drive)
 
@@ -195,14 +189,20 @@ Der MCP-Server unter Port 5001 bietet diese Tools:
 
 ## Wichtige Orte im Vault
 
-- Tagesnotizen: `00_Wissen/03_Aktuelles/Aktiv/`
-- Projekte: `00_Wissen/02_Projekte/`
+(Tagesnotizen & Projekte siehe "Dateiorganisation" oben)
+
 - Aktive Fähigkeiten: `02_Fähigkeiten/Aktiv/`
-- Vorlagen: `04_System/Vorlagen/`
-- Skripte: `04_System/Skripte/`
+- Vorlagen: `02_Fähigkeiten/Vorlagen/`
 - Wiki/Referenzen: `00_Wissen/04_Referenzen/Wiki/`
-- Architektur-Dokumente: `04_System/Dokumentation/Architektur/`
-- Vektordatenbank: `04_System/Data/vector_store.json`
+- Infrastruktur (Gateway/Runtime/Config): `04_Infrastruktur/`
+- Architektur-Dokumente: `04_Infrastruktur/Dokumentation/Architektur/`
+- Agenten (Agent-System, Workflow-Engine): `05_Agenten/`
+- Gedächtnis/Memory (RAG-Indexer, Wissenskategorien): `06_Gedächtnis/`
+- Sicherheit/Compliance: `07_Sicherheit/`
+- Monitoring & Logs: `08_Monitoring/`
+- Backup & Disaster Recovery: `09_Backup-Recovery/`
+- Business-Projekte: `10_Business/`
+- Vektordatenbank: `06_Gedächtnis/Vector-Database/vector_store.json`
 
 ---
 
