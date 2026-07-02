@@ -9,6 +9,7 @@ import sys
 import json
 import subprocess
 import urllib.request
+import urllib.error
 from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
@@ -123,24 +124,27 @@ TEMPLATE = """
     <title>🧠 AI-OS Dashboard</title>
     <style>
         :root {
-            --bg-primary: #0a0e17;
-            --bg-secondary: #111827;
-            --bg-card: #1a2333;
-            --bg-hover: #202b40;
-            --text-primary: #e8edf5;
-            --text-secondary: #8a97ab;
-            --accent: #4f7cff;
-            --accent-hover: #3d67ea;
-            --accent-soft: rgba(79,124,255,0.12);
-            --success: #22c55e;
-            --success-soft: rgba(34,197,94,0.12);
-            --warning: #eab308;
-            --danger: #ef4444;
-            --danger-soft: rgba(239,68,68,0.12);
-            --border: #26324a;
+            /* Warm-neutrale Dunkelflächen + validierte Ink-/Statusfarben (≥3:1 auf dunkler Fläche) */
+            --bg-primary: #0d0d0d;
+            --bg-secondary: #161615;
+            --bg-card: #1a1a19;
+            --bg-hover: #232322;
+            --text-primary: #ffffff;
+            --text-secondary: #c3c2b7;
+            --text-muted: #898781;
+            --accent: #3987e5;
+            --accent-hover: #5598e7;
+            --accent-soft: rgba(57,135,229,0.14);
+            --success: #0ca30c;
+            --success-soft: rgba(12,163,12,0.16);
+            --warning: #fab219;
+            --danger: #d03b3b;
+            --danger-soft: rgba(208,59,59,0.16);
+            --border: rgba(255,255,255,0.10);
+            --border-strong: rgba(255,255,255,0.18);
             --radius: 14px;
             --radius-sm: 8px;
-            --shadow: 0 8px 30px rgba(0,0,0,0.35);
+            --shadow: 0 10px 32px rgba(0,0,0,0.45);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -353,7 +357,7 @@ TEMPLATE = """
             padding: 1.1rem 1.25rem;
             transition: border-color 0.15s;
         }
-        .service-card:hover { border-color: #364160; }
+        .service-card:hover { border-color: var(--border-strong); }
 
         .service-card .head {
             display: flex;
@@ -465,12 +469,60 @@ TEMPLATE = """
         }
 
         .chat-header {
-            padding: 1rem 1.25rem;
+            padding: 0.8rem 1.25rem;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
             flex-shrink: 0;
+        }
+
+        .chat-title { font-weight: 600; font-size: 0.92rem; }
+        .chat-header-actions { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+
+        #rag-toggle.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+        .message .msg-body p { margin: 0 0 0.5em; }
+        .message .msg-body p:last-child { margin-bottom: 0; }
+        .message .msg-body code {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.08em 0.35em;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+        .message .msg-body pre {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.7rem 0.85rem;
+            overflow-x: auto;
+            margin: 0.5em 0;
+        }
+        .message .msg-body pre code { background: none; border: none; padding: 0; }
+        .message .msg-body ul { margin: 0.35em 0 0.35em 1.2em; }
+
+        .msg-copy {
+            float: right;
+            margin-left: 0.6rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 0;
+        }
+        .msg-copy:hover { color: var(--accent); }
+
+        .rag-sources {
+            margin-top: 0.55rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed var(--border);
+            font-size: 0.72rem;
+            color: var(--text-muted);
         }
 
         .chat-messages {
@@ -601,6 +653,7 @@ TEMPLATE = """
         }
 
         .sketch-toolbar input[type="range"] { width: 80px; }
+        .sketch-tool.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 
         #sketch-canvas {
             width: 100%;
@@ -914,8 +967,13 @@ TEMPLATE = """
                     <div class="chat-layout">
                         <div class="chat-section">
                             <div class="chat-header">
-                                <span>💬 Unterhaltung mit lokaler KI — teile deine Business-Idee</span>
-                                <select id="model-select"></select>
+                                <span class="chat-title">💬 Business-Ideen-Chat</span>
+                                <div class="chat-header-actions">
+                                    <button class="btn btn-outline btn-sm" id="rag-toggle" onclick="toggleRagMode()" title="Antworten mit Kontext aus deiner Wissensdatenbank (Gedächtnis/RAG-Dienst)">🧠 Wissensmodus</button>
+                                    <button class="btn btn-outline btn-sm" onclick="exportChat()" title="Chat als Markdown herunterladen">⬇</button>
+                                    <button class="btn btn-outline btn-sm" onclick="clearChat()" title="Chatverlauf löschen">🗑</button>
+                                    <select id="model-select"></select>
+                                </div>
                             </div>
                             <div class="chat-messages" id="chat-messages">
                                 <div class="message assistant">
@@ -945,13 +1003,16 @@ TEMPLATE = """
                             </div>
                             <div class="idea-tab-panel" id="idea-tab-sketch">
                                 <div class="sketch-toolbar">
-                                    <input type="color" id="sketch-color" value="#4f7cff" title="Farbe">
-                                    <input type="range" id="sketch-size" min="1" max="20" value="3" title="Stiftdicke">
-                                    <button class="btn btn-outline btn-sm" onclick="clearSketch()">🗑 Leeren</button>
-                                    <button class="btn btn-outline btn-sm" onclick="saveSketchAsPng()">💾 PNG</button>
+                                    <button class="btn btn-outline btn-sm sketch-tool active" id="tool-pen" onclick="setSketchTool('pen')" title="Stift">✏️</button>
+                                    <button class="btn btn-outline btn-sm sketch-tool" id="tool-eraser" onclick="setSketchTool('eraser')" title="Radierer">🧽</button>
+                                    <input type="color" id="sketch-color" value="#3987e5" title="Farbe">
+                                    <input type="range" id="sketch-size" min="1" max="24" value="3" title="Stiftdicke">
+                                    <button class="btn btn-outline btn-sm" onclick="undoSketch()" title="Rückgängig">↩️</button>
+                                    <button class="btn btn-outline btn-sm" onclick="clearSketch()" title="Alles löschen">🗑</button>
+                                    <button class="btn btn-outline btn-sm" onclick="saveSketchAsPng()" title="Als PNG speichern">💾</button>
                                 </div>
-                                <canvas id="sketch-canvas" width="480" height="480"></canvas>
-                                <div class="idea-panel-hint">Skizziere Ideen, Skizzen, Flowcharts — bleibt lokal gespeichert, wird nicht automatisch an den Chat gesendet.</div>
+                                <canvas id="sketch-canvas" width="640" height="640"></canvas>
+                                <div class="idea-panel-hint">Skizziere Ideen, Diagramme, Flowcharts — wird lokal gespeichert. ↩️ macht den letzten Strich rückgängig.</div>
                             </div>
                         </aside>
                     </div>
@@ -1104,6 +1165,39 @@ TEMPLATE = """
 
         let sketchCtx = null;
         let sketchDrawing = false;
+        let sketchTool = 'pen';
+        let sketchUndoStack = [];
+
+        function setSketchTool(tool) {
+            sketchTool = tool;
+            document.querySelectorAll('.sketch-tool').forEach(el => el.classList.remove('active'));
+            document.getElementById('tool-' + tool).classList.add('active');
+        }
+
+        function pushSketchUndo() {
+            const canvas = document.getElementById('sketch-canvas');
+            sketchUndoStack.push(canvas.toDataURL());
+            if (sketchUndoStack.length > 25) sketchUndoStack.shift();
+        }
+
+        function undoSketch() {
+            if (!sketchUndoStack.length) { toast('Nichts zum Rückgängigmachen.'); return; }
+            const canvas = document.getElementById('sketch-canvas');
+            const prev = sketchUndoStack.pop();
+            const img = new Image();
+            img.onload = () => {
+                sketchCtx.globalCompositeOperation = 'source-over';
+                sketchCtx.clearRect(0, 0, canvas.width, canvas.height);
+                sketchCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                persistSketch();
+            };
+            img.src = prev;
+        }
+
+        function persistSketch() {
+            const canvas = document.getElementById('sketch-canvas');
+            try { localStorage.setItem('aios-sketch', canvas.toDataURL()); } catch (e) {}
+        }
 
         function setupSketch() {
             const canvas = document.getElementById('sketch-canvas');
@@ -1129,6 +1223,7 @@ TEMPLATE = """
 
             function start(e) {
                 sketchDrawing = true;
+                pushSketchUndo();
                 const p = pos(e);
                 sketchCtx.beginPath();
                 sketchCtx.moveTo(p.x, p.y);
@@ -1137,8 +1232,15 @@ TEMPLATE = """
             function move(e) {
                 if (!sketchDrawing) return;
                 const p = pos(e);
-                sketchCtx.strokeStyle = document.getElementById('sketch-color').value;
-                sketchCtx.lineWidth = document.getElementById('sketch-size').value;
+                if (sketchTool === 'eraser') {
+                    sketchCtx.globalCompositeOperation = 'destination-out';
+                    sketchCtx.strokeStyle = 'rgba(0,0,0,1)';
+                    sketchCtx.lineWidth = document.getElementById('sketch-size').value * 3;
+                } else {
+                    sketchCtx.globalCompositeOperation = 'source-over';
+                    sketchCtx.strokeStyle = document.getElementById('sketch-color').value;
+                    sketchCtx.lineWidth = document.getElementById('sketch-size').value;
+                }
                 sketchCtx.lineTo(p.x, p.y);
                 sketchCtx.stroke();
                 e.preventDefault();
@@ -1146,7 +1248,8 @@ TEMPLATE = """
             function end() {
                 if (!sketchDrawing) return;
                 sketchDrawing = false;
-                try { localStorage.setItem('aios-sketch', canvas.toDataURL()); } catch (e) {}
+                sketchCtx.globalCompositeOperation = 'source-over';
+                persistSketch();
             }
 
             canvas.addEventListener('mousedown', start);
@@ -1158,16 +1261,26 @@ TEMPLATE = """
         }
 
         function clearSketch() {
+            pushSketchUndo();
             const canvas = document.getElementById('sketch-canvas');
+            sketchCtx.globalCompositeOperation = 'source-over';
             sketchCtx.clearRect(0, 0, canvas.width, canvas.height);
             localStorage.removeItem('aios-sketch');
         }
 
         function saveSketchAsPng() {
             const canvas = document.getElementById('sketch-canvas');
+            // Auf weißen Hintergrund kompositieren, sonst wäre das PNG transparent
+            const out = document.createElement('canvas');
+            out.width = canvas.width;
+            out.height = canvas.height;
+            const octx = out.getContext('2d');
+            octx.fillStyle = '#ffffff';
+            octx.fillRect(0, 0, out.width, out.height);
+            octx.drawImage(canvas, 0, 0);
             const a = document.createElement('a');
             a.download = 'ai-os-skizze.png';
-            a.href = canvas.toDataURL('image/png');
+            a.href = out.toDataURL('image/png');
             a.click();
             toast('Skizze als PNG gespeichert.', 'success');
         }
@@ -1482,9 +1595,88 @@ TEMPLATE = """
         }
 
         // === Chat ===
+        let ragMode = false;
+
+        function toggleRagMode() {
+            ragMode = !ragMode;
+            document.getElementById('rag-toggle').classList.toggle('active', ragMode);
+            toast(ragMode
+                ? 'Wissensmodus an — Antworten nutzen deine Wissensdatenbank (RAG-Dienst, Port 5002).'
+                : 'Wissensmodus aus — direkter Modell-Chat.');
+        }
+
+        // Minimaler, sicherer Markdown-Renderer: erst escapen, dann formatieren
+        function renderMarkdown(text) {
+            let html = escapeHtml(text);
+            html = html.replace(/```([\\s\\S]*?)```/g, (m, code) => `<pre><code>${code.trim()}</code></pre>`);
+            html = html.replace(/`([^`\\n]+)`/g, '<code>$1</code>');
+            html = html.replace(/\\*\\*([^*\\n]+)\\*\\*/g, '<strong>$1</strong>');
+            const blocks = html.split(/\\n{2,}/).map(block => {
+                if (block.startsWith('<pre>')) return block;
+                const lines = block.split('\\n');
+                if (lines.every(l => /^[-*] /.test(l.trim()) || l.trim() === '')) {
+                    const items = lines.filter(l => l.trim()).map(l => `<li>${l.trim().slice(2)}</li>`).join('');
+                    return `<ul>${items}</ul>`;
+                }
+                return `<p>${block.replace(/\\n/g, '<br>')}</p>`;
+            });
+            return blocks.join('');
+        }
+
+        function appendMessage(cls, roleLabel, bodyHtml, withCopy = false, rawText = '') {
+            const messages = document.getElementById('chat-messages');
+            const el = document.createElement('div');
+            el.className = 'message ' + cls;
+            el.innerHTML = `<div class="role">${roleLabel}${withCopy ? '<button class="msg-copy" title="Antwort kopieren">📋</button>' : ''}</div><div class="msg-body">${bodyHtml}</div>`;
+            if (withCopy) {
+                el.querySelector('.msg-copy').addEventListener('click', () => {
+                    navigator.clipboard.writeText(rawText).then(
+                        () => toast('Antwort kopiert.', 'success'),
+                        () => toast('Kopieren fehlgeschlagen.', 'error'));
+                });
+            }
+            messages.appendChild(el);
+            messages.scrollTop = messages.scrollHeight;
+            return el;
+        }
+
+        function persistChat() {
+            try { localStorage.setItem('aios-chat-history', JSON.stringify(chatHistory)); } catch (e) {}
+        }
+
+        function restoreChat() {
+            try {
+                chatHistory = JSON.parse(localStorage.getItem('aios-chat-history') || '[]');
+            } catch (e) { chatHistory = []; }
+            for (const h of chatHistory) {
+                if (h.role === 'user') appendMessage('user', '👤 Du', renderMarkdown(h.content));
+                else if (h.role === 'assistant') appendMessage('assistant', '🤖 KI', renderMarkdown(h.content), true, h.content);
+            }
+        }
+
+        function clearChat() {
+            askConfirm('Chat leeren?', 'Der gesamte Chatverlauf wird gelöscht.', () => {
+                chatHistory = [];
+                localStorage.removeItem('aios-chat-history');
+                document.getElementById('chat-messages').innerHTML =
+                    `<div class="message assistant"><div class="role">🤖 System</div><div class="msg-body">Chat geleert. Teile deine nächste Business-Idee!</div></div>`;
+            });
+        }
+
+        function exportChat() {
+            if (!chatHistory.length) { toast('Noch kein Chatverlauf vorhanden.', 'error'); return; }
+            const lines = chatHistory.map(h => (h.role === 'user' ? '## 👤 Du\\n\\n' : '## 🤖 KI\\n\\n') + h.content);
+            const blob = new Blob(['# AI-OS Chat-Export\\n\\n' + lines.join('\\n\\n---\\n\\n')], { type: 'text/markdown' });
+            const a = document.createElement('a');
+            a.download = 'ai-os-chat.md';
+            a.href = URL.createObjectURL(blob);
+            a.click();
+            URL.revokeObjectURL(a.href);
+            toast('Chat als Markdown exportiert.', 'success');
+        }
+
         async function sendMessage() {
             const input = document.getElementById('chat-input');
-            const messages = document.getElementById('chat-messages');
             const model = document.getElementById('model-select').value;
             const text = input.value.trim();
 
@@ -1494,36 +1686,40 @@ TEMPLATE = """
                 return;
             }
 
-            messages.innerHTML += `<div class="message user"><div class="role">👤 Du</div>${escapeHtml(text)}</div>`;
+            appendMessage('user', '👤 Du', renderMarkdown(text));
             input.value = '';
-            messages.scrollTop = messages.scrollHeight;
 
-            const loadingId = 'loading-' + Date.now();
-            messages.innerHTML += `<div class="message assistant" id="${loadingId}"><div class="role">🤖 ${model}</div><div class="thinking"><span></span><span></span><span></span></div></div>`;
-            messages.scrollTop = messages.scrollHeight;
+            const roleLabel = ragMode ? `🧠 ${model} + Wissen` : `🤖 ${model}`;
+            const loadingEl = appendMessage('assistant', roleLabel,
+                '<div class="thinking"><span></span><span></span><span></span></div>');
 
             try {
-                const resp = await fetch('/api/chat', {
+                const endpoint = ragMode ? '/api/rag-chat' : '/api/chat';
+                const resp = await fetch(endpoint, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ model, message: text, history: chatHistory })
                 });
                 const data = await resp.json();
-
-                document.getElementById(loadingId).remove();
+                loadingEl.remove();
 
                 if (data.error) {
-                    messages.innerHTML += `<div class="message assistant"><div class="role">❌ Fehler</div>${escapeHtml(data.error)}</div>`;
+                    appendMessage('assistant', '❌ Fehler', renderMarkdown(data.error));
                 } else {
-                    messages.innerHTML += `<div class="message assistant"><div class="role">🤖 ${model}</div>${escapeHtml(data.response)}</div>`;
-                    chatHistory = data.history;
+                    let body = renderMarkdown(data.response);
+                    if (data.sources && data.sources.length) {
+                        body += `<div class="rag-sources">📎 Quellen: ${data.sources.map(escapeHtml).join(' · ')}</div>`;
+                    }
+                    appendMessage('assistant', roleLabel, body, true, data.response);
+                    chatHistory.push({ role: 'user', content: text });
+                    chatHistory.push({ role: 'assistant', content: data.response });
+                    if (chatHistory.length > 40) chatHistory = chatHistory.slice(-40);
+                    persistChat();
                 }
             } catch (e) {
-                document.getElementById(loadingId).remove();
-                messages.innerHTML += `<div class="message assistant"><div class="role">❌ Fehler</div>Verbindung fehlgeschlagen: ${escapeHtml(e.message)}</div>`;
+                loadingEl.remove();
+                appendMessage('assistant', '❌ Fehler', `Verbindung fehlgeschlagen: ${escapeHtml(e.message)}`);
             }
-
-            messages.scrollTop = messages.scrollHeight;
         }
 
         // === Model Actions ===
@@ -1606,6 +1802,7 @@ TEMPLATE = """
         setupNotepad();
         setupSketch();
         setupSpeechRecognition();
+        restoreChat();
         loadModels();
         loadStats();
         loadServices();
@@ -1848,6 +2045,38 @@ def chat():
         })
     except Exception as e:
         return jsonify({"error": str(e), "response": "", "history": history})
+
+@app.route("/api/rag-chat", methods=["POST"])
+def rag_chat():
+    """Wissensmodus: leitet die Frage an den Gedächtnis/RAG-Dienst (Port 5002, /query) weiter."""
+    data = request.json or {}
+    message = data.get("message", "")
+    model = data.get("model", "llama3")
+    if not message:
+        return jsonify({"error": "Keine Nachricht angegeben"})
+
+    try:
+        payload = json.dumps({"query": message, "model": model}).encode("utf-8")
+        req = urllib.request.Request(
+            "http://127.0.0.1:5002/query",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            result = json.loads(resp.read())
+
+        if result.get("error") and not result.get("answer"):
+            return jsonify({"error": result["error"]})
+
+        return jsonify({
+            "response": result.get("answer", ""),
+            "sources": result.get("sources", [])
+        })
+    except urllib.error.URLError:
+        return jsonify({"error": "Gedächtnis/RAG-Dienst nicht erreichbar (Port 5002). Starte ihn im Dienste-Tab und indiziere ggf. die Wissensdatenbank."})
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 @app.route("/api/pull", methods=["POST"])
 def pull_model():
