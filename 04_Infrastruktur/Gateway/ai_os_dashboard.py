@@ -164,6 +164,23 @@ TEMPLATE = """
             display: flex;
             flex-direction: column;
             padding: 1.25rem 0.9rem;
+            transition: width 0.2s ease, transform 0.2s ease;
+            overflow: hidden;
+        }
+
+        /* Desktop: Hamburger klappt Sidebar auf Icon-Leiste zusammen */
+        .app.sidebar-collapsed .sidebar { width: 68px; padding-left: 0.5rem; padding-right: 0.5rem; }
+        .app.sidebar-collapsed .sidebar .label,
+        .app.sidebar-collapsed .sidebar .nav-badge { display: none; }
+        .app.sidebar-collapsed .nav-item { justify-content: center; }
+        .app.sidebar-collapsed .brand { justify-content: center; padding-left: 0; padding-right: 0; }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 150;
         }
 
         .brand {
@@ -229,7 +246,7 @@ TEMPLATE = """
             flex-shrink: 0;
         }
 
-        .topbar h2 { font-size: 1.2rem; font-weight: 600; }
+        .topbar h2 { font-size: 1.2rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .topbar-actions { display: flex; align-items: center; gap: 0.75rem; }
 
@@ -404,8 +421,40 @@ TEMPLATE = """
 
         .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.75rem; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-icon { padding: 0.6rem 0.75rem; flex-shrink: 0; }
+
+        #mic-btn.recording {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+            animation: pulse 1s infinite;
+        }
+
+        .hamburger-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 1.05rem;
+        }
+        .hamburger-btn:hover { border-color: var(--accent); color: var(--accent); }
 
         /* ===== Chat ===== */
+        .chat-layout {
+            display: flex;
+            gap: 1.25rem;
+            height: calc(100vh - 220px);
+        }
+
+        .chat-layout .chat-section { flex: 1; min-width: 0; height: 100%; }
+
         .chat-section {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -413,7 +462,6 @@ TEMPLATE = """
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 220px);
         }
 
         .chat-header {
@@ -483,6 +531,88 @@ TEMPLATE = """
             padding: 0.4rem 0.7rem;
             font-size: 0.83rem;
         }
+
+        /* ===== Ideen-Panel (Notizzettel + Skizze) ===== */
+        .idea-panel {
+            width: 320px;
+            flex-shrink: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .idea-panel-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+
+        .idea-tab {
+            flex: 1;
+            padding: 0.75rem 0.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .idea-tab:hover { color: var(--text-primary); }
+        .idea-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+        .idea-tab-panel { display: none; flex: 1; flex-direction: column; padding: 1rem; overflow-y: auto; min-height: 0; }
+        .idea-tab-panel.active { display: flex; }
+
+        #notepad {
+            flex: 1;
+            resize: none;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            padding: 0.75rem;
+            font-size: 0.85rem;
+            font-family: inherit;
+            margin-bottom: 0.75rem;
+            min-height: 160px;
+        }
+        #notepad:focus { outline: none; border-color: var(--accent); }
+
+        .idea-panel-actions { display: flex; gap: 0.5rem; justify-content: space-between; flex-shrink: 0; }
+        .idea-panel-actions .btn { flex: 1; justify-content: center; }
+
+        .sketch-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .sketch-toolbar input[type="color"] {
+            width: 32px; height: 32px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .sketch-toolbar input[type="range"] { width: 80px; }
+
+        #sketch-canvas {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background: #ffffff;
+            border-radius: var(--radius-sm);
+            cursor: crosshair;
+            touch-action: none;
+            flex-shrink: 0;
+        }
+
+        .idea-panel-hint { font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.6rem; line-height: 1.4; }
 
         /* ===== Files ===== */
         .file-system {
@@ -648,10 +778,49 @@ TEMPLATE = """
         .wiki-doc .name { font-size: 0.8rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .wiki-doc .size { font-size: 0.7rem; color: var(--text-secondary); flex-shrink: 0; }
 
+        /* Chat + Ideen-Panel stapeln, sobald es eng wird */
+        @media (max-width: 1150px) {
+            .chat-layout { flex-direction: column; height: auto; }
+            .chat-layout .chat-section { height: 62vh; }
+            .idea-panel { width: 100%; height: 380px; }
+        }
+
+        /* Sidebar wird zur ausklappbaren Drawer-Leiste (Hamburger) */
         @media (max-width: 900px) {
-            .sidebar { width: 72px; }
-            .sidebar .nav-item span.label { display: none; }
-            .brand span.label { display: none; }
+            .sidebar {
+                position: fixed;
+                top: 0; left: 0;
+                height: 100vh;
+                width: 250px !important;
+                padding-left: 0.9rem !important;
+                padding-right: 0.9rem !important;
+                transform: translateX(-100%);
+                z-index: 200;
+                box-shadow: var(--shadow);
+            }
+            .sidebar .label, .sidebar .nav-badge { display: inline-flex !important; }
+            .app.sidebar-collapsed .sidebar .nav-item,
+            .app.sidebar-collapsed .brand { justify-content: flex-start; }
+
+            .app.mobile-nav-open .sidebar { transform: translateX(0); }
+            .app.mobile-nav-open .sidebar-overlay { display: block; }
+
+            .topbar { padding: 0.85rem 1rem; flex-wrap: wrap; row-gap: 0.6rem; }
+            .content { padding: 1.1rem 1rem 2.5rem; }
+
+            .stats-grid, .services-grid, .models-grid, .knowledge-grid, .wiki-doc-grid {
+                grid-template-columns: 1fr;
+            }
+            .layer-band-items { grid-template-columns: 1fr; }
+
+            .message { max-width: 92%; }
+            .chat-layout .chat-section { height: 58vh; }
+            .idea-panel { height: 340px; }
+        }
+
+        @media (max-width: 480px) {
+            .topbar-actions { width: 100%; justify-content: space-between; }
+            .stat-card { padding: 1rem; }
         }
     </style>
 </head>
@@ -674,9 +843,14 @@ TEMPLATE = """
             </div>
         </aside>
 
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeMobileNav()"></div>
+
         <div class="main">
             <div class="topbar">
-                <h2 id="topbar-title">📊 Übersicht</h2>
+                <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
+                    <button class="hamburger-btn" onclick="toggleSidebar()" title="Menü ein-/ausblenden">☰</button>
+                    <h2 id="topbar-title">📊 Übersicht</h2>
+                </div>
                 <div class="topbar-actions">
                     <span class="pill" id="services-summary">Dienste werden geprüft...</span>
                     <button class="btn btn-outline btn-sm" onclick="refreshAll()">🔄 Aktualisieren</button>
@@ -737,21 +911,49 @@ TEMPLATE = """
 
                 <!-- === Chat === -->
                 <section class="tab-panel" id="tab-chat">
-                    <div class="chat-section">
-                        <div class="chat-header">
-                            <span>💬 Unterhaltung mit lokaler KI</span>
-                            <select id="model-select"></select>
-                        </div>
-                        <div class="chat-messages" id="chat-messages">
-                            <div class="message assistant">
-                                <div class="role">🤖 System</div>
-                                Hallo! Ich bin deine lokale KI. Stelle mir eine Frage oder wähle ein Modell aus.
+                    <div class="chat-layout">
+                        <div class="chat-section">
+                            <div class="chat-header">
+                                <span>💬 Unterhaltung mit lokaler KI — teile deine Business-Idee</span>
+                                <select id="model-select"></select>
+                            </div>
+                            <div class="chat-messages" id="chat-messages">
+                                <div class="message assistant">
+                                    <div class="role">🤖 System</div>
+                                    Hallo! Ich bin deine lokale KI. Nutze rechts den Notizzettel oder die Skizze, um deine
+                                    Business-Idee vorzuformulieren, oder sprich sie direkt über das Mikrofon ein.
+                                </div>
+                            </div>
+                            <div class="chat-input-area">
+                                <button class="btn btn-outline btn-icon" id="mic-btn" onclick="toggleMic()" title="Spracheingabe (Mikrofon)">🎤</button>
+                                <textarea class="chat-input" id="chat-input" rows="1" placeholder="Nachricht eingeben oder Mikrofon nutzen..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+                                <button class="btn btn-primary" onclick="sendMessage()">Senden</button>
                             </div>
                         </div>
-                        <div class="chat-input-area">
-                            <textarea class="chat-input" id="chat-input" rows="1" placeholder="Nachricht eingeben..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
-                            <button class="btn btn-primary" onclick="sendMessage()">Senden</button>
-                        </div>
+
+                        <aside class="idea-panel">
+                            <div class="idea-panel-tabs">
+                                <button class="idea-tab active" data-idea-tab="notes" onclick="showIdeaTab('notes')">🗒️ Notizzettel</button>
+                                <button class="idea-tab" data-idea-tab="sketch" onclick="showIdeaTab('sketch')">✏️ Skizze</button>
+                            </div>
+                            <div class="idea-tab-panel active" id="idea-tab-notes">
+                                <textarea id="notepad" placeholder="Sammle hier Stichpunkte zu deiner Business-Idee — Zielgruppe, Problem, Lösung, offene Fragen — bevor du sie als Nachricht formulierst."></textarea>
+                                <div class="idea-panel-actions">
+                                    <button class="btn btn-outline btn-sm" onclick="clearNotepad()">🗑 Leeren</button>
+                                    <button class="btn btn-primary btn-sm" onclick="insertNotepadIntoChat()">➡ In Chat einfügen</button>
+                                </div>
+                            </div>
+                            <div class="idea-tab-panel" id="idea-tab-sketch">
+                                <div class="sketch-toolbar">
+                                    <input type="color" id="sketch-color" value="#4f7cff" title="Farbe">
+                                    <input type="range" id="sketch-size" min="1" max="20" value="3" title="Stiftdicke">
+                                    <button class="btn btn-outline btn-sm" onclick="clearSketch()">🗑 Leeren</button>
+                                    <button class="btn btn-outline btn-sm" onclick="saveSketchAsPng()">💾 PNG</button>
+                                </div>
+                                <canvas id="sketch-canvas" width="480" height="480"></canvas>
+                                <div class="idea-panel-hint">Skizziere Ideen, Skizzen, Flowcharts — bleibt lokal gespeichert, wird nicht automatisch an den Chat gesendet.</div>
+                            </div>
+                        </aside>
                     </div>
                 </section>
 
@@ -844,6 +1046,192 @@ TEMPLATE = """
             document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
             const titles = {overview: '📊 Übersicht', services: '🧩 Dienste', chat: '💬 Chat', models: '📦 Modelle', knowledge: '🧠 Gedächtnis', files: '📂 Dateien', architecture: '🏛️ Architektur'};
             document.getElementById('topbar-title').textContent = titles[tab] || tab;
+            closeMobileNav();
+        }
+
+        // === Hamburger / Sidebar ===
+        function isMobile() { return window.innerWidth <= 900; }
+
+        function toggleSidebar() {
+            const app = document.querySelector('.app');
+            if (isMobile()) {
+                app.classList.toggle('mobile-nav-open');
+            } else {
+                app.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('aios-sidebar-collapsed', app.classList.contains('sidebar-collapsed') ? '1' : '0');
+            }
+        }
+
+        function closeMobileNav() {
+            document.querySelector('.app').classList.remove('mobile-nav-open');
+        }
+
+        function restoreSidebarPreference() {
+            if (!isMobile() && localStorage.getItem('aios-sidebar-collapsed') === '1') {
+                document.querySelector('.app').classList.add('sidebar-collapsed');
+            }
+        }
+
+        // === Ideen-Panel: Notizzettel & Skizze ===
+        function showIdeaTab(tab) {
+            document.querySelectorAll('.idea-tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.idea-tab-panel').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.idea-tab[data-idea-tab="${tab}"]`).classList.add('active');
+            document.getElementById('idea-tab-' + tab).classList.add('active');
+        }
+
+        function setupNotepad() {
+            const pad = document.getElementById('notepad');
+            pad.value = localStorage.getItem('aios-notepad') || '';
+            pad.addEventListener('input', () => localStorage.setItem('aios-notepad', pad.value));
+        }
+
+        function clearNotepad() {
+            const pad = document.getElementById('notepad');
+            pad.value = '';
+            localStorage.removeItem('aios-notepad');
+            pad.focus();
+        }
+
+        function insertNotepadIntoChat() {
+            const text = document.getElementById('notepad').value.trim();
+            if (!text) { toast('Notizzettel ist leer.', 'error'); return; }
+            const input = document.getElementById('chat-input');
+            input.value = (input.value.trim() ? input.value.trim() + '\n\n' : '') + text;
+            input.focus();
+            toast('Notizen in die Nachricht übernommen — jetzt anpassen & senden.', 'success');
+        }
+
+        let sketchCtx = null;
+        let sketchDrawing = false;
+
+        function setupSketch() {
+            const canvas = document.getElementById('sketch-canvas');
+            sketchCtx = canvas.getContext('2d');
+            sketchCtx.lineCap = 'round';
+            sketchCtx.lineJoin = 'round';
+
+            const saved = localStorage.getItem('aios-sketch');
+            if (saved) {
+                const img = new Image();
+                img.onload = () => sketchCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                img.src = saved;
+            }
+
+            function pos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+            }
+
+            function start(e) {
+                sketchDrawing = true;
+                const p = pos(e);
+                sketchCtx.beginPath();
+                sketchCtx.moveTo(p.x, p.y);
+                e.preventDefault();
+            }
+            function move(e) {
+                if (!sketchDrawing) return;
+                const p = pos(e);
+                sketchCtx.strokeStyle = document.getElementById('sketch-color').value;
+                sketchCtx.lineWidth = document.getElementById('sketch-size').value;
+                sketchCtx.lineTo(p.x, p.y);
+                sketchCtx.stroke();
+                e.preventDefault();
+            }
+            function end() {
+                if (!sketchDrawing) return;
+                sketchDrawing = false;
+                try { localStorage.setItem('aios-sketch', canvas.toDataURL()); } catch (e) {}
+            }
+
+            canvas.addEventListener('mousedown', start);
+            canvas.addEventListener('mousemove', move);
+            window.addEventListener('mouseup', end);
+            canvas.addEventListener('touchstart', start, { passive: false });
+            canvas.addEventListener('touchmove', move, { passive: false });
+            canvas.addEventListener('touchend', end);
+        }
+
+        function clearSketch() {
+            const canvas = document.getElementById('sketch-canvas');
+            sketchCtx.clearRect(0, 0, canvas.width, canvas.height);
+            localStorage.removeItem('aios-sketch');
+        }
+
+        function saveSketchAsPng() {
+            const canvas = document.getElementById('sketch-canvas');
+            const a = document.createElement('a');
+            a.download = 'ai-os-skizze.png';
+            a.href = canvas.toDataURL('image/png');
+            a.click();
+            toast('Skizze als PNG gespeichert.', 'success');
+        }
+
+        // === Mikrofon / Spracheingabe ===
+        let recognition = null;
+        let recognizing = false;
+        let micBaseText = '';
+
+        function setupSpeechRecognition() {
+            const micBtn = document.getElementById('mic-btn');
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                micBtn.disabled = true;
+                micBtn.title = 'Spracheingabe wird von diesem Browser nicht unterstützt (z.B. Chrome verwenden)';
+                return;
+            }
+            recognition = new SpeechRecognition();
+            recognition.lang = 'de-DE';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onstart = () => {
+                recognizing = true;
+                micBtn.classList.add('recording');
+                const input = document.getElementById('chat-input');
+                micBaseText = input.value.trim();
+                if (micBaseText) micBaseText += ' ';
+            };
+
+            recognition.onresult = (event) => {
+                let interim = '';
+                let finalChunk = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) finalChunk += transcript + ' ';
+                    else interim += transcript;
+                }
+                if (finalChunk) micBaseText += finalChunk;
+                document.getElementById('chat-input').value = micBaseText + interim;
+            };
+
+            recognition.onerror = (e) => {
+                if (e.error !== 'no-speech' && e.error !== 'aborted') {
+                    toast('Spracheingabe-Fehler: ' + e.error, 'error');
+                }
+                stopMicUi();
+            };
+
+            recognition.onend = () => stopMicUi();
+        }
+
+        function toggleMic() {
+            if (!recognition) return;
+            if (recognizing) {
+                recognition.stop();
+            } else {
+                try { recognition.start(); } catch (e) {}
+            }
+        }
+
+        function stopMicUi() {
+            recognizing = false;
+            document.getElementById('mic-btn').classList.remove('recording');
         }
 
         // === Toasts ===
@@ -1214,6 +1602,10 @@ TEMPLATE = """
         }
 
         // === Init ===
+        restoreSidebarPreference();
+        setupNotepad();
+        setupSketch();
+        setupSpeechRecognition();
         loadModels();
         loadStats();
         loadServices();
