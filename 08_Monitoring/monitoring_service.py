@@ -31,7 +31,11 @@ MONITORED_SERVICES = {
     "gateway": {"host": "127.0.0.1", "port": 5100, "name": "API Gateway"},
     "workflow": {"host": "127.0.0.1", "port": 5200, "name": "Workflow Engine"},
     "agents": {"host": "127.0.0.1", "port": 5300, "name": "Agent System"},
-    "ollama": {"host": "127.0.0.1", "port": 11434, "name": "Ollama"}
+    "ollama": {"host": "127.0.0.1", "port": 11434, "name": "Ollama"},
+    # Spezial-Agenten (05_Agenten/agents/) — Check alle 30s, Alert bei 2x keine Antwort
+    "cal_agent": {"host": "127.0.0.1", "port": 5301, "name": "Cal Scheduling Agent", "interval": 30},
+    "bubble_agent": {"host": "127.0.0.1", "port": 5302, "name": "Bubble No-Code Agent", "interval": 30},
+    "higgsfield_agent": {"host": "127.0.0.1", "port": 5303, "name": "Higgsfield Video Agent", "interval": 30}
 }
 
 
@@ -49,6 +53,8 @@ class MetricsCollector:
         self.traces = deque(maxlen=200)                                # Letzte 200 Traces
         self.collection_active = False
         self.collection_thread = None
+        self.last_checked = {}                                         # Pro-Service-Intervalle
+        self.alerted = set()                                           # Bereits alarmierte Services
     
     def start_collection(self, interval=10):
         """Starte regelmäßige Metrik-Erfassung"""
@@ -80,6 +86,13 @@ class MetricsCollector:
         timestamp = datetime.now().isoformat()
         
         for name, svc in MONITORED_SERVICES.items():
+            # Services mit eigenem Check-Intervall (z.B. Spezial-Agenten: 30s) überspringen,
+            # solange ihr Intervall noch nicht abgelaufen ist
+            interval = svc.get("interval")
+            if interval and time.time() - self.last_checked.get(name, 0) < interval:
+                continue
+            self.last_checked[name] = time.time()
+
             try:
                 start = time.time()
                 req = urllib.request.Request(
@@ -89,19 +102,31 @@ class MetricsCollector:
                 with urllib.request.urlopen(req, timeout=5) as resp:
                     response_time = (time.time() - start) * 1000  # ms
                     status = resp.status
-                
+
                 self.health_history[name].append({
                     "timestamp": timestamp,
                     "status": "up" if status == 200 else "degraded",
                     "response_time_ms": round(response_time, 2)
                 })
-                
+                self.alerted.discard(name)
+
             except Exception as e:
                 self.health_history[name].append({
                     "timestamp": timestamp,
                     "status": "down",
                     "error": str(e)[:100]
                 })
+                self._check_alert(name, svc)
+
+    def _check_alert(self, name, svc):
+        """Alert wenn ein Service 2x hintereinander nicht antwortet (einmalig pro Ausfall)"""
+        history = list(self.health_history[name])
+        if len(history) >= 2 and all(h["status"] == "down" for h in history[-2:]):
+            if name not in self.alerted:
+                self.alerted.add(name)
+                self.add_log("ERROR", "Monitoring",
+                             f"ALERT: {svc['name']} antwortet 2x hintereinander nicht "
+                             f"(Port {svc['port']})")
     
     def add_log(self, level, source, message):
         """Füge einen Log-Eintrag hinzu"""

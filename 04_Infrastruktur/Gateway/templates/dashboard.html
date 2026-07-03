@@ -376,6 +376,20 @@
         .service-card .meta { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
         .service-card .port { font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.02em; }
 
+        /* ===== Agenten-Flotte ===== */
+        .agent-caps { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.6rem; }
+        .agent-caps .pill { font-size: 0.65rem; padding: 0.15rem 0.5rem; }
+        .agent-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.8rem; }
+        .agent-mini-list { margin-top: 0.8rem; font-size: 0.78rem; color: var(--text-secondary); }
+        .agent-mini-list .mini-title { font-weight: 600; margin-bottom: 0.3rem; color: var(--text-primary); }
+        .agent-mini-list .mini-item.muted { color: var(--text-muted); }
+        .fleet-output {
+            background: var(--bg-card, #111827); border: 1px solid var(--border); border-radius: 10px;
+            padding: 1rem; font-size: 0.78rem; font-family: 'JetBrains Mono', monospace;
+            max-height: 320px; overflow: auto; white-space: pre-wrap; margin-top: 0.6rem;
+            color: var(--text-secondary);
+        }
+
         /* ===== Models / Knowledge grids ===== */
         .models-grid, .knowledge-grid {
             display: grid;
@@ -1006,6 +1020,7 @@
                 <button class="nav-item active" data-tab="overview" onclick="showTab('overview')">📊 <span class="label">Übersicht</span></button>
                 <button class="nav-item" data-tab="news" onclick="showTab('news')">📰 <span class="label">KI-News</span></button>
                 <button class="nav-item" data-tab="services" onclick="showTab('services')">🧩 <span class="label">Dienste</span><span class="nav-badge" id="services-badge">-</span></button>
+                <button class="nav-item" data-tab="fleet" onclick="showTab('fleet')">🎯 <span class="label">Agenten</span><span class="nav-badge" id="fleet-badge">-</span></button>
                 <button class="nav-item" data-tab="chat" onclick="showTab('chat')">💬 <span class="label">Chat</span></button>
                 <button class="nav-item" data-tab="models" onclick="showTab('models')">📦 <span class="label">Modelle</span></button>
                 <button class="nav-item" data-tab="knowledge" onclick="showTab('knowledge')">🧠 <span class="label">Gedächtnis</span></button>
@@ -1106,6 +1121,17 @@
                     <div class="services-grid" id="services-grid">
                         <div class="empty-state">Lade Dienste...</div>
                     </div>
+                </section>
+
+                <!-- === Agenten-Flotte === -->
+                <section class="tab-panel" id="tab-fleet">
+                    <div class="section-title">🎯 Agenten-Flotte <span class="muted">— Live-Status aller 10 Agenten</span></div>
+                    <span class="pill" id="fleet-summary">Lade Agenten...</span>
+                    <div class="services-grid" id="fleet-grid" style="margin-top: 1rem;">
+                        <div class="empty-state">Lade Agenten...</div>
+                    </div>
+                    <div class="section-title" style="margin-top: 1.5rem;">📤 Letzte Agent-Antwort</div>
+                    <pre class="fleet-output" id="fleet-output">Noch keine Aktion ausgeführt. Nutze die Quick-Actions auf den Agenten-Karten.</pre>
                 </section>
 
                 <!-- === Chat === -->
@@ -1300,7 +1326,7 @@
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
             document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
-            const titles = {overview: '📊 Übersicht', news: '📰 KI-News', services: '🧩 Dienste', chat: '💬 Chat', models: '📦 Modelle', knowledge: '🧠 Gedächtnis', learning: '🎓 Lernen', files: '📂 Dateien', architecture: '🏛️ Architektur'};
+            const titles = {overview: '📊 Übersicht', news: '📰 KI-News', services: '🧩 Dienste', fleet: '🎯 Agenten', chat: '💬 Chat', models: '📦 Modelle', knowledge: '🧠 Gedächtnis', learning: '🎓 Lernen', files: '📂 Dateien', architecture: '🏛️ Architektur'};
             document.getElementById('topbar-title').textContent = titles[tab] || tab;
             closeMobileNav();
         }
@@ -2154,10 +2180,118 @@
             return div.innerHTML;
         }
 
+        // === Agenten-Flotte ===
+        const AGENT_ACTIONS = {
+            'cal-scheduling-agent': [
+                {label: '📋 Heutige Termine', path: '/agent/list-events', payload: {}},
+                {label: '➕ Termin buchen', path: '/agent/chat', promptText: 'Was soll gebucht werden? (z.B. "Morgen 14 Uhr 30-Min-Call mit Max")', payloadKey: 'message'},
+                {label: '🕐 Verfügbarkeit', path: '/agent/check-availability', payload: {}}
+            ],
+            'bubble-nocode-agent': [
+                {label: '📥 Daten lesen', path: '/agent/fetch-data', promptText: 'Welcher Bubble-Datentyp? (z.B. "kunde")', payloadKey: 'object_type'},
+                {label: '🎨 UI-Spec generieren', path: '/agent/generate-ui-spec', promptText: 'Beschreibe die gewünschte UI (z.B. "CRM-Ansicht mit Name, Email, Status")', payloadKey: 'description'},
+                {label: '⚡ Workflow triggern', path: '/agent/trigger-workflow', promptText: 'Name des Bubble-Workflows', payloadKey: 'workflow_name'}
+            ],
+            'higgsfield-video-agent': [
+                {label: '🎬 Video generieren', path: '/agent/generate-video', promptText: 'Video-Prompt (Text-to-Video)', payloadKey: 'prompt'},
+                {label: '🗓️ Content-Plan', path: '/agent/create-content-plan', promptText: 'Thema (z.B. "5 YouTube Shorts über KI-Agenten")', payloadKey: 'topic'},
+                {label: '📊 Jobs überwachen', path: '/agent/list-videos', method: 'GET'}
+            ]
+        };
+
+        function renderAgentCard(a) {
+            const statusClass = a.online ? 'online' : 'offline';
+            const actions = (AGENT_ACTIONS[a.id] || []).map((act, i) =>
+                `<button class="btn btn-sm" onclick="runAgentAction('${a.id}', ${a.port}, ${i})" ${a.online ? '' : 'disabled'}>${act.label}</button>`
+            ).join('');
+            const caps = (a.capabilities || []).map(c => `<span class="pill">${escapeHtml(c)}</span>`).join('');
+            return `
+                <div class="service-card">
+                    <div class="head">
+                        <span class="icon">${a.type === 'remote' ? '🛰️' : '🤖'}</span>
+                        <span class="name">${escapeHtml(a.name || a.id)}</span>
+                        <span class="status-dot ${statusClass}" title="${a.online ? 'Online' : 'Offline'}"></span>
+                    </div>
+                    <div class="desc">${escapeHtml(a.description || '')}</div>
+                    <div class="meta">
+                        <span class="port">:${a.port}${a.model ? ' · ' + escapeHtml(a.model) : ''} · ${a.type === 'remote' ? 'Microservice' : 'Agent System'}</span>
+                    </div>
+                    ${caps ? `<div class="agent-caps">${caps}</div>` : ''}
+                    ${actions ? `<div class="agent-actions">${actions}</div>` : ''}
+                    ${a.id === 'cal-scheduling-agent' ? '<div class="agent-mini-list" id="cal-mini-list"></div>' : ''}
+                </div>`;
+        }
+
+        async function loadFleet() {
+            try {
+                const resp = await fetch('/api/agents/fleet');
+                const data = await resp.json();
+                document.getElementById('fleet-grid').innerHTML = data.agents.map(renderAgentCard).join('');
+                const badge = document.getElementById('fleet-badge');
+                badge.textContent = `${data.online}/${data.total}`;
+                badge.className = 'nav-badge' + (data.online < data.total ? ' warn' : '');
+                const summary = document.getElementById('fleet-summary');
+                summary.textContent = `${data.online} von ${data.total} Agenten online` +
+                    (data.agent_system_online ? '' : ' — Agent System (:5300) offline');
+                summary.className = 'pill' + (data.online === data.total ? ' ok' : ' warn');
+                loadCalPreview(data.agents);
+            } catch (e) {
+                document.getElementById('fleet-grid').innerHTML =
+                    `<div class="empty-state error">❌ Agenten-Status konnte nicht geladen werden</div>`;
+            }
+        }
+
+        async function runAgentAction(agentId, port, actionIndex) {
+            const act = (AGENT_ACTIONS[agentId] || [])[actionIndex];
+            if (!act) return;
+            const payload = Object.assign({}, act.payload || {});
+            if (act.promptText) {
+                const value = prompt(act.promptText);
+                if (!value) return;
+                payload[act.payloadKey] = value;
+            }
+            const out = document.getElementById('fleet-output');
+            out.textContent = `⏳ ${act.label} läuft...`;
+            try {
+                const resp = await fetch('/api/agents/action', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({port: port, path: act.path, method: act.method || 'POST', payload: payload})
+                });
+                const data = await resp.json();
+                out.textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                out.textContent = '❌ Fehler: ' + e;
+            }
+        }
+
+        async function loadCalPreview(agents) {
+            const el = document.getElementById('cal-mini-list');
+            const cal = agents.find(a => a.id === 'cal-scheduling-agent');
+            if (!el || !cal || !cal.online) return;
+            try {
+                const resp = await fetch('/api/agents/action', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({port: cal.port, path: '/agent/list-events', payload: {limit: 3}})
+                });
+                const data = await resp.json();
+                if (data.success && Array.isArray(data.events) && data.events.length) {
+                    el.innerHTML = '<div class="mini-title">Nächste Termine:</div>' + data.events.slice(0, 3)
+                        .map(ev => `<div class="mini-item">📌 ${escapeHtml(ev.title || ev.start || 'Termin')}</div>`).join('');
+                } else {
+                    el.innerHTML = '<div class="mini-item muted">Keine anstehenden Termine</div>';
+                }
+            } catch (e) {
+                el.innerHTML = '<div class="mini-item muted">Termine nicht abrufbar</div>';
+            }
+        }
+
         function refreshAll() {
             loadModels();
             loadStats();
             loadServices();
+            loadFleet();
             loadKnowledge();
             loadArchitecture();
             toast('Aktualisiert.');
@@ -2178,9 +2312,11 @@
         loadFileTree();
         loadArchitecture();
         loadWikiDocs();
+        loadFleet();
         setInterval(loadModels, 30000);
         setInterval(loadStats, 30000);
         setInterval(loadServices, 15000);
+        setInterval(loadFleet, 20000);
     </script>
 </body>
 </html>

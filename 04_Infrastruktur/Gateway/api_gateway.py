@@ -57,8 +57,41 @@ SERVICES = {
         "host": "127.0.0.1",
         "port": 5400,
         "description": "Observability"
+    },
+    "cal": {
+        "name": "Cal Scheduling Agent",
+        "host": "127.0.0.1",
+        "port": 5301,
+        "description": "Terminmanagement via Cal.com"
+    },
+    "bubble": {
+        "name": "Bubble No-Code Agent",
+        "host": "127.0.0.1",
+        "port": 5302,
+        "description": "Bubble.io Daten & Workflows"
+    },
+    "higgsfield": {
+        "name": "Higgsfield Video Agent",
+        "host": "127.0.0.1",
+        "port": 5303,
+        "description": "KI-Videoproduktion"
     }
 }
+
+# Routing-Präfixe für die Spezial-Agenten: /api/agents/cal/* -> :5301/* usw.
+AGENT_ROUTES = {
+    "/api/agents/cal": "cal",
+    "/api/agents/bubble": "bubble",
+    "/api/agents/higgsfield": "higgsfield"
+}
+
+
+def match_agent_route(path):
+    """Findet den Spezial-Agenten zu einem /api/agents/...-Pfad"""
+    for prefix, service in AGENT_ROUTES.items():
+        if path.startswith(prefix + "/"):
+            return service, path[len(prefix):]
+    return None, None
 
 
 class GatewayHandler(BaseHTTPRequestHandler):
@@ -156,6 +189,16 @@ class GatewayHandler(BaseHTTPRequestHandler):
                 "services": health_status
             }).encode())
         
+        # Spezial-Agenten: /api/agents/cal/* -> :5301/* usw.
+        elif path.startswith("/api/agents/"):
+            service, sub_path = match_agent_route(path)
+            if service:
+                result, status = self._forward_request(service, sub_path)
+            else:
+                result, status = {"error": "Unbekannter Agent"}, 404
+            self._set_headers(status)
+            self.wfile.write(json.dumps(result).encode())
+
         # Route zu spezifischen Services
         elif path.startswith("/dashboard/"):
             result, status = self._forward_request("dashboard", path.replace("/dashboard", ""))
@@ -275,6 +318,16 @@ class GatewayHandler(BaseHTTPRequestHandler):
             self._set_headers(status)
             self.wfile.write(json.dumps(result).encode())
         
+        # Spezial-Agenten: /api/agents/cal/* -> :5301/* usw.
+        elif path.startswith("/api/agents/"):
+            service, sub_path = match_agent_route(path)
+            if service:
+                result, status = self._forward_request(service, sub_path, "POST", data)
+            else:
+                result, status = {"error": "Unbekannter Agent"}, 404
+            self._set_headers(status)
+            self.wfile.write(json.dumps(result).encode())
+
         # Route zu spezifischen Services
         elif path.startswith("/dashboard/"):
             result, status = self._forward_request("dashboard", path.replace("/dashboard", ""), "POST", data)

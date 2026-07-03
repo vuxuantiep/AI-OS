@@ -118,6 +118,9 @@ Verfügbare Agenten:
 - Analysis Agent: Datenanalyse und Reports
 - Planner Agent: Planung und Strategie
 - Memory Agent: Kontext- und Gedächtnisverwaltung
+- Cal Scheduling Agent: Terminbuchung und Kalenderverwaltung (Cal.com)
+- Bubble No-Code Agent: Bubble.io-Daten, Workflows und UI-Specs
+- Higgsfield Video Agent: KI-Videoproduktion und Content-Pläne
 
 Antworte auf Deutsch. Gib einen strukturierten Plan aus."""
 
@@ -245,6 +248,64 @@ class MemoryAgent(BaseAgent):
 Antworte auf Deutsch. Sei präzise."""
 
 
+class RemoteAgent:
+    """Proxy für Spezial-Agenten, die als eigene Microservices laufen
+    (Registry: 05_Agenten/agents/agents.json, z.B. Cal :5301, Bubble :5302, Higgsfield :5303)."""
+
+    def __init__(self, config):
+        self.config = config
+        self.name = config.get("name", config.get("id", "Remote"))
+        self.description = config.get("description", "")
+        self.model = config.get("llm_model", DEFAULT_MODEL)
+        self.port = config.get("port")
+        self.chat_endpoint = config.get("chat_endpoint", "/agent/chat")
+        self.metrics = {"calls": 0, "total_tokens": 0, "errors": 0}
+
+    def is_online(self):
+        """Prüft ob der Microservice erreichbar ist"""
+        try:
+            req = urllib.request.Request(f"http://127.0.0.1:{self.port}/health")
+            with urllib.request.urlopen(req, timeout=2) as resp:
+                return resp.status == 200
+        except Exception:
+            return False
+
+    def execute(self, task, context=None):
+        """Leitet die Aufgabe an den Chat-Endpoint des Microservices weiter"""
+        self.metrics["calls"] += 1
+        try:
+            payload = json.dumps({"message": task, "description": task}).encode("utf-8")
+            req = urllib.request.Request(
+                f"http://127.0.0.1:{self.port}{self.chat_endpoint}",
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=300) as resp:
+                result = json.loads(resp.read())
+            return {"success": result.get("success", True), "response": result, "agent": self.name}
+        except Exception as e:
+            self.metrics["errors"] += 1
+            return {
+                "success": False, "agent": self.name,
+                "error": f"Spezial-Agent nicht erreichbar (Port {self.port}): {e}. "
+                         f"Starten mit: python {self.config.get('script', '')}"
+            }
+
+
+def load_remote_agents():
+    """Lädt die Spezial-Agenten aus der Registry 05_Agenten/agents/agents.json"""
+    registry_path = Path(__file__).parent / "agents" / "agents.json"
+    agents = {}
+    try:
+        for cfg in json.loads(registry_path.read_text(encoding="utf-8")):
+            if cfg.get("status") == "active":
+                agents[cfg["id"]] = RemoteAgent(cfg)
+    except Exception as e:
+        print(f"⚠️ Agent-Registry konnte nicht geladen werden: {e}")
+    return agents
+
+
 # ============================================================
 # Agent System Manager
 # ============================================================
@@ -262,6 +323,8 @@ class AgentSystem:
             "planner": PlannerAgent(),
             "memory": MemoryAgent()
         }
+        # Spezial-Agenten (eigene Microservices) aus der Registry ergänzen
+        self.agents.update(load_remote_agents())
         self.sessions = {}
         self.task_queue = deque()
         self.results_cache = {}
@@ -277,7 +340,10 @@ class AgentSystem:
                 "name": a.name,
                 "description": a.description,
                 "model": a.model,
-                "metrics": a.metrics
+                "metrics": a.metrics,
+                "type": "remote" if isinstance(a, RemoteAgent) else "local",
+                "port": getattr(a, "port", AGENT_PORT),
+                "online": a.is_online() if isinstance(a, RemoteAgent) else True
             }
             for a in self.agents.values()
         ]

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "cal-scheduling-agent",
+    "name": "📅 Cal Scheduling Agent",
+    "description": "Autonomes Terminmanagement via Cal.com — bucht, verwaltet und optimiert Meetings",
+    "port": 5301,
+    "capabilities": ["meeting_booking", "calendar_sync", "availability_check", "natural_language_scheduling"],
+    "llm_model": "llama3",
+    "ollama_endpoint": "http://localhost:11434",
+    "layer": "05_Agenten",
+    "status": "active",
+    "script": "05_Agenten/agents/cal_agent.py",
+    "chat_endpoint": "/agent/chat"
+  },
+  {
+    "id": "bubble-nocode-agent",
+    "name": "🫧 Bubble No-Code Agent",
+    "description": "Brücke zwischen AI-OS und Bubble.io — liest/schreibt Daten, triggert Workflows und generiert UI-Specs",
+    "port": 5302,
+    "capabilities": ["data_crud", "workflow_trigger", "ui_generation", "app_sync"],
+    "llm_model": "llama3",
+    "ollama_endpoint": "http://localhost:11434",
+    "layer": "05_Agenten",
+    "status": "active",
+    "script": "05_Agenten/agents/bubble_agent.py",
+    "chat_endpoint": "/agent/generate-ui-spec"
+  },
+  {
+    "id": "higgsfield-video-agent",
+    "name": "🎬 Higgsfield Video Agent",
+    "description": "KI-Videoproduktion on-demand — generiert cineastische Videos aus Text und Bildern für Content-Pipeline",
+    "port": 5303,
+    "capabilities": ["text_to_video", "image_to_video", "script_writing", "content_planning", "batch_production"],
+    "llm_model": "llama3",
+    "ollama_endpoint": "http://localhost:11434",
+    "layer": "05_Agenten",
+    "status": "active",
+    "script": "05_Agenten/agents/higgsfield_agent.py",
+    "chat_endpoint": "/agent/generate-script"
+  }
+]

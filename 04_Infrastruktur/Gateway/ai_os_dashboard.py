@@ -54,12 +54,24 @@ SERVICES = [
      "desc": "DAG-basierte Aufgaben-Pipelines", "layer": "05_Agenten",
      "script": "05_Agenten/workflow_engine.py", "env_key": "WORKFLOW_PORT"},
     {"key": "agents", "name": "Agent System", "icon": "🤖", "port": 5300,
-     "desc": "7 spezialisierte KI-Agenten", "layer": "05_Agenten",
+     "desc": "10 spezialisierte KI-Agenten", "layer": "05_Agenten",
      "script": "05_Agenten/agent_system.py", "env_key": "AGENT_PORT"},
     {"key": "monitoring", "name": "Monitoring", "icon": "📊", "port": 5400,
      "desc": "Health-Checks, Metriken, Logs", "layer": "08_Monitoring",
      "script": "08_Monitoring/monitoring_service.py", "env_key": "MONITOR_PORT"},
+    {"key": "cal_agent", "name": "Scheduling Agent", "icon": "📅", "port": 5301,
+     "desc": "Terminmanagement via Cal.com + Ollama-Intents", "layer": "05_Agenten",
+     "script": "05_Agenten/agents/cal_agent.py", "env_key": "CAL_AGENT_PORT"},
+    {"key": "bubble_agent", "name": "Bubble No-Code Agent", "icon": "🫧", "port": 5302,
+     "desc": "Bubble.io-Daten, Workflows & UI-Specs", "layer": "05_Agenten",
+     "script": "05_Agenten/agents/bubble_agent.py", "env_key": "BUBBLE_AGENT_PORT"},
+    {"key": "higgsfield_agent", "name": "Video Agent", "icon": "🎬", "port": 5303,
+     "desc": "KI-Videoproduktion & Content-Pipeline (Higgsfield)", "layer": "05_Agenten",
+     "script": "05_Agenten/agents/higgsfield_agent.py", "env_key": "HIGGSFIELD_AGENT_PORT"},
 ]
+
+AGENTS_REGISTRY_PATH = AI_OS_ROOT / "05_Agenten" / "agents" / "agents.json"
+AGENT_ACTION_PORTS = (5300, 5301, 5302, 5303)
 
 KNOWLEDGE_CATEGORIES = [
     {"key": "business", "name": "Business-Knowledge", "icon": "💼", "path": "Business-Knowledge",
@@ -473,6 +485,98 @@ def start_service_route():
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)})
+
+def _fetch_json(url, timeout=3):
+    """Holt JSON von einem lokalen Dienst, None bei Fehler."""
+    try:
+        req = urllib.request.Request(url)
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read())
+    except Exception:
+        return None
+
+
+@app.route("/api/agents/fleet")
+def agents_fleet():
+    """Live-Status der kompletten Agenten-Flotte: 7 lokale (:5300) + 3 Spezial-Agenten."""
+    fleet = []
+
+    # Lokale Agenten vom Agent System (:5300)
+    data = _fetch_json("http://127.0.0.1:5300/agents", timeout=4)
+    agent_system_online = data is not None
+    if data:
+        for a in data.get("agents", []):
+            if a.get("type") == "remote":
+                continue  # Spezial-Agenten unten mit Live-Health ergänzen
+            fleet.append({
+                "id": a["name"].lower(), "name": f"🤖 {a['name']} Agent",
+                "description": a.get("description", ""), "model": a.get("model"),
+                "type": "local", "port": 5300, "online": True,
+                "metrics": a.get("metrics", {}),
+            })
+    else:
+        for name, desc in [("Orchestrator", "Koordiniert alle Agenten"), ("Research", "Recherche"),
+                           ("Code", "Code-Generierung"), ("Writer", "Texte & Doku"),
+                           ("Analysis", "Datenanalyse"), ("Planner", "Planung"),
+                           ("Memory", "Gedächtnisverwaltung")]:
+            fleet.append({"id": name.lower(), "name": f"🤖 {name} Agent", "description": desc,
+                          "type": "local", "port": 5300, "online": False})
+
+    # Spezial-Agenten aus der Registry mit Live-Health-Check
+    try:
+        registry = json.loads(AGENTS_REGISTRY_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        registry = []
+
+    def check(cfg):
+        health = _fetch_json(f"http://127.0.0.1:{cfg['port']}/health", timeout=2)
+        return {
+            "id": cfg.get("id"), "name": cfg.get("name"), "description": cfg.get("description"),
+            "port": cfg.get("port"), "capabilities": cfg.get("capabilities", []),
+            "model": cfg.get("llm_model"), "type": "remote",
+            "online": health is not None, "health": health,
+        }
+
+    if registry:
+        with ThreadPoolExecutor(max_workers=len(registry)) as pool:
+            fleet.extend(pool.map(check, registry))
+
+    return jsonify({
+        "agent_system_online": agent_system_online,
+        "agents": fleet,
+        "total": len(fleet),
+        "online": sum(1 for a in fleet if a.get("online")),
+    })
+
+
+@app.route("/api/agents/action", methods=["POST"])
+def agent_action():
+    """Proxy für Quick-Actions der Agenten-Karten (nur lokale Agent-Ports)."""
+    payload = request.get_json(silent=True) or {}
+    port = int(payload.get("port", 0))
+    path = payload.get("path", "")
+    method = (payload.get("method") or "POST").upper()
+    body = payload.get("payload") or {}
+
+    allowed_path = path.startswith("/agent") or path in ("/health", "/agents", "/chat", "/stats")
+    if port not in AGENT_ACTION_PORTS or not allowed_path or method not in ("GET", "POST"):
+        return jsonify({"error": "Ungültige Agent-Anfrage"}), 400
+
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", method=method)
+        if method == "POST":
+            req.data = json.dumps(body).encode("utf-8")
+            req.add_header("Content-Type", "application/json")
+        with urllib.request.urlopen(req, timeout=300) as resp:
+            return jsonify(json.loads(resp.read()))
+    except urllib.error.HTTPError as e:
+        try:
+            return jsonify(json.loads(e.read())), e.code
+        except Exception:
+            return jsonify({"error": f"HTTP {e.code}: {e.reason}"}), e.code
+    except Exception as e:
+        return jsonify({"error": f"Agent auf Port {port} nicht erreichbar: {e}"}), 503
+
 
 @app.route("/api/knowledge")
 def get_knowledge():

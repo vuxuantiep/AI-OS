@@ -99,7 +99,7 @@ AI-OS als Multi-Agent-System weiterentwickeln, um KI-gestützte Automatisierung 
 - **Dokumentation**: Obsidian, Markdown
 
 ### Im Projekt (KI-Fabrik V2)
-- **Agent System**: 7 spezialisierte KI-Agenten (Orchestrator, Research, Code, Writer, Analysis, Planner, Memory)
+- **Agent System**: 10 spezialisierte KI-Agenten (Orchestrator, Research, Code, Writer, Analysis, Planner, Memory + Cal, Bubble, Higgsfield)
 - **Infrastruktur**: API Gateway (5100), Workflow Engine (5200), Agent System (5300), Monitoring (5400)
 - **Stack**: Flask, Python, JSON Vector Store, RAG Pipeline
 - **Automation**: n8n, Ansible/Semaphore, Traefik, Authentik
@@ -107,7 +107,7 @@ AI-OS als Multi-Agent-System weiterentwickeln, um KI-gestützte Automatisierung 
 ## Persönliche Projekte
 
 ### KI-Fabrik V2 (Aktiv)
-Multi-Agent-System mit Workflow-Engine, RAG-Pipeline und Monitoring. Sieben spezialisierte KI-Agenten, die über Ollama mit lokalen Modellen betrieben werden.
+Multi-Agent-System mit Workflow-Engine, RAG-Pipeline und Monitoring. Zehn spezialisierte KI-Agenten, die über Ollama mit lokalen Modellen betrieben werden.
 
 ### n8n-Lead-Funnel (Aktiv)
 Automatisierte Lead-Generierung mit DMS-Anbindung (Dolibarr). Hybrid-PaaS mit Docker Swarm, Traefik, Authentik IAM und Cloudflare Zero-Trust.

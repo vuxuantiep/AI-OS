@@ -4,7 +4,7 @@ Willkommen in meiner **KI-Fabrik V2** – einem vollständigen Multi-Agent-Syste
 
 ## 🎯 Was ist das?
 
-Die KI-Fabrik V2 ist ein **lokales KI-Betriebssystem** mit 7 spezialisierten Agenten, das auf Ollama aufbaut und volle Kontrolle über deine KI-Workflows gibt.
+Die KI-Fabrik V2 ist ein **lokales KI-Betriebssystem** mit 10 spezialisierten Agenten, das auf Ollama aufbaut und volle Kontrolle über deine KI-Workflows gibt.
 
 ## ⚡ Schnellstart
 

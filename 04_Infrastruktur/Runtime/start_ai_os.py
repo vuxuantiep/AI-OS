@@ -27,6 +27,9 @@ SERVICES = [
     {"name": "Workflow Engine", "script": "05_Agenten/workflow_engine.py", "port": 5200, "env": {"WORKFLOW_PORT": "5200"}},
     {"name": "Agent System", "script": "05_Agenten/agent_system.py", "port": 5300, "env": {"AGENT_PORT": "5300"}},
     {"name": "Monitoring", "script": "08_Monitoring/monitoring_service.py", "port": 5400, "env": {"MONITOR_PORT": "5400"}},
+    {"name": "Cal Agent", "script": "05_Agenten/agents/cal_agent.py", "port": 5301, "env": {"CAL_AGENT_PORT": "5301"}},
+    {"name": "Bubble Agent", "script": "05_Agenten/agents/bubble_agent.py", "port": 5302, "env": {"BUBBLE_AGENT_PORT": "5302"}},
+    {"name": "Higgsfield Agent", "script": "05_Agenten/agents/higgsfield_agent.py", "port": 5303, "env": {"HIGGSFIELD_AGENT_PORT": "5303"}},
 ]
 
 def check_ollama():

@@ -1,0 +1,43 @@
+# AI-OS Docker-Compose — Spezial-Agenten + Ollama
+# Hinweis: Die Kern-Dienste (Dashboard, Gateway, ...) laufen weiterhin nativ
+# über 04_Infrastruktur/Runtime/start_ai_os.py. Dieses Compose-File containerisiert
+# die 3 neuen Spezial-Agenten und Ollama.
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports: ["11434:11434"]
+    volumes:
+      - ollama-data:/root/.ollama
+
+  cal-agent:
+    build: ./05_Agenten/agents
+    command: uvicorn cal_agent:app --host 0.0.0.0 --port 5301
+    ports: ["5301:5301"]
+    env_file: .env
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+    depends_on: [ollama]
+
+  bubble-agent:
+    build: ./05_Agenten/agents
+    command: uvicorn bubble_agent:app --host 0.0.0.0 --port 5302
+    ports: ["5302:5302"]
+    env_file: .env
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+    depends_on: [ollama]
+
+  higgsfield-agent:
+    build: ./05_Agenten/agents
+    command: uvicorn higgsfield_agent:app --host 0.0.0.0 --port 5303
+    ports: ["5303:5303"]
+    env_file: .env
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+    volumes:
+      - ./10_Business/content:/app/ai-os/10_Business/content
+    depends_on: [ollama]
+
+volumes:
+  ollama-data:

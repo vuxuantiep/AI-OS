@@ -3,7 +3,7 @@
 ## Überblick
 Dies ist meine **KI-Fabrik V2** - ein vollständiges Multi-Agent-System mit Workflow-Engine, RAG-Pipeline und Monitoring. Es verbindet:
 - **Ollama** (lokale KI-Modelle) als KI-Engine
-- **7 spezialisierte KI-Agenten** (Orchestrator, Research, Code, Writer, Analysis, Planner, Memory)
+- **10 spezialisierte KI-Agenten** (Orchestrator, Research, Code, Writer, Analysis, Planner, Memory + Cal Scheduling :5301, Bubble No-Code :5302, Higgsfield Video :5303)
 - **Workflow Engine** für DAG-basierte Aufgaben-Pipelines
 - **API Gateway** als zentraler Einstiegspunkt
 - **RAG Pipeline** mit Vektorsuche über die Wissensdatenbank
