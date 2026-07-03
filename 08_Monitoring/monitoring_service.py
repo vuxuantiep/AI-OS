@@ -31,7 +31,8 @@ MONITORED_SERVICES = {
     "gateway": {"host": "127.0.0.1", "port": 5100, "name": "API Gateway"},
     "workflow": {"host": "127.0.0.1", "port": 5200, "name": "Workflow Engine"},
     "agents": {"host": "127.0.0.1", "port": 5300, "name": "Agent System"},
-    "ollama": {"host": "127.0.0.1", "port": 11434, "name": "Ollama"},
+    # Ollama hat keinen /health-Endpoint -> /api/tags als Health-Check nutzen
+    "ollama": {"host": "127.0.0.1", "port": 11434, "name": "Ollama", "path": "/api/tags"},
     # Spezial-Agenten (05_Agenten/agents/) — Check alle 30s, Alert bei 2x keine Antwort
     "cal_agent": {"host": "127.0.0.1", "port": 5301, "name": "Cal Scheduling Agent", "interval": 30},
     "bubble_agent": {"host": "127.0.0.1", "port": 5302, "name": "Bubble No-Code Agent", "interval": 30},
@@ -96,7 +97,7 @@ class MetricsCollector:
             try:
                 start = time.time()
                 req = urllib.request.Request(
-                    f"http://{svc['host']}:{svc['port']}/health",
+                    f"http://{svc['host']}:{svc['port']}{svc.get('path', '/health')}",
                     method="GET"
                 )
                 with urllib.request.urlopen(req, timeout=5) as resp:

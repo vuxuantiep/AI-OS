@@ -446,6 +446,17 @@ def get_stats():
     except Exception as e:
         return jsonify({"files": 0, "memory": "N/A", "os": str(e)})
 
+@app.route("/health")
+def health():
+    """Health-Check für Monitoring (:5400) und API Gateway (:5100)."""
+    return jsonify({
+        "status": "ok",
+        "service": "AI-OS Dashboard",
+        "version": "2.0.0",
+        "timestamp": datetime.now().isoformat(),
+    })
+
+
 @app.route("/api/services")
 def get_services():
     """Prüft parallel den Online-Status aller AI-OS-Dienste (Ebenen-Struktur)."""
