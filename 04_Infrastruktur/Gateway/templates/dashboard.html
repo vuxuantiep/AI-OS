@@ -910,6 +910,22 @@
         .news-item .title { font-weight: 600; font-size: 0.93rem; line-height: 1.4; }
         .news-item .summary { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.3rem; line-height: 1.5; }
 
+        /* ===== Lernender Agent ===== */
+        .personalize-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            user-select: none;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.35rem 0.7rem;
+        }
+        .personalize-toggle:hover { border-color: var(--accent); }
+        .personalize-toggle input { accent-color: var(--accent); }
+
         /* ===== Architektur: Wiki-Dokumente ===== */
         .wiki-doc-grid {
             display: grid;
@@ -993,6 +1009,7 @@
                 <button class="nav-item" data-tab="chat" onclick="showTab('chat')">💬 <span class="label">Chat</span></button>
                 <button class="nav-item" data-tab="models" onclick="showTab('models')">📦 <span class="label">Modelle</span></button>
                 <button class="nav-item" data-tab="knowledge" onclick="showTab('knowledge')">🧠 <span class="label">Gedächtnis</span></button>
+                <button class="nav-item" data-tab="learning" onclick="showTab('learning')">🎓 <span class="label">Lernen</span><span class="nav-badge" id="learning-badge" style="display:none;">-</span></button>
                 <button class="nav-item" data-tab="files" onclick="showTab('files')">📂 <span class="label">Dateien</span></button>
                 <button class="nav-item" data-tab="architecture" onclick="showTab('architecture')">🏛️ <span class="label">Architektur</span></button>
             </nav>
@@ -1163,6 +1180,55 @@
                     </div>
                 </section>
 
+                <!-- === Lernen === -->
+                <section class="tab-panel" id="tab-learning">
+                    <div class="news-toolbar">
+                        <div>
+                            <div class="section-title" style="margin-bottom:0.2rem;">🎓 Lernender Agent</div>
+                            <div class="news-meta">Lernt aus deinen Chat-Interaktionen und passt das Dialogsystem an dich an — alles lokal.</div>
+                        </div>
+                        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+                            <label class="personalize-toggle" title="Gelerntes Profil in Chat-Antworten einbeziehen">
+                                <input type="checkbox" id="personalize-check" onchange="togglePersonalize()"> Personalisierung im Chat
+                            </label>
+                            <button class="btn btn-primary btn-sm" id="learn-btn" onclick="runLearning()">🎓 Jetzt lernen</button>
+                            <button class="btn btn-danger btn-sm" onclick="resetLearning()">🗑 Gelerntes löschen</button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid" style="margin-bottom:1.5rem;">
+                        <div class="stat-card">
+                            <div class="stat-icon">📖</div>
+                            <div>
+                                <h3>Interaktionen erfasst</h3>
+                                <div class="stat-value" id="learn-total">-</div>
+                                <div class="stat-detail">im Episodic-Memory</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">✨</div>
+                            <div>
+                                <h3>Neu seit letztem Lernen</h3>
+                                <div class="stat-value" id="learn-new">-</div>
+                                <div class="stat-detail" id="learn-auto-hint">Auto-Lernzyklus alle 10 Interaktionen</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🗄️</div>
+                            <div>
+                                <h3>Letzter Lernzyklus</h3>
+                                <div class="stat-value" id="learn-last" style="font-size:1.05rem;">-</div>
+                                <div class="stat-detail">konsolidiert ins Long-Memory</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="brief-box" id="profile-box">
+                        <div class="brief-title">🧠 Gelerntes Nutzerprofil <span class="muted">(fließt in Chat-Antworten ein)</span></div>
+                        <div class="msg-body" id="profile-content"><span style="color:var(--text-muted);">Noch nichts gelernt — chatte ein wenig und starte dann einen Lernzyklus.</span></div>
+                    </div>
+                </section>
+
                 <!-- === Dateien === -->
                 <section class="tab-panel" id="tab-files">
                     <div class="section-title">📂 Wissensspeicher (00_Wissen)</div>
@@ -1234,7 +1300,7 @@
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
             document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
-            const titles = {overview: '📊 Übersicht', news: '📰 KI-News', services: '🧩 Dienste', chat: '💬 Chat', models: '📦 Modelle', knowledge: '🧠 Gedächtnis', files: '📂 Dateien', architecture: '🏛️ Architektur'};
+            const titles = {overview: '📊 Übersicht', news: '📰 KI-News', services: '🧩 Dienste', chat: '💬 Chat', models: '📦 Modelle', knowledge: '🧠 Gedächtnis', learning: '🎓 Lernen', files: '📂 Dateien', architecture: '🏛️ Architektur'};
             document.getElementById('topbar-title').textContent = titles[tab] || tab;
             closeMobileNav();
         }
@@ -1672,6 +1738,95 @@
             }).join('');
         }
 
+        // === Lernender Agent ===
+        let personalizeEnabled = localStorage.getItem('aios-personalize') !== '0';
+
+        function togglePersonalize() {
+            personalizeEnabled = document.getElementById('personalize-check').checked;
+            localStorage.setItem('aios-personalize', personalizeEnabled ? '1' : '0');
+            toast(personalizeEnabled
+                ? 'Personalisierung an — Chat nutzt das gelernte Profil.'
+                : 'Personalisierung aus — Chat antwortet neutral.');
+        }
+
+        async function loadLearning() {
+            try {
+                const resp = await fetch('/api/learning');
+                const d = await resp.json();
+                document.getElementById('learn-total').textContent = d.interactions_total;
+                document.getElementById('learn-new').textContent = d.new_since_learn;
+                document.getElementById('learn-last').textContent = d.last_learned_at ? d.last_learned_at.replace('T', ' ') : 'noch nie';
+                document.getElementById('learn-auto-hint').textContent = `Auto-Lernzyklus alle ${d.auto_every} Interaktionen`;
+                document.getElementById('personalize-check').checked = personalizeEnabled;
+
+                const badge = document.getElementById('learning-badge');
+                if (d.new_since_learn > 0) {
+                    badge.style.display = '';
+                    badge.textContent = d.new_since_learn;
+                } else {
+                    badge.style.display = 'none';
+                }
+
+                if (d.profile) {
+                    document.getElementById('profile-content').innerHTML =
+                        renderMarkdown(d.profile.replace(/<!--[\s\S]*?-->/g, '').trim());
+                }
+                if (d.learning_active) {
+                    const btn = document.getElementById('learn-btn');
+                    btn.disabled = true;
+                    btn.textContent = '⏳ Lernt gerade...';
+                    setTimeout(loadLearning, 4000);
+                } else {
+                    const btn = document.getElementById('learn-btn');
+                    btn.disabled = false;
+                    btn.textContent = '🎓 Jetzt lernen';
+                }
+            } catch (e) {}
+        }
+
+        async function runLearning() {
+            const btn = document.getElementById('learn-btn');
+            const model = document.getElementById('model-select').value;
+            if (!model) { toast('Kein Ollama-Modell verfügbar.', 'error'); return; }
+            btn.disabled = true;
+            btn.textContent = '⏳ Lernt...';
+            try {
+                const resp = await fetch('/api/learning/run', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ model })
+                });
+                const d = await resp.json();
+                if (d.error) {
+                    toast(d.error, 'error');
+                } else {
+                    toast(`Gelernt aus ${d.episodes_used} Interaktionen.`, 'success');
+                }
+                loadLearning();
+            } catch (e) {
+                toast('Fehler: ' + e.message, 'error');
+            }
+            btn.disabled = false;
+            btn.textContent = '🎓 Jetzt lernen';
+        }
+
+        function resetLearning() {
+            askConfirm('Gelerntes löschen?', 'Nutzerprofil, Interaktions-Log und Lern-Metadaten werden dauerhaft entfernt.', async () => {
+                try {
+                    const resp = await fetch('/api/learning/reset', { method: 'POST' });
+                    const d = await resp.json();
+                    if (d.success) {
+                        toast('Gelerntes gelöscht.', 'success');
+                        document.getElementById('profile-content').innerHTML =
+                            '<span style="color:var(--text-muted);">Noch nichts gelernt — chatte ein wenig und starte dann einen Lernzyklus.</span>';
+                        loadLearning();
+                    } else {
+                        toast(d.error || 'Löschen fehlgeschlagen.', 'error');
+                    }
+                } catch (e) { toast('Fehler: ' + e.message, 'error'); }
+            });
+        }
+
         // === KI-News ===
         function newsTimeAgo(ts) {
             if (!ts) return '';
@@ -1908,7 +2063,7 @@
                 const resp = await fetch(endpoint, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ model, message: text, history: chatHistory })
+                    body: JSON.stringify({ model, message: text, history: chatHistory, personalize: personalizeEnabled })
                 });
                 const data = await resp.json();
                 loadingEl.remove();
@@ -1925,6 +2080,7 @@
                     chatHistory.push({ role: 'assistant', content: data.response });
                     if (chatHistory.length > 40) chatHistory = chatHistory.slice(-40);
                     persistChat();
+                    loadLearning();
                 }
             } catch (e) {
                 loadingEl.remove();
@@ -2014,6 +2170,7 @@
         setupSpeechRecognition();
         restoreChat();
         loadNews();
+        loadLearning();
         loadModels();
         loadStats();
         loadServices();

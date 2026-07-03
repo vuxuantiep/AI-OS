@@ -240,6 +240,147 @@ def _news_daily_worker():
         time.sleep(3600)
 
 
+# ========== LERNENDER AGENT (Komponente 1 der Drei-Komponenten-Architektur) ==========
+# Echtes Lernen durch Gedächtnis-Konsolidierung: Interaktionen -> Episodic-Memory,
+# Lern-Zyklus destilliert daraus per lokalem Modell ein Nutzerprofil -> Long-Memory,
+# das Dialogsystem injiziert dieses Profil in seine Antworten.
+
+EPISODIC_LOG_PATH = AI_OS_ROOT / "06_Gedächtnis" / "Memory" / "Episodic-Memory" / "chat_log.jsonl"
+PROFILE_PATH = AI_OS_ROOT / "06_Gedächtnis" / "Memory" / "Long-Memory" / "nutzerprofil.md"
+LEARN_META_PATH = AI_OS_ROOT / "06_Gedächtnis" / "Memory" / "Long-Memory" / "learn_meta.json"
+LEARN_EVERY_N = 10          # Auto-Lernzyklus nach so vielen neuen Interaktionen
+LEARN_WINDOW = 50           # so viele jüngste Interaktionen fließen in einen Zyklus ein
+_learn_lock = threading.Lock()
+_learning_active = threading.Event()
+
+
+def log_interaction(question, answer, mode="chat"):
+    """Protokolliert eine Dialog-Interaktion ins Episodic-Memory (JSONL, append-only)."""
+    entry = {
+        "ts": datetime.now().isoformat(timespec="seconds"),
+        "mode": mode,
+        "question": question[:500],
+        "answer": (answer or "")[:500],
+    }
+    try:
+        with _learn_lock:
+            EPISODIC_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with open(EPISODIC_LOG_PATH, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        return
+    # Auto-Lernen: nach LEARN_EVERY_N neuen Interaktionen im Hintergrund konsolidieren
+    try:
+        meta = load_learn_meta()
+        if count_interactions() - meta.get("learned_count", 0) >= LEARN_EVERY_N:
+            threading.Thread(target=run_learning_cycle, args=("llama3",), daemon=True).start()
+    except Exception:
+        pass
+
+
+def count_interactions():
+    try:
+        with open(EPISODIC_LOG_PATH, encoding="utf-8") as f:
+            return sum(1 for line in f if line.strip())
+    except Exception:
+        return 0
+
+
+def load_learn_meta():
+    try:
+        return json.loads(LEARN_META_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def load_profile():
+    try:
+        return PROFILE_PATH.read_text(encoding="utf-8")
+    except Exception:
+        return ""
+
+
+def recent_interactions(n=LEARN_WINDOW):
+    try:
+        with open(EPISODIC_LOG_PATH, encoding="utf-8") as f:
+            lines = [line for line in f if line.strip()]
+        return [json.loads(line) for line in lines[-n:]]
+    except Exception:
+        return []
+
+
+def run_learning_cycle(model="llama3"):
+    """Konsolidiert jüngste Interaktionen + bisheriges Profil zu einem aktualisierten Nutzerprofil."""
+    if _learning_active.is_set():
+        return {"error": "Ein Lernzyklus läuft bereits."}
+    _learning_active.set()
+    try:
+        episodes = recent_interactions()
+        if not episodes:
+            return {"error": "Noch keine Interaktionen im Episodic-Memory."}
+
+        old_profile = load_profile() or "(noch leer)"
+        episode_text = "\n".join(
+            f"- [{e['ts']}] Frage: {e['question'][:180]}" for e in episodes
+        )
+        prompt = (
+            "Du bist der Lern-Agent eines lokalen AI-OS. Aktualisiere das Nutzerprofil auf Basis "
+            "der jüngsten Interaktionen. Das Profil hilft dem Dialogsystem, künftig passender zu "
+            "antworten.\n\n"
+            f"Bisheriges Profil:\n{old_profile[:1500]}\n\n"
+            f"Jüngste Interaktionen (nur Fragen des Nutzers):\n{episode_text}\n\n"
+            "Schreibe das aktualisierte Profil als kompaktes Markdown mit genau diesen Abschnitten:\n"
+            "## Interessen & Themen\n## Aktuelle Projekte\n## Kommunikations-Vorlieben\n"
+            "## Wiederkehrende Fragen\n"
+            "Maximal 20 Zeilen gesamt. Nur belegbare Beobachtungen aus den Interaktionen, "
+            "keine Erfindungen. Antworte nur mit dem Profil, auf Deutsch."
+        )
+
+        payload = json.dumps({
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "stream": False,
+            "options": {"temperature": 0.3, "num_predict": 600},
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/api/chat",
+            data=payload, headers={"Content-Type": "application/json"}, method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=180) as resp:
+            result = json.loads(resp.read())
+        profile = result.get("message", {}).get("content", "").strip()
+        if not profile:
+            return {"error": "Modell lieferte kein Profil."}
+
+        stamp = datetime.now().isoformat(timespec="minutes")
+        with _learn_lock:
+            PROFILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+            PROFILE_PATH.write_text(
+                f"<!-- Automatisch gelernt am {stamp} aus {len(episodes)} Interaktionen -->\n{profile}\n",
+                encoding="utf-8")
+            LEARN_META_PATH.write_text(json.dumps({
+                "learned_count": count_interactions(),
+                "last_learned_at": stamp,
+                "model": model,
+            }), encoding="utf-8")
+        return {"profile": profile, "episodes_used": len(episodes), "learned_at": stamp}
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        _learning_active.clear()
+
+
+def personalization_prompt():
+    """Liefert den Profil-Zusatz für den System-Prompt des Dialogsystems (leer, wenn nichts gelernt)."""
+    profile = load_profile()
+    if not profile:
+        return ""
+    return (
+        "\n\nWas du bisher über diesen Nutzer gelernt hast (nutze es, um passender zu antworten, "
+        f"aber erwähne das Profil nicht ungefragt):\n{profile[:1200]}"
+    )
+
+
 # ========== API ROUTES ==========
 
 @app.route("/")
@@ -432,7 +573,12 @@ def chat():
     if len(history) > 20:
         history = history[-20:]
 
-    messages = [{"role": "system", "content": "Du bist ein hilfreicher Assistent. Du bist Teil des AI-OS (AI Operating System), einem lokalen KI-Betriebssystem. Antworte auf Deutsch."}]
+    system = ("Du bist ein hilfreicher Assistent. Du bist Teil des AI-OS (AI Operating System), "
+              "einem lokalen KI-Betriebssystem. Antworte auf Deutsch.")
+    if data.get("personalize", True):
+        system += personalization_prompt()
+
+    messages = [{"role": "system", "content": system}]
     for h in history:
         messages.append(h)
     messages.append({"role": "user", "content": message})
@@ -461,6 +607,8 @@ def chat():
 
         history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": response})
+
+        log_interaction(message, response, mode="chat")
 
         return jsonify({
             "response": response,
@@ -492,6 +640,8 @@ def rag_chat():
         if result.get("error") and not result.get("answer"):
             return jsonify({"error": result["error"]})
 
+        log_interaction(message, result.get("answer", ""), mode="rag")
+
         return jsonify({
             "response": result.get("answer", ""),
             "sources": result.get("sources", [])
@@ -500,6 +650,39 @@ def rag_chat():
         return jsonify({"error": "Gedächtnis/RAG-Dienst nicht erreichbar (Port 5002). Starte ihn im Dienste-Tab und indiziere ggf. die Wissensdatenbank."})
     except Exception as e:
         return jsonify({"error": str(e)})
+
+@app.route("/api/learning")
+def get_learning():
+    """Status des Lern-Agenten: Profil, Interaktions-Zähler, letzter Lernzyklus."""
+    meta = load_learn_meta()
+    total = count_interactions()
+    return jsonify({
+        "profile": load_profile(),
+        "interactions_total": total,
+        "new_since_learn": max(0, total - meta.get("learned_count", 0)),
+        "last_learned_at": meta.get("last_learned_at"),
+        "learning_active": _learning_active.is_set(),
+        "auto_every": LEARN_EVERY_N,
+    })
+
+@app.route("/api/learning/run", methods=["POST"])
+def learning_run():
+    """Startet einen Lernzyklus manuell (blockierend, liefert das neue Profil)."""
+    model = (request.json or {}).get("model", "llama3")
+    return jsonify(run_learning_cycle(model))
+
+@app.route("/api/learning/reset", methods=["POST"])
+def learning_reset():
+    """Löscht Gelerntes: Nutzerprofil, Episodic-Log und Lern-Metadaten."""
+    with _learn_lock:
+        for p in (PROFILE_PATH, EPISODIC_LOG_PATH, LEARN_META_PATH):
+            try:
+                p.unlink()
+            except FileNotFoundError:
+                pass
+            except Exception as e:
+                return jsonify({"error": str(e)})
+    return jsonify({"success": True})
 
 @app.route("/api/news")
 def get_news():

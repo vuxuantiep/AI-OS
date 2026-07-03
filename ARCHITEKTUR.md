@@ -16,7 +16,7 @@ getrennte Business-Ordner ohne gemeinsamen Oberbegriff.
 ## Vorgeschlagene Struktur
 
 ```
-AI-OS/
+AI-OS/                    KI-Fabrik - Multi-Agent System
 ├── 00_Wissen/            Obsidian Vault — Rohwissen, Notizen (unverändert)
 ├── 01_Verbindungen/      APIs, CLI, MCP-Client-Configs (unverändert)
 ├── 02_Fähigkeiten/       Skills (unverändert)

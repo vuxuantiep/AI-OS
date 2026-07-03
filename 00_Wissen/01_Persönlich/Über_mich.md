@@ -9,12 +9,12 @@
 - **Telefon**: +49 178 186 8683
 
 ## Berufliches
-- **Rolle/Beruf**: IT System- & Applikationsmanager
+- **Rolle/Beruf**: Unternehmer(Inhaber des AI-OS), IT System- & Applikationsmanager
 - **Kernkompetenz**: System- und Architekturverständnis, Schnittstelle zwischen Fachbereich und IT (Betrieb & Entwicklung), Lösungsorientierung bei komplexen IT-Systemen, Integration von Cloud- und KI-Technologien
 - **Aktuelle Tätigkeit**: Adesso SE, Hamburg & DVZ GmbH, Schwerin (10/2023 – 06/2026)
 
 ## Meine Ziele
-
+AI-OS als Multi-Agent-System weiterentwickeln, um KI-gestützte Automatisierung in Unternehmen zu ermöglichen. Fokus auf RAG-Pipeline, Workflow-Engine und Agenten-Orchestrierung.
 ### Kurzfristig (3-6 Monate)
 1. KI-Fabrik V2 als vollwertiges Multi-Agent-System produktiv betreiben
 2. n8n-Lead-Funnel mit DMS-Integration (Dolibarr) abschließen

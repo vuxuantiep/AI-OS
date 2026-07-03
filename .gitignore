@@ -57,3 +57,6 @@ venv/
 .claude/
 # Generierte Tages-Daten
 06_Gedächtnis/Memory/Short-Memory/news_cache.json
+06_Gedächtnis/Memory/Episodic-Memory/chat_log.jsonl
+06_Gedächtnis/Memory/Long-Memory/nutzerprofil.md
+06_Gedächtnis/Memory/Long-Memory/learn_meta.json
