@@ -85,18 +85,22 @@ def _clean_secret(value):
     return "" if (not value or " " in value or value.startswith("HIER-EINTRAGEN")) else value
 
 
+# Einige Anbieter (z.B. HuggingFace) blockieren den Standard-UA "Python-urllib" mit 403
+USER_AGENT = "AI-OS-Dashboard/1.0"
+
+
 def _post_json(url, payload, headers=None, timeout=180):
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
         url, data=data,
-        headers={"Content-Type": "application/json", **(headers or {})},
+        headers={"Content-Type": "application/json", "User-Agent": USER_AGENT, **(headers or {})},
         method="POST")
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read())
 
 
 def _get_json(url, headers=None, timeout=6):
-    req = urllib.request.Request(url, headers=headers or {})
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **(headers or {})})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read())
 
