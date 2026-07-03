@@ -1408,7 +1408,7 @@
                     <div style="background:linear-gradient(135deg,var(--bg-card),var(--bg-tertiary));border:1px solid var(--accent);border-radius:var(--radius);padding:1.5rem;position:relative;overflow:hidden;margin-top:1.5rem;">
                         <div style="position:absolute;top:-20px;right:-20px;width:150px;height:150px;background:radial-gradient(circle,var(--accent-soft) 0%,transparent 70%);opacity:0.4;animation:float 6s ease-in-out infinite;"></div>
                         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;position:relative;z-index:1;">
-                            <div class="section-title" style="margin:0;">🏭 KI-Fabrik — Live <span class="muted">— CEO beauftragt den CTO-Agenten</span></div>
+                            <div class="section-title" style="margin:0;">🏭 KI-Fabrik — Live <span class="muted">— Scrum: CEO = Product Owner, CTO = Scrum Master, Agenten = Dev-Team</span></div>
                             <div style="display:flex;gap:0.4rem;">
                                 <span class="pill" id="factory-cto-status" style="font-size:0.65rem;">🧑‍💼 CTO: prüfe…</span>
                                 <span class="pill" id="factory-agents-status" style="font-size:0.65rem;">🤖 Agent-System: prüfe…</span>
@@ -1420,7 +1420,7 @@
                                 <div id="factory-3d-container" style="width:100%;aspect-ratio:4/3;background:var(--bg-primary);border-radius:var(--radius-sm);position:relative;overflow:hidden;cursor:grab;border:2px solid var(--border-strong);box-shadow:inset 0 0 30px rgba(91,156,245,0.1);">
                                     <canvas id="factory-3d-canvas" style="width:100%;height:100%;display:block;"></canvas>
                                     <div id="factory-3d-banner" style="position:absolute;top:0.6rem;left:50%;transform:translateX(-50%);font-size:0.72rem;color:var(--text-primary);pointer-events:none;background:rgba(0,0,0,0.55);padding:0.35rem 0.9rem;border-radius:12px;border:1px solid rgba(91,156,245,0.4);white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;">Fabrik im Leerlauf — sende eine Idee an den CTO</div>
-                                    <div style="position:absolute;bottom:0.5rem;left:50%;transform:translateX(-50%);font-size:0.7rem;color:var(--text-secondary);pointer-events:none;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.7),transparent);padding:0.4rem 1rem;border-radius:12px;white-space:nowrap;">🖱️ Ziehen = Drehen | Scrollen = Zoom</div>
+                                    <div style="position:absolute;bottom:0.5rem;left:50%;transform:translateX(-50%);font-size:0.7rem;color:var(--text-secondary);pointer-events:none;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.7),transparent);padding:0.4rem 1rem;border-radius:12px;white-space:nowrap;">🖱️ Ziehen = Drehen | Scrollen = Zoom | Doppelklick = CEO-Blick</div>
                                 </div>
                                 <div style="display:flex;gap:0.4rem;margin-top:0.75rem;justify-content:center;flex-wrap:wrap;">
                                     <span class="pill" style="font-size:0.65rem;">👔 CEO-Büro</span>
@@ -2834,17 +2834,20 @@
 
             // Fabrik-Stationen als Produktionslinie im Raum (x rechts, y hoch, z Tiefe)
             const stations = [
-                { id: 'ceo',      label: 'CEO-Büro',     icon: '👔',   x: -168, z: 55,  h: 42, color: '#a78bfa' },
-                { id: 'cto',      label: 'CTO-Agent',    icon: '🧑‍💼', x: -120, z: -45, h: 42, color: '#5b9cf5' },
+                { id: 'ceo',      label: 'CEO (Product Owner)', icon: '👔',   x: -168, z: 55,  h: 42, color: '#a78bfa' },
+                { id: 'cto',      label: 'CTO (Scrum Master)',  icon: '🧑‍💼', x: -120, z: -45, h: 42, color: '#5b9cf5' },
                 { id: 'planner',  label: 'Planung',      icon: '📋',   x: -72,  z: 55,  h: 23, color: '#22d3ee' },
-                { id: 'dev',      label: 'Entwicklung',  icon: '⚙️',   x: -24,  z: -45, h: 24, color: '#34d399' },
+                { id: 'dev',      label: 'Dev-Team',     icon: '⚙️',   x: -24,  z: -45, h: 24, color: '#34d399' },
                 { id: 'lab',      label: 'Testlabor',    icon: '🔬',   x: 24,   z: 55,  h: 22, color: '#38bdf8' },
                 { id: 'test',     label: 'Qualität',     icon: '🧪',   x: 72,   z: -45, h: 30, color: '#fbbf24' },
                 { id: 'approval', label: 'CEO-Abnahme',  icon: '🤝',   x: 120,  z: 55,  h: 42, color: '#e879f9' },
                 { id: 'deploy',   label: 'Auslieferung', icon: '🚀',   x: 168,  z: -45, h: 29, color: '#f87171' }
             ];
 
-            let rotY = -0.35, rotX = 0.62, zoom = 1;
+            // CEO-Vogelperspektive: Kamera schaut aus der Ecke ~30° nach unten auf die Produktionslinie.
+            // rotX ist so begrenzt, dass der Boden IMMER unten bleibt (kein Kippen unter die Halle).
+            const CEO_VIEW = { rotY: -0.785, rotX: 0.52, zoom: 1 };
+            let rotY = CEO_VIEW.rotY, rotX = CEO_VIEW.rotX, zoom = CEO_VIEW.zoom;
             let isDragging = false, lastMouse = { x: 0, y: 0 };
 
             function project(x, y, z) {
@@ -3093,6 +3096,24 @@
                     ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
                 }
 
+                // Kreislauf: Rückführung von der Auslieferung zurück zum Scrum Master (CTO)
+                // für Folge-Sprints / neue Versionen — als dezenter, langsam laufender Pfad
+                const loopWorld = [[168, -45], [200, -100], [-200, -100], [-120, -45]];
+                const loopPts = loopWorld.map(c => project(c[0], 2, c[1]));
+                ctx.strokeStyle = 'rgba(167,139,250,0.35)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 10]);
+                ctx.lineDashOffset = time * 18;
+                ctx.beginPath();
+                loopPts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+                ctx.stroke();
+                ctx.setLineDash([]);
+                const loopMid = project(0, 2, -100);
+                ctx.fillStyle = 'rgba(167,139,250,0.75)';
+                ctx.font = `${Math.max(9, 11 * loopMid.s)}px Inter`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText('🔁 Kreislauf: nächster Sprint / neue Version', loopMid.x, loopMid.y);
+
                 // Fließband entlang der Produktionslinie
                 const beltPts = stations.map(st => project(st.x, 2, st.z));
                 ctx.strokeStyle = 'rgba(120,130,150,0.5)';
@@ -3161,10 +3182,14 @@
                 if (!isDragging) return;
                 rotY += (e.clientX - lastMouse.x) * 0.008;
                 rotX += (e.clientY - lastMouse.y) * 0.008;
-                rotX = Math.max(0.15, Math.min(1.35, rotX));
+                // Blick bleibt immer von oben (ca. 20°-60° nach unten) — Boden bleibt Boden
+                rotX = Math.max(0.35, Math.min(1.05, rotX));
                 lastMouse = { x: e.clientX, y: e.clientY };
             });
             window.addEventListener('mouseup', () => isDragging = false);
+            canvas.addEventListener('dblclick', () => {
+                rotY = CEO_VIEW.rotY; rotX = CEO_VIEW.rotX; zoom = CEO_VIEW.zoom;
+            });
 
             draw();
             return true;
@@ -3333,15 +3358,19 @@
                     ? `<div style="font-size:0.7rem;margin-top:0.3rem;"><a href="${order.prototype_file}" target="_blank" style="color:var(--accent);">🔬 Prototyp-Testumgebung öffnen</a></div>` : '';
                 const deleteHtml = order.status !== 'processing'
                     ? `<button class="btn btn-outline btn-sm" onclick="deleteFactoryOrder('${order.id}')" style="padding:0.1rem 0.4rem;font-size:0.7rem;">🗑</button>` : '';
+                const reviseHtml = ['completed', 'rejected', 'error'].includes(order.status)
+                    ? `<button class="btn btn-outline btn-sm" onclick="reviseFactoryOrder('${order.id}', this)" style="width:100%;justify-content:center;margin-top:0.4rem;font-size:0.72rem;border-color:#a78bfa;color:#a78bfa;">🔁 Folge-Sprint: Version v${(order.version || 1) + 1} beauftragen</button>` : '';
+                const reworkPill = order.rework_count
+                    ? `<span title="QA nicht bestanden — Konzept wurde in einer Schleife nachgebessert" style="font-size:0.62rem;background:var(--warning);color:#000;padding:0.1rem 0.4rem;border-radius:8px;">🔁 QA-Schleife</span>` : '';
                 return `
                 <div style="background:var(--bg-card);padding:0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:0.5rem;border-left:3px solid ${info.color};">
                     <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
-                        <div style="font-weight:600;font-size:0.85rem;">${escapeHtml(order.idea.name)}</div>
+                        <div style="font-weight:600;font-size:0.85rem;">${escapeHtml(order.idea.name)} <span style="font-size:0.68rem;background:var(--accent-soft);color:var(--accent);padding:0.1rem 0.45rem;border-radius:8px;">Sprint v${order.version || 1}</span> ${reworkPill}</div>
                         ${deleteHtml}
                     </div>
-                    <div style="font-size:0.72rem;color:var(--text-secondary);margin:0.25rem 0;">${info.label} · ${new Date(order.created_at).toLocaleString('de-DE')}</div>
+                    <div style="font-size:0.72rem;color:var(--text-secondary);margin:0.25rem 0;">${info.label} · ${new Date(order.created_at).toLocaleString('de-DE')}${order.previous_order ? ' · 🔁 Nachfolger von ' + escapeHtml(order.previous_order) : ''}</div>
                     <div style="display:flex;align-items:center;gap:0.2rem;margin:0.3rem 0;">${stepsHtml}</div>
-                    ${confirmHtml}${errorHtml}${outputsHtml}${approvalDoneHtml}${approvalHtml}${protoLinkHtml}${resultHtml}
+                    ${confirmHtml}${errorHtml}${outputsHtml}${approvalDoneHtml}${approvalHtml}${protoLinkHtml}${resultHtml}${reviseHtml}
                 </div>`;
             }).join('');
             Object.entries(savedComments).forEach(([id, v]) => {
@@ -3372,6 +3401,26 @@
                 pollFactoryOrders(false);
             } catch (e) {
                 toast('Abnahme fehlgeschlagen: ' + e, 'error');
+            } finally {
+                if (btnEl) btnEl.disabled = false;
+            }
+        }
+
+        async function reviseFactoryOrder(orderId, btnEl) {
+            const note = prompt('🔁 Folge-Sprint beauftragen — was soll in der neuen Version anders/besser werden?\n(CEO-Feedback und Retrospektive der Vorversion gehen automatisch mit ins Briefing)') ;
+            if (note === null) return;
+            if (btnEl) { btnEl.disabled = true; btnEl.textContent = '⏳ Starte Folge-Sprint…'; }
+            try {
+                const resp = await fetch('/api/factory/orders/revise', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: orderId, note: note.trim() })
+                });
+                const data = await resp.json();
+                if (data.error) { toast(data.error, 'error'); return; }
+                toast(`🔁 Folge-Sprint gestartet: „${data.order.idea.name}“ v${data.order.version}`, 'success');
+                pollFactoryOrders(false);
+            } catch (e) {
+                toast('Folge-Sprint fehlgeschlagen: ' + e, 'error');
             } finally {
                 if (btnEl) btnEl.disabled = false;
             }

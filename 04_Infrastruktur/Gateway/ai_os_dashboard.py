@@ -400,14 +400,17 @@ FACTORY_RESULTS_DIR = AI_OS_ROOT / "10_Business" / "KI-Fabrik-Auftraege"
 FACTORY_MODEL = "llama3"
 _factory_lock = threading.Lock()
 
+# Scrum-Modell: CEO = Product Owner, CTO = Scrum Master, Agenten = Dev-Team.
+# Jede Auftrags-Version ist ein Sprint; die Retrospektive fließt in den nächsten Sprint ein.
 FACTORY_STEPS = [
-    {"key": "annahme",     "station": "cto",      "label": "CTO-Agent: Auftrag annehmen & bestätigen"},
-    {"key": "analyse",     "station": "planner",  "label": "Planung: Analyse & Umsetzungsplan"},
-    {"key": "entwicklung", "station": "dev",      "label": "Entwicklung: Technisches Konzept"},
-    {"key": "prototyp",    "station": "lab",      "label": "Testlabor: Klickbarer Prototyp als Testumgebung"},
-    {"key": "qualitaet",   "station": "test",     "label": "Qualität: Review & Risiken"},
-    {"key": "abnahme",     "station": "approval", "label": "CEO-Abnahme: Testen & Freigabe durch den CEO (Human in the Loop)"},
-    {"key": "abschluss",   "station": "deploy",   "label": "Auslieferung: Ergebnis-Dokument"},
+    {"key": "annahme",     "station": "cto",      "label": "Sprint-Planung: CTO (Scrum Master) nimmt den Auftrag an"},
+    {"key": "analyse",     "station": "planner",  "label": "Backlog & Umsetzungsplan (Sprint-Planung)"},
+    {"key": "entwicklung", "station": "dev",      "label": "Sprint: Technisches Konzept (Dev-Team)"},
+    {"key": "prototyp",    "station": "lab",      "label": "Sprint-Inkrement: Klickbarer Prototyp als Testumgebung"},
+    {"key": "qualitaet",   "station": "test",     "label": "QA-Review: bestanden / nicht bestanden (max. 1 Nachbesserungs-Schleife)"},
+    {"key": "abnahme",     "station": "approval", "label": "Sprint Review: CEO-Abnahme als Product Owner (Human in the Loop)"},
+    {"key": "abschluss",   "station": "deploy",   "label": "Release: Auslieferung mit Versions-Kennzeichnung"},
+    {"key": "retro",       "station": "cto",      "label": "Retrospektive: Team-Erkenntnisse für den nächsten Sprint"},
 ]
 FACTORY_PROTO_DIR = FACTORY_RESULTS_DIR / "Prototypen"
 
@@ -536,24 +539,39 @@ def _factory_build_prototype(order_id, briefing, concept):
                 "<h2>🧪 Prototyp — KI-Fabrik Testumgebung</h2>"
                 "<p>Das Modell lieferte kein gültiges HTML. Rohausgabe:</p>"
                 f"<pre style=\"white-space:pre-wrap;\">{html_module.escape(text[:6000])}</pre></body></html>")
+    # Versions-Kennzeichnung: Badge mit Sprint-Version fest in den Prototyp einbetten
+    with _factory_lock:
+        _orders = _load_factory_orders()
+    version = next((o.get("version", 1) for o in _orders if o["id"] == order_id), 1)
+    badge = (f'<div style="position:fixed;top:8px;right:8px;z-index:99999;background:rgba(17,17,17,0.85);'
+             f'color:#fff;padding:4px 12px;border-radius:14px;font:600 12px sans-serif;">'
+             f'🏭 Prototyp v{version} · {order_id}</div>')
+    html, n = re.subn(r"<body[^>]*>", lambda m: m.group(0) + badge, html, count=1, flags=re.I)
+    if not n:
+        html = badge + html
     FACTORY_PROTO_DIR.mkdir(parents=True, exist_ok=True)
     (FACTORY_PROTO_DIR / f"{order_id}.html").write_text(html, encoding="utf-8")
     _factory_update_order(order_id, lambda o: o.update(prototype_file=f"/factory/prototype/{order_id}"))
-    summary = (f"Testumgebung bereit: klickbarer Prototyp ({len(html)} Zeichen) unter "
-               f"/factory/prototype/{order_id} — der CEO kann das Produkt vor der Freigabe testen.")
+    summary = (f"Sprint-Inkrement bereit: klickbarer Prototyp v{version} ({len(html)} Zeichen) unter "
+               f"/factory/prototype/{order_id} — der Product Owner (CEO) kann das Produkt vor der Freigabe testen.")
     _factory_set_step(order_id, "prototyp", "done", output=summary, engine=engine)
+
+
+def _idea_key(name):
+    """Normalisierter Schlüssel, um Versionen derselben Idee zu erkennen."""
+    return re.sub(r"\W+", "", str(name)).lower()
 
 
 def _idea_briefing(order):
     idea = order.get("idea", {})
     parts = [
-        f"Produktidee: {idea.get('name', '')}",
+        f"Produktidee: {idea.get('name', '')} (Sprint/Version v{order.get('version', 1)})",
         f"Zielgruppe: {idea.get('target', '')}",
         f"Problem: {idea.get('problem', '')}",
         f"Lösungsansatz: {idea.get('solution', '')}",
     ]
     if order.get("note"):
-        parts.append(f"Zusätzliche Anweisung des CEO: {order['note']}")
+        parts.append(f"Zusätzliche Anweisung des CEO (Product Owner): {order['note']}")
     return "\n".join(parts)
 
 
@@ -604,14 +622,31 @@ def _process_factory_order(order_id):
         # 3b) Testlabor: klickbarer Prototyp als Testumgebung für die CEO-Abnahme
         _factory_build_prototype(order_id, briefing, concept)
 
-        # 4) Qualitätsprüfung
-        _factory_run_step(
-            order_id, "qualitaet", "analysis",
-            "Du bist der ANALYSIS/QA AGENT der KI-Fabrik. Prüfe Konzepte kritisch auf Lücken und Risiken. Antworte auf Deutsch, kurz und strukturiert.",
-            "Prüfe das folgende Konzept kritisch: größte Stärken, Top-3-Risiken, konkrete "
-            "Verbesserungen, Gesamturteil (1 Satz):\n\nBRIEFING:\n" + briefing +
-            "\n\nKONZEPT:\n" + concept[:3000],
-            num_predict=500)
+        # 4) QA-Review mit Kreislauf: fällt die Prüfung durch, geht es EINMAL zurück
+        #    in die Entwicklung (Nachbesserungs-Schleife), dann erneut durch Labor & QA.
+        qa_system = ("Du bist der ANALYSIS/QA AGENT der KI-Fabrik (Scrum-Team). Prüfe Konzepte kritisch "
+                     "auf Lücken und Risiken. Beginne deine Antwort zwingend mit genau einer Zeile "
+                     "'URTEIL: BESTANDEN' oder 'URTEIL: NICHT BESTANDEN'. Antworte auf Deutsch, kurz und strukturiert.")
+        qa_task = ("Prüfe das folgende Konzept kritisch: größte Stärken, Top-3-Risiken, konkrete "
+                   "Verbesserungen, Gesamturteil. Erste Zeile: URTEIL wie vorgegeben.\n\nBRIEFING:\n"
+                   + briefing + "\n\nKONZEPT:\n")
+        review, _ = _factory_run_step(order_id, "qualitaet", "analysis",
+                                      qa_system, qa_task + concept[:3000], num_predict=500)
+
+        if "NICHT BESTANDEN" in review[:80].upper():
+            _factory_update_order(order_id, lambda o: o.update(rework_count=1))
+            concept, _ = _factory_run_step(
+                order_id, "entwicklung", "code",
+                "Du bist der CODE/DEV AGENT der KI-Fabrik (Scrum Dev-Team). Überarbeite dein Konzept "
+                "anhand des QA-Feedbacks. Antworte auf Deutsch in Markdown.",
+                "Nachbesserungs-Schleife: Die QA hat das Konzept NICHT bestanden. Überarbeite es und "
+                "behebe die genannten Punkte.\n\nBRIEFING:\n" + briefing +
+                "\n\nALTES KONZEPT:\n" + concept[:2000] + "\n\nQA-FEEDBACK:\n" + review[:1500],
+                num_predict=900)
+            _factory_build_prototype(order_id, briefing, concept)
+            _factory_run_step(order_id, "qualitaet", "analysis", qa_system,
+                              "ZWEITE PRÜFUNG nach Nachbesserung. " + qa_task + concept[:3000],
+                              num_predict=500)
 
         # 5) Human in the Loop: Fabrik pausiert, bis der CEO die Ergebnisse freigibt.
         #    Die Auslieferung startet erst über /api/factory/orders/approve.
@@ -637,35 +672,64 @@ def _finalize_factory_order(order_id):
     if not order:
         return
     idea_name = order.get("idea", {}).get("name", "Unbenannt")
+    version = order.get("version", 1)
     try:
         _factory_set_step(order_id, "abschluss", "active")
         safe_name = re.sub(r"[^\w\-]+", "_", idea_name)[:40] or "Auftrag"
         FACTORY_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-        result_path = FACTORY_RESULTS_DIR / f"{order_id}_{safe_name}.md"
+        result_path = FACTORY_RESULTS_DIR / f"{order_id}_{safe_name}_v{version}.md"
         approval = order.get("ceo_approval") or {}
-        approval_line = f"- CEO-Abnahme: freigegeben am {approval.get('decided_at', '?')}"
+        approval_line = f"- Sprint Review / CEO-Abnahme: freigegeben am {approval.get('decided_at', '?')}"
         if approval.get("comment"):
             approval_line += f" — Kommentar: {approval['comment']}"
+        rework_line = ("- QA-Kreislauf: 1 Nachbesserungs-Schleife durchlaufen\n"
+                       if order.get("rework_count") else "")
+        prev_line = (f"- Vorgänger-Sprint: {order['previous_order']}\n"
+                     if order.get("previous_order") else "")
         doc = (
-            f"# 🏭 KI-Fabrik Auftrag: {idea_name}\n\n"
+            f"# 🏭 KI-Fabrik Auftrag: {idea_name} — Version v{version}\n\n"
             f"- Auftrags-ID: {order_id}\n"
+            f"- Sprint/Version: v{version}\n"
+            f"{prev_line}"
             f"- Erstellt: {order.get('created_at')}\n"
+            f"{rework_line}"
             f"{approval_line}\n"
-            f"- Abgeschlossen: {datetime.now().isoformat(timespec='seconds')}\n\n"
-            f"## 👔 CEO-Briefing\n\n{_idea_briefing(order)}\n\n"
-            f"## 🧑‍💼 CTO-Bestätigung\n\n{order.get('cto_confirmation') or ''}\n\n"
-            f"## 📋 Analyse & Umsetzungsplan\n\n{_factory_step_output(order, 'analyse')}\n\n"
-            f"## ⚙️ Technisches Konzept\n\n{_factory_step_output(order, 'entwicklung')}\n\n"
-            f"## 🔬 Testlabor / Prototyp\n\n{_factory_step_output(order, 'prototyp')}\n\n"
-            f"## 🧪 Qualitätsprüfung\n\n{_factory_step_output(order, 'qualitaet')}\n\n"
-            f"## 👔 CEO-Abnahme (Human in the Loop)\n\n{_factory_step_output(order, 'abnahme')}\n"
+            f"- Prototyp (Testumgebung): /factory/prototype/{order_id}\n"
+            f"- Release: {datetime.now().isoformat(timespec='seconds')}\n\n"
+            f"## 👔 CEO-Briefing (Product Owner)\n\n{_idea_briefing(order)}\n\n"
+            f"## 🧑‍💼 CTO-Bestätigung (Scrum Master)\n\n{order.get('cto_confirmation') or ''}\n\n"
+            f"## 📋 Backlog & Umsetzungsplan\n\n{_factory_step_output(order, 'analyse')}\n\n"
+            f"## ⚙️ Technisches Konzept (Dev-Team)\n\n{_factory_step_output(order, 'entwicklung')}\n\n"
+            f"## 🔬 Sprint-Inkrement / Prototyp\n\n{_factory_step_output(order, 'prototyp')}\n\n"
+            f"## 🧪 QA-Review\n\n{_factory_step_output(order, 'qualitaet')}\n\n"
+            f"## 👔 Sprint Review / CEO-Abnahme (Human in the Loop)\n\n{_factory_step_output(order, 'abnahme')}\n"
         )
         result_path.write_text(doc, encoding="utf-8")
-        summary = (f"Ergebnis-Dokument abgelegt: 10_Business/KI-Fabrik-Auftraege/{result_path.name}")
+        summary = (f"Release v{version} ausgeliefert: 10_Business/KI-Fabrik-Auftraege/{result_path.name}")
         _factory_set_step(order_id, "abschluss", "done", output=summary, engine="Dashboard")
         _factory_update_order(order_id, lambda o: o.update(
-            status="completed",
             result_file=f"10_Business/KI-Fabrik-Auftraege/{result_path.name}"))
+
+        # Retrospektive (Scrum): Erkenntnisse des Teams fließen in den nächsten Sprint ein
+        try:
+            _factory_set_step(order_id, "retro", "active")
+            retro, retro_engine = _llm_generate(
+                "Du bist der Scrum Master (CTO) der KI-Fabrik und moderierst die Sprint-Retrospektive. "
+                "Antworte auf Deutsch, kompakt in Markdown mit genau diesen Abschnitten: "
+                "## Was lief gut\n## Was verbessern\n## Aktionen für den nächsten Sprint (max. 3)",
+                f"Sprint v{version} für „{idea_name}“ ist released. QA-Review:\n"
+                + _factory_step_output(order, "qualitaet")[:1200]
+                + "\n\nCEO-Feedback bei der Abnahme:\n" + (approval.get("comment") or "(kein Kommentar)")
+                + ("\n\nHinweis: Es gab eine QA-Nachbesserungs-Schleife." if order.get("rework_count") else ""),
+                num_predict=400, temperature=0.4, timeout=240)
+            _factory_set_step(order_id, "retro", "done", output=retro, engine=retro_engine)
+            _factory_update_order(order_id, lambda o: o.update(retro=retro[:3000]))
+            with result_path.open("a", encoding="utf-8") as fh:
+                fh.write(f"\n## 🔁 Retrospektive (für Sprint v{version + 1})\n\n{retro}\n")
+        except Exception as re_err:
+            _factory_set_step(order_id, "retro", "error", output=f"Retrospektive übersprungen: {re_err}")
+
+        _factory_update_order(order_id, lambda o: o.update(status="completed"))
     except Exception as e:
         err = f"Auslieferung fehlgeschlagen: {e}"
         _factory_set_step(order_id, "abschluss", "error", output=err)
@@ -925,6 +989,12 @@ def factory_order_create():
                                  "kein Online-Fallback (OpenRouter/Cloudflare) konfiguriert. "
                                  "Siehe Tab 'KI-Gateway'."}), 503
 
+    order = _factory_create_order(idea, str(data.get("note", ""))[:1000])
+    return jsonify({"order": order})
+
+
+def _factory_create_order(idea, note, previous_order=None):
+    """Legt einen Auftrag (Sprint) an; die Version zählt pro Idee automatisch hoch."""
     now = datetime.now()
     order = {
         "id": f"ord_{now.strftime('%Y%m%d_%H%M%S')}",
@@ -934,7 +1004,11 @@ def factory_order_create():
             "problem": str(idea.get("problem", ""))[:300],
             "solution": str(idea.get("solution", ""))[:2000],
         },
-        "note": str(data.get("note", ""))[:1000],
+        "note": str(note or "")[:2500],
+        "version": 1,
+        "previous_order": previous_order,
+        "rework_count": 0,
+        "retro": None,
         "status": "queued",
         "current_step": "annahme",
         "cto_confirmation": None,
@@ -949,12 +1023,45 @@ def factory_order_create():
     }
     with _factory_lock:
         orders = _load_factory_orders()
+        key = _idea_key(order["idea"]["name"])
+        order["version"] = 1 + max(
+            [o.get("version", 1) for o in orders
+             if _idea_key(o.get("idea", {}).get("name", "")) == key] or [0])
         if order["id"] in {o["id"] for o in orders}:
             order["id"] += f"_{len(orders)}"
         orders.append(order)
         _save_factory_orders(orders)
 
     threading.Thread(target=_process_factory_order, args=(order["id"],), daemon=True).start()
+    return order
+
+
+@app.route("/api/factory/orders/revise", methods=["POST"])
+def factory_order_revise():
+    """Kreislauf: startet den Folge-Sprint (neue Version) mit CEO-Feedback und Retrospektive der Vorversion."""
+    data = request.get_json(silent=True) or {}
+    prev_id = data.get("id", "")
+    extra = str(data.get("note", "")).strip()[:800]
+    with _factory_lock:
+        orders = _load_factory_orders()
+    prev = next((o for o in orders if o["id"] == prev_id), None)
+    if not prev:
+        return jsonify({"error": "Auftrag nicht gefunden."}), 404
+    if prev.get("status") not in ("completed", "rejected", "error"):
+        return jsonify({"error": "Eine neue Version ist erst nach Abschluss oder Ablehnung des Sprints möglich."}), 409
+    if not LLM_ROUTER.any_available():
+        return jsonify({"error": "Kein LLM erreichbar — siehe Tab 'KI-Gateway'."}), 503
+
+    parts = [f"Kreislauf/Folge-Sprint: Neue Version des Auftrags {prev_id} (v{prev.get('version', 1)})."]
+    ceo = prev.get("ceo_approval") or {}
+    if ceo.get("comment"):
+        verdict = "Freigabe" if ceo.get("decision") == "approve" else "Ablehnung"
+        parts.append(f"CEO-Feedback ({verdict} der Vorversion): {ceo['comment']}")
+    if prev.get("retro"):
+        parts.append(f"Retrospektive der Vorversion (umsetzen!):\n{prev['retro'][:1200]}")
+    if extra:
+        parts.append(f"Neue Anweisung des CEO: {extra}")
+    order = _factory_create_order(dict(prev.get("idea") or {}), "\n\n".join(parts), previous_order=prev_id)
     return jsonify({"order": order})
 
 
