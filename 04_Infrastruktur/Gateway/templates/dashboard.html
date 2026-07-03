@@ -1214,9 +1214,11 @@
                             Dafür einmalig API-Keys hinterlegen — <b>niemals im Code</b>, sondern in der nicht
                             versionierten Datei <code>01_Verbindungen/APIs/Geheimnisse/llm_router.json</code>
                             (Vorlage: <code>01_Verbindungen/APIs/llm_router.example.json</code>) oder als
-                            Umgebungsvariablen <code>OPENROUTER_API_KEY</code>, <code>CLOUDFLARE_ACCOUNT_ID</code>,
-                            <code>CLOUDFLARE_API_TOKEN</code>, optional <code>CLOUDFLARE_AI_GATEWAY</code>.
-                            Danach das Dashboard neu starten. Lokale Modellnamen (llama3, mistral,
+                            Umgebungsvariablen <code>OPENROUTER_API_KEY</code>, <code>HUGGINGFACE_API_KEY</code>,
+                            <code>CLOUDFLARE_ACCOUNT_ID</code>, <code>CLOUDFLARE_API_TOKEN</code>,
+                            optional <code>CLOUDFLARE_AI_GATEWAY</code>.
+                            Die Datei wird bei jeder Anfrage neu gelesen — kein Neustart nötig.
+                            Lokale Modellnamen (llama3, mistral,
                             qwen2.5-coder …) werden automatisch auf gleichwertige Online-Modelle abgebildet.
                         </div>
                     </div>
@@ -1919,7 +1921,7 @@
                 document.getElementById('llm-grid').innerHTML =
                     data.providers.map(p => renderLlmProviderCard(p, data.active)).join('');
 
-                const names = {ollama: 'Ollama (lokal)', openrouter: 'OpenRouter', cloudflare: 'Cloudflare'};
+                const names = {ollama: 'Ollama (lokal)', openrouter: 'OpenRouter', huggingface: 'HuggingFace', cloudflare: 'Cloudflare'};
                 const summary = document.getElementById('llm-summary');
                 const badge = document.getElementById('llm-badge');
                 if (data.active) {

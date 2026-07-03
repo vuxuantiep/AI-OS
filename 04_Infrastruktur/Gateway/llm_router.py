@@ -2,16 +2,18 @@
 """
 LLM-Router für das AI-OS Dashboard.
 
-Routet Chat-Anfragen mit automatischem Fallback über drei Provider:
+Routet Chat-Anfragen mit automatischem Fallback über vier Provider:
   1. Ollama (lokal, Port 11434) — bevorzugt, kostenlos, privat
   2. OpenRouter (online, kostenlose Open-Source-Modelle)
-  3. Cloudflare Workers AI (online, optional über AI Gateway)
+  3. HuggingFace Inference (online, Open-Source-Modelle)
+  4. Cloudflare Workers AI (online, optional über AI Gateway)
 
 API-Keys werden NIE im Code gespeichert. Konfiguration über Umgebungsvariablen
 oder die (nicht versionierte) Datei 01_Verbindungen/APIs/Geheimnisse/llm_router.json:
 
     {
       "openrouter_api_key": "sk-or-...",
+      "huggingface_api_key": "hf_...",
       "cloudflare_account_id": "....",
       "cloudflare_api_token": "....",
       "cloudflare_gateway": "optionaler-gateway-name"
@@ -37,26 +39,50 @@ OLLAMA_PORT = 11434
 # Lokale Modellnamen -> gleichwertige Open-Source-Modelle bei den Online-Providern.
 # Unbekannte Modelle fallen auf "default" zurück.
 OPENROUTER_MODEL_MAP = {
-    "default": "meta-llama/llama-3.3-70b-instruct:free",
+    "default": "openai/gpt-oss-120b:free",
     "llama3": "meta-llama/llama-3.3-70b-instruct:free",
     "llama2": "meta-llama/llama-3.3-70b-instruct:free",
-    "mistral": "mistralai/mistral-7b-instruct:free",
-    "deepseek-coder": "qwen/qwen-2.5-coder-32b-instruct:free",
-    "qwen2.5-coder": "qwen/qwen-2.5-coder-32b-instruct:free",
+    "mistral": "openai/gpt-oss-20b:free",
+    "deepseek-coder": "qwen/qwen3-coder:free",
+    "qwen2.5-coder": "qwen/qwen3-coder:free",
+}
+HUGGINGFACE_MODEL_MAP = {
+    "default": "meta-llama/Llama-3.3-70B-Instruct",
+    "llama3": "meta-llama/Llama-3.3-70B-Instruct",
+    "llama2": "meta-llama/Llama-3.3-70B-Instruct",
+    "mistral": "mistralai/Mistral-7B-Instruct-v0.3",
+    "deepseek-coder": "Qwen/Qwen2.5-Coder-32B-Instruct",
+    "qwen2.5-coder": "Qwen/Qwen2.5-Coder-32B-Instruct",
 }
 CLOUDFLARE_MODEL_MAP = {
-    "default": "@cf/meta/llama-3.1-8b-instruct",
-    "llama3": "@cf/meta/llama-3.1-8b-instruct",
-    "llama2": "@cf/meta/llama-3.1-8b-instruct",
-    "mistral": "@cf/mistral/mistral-7b-instruct-v0.1",
+    "default": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "llama3": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "llama2": "@cf/meta/llama-3.1-8b-instruct-fp8",
+    "mistral": "@cf/mistralai/mistral-small-3.1-24b-instruct",
     "deepseek-coder": "@cf/qwen/qwen2.5-coder-32b-instruct",
     "qwen2.5-coder": "@cf/qwen/qwen2.5-coder-32b-instruct",
 }
 
 
+# Weitere kostenlose OpenRouter-Modelle, falls das erste überlastet ist (HTTP 429)
+# Aktuelle Liste: https://openrouter.ai/api/v1/models (IDs mit ":free")
+OPENROUTER_ALTERNATES = [
+    "openai/gpt-oss-120b:free",
+    "qwen/qwen3-next-80b-a3b-instruct:free",
+    "google/gemma-4-31b-it:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+]
+
+
 def _base_model_name(model):
     """'qwen2.5-coder:7b' -> 'qwen2.5-coder'"""
     return (model or "").split(":")[0].strip().lower()
+
+
+def _clean_secret(value):
+    """Platzhalter aus der Vorlage ('HIER-EINTRAGEN: ...') zählen nicht als konfiguriert."""
+    value = (value or "").strip()
+    return "" if (not value or " " in value or value.startswith("HIER-EINTRAGEN")) else value
 
 
 def _post_json(url, payload, headers=None, timeout=180):
@@ -92,10 +118,11 @@ class LLMRouter:
         except Exception:
             pass
         return {
-            "openrouter_api_key": os.environ.get("OPENROUTER_API_KEY") or cfg.get("openrouter_api_key") or "",
-            "cloudflare_account_id": os.environ.get("CLOUDFLARE_ACCOUNT_ID") or cfg.get("cloudflare_account_id") or "",
-            "cloudflare_api_token": os.environ.get("CLOUDFLARE_API_TOKEN") or cfg.get("cloudflare_api_token") or "",
-            "cloudflare_gateway": os.environ.get("CLOUDFLARE_AI_GATEWAY") or cfg.get("cloudflare_gateway") or "",
+            "openrouter_api_key": _clean_secret(os.environ.get("OPENROUTER_API_KEY") or cfg.get("openrouter_api_key")),
+            "huggingface_api_key": _clean_secret(os.environ.get("HUGGINGFACE_API_KEY") or cfg.get("huggingface_api_key")),
+            "cloudflare_account_id": _clean_secret(os.environ.get("CLOUDFLARE_ACCOUNT_ID") or cfg.get("cloudflare_account_id")),
+            "cloudflare_api_token": _clean_secret(os.environ.get("CLOUDFLARE_API_TOKEN") or cfg.get("cloudflare_api_token")),
+            "cloudflare_gateway": _clean_secret(os.environ.get("CLOUDFLARE_AI_GATEWAY") or cfg.get("cloudflare_gateway")),
         }
 
     def _cf_endpoint(self, s):
@@ -138,6 +165,16 @@ class LLMRouter:
             return bool(data.get("data"))
         return self._cached_check("openrouter", 60, check)
 
+    def huggingface_online(self):
+        s = self._secrets()
+        if not s["huggingface_api_key"]:
+            return False
+        def check():
+            data = _get_json("https://huggingface.co/api/whoami-v2",
+                             headers={"Authorization": f"Bearer {s['huggingface_api_key']}"})
+            return bool(data.get("name"))
+        return self._cached_check("huggingface", 60, check)
+
     def cloudflare_online(self):
         s = self._secrets()
         if not (s["cloudflare_account_id"] and s["cloudflare_api_token"]):
@@ -151,7 +188,8 @@ class LLMRouter:
         return self._cached_check("cloudflare", 60, check)
 
     def any_available(self):
-        return self.ollama_online() or self.openrouter_online() or self.cloudflare_online()
+        return (self.ollama_online() or self.openrouter_online()
+                or self.huggingface_online() or self.cloudflare_online())
 
     # ---------- Provider-Aufrufe ----------
 
@@ -202,20 +240,36 @@ class LLMRouter:
                 errors.append(f"Ollama: {e}")
 
         if s["openrouter_api_key"]:
+            # Freie Modelle sind oft überlastet (429) -> mehrere Kandidaten durchprobieren
+            or_model = OPENROUTER_MODEL_MAP.get(base, OPENROUTER_MODEL_MAP["default"])
+            candidates = [or_model] + [m for m in OPENROUTER_ALTERNATES if m != or_model]
+            for candidate in candidates[:3]:
+                try:
+                    # Online-Timeouts kürzer halten als lokale (große lokale Modelle sind langsam)
+                    content, used = self._chat_openai_compatible(
+                        "https://openrouter.ai/api/v1/chat/completions",
+                        s["openrouter_api_key"], messages, candidate,
+                        temperature, num_predict, min(timeout, 120),
+                        extra_headers={"HTTP-Referer": "http://localhost:5000",
+                                       "X-Title": "AI-OS Dashboard"})
+                    self.last_provider = "openrouter"
+                    return {"content": content, "provider": "openrouter",
+                            "provider_label": f"OpenRouter ({used})", "model": used}
+                except Exception as e:
+                    errors.append(f"OpenRouter ({candidate}): {e}")
+
+        if s["huggingface_api_key"]:
             try:
-                or_model = OPENROUTER_MODEL_MAP.get(base, OPENROUTER_MODEL_MAP["default"])
-                # Online-Timeouts kürzer halten als lokale (große lokale Modelle sind langsam)
+                hf_model = HUGGINGFACE_MODEL_MAP.get(base, HUGGINGFACE_MODEL_MAP["default"])
                 content, used = self._chat_openai_compatible(
-                    "https://openrouter.ai/api/v1/chat/completions",
-                    s["openrouter_api_key"], messages, or_model,
-                    temperature, num_predict, min(timeout, 120),
-                    extra_headers={"HTTP-Referer": "http://localhost:5000",
-                                   "X-Title": "AI-OS Dashboard"})
-                self.last_provider = "openrouter"
-                return {"content": content, "provider": "openrouter",
-                        "provider_label": f"OpenRouter ({used})", "model": used}
+                    "https://router.huggingface.co/v1/chat/completions",
+                    s["huggingface_api_key"], messages, hf_model,
+                    temperature, num_predict, min(timeout, 120))
+                self.last_provider = "huggingface"
+                return {"content": content, "provider": "huggingface",
+                        "provider_label": f"HuggingFace ({used})", "model": used}
             except Exception as e:
-                errors.append(f"OpenRouter: {e}")
+                errors.append(f"HuggingFace: {e}")
 
         if s["cloudflare_account_id"] and s["cloudflare_api_token"]:
             try:
@@ -250,12 +304,15 @@ class LLMRouter:
         s = self._secrets()
         ollama = self.ollama_online()
         openrouter_cfg = bool(s["openrouter_api_key"])
+        huggingface_cfg = bool(s["huggingface_api_key"])
         cloudflare_cfg = bool(s["cloudflare_account_id"] and s["cloudflare_api_token"])
         openrouter = self.openrouter_online()
+        huggingface = self.huggingface_online()
         cloudflare = self.cloudflare_online()
 
-        active = "ollama" if ollama else ("openrouter" if openrouter
-                                          else ("cloudflare" if cloudflare else None))
+        active = next((key for key, online in [
+            ("ollama", ollama), ("openrouter", openrouter),
+            ("huggingface", huggingface), ("cloudflare", cloudflare)] if online), None)
         cf_via = "AI Gateway" if s["cloudflare_gateway"] else "Workers AI"
         providers = [
             {"key": "ollama", "name": "Ollama", "icon": "🖥️", "priority": 1,
@@ -267,7 +324,12 @@ class LLMRouter:
              "detail": OPENROUTER_MODEL_MAP["default"] if openrouter_cfg
                        else "API-Key fehlt (OPENROUTER_API_KEY oder Geheimnisse/llm_router.json)",
              "configured": openrouter_cfg, "online": openrouter},
-            {"key": "cloudflare", "name": f"Cloudflare {cf_via}", "icon": "☁️", "priority": 3,
+            {"key": "huggingface", "name": "HuggingFace", "icon": "🤗", "priority": 3,
+             "desc": "Online-Fallback — Open-Source-LLMs via HF Inference Providers",
+             "detail": HUGGINGFACE_MODEL_MAP["default"] if huggingface_cfg
+                       else "API-Key fehlt (HUGGINGFACE_API_KEY oder Geheimnisse/llm_router.json)",
+             "configured": huggingface_cfg, "online": huggingface},
+            {"key": "cloudflare", "name": f"Cloudflare {cf_via}", "icon": "☁️", "priority": 4,
              "desc": "Online-Fallback — Open-Source-LLMs auf Cloudflare Workers AI",
              "detail": CLOUDFLARE_MODEL_MAP["default"] if cloudflare_cfg
                        else "Account-ID + API-Token fehlen (Geheimnisse/llm_router.json)",
