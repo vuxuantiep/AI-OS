@@ -1427,7 +1427,9 @@
                                     <span class="pill" style="font-size:0.65rem;">🧑‍💼 CTO-Agent</span>
                                     <span class="pill" style="font-size:0.65rem;">📋 Planung</span>
                                     <span class="pill" style="font-size:0.65rem;">⚙️ Entwicklung</span>
+                                    <span class="pill" style="font-size:0.65rem;border-color:#38bdf8;">🔬 Testlabor</span>
                                     <span class="pill" style="font-size:0.65rem;">🧪 Qualität</span>
+                                    <span class="pill" style="font-size:0.65rem;border-color:#e879f9;">🤝 CEO-Abnahme</span>
                                     <span class="pill" style="font-size:0.65rem;">🚀 Auslieferung</span>
                                 </div>
                             </div>
@@ -2809,7 +2811,8 @@
         let factorySeenConfirmations = new Set();
         let factoryFirstLoad = true;
         // Live-Zustand, den die 3D-Szene rendert
-        const factoryScene = { activeStation: null, doneStations: [], running: false };
+        const factoryScene = { activeStation: null, doneStations: [], running: false, waiting: false };
+        let factorySeenApprovals = new Set();
 
         function initFactory3D() {
             const canvas = document.getElementById('factory-3d-canvas');
@@ -2831,12 +2834,14 @@
 
             // Fabrik-Stationen als Produktionslinie im Raum (x rechts, y hoch, z Tiefe)
             const stations = [
-                { id: 'ceo',     label: 'CEO-Büro',     icon: '👔',   x: -135, z: 55,  h: 34, color: '#a78bfa' },
-                { id: 'cto',     label: 'CTO-Agent',    icon: '🧑‍💼', x: -80,  z: -45, h: 44, color: '#5b9cf5' },
-                { id: 'planner', label: 'Planung',      icon: '📋',   x: -20,  z: 55,  h: 30, color: '#22d3ee' },
-                { id: 'dev',     label: 'Entwicklung',  icon: '⚙️',   x: 40,   z: -45, h: 38, color: '#34d399' },
-                { id: 'test',    label: 'Qualität',     icon: '🧪',   x: 95,   z: 55,  h: 30, color: '#fbbf24' },
-                { id: 'deploy',  label: 'Auslieferung', icon: '🚀',   x: 145,  z: -45, h: 36, color: '#f87171' }
+                { id: 'ceo',      label: 'CEO-Büro',     icon: '👔',   x: -168, z: 55,  h: 34, color: '#a78bfa' },
+                { id: 'cto',      label: 'CTO-Agent',    icon: '🧑‍💼', x: -120, z: -45, h: 44, color: '#5b9cf5' },
+                { id: 'planner',  label: 'Planung',      icon: '📋',   x: -72,  z: 55,  h: 30, color: '#22d3ee' },
+                { id: 'dev',      label: 'Entwicklung',  icon: '⚙️',   x: -24,  z: -45, h: 38, color: '#34d399' },
+                { id: 'lab',      label: 'Testlabor',    icon: '🔬',   x: 24,   z: 55,  h: 34, color: '#38bdf8' },
+                { id: 'test',     label: 'Qualität',     icon: '🧪',   x: 72,   z: -45, h: 30, color: '#fbbf24' },
+                { id: 'approval', label: 'CEO-Abnahme',  icon: '🤝',   x: 120,  z: 55,  h: 40, color: '#e879f9' },
+                { id: 'deploy',   label: 'Auslieferung', icon: '🚀',   x: 168,  z: -45, h: 36, color: '#f87171' }
             ];
 
             let rotY = -0.35, rotX = 0.62, zoom = 1;
@@ -2866,6 +2871,12 @@
                 const corners = [[-1,-1],[1,-1],[1,1],[-1,1]].map(d => [st.x + d[0]*size, st.z + d[1]*size]);
                 const base = corners.map(c => project(c[0], 0, c[1]));
                 const top = corners.map(c => project(c[0], st.h, c[1]));
+                // Weicher Bodenschatten für räumliche Tiefe
+                const sh = project(st.x, 0, st.z);
+                ctx.fillStyle = 'rgba(0,0,0,0.32)';
+                ctx.beginPath();
+                ctx.ellipse(sh.x, sh.y + 3, 30 * sh.s, 10 * sh.s, 0, 0, Math.PI * 2);
+                ctx.fill();
                 const faces = [];
                 for (let i = 0; i < 4; i++) {
                     const j = (i + 1) % 4;
@@ -2884,22 +2895,26 @@
                     ctx.closePath(); ctx.fill(); ctx.stroke();
                 });
                 const topC = project(st.x, st.h, st.z);
-                // Glüh-Puls an der aktiven Station
+                // Glüh-Puls an der aktiven Station (violett bei wartender CEO-Abnahme, sonst bernstein)
                 if (active) {
-                    const pulse = 1 + 0.25 * Math.sin(time * 5);
-                    const r = 34 * topC.s * pulse;
+                    const humanWait = factoryScene.waiting && st.id === 'approval';
+                    const rgb = humanWait ? '232,121,249' : '251,191,36';
+                    const pulse = 1 + (humanWait ? 0.35 * Math.sin(time * 2.2) : 0.25 * Math.sin(time * 5));
+                    const r = (humanWait ? 42 : 34) * topC.s * pulse;
                     const glow = ctx.createRadialGradient(topC.x, topC.y, 4, topC.x, topC.y, r);
-                    glow.addColorStop(0, 'rgba(251,191,36,0.5)');
-                    glow.addColorStop(1, 'rgba(251,191,36,0)');
+                    glow.addColorStop(0, `rgba(${rgb},0.5)`);
+                    glow.addColorStop(1, `rgba(${rgb},0)`);
                     ctx.fillStyle = glow;
                     ctx.beginPath(); ctx.arc(topC.x, topC.y, r, 0, Math.PI * 2); ctx.fill();
-                    // Funken
-                    for (let i = 0; i < 4; i++) {
-                        ctx.fillStyle = 'rgba(251,191,36,0.85)';
-                        ctx.beginPath();
-                        ctx.arc(topC.x + (Math.random() - 0.5) * 40 * topC.s,
-                                topC.y - Math.random() * 30 * topC.s, 2, 0, Math.PI * 2);
-                        ctx.fill();
+                    // Funken nur bei laufender Maschine — beim Menschen wartet die Fabrik ruhig
+                    if (!humanWait) {
+                        for (let i = 0; i < 4; i++) {
+                            ctx.fillStyle = `rgba(${rgb},0.85)`;
+                            ctx.beginPath();
+                            ctx.arc(topC.x + (Math.random() - 0.5) * 40 * topC.s,
+                                    topC.y - Math.random() * 30 * topC.s, 2, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
                     }
                 }
                 ctx.font = `${Math.max(13, 22 * topC.s)}px Inter`;
@@ -2947,12 +2962,12 @@
                 ctx.stroke();
 
                 const activeIdx = stations.findIndex(s => s.id === factoryScene.activeStation);
-                // Laufende Förderband-Animation bis zur aktiven Station
+                // Laufende Förderband-Animation bis zur aktiven Station (pausiert bei CEO-Abnahme)
                 if (factoryScene.running && activeIdx > 0) {
-                    ctx.strokeStyle = 'rgba(251,191,36,0.85)';
+                    ctx.strokeStyle = factoryScene.waiting ? 'rgba(232,121,249,0.8)' : 'rgba(251,191,36,0.85)';
                     ctx.lineWidth = 3;
                     ctx.setLineDash([6, 8]);
-                    ctx.lineDashOffset = -time * 40;
+                    ctx.lineDashOffset = factoryScene.waiting ? -20 : -time * 40;
                     ctx.beginPath();
                     for (let i = 0; i <= activeIdx; i++) {
                         const p = beltPts[i];
@@ -2970,15 +2985,27 @@
 
                 // Auftrags-Paket wandert das Band entlang zur aktiven Station
                 if (factoryScene.running && activeIdx > 0) {
-                    const journey = (time * 0.45) % 1;
-                    const segPos = journey * activeIdx;
-                    const seg = Math.min(activeIdx - 1, Math.floor(segPos));
-                    const t = segPos - seg;
-                    const a = stations[seg], b = stations[seg + 1];
-                    const p = project(a.x + (b.x - a.x) * t, 12 + Math.sin(time * 8) * 1.5, a.z + (b.z - a.z) * t);
-                    ctx.font = `${Math.max(12, 17 * p.s)}px Inter`;
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    ctx.fillText('📦', p.x, p.y);
+                    if (factoryScene.waiting) {
+                        // Human in the Loop: Paket wartet vor der CEO-Abnahme, Fragezeichen pulsiert
+                        const st = stations[activeIdx];
+                        const p = project(st.x - 26, 12 + Math.sin(time * 2) * 2, st.z);
+                        ctx.font = `${Math.max(12, 17 * p.s)}px Inter`;
+                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.fillText('📦', p.x, p.y);
+                        const q = project(st.x, st.h + 28 + Math.sin(time * 2.6) * 3, st.z);
+                        ctx.font = `${Math.max(13, (19 + 3 * Math.sin(time * 2.6)) * q.s)}px Inter`;
+                        ctx.fillText('❓', q.x, q.y);
+                    } else {
+                        const journey = (time * 0.45) % 1;
+                        const segPos = journey * activeIdx;
+                        const seg = Math.min(activeIdx - 1, Math.floor(segPos));
+                        const t = segPos - seg;
+                        const a = stations[seg], b = stations[seg + 1];
+                        const p = project(a.x + (b.x - a.x) * t, 12 + Math.sin(time * 8) * 1.5, a.z + (b.z - a.z) * t);
+                        ctx.font = `${Math.max(12, 17 * p.s)}px Inter`;
+                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.fillText('📦', p.x, p.y);
+                    }
                 }
 
                 requestAnimationFrame(draw);
@@ -3057,6 +3084,10 @@
                     factorySeenConfirmations.add(o.id);
                     if (!factoryFirstLoad) toast('🧑‍💼 CTO: ' + o.cto_confirmation.slice(0, 180), 'success');
                 }
+                if (o.status === 'awaiting_approval' && !factorySeenApprovals.has(o.id)) {
+                    factorySeenApprovals.add(o.id);
+                    if (!factoryFirstLoad) toast(`👔 CEO-Abnahme erforderlich: „${o.idea.name}“ — die Fabrik wartet auf deine Freigabe.`, 'info');
+                }
             });
             factoryFirstLoad = false;
 
@@ -3067,29 +3098,41 @@
 
         function updateFactoryScene(orders) {
             const active = orders.find(o => o.status === 'processing' || o.status === 'queued');
+            const waiting = orders.find(o => o.status === 'awaiting_approval');
             const banner = document.getElementById('factory-3d-banner');
             if (active) {
                 const step = (active.steps || []).find(s => s.key === active.current_step);
                 factoryScene.running = true;
+                factoryScene.waiting = false;
                 factoryScene.activeStation = step ? step.station : 'cto';
                 factoryScene.doneStations = (active.steps || []).filter(s => s.status === 'done').map(s => s.station);
                 if (banner) banner.textContent = `🔄 „${active.idea.name}“ — ${step ? step.label : 'Bearbeitung läuft'}`;
+            } else if (waiting) {
+                // Human in the Loop: Fabrik hält an der CEO-Abnahme
+                factoryScene.running = true;
+                factoryScene.waiting = true;
+                factoryScene.activeStation = 'approval';
+                factoryScene.doneStations = (waiting.steps || []).filter(s => s.status === 'done').map(s => s.station);
+                if (banner) banner.textContent = `👔 „${waiting.idea.name}“ wartet auf deine Abnahme — rechts freigeben oder ablehnen`;
             } else {
                 factoryScene.running = false;
+                factoryScene.waiting = false;
                 factoryScene.activeStation = null;
                 const last = orders[0];
                 factoryScene.doneStations = last && last.status === 'completed'
                     ? (last.steps || []).map(s => s.station) : [];
                 if (banner) banner.textContent = last && last.status === 'completed'
                     ? `✅ Letzter Auftrag „${last.idea.name}“ abgeschlossen`
-                    : 'Fabrik im Leerlauf — sende eine Idee an den CTO';
+                    : (last && last.status === 'rejected'
+                        ? `🚫 Letzter Auftrag „${last.idea.name}“ vom CEO abgelehnt`
+                        : 'Fabrik im Leerlauf — sende eine Idee an den CTO');
             }
         }
 
         function factoryStepIcon(s) {
             if (s.status === 'done') return '✅';
-            if (s.status === 'active') return '🔄';
-            if (s.status === 'error') return '❌';
+            if (s.status === 'active') return s.key === 'abnahme' ? '👔' : '🔄';
+            if (s.status === 'error') return s.key === 'abnahme' ? '🚫' : '❌';
             return '⚪';
         }
 
@@ -3101,11 +3144,16 @@
                 return;
             }
             const statusInfo = {
-                queued:     { color: 'var(--warning)', label: '⏳ Wartet auf CTO' },
-                processing: { color: 'var(--accent)',  label: '🔄 In Bearbeitung' },
-                completed:  { color: 'var(--success)', label: '✅ Abgeschlossen' },
-                error:      { color: 'var(--danger)',  label: '⚠️ Fehler' }
+                queued:             { color: 'var(--warning)', label: '⏳ Wartet auf CTO' },
+                processing:         { color: 'var(--accent)',  label: '🔄 In Bearbeitung' },
+                awaiting_approval:  { color: '#e879f9',        label: '👔 Wartet auf CEO-Abnahme' },
+                rejected:           { color: 'var(--danger)',  label: '🚫 Vom CEO abgelehnt' },
+                completed:          { color: 'var(--success)', label: '✅ Abgeschlossen' },
+                error:              { color: 'var(--danger)',  label: '⚠️ Fehler' }
             };
+            // Getippte Abnahme-Kommentare überleben das Re-Rendern beim Polling
+            const savedComments = {};
+            container.querySelectorAll('textarea[id^="approval-comment-"]').forEach(t => { if (t.value) savedComments[t.id] = t.value; });
             container.innerHTML = orders.map(order => {
                 const info = statusInfo[order.status] || statusInfo.queued;
                 const stepsHtml = (order.steps || []).map(s =>
@@ -3120,6 +3168,29 @@
                 ).join('');
                 const resultHtml = order.result_file
                     ? `<div style="font-size:0.7rem;color:var(--success);margin-top:0.3rem;">📄 ${escapeHtml(order.result_file)}</div>` : '';
+                const approvalDoneHtml = order.ceo_approval
+                    ? `<div style="background:rgba(232,121,249,0.12);border-left:3px solid #e879f9;padding:0.5rem;border-radius:0 6px 6px 0;font-size:0.74rem;margin:0.4rem 0;line-height:1.45;">👔 <b>CEO-Abnahme:</b> ${order.ceo_approval.decision === 'approve' ? '✅ freigegeben' : '🚫 abgelehnt'} am ${escapeHtml(order.ceo_approval.decided_at || '')}${order.ceo_approval.comment ? ' — „' + escapeHtml(order.ceo_approval.comment) + '“' : ''}</div>` : '';
+                const testLabHtml = order.prototype_file && order.status === 'awaiting_approval'
+                    ? `<div style="margin-bottom:0.5rem;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;">
+                            <span style="font-size:0.74rem;font-weight:600;">🔬 Testumgebung — Produkt jetzt ausprobieren:</span>
+                            <button class="btn btn-outline btn-sm" onclick="window.open('${order.prototype_file}', '_blank')" style="padding:0.15rem 0.5rem;font-size:0.7rem;">🧪 Im neuen Tab testen</button>
+                        </div>
+                        <iframe src="${order.prototype_file}" sandbox="allow-scripts" title="Prototyp-Testumgebung" style="width:100%;height:280px;border:1px solid var(--border);border-radius:6px;background:#fff;"></iframe>
+                    </div>` : '';
+                const approvalHtml = order.status === 'awaiting_approval'
+                    ? `<div style="background:rgba(232,121,249,0.12);border:1px solid #e879f9;padding:0.6rem;border-radius:var(--radius-sm);margin:0.4rem 0;">
+                        <div style="font-size:0.78rem;font-weight:600;margin-bottom:0.4rem;">👔 CEO-Abnahme erforderlich (Human in the Loop)</div>
+                        <div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:0.4rem;">Teste den Prototyp und prüfe Plan, Konzept & Qualitätsreview — erst nach deiner Freigabe liefert die Fabrik aus.</div>
+                        ${testLabHtml}
+                        <textarea id="approval-comment-${order.id}" placeholder="Optionaler Kommentar zur Entscheidung..." style="width:100%;min-height:40px;padding:0.4rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:0.75rem;resize:vertical;font-family:inherit;margin-bottom:0.4rem;"></textarea>
+                        <div style="display:flex;gap:0.5rem;">
+                            <button class="btn btn-success btn-sm" onclick="approveFactoryOrder('${order.id}', 'approve', this)" style="flex:1;justify-content:center;">✅ Freigeben & ausliefern</button>
+                            <button class="btn btn-danger btn-sm" onclick="approveFactoryOrder('${order.id}', 'reject', this)" style="flex:1;justify-content:center;">🚫 Ablehnen</button>
+                        </div>
+                    </div>` : '';
+                const protoLinkHtml = order.prototype_file && order.status !== 'awaiting_approval'
+                    ? `<div style="font-size:0.7rem;margin-top:0.3rem;"><a href="${order.prototype_file}" target="_blank" style="color:var(--accent);">🔬 Prototyp-Testumgebung öffnen</a></div>` : '';
                 const deleteHtml = order.status !== 'processing'
                     ? `<button class="btn btn-outline btn-sm" onclick="deleteFactoryOrder('${order.id}')" style="padding:0.1rem 0.4rem;font-size:0.7rem;">🗑</button>` : '';
                 return `
@@ -3130,9 +3201,40 @@
                     </div>
                     <div style="font-size:0.72rem;color:var(--text-secondary);margin:0.25rem 0;">${info.label} · ${new Date(order.created_at).toLocaleString('de-DE')}</div>
                     <div style="display:flex;align-items:center;gap:0.2rem;margin:0.3rem 0;">${stepsHtml}</div>
-                    ${confirmHtml}${errorHtml}${outputsHtml}${resultHtml}
+                    ${confirmHtml}${errorHtml}${outputsHtml}${approvalDoneHtml}${approvalHtml}${protoLinkHtml}${resultHtml}
                 </div>`;
             }).join('');
+            Object.entries(savedComments).forEach(([id, v]) => {
+                const el = document.getElementById(id);
+                if (el) el.value = v;
+            });
+        }
+
+        async function approveFactoryOrder(orderId, decision, btnEl) {
+            const commentEl = document.getElementById('approval-comment-' + orderId);
+            const comment = commentEl ? commentEl.value.trim() : '';
+            if (decision === 'reject' && !comment) {
+                toast('Bitte gib bei einer Ablehnung eine kurze Begründung an.', 'error');
+                if (commentEl) commentEl.focus();
+                return;
+            }
+            if (btnEl) { btnEl.disabled = true; btnEl.textContent = '⏳ Übermittle…'; }
+            try {
+                const resp = await fetch('/api/factory/orders/approve', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: orderId, decision, comment })
+                });
+                const data = await resp.json();
+                if (data.error) { toast(data.error, 'error'); return; }
+                toast(decision === 'approve'
+                    ? '✅ Freigegeben — die Fabrik liefert jetzt aus.'
+                    : '🚫 Abgelehnt — der Auftrag wurde gestoppt.', decision === 'approve' ? 'success' : 'info');
+                pollFactoryOrders(false);
+            } catch (e) {
+                toast('Abnahme fehlgeschlagen: ' + e, 'error');
+            } finally {
+                if (btnEl) btnEl.disabled = false;
+            }
         }
 
         async function deleteFactoryOrder(orderId) {

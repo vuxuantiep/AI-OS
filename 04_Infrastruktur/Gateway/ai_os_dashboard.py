@@ -401,12 +401,15 @@ FACTORY_MODEL = "llama3"
 _factory_lock = threading.Lock()
 
 FACTORY_STEPS = [
-    {"key": "annahme",     "station": "cto",     "label": "CTO-Agent: Auftrag annehmen & bestätigen"},
-    {"key": "analyse",     "station": "planner", "label": "Planung: Analyse & Umsetzungsplan"},
-    {"key": "entwicklung", "station": "dev",     "label": "Entwicklung: Technisches Konzept"},
-    {"key": "qualitaet",   "station": "test",    "label": "Qualität: Review & Risiken"},
-    {"key": "abschluss",   "station": "deploy",  "label": "Auslieferung: Ergebnis-Dokument"},
+    {"key": "annahme",     "station": "cto",      "label": "CTO-Agent: Auftrag annehmen & bestätigen"},
+    {"key": "analyse",     "station": "planner",  "label": "Planung: Analyse & Umsetzungsplan"},
+    {"key": "entwicklung", "station": "dev",      "label": "Entwicklung: Technisches Konzept"},
+    {"key": "prototyp",    "station": "lab",      "label": "Testlabor: Klickbarer Prototyp als Testumgebung"},
+    {"key": "qualitaet",   "station": "test",     "label": "Qualität: Review & Risiken"},
+    {"key": "abnahme",     "station": "approval", "label": "CEO-Abnahme: Testen & Freigabe durch den CEO (Human in the Loop)"},
+    {"key": "abschluss",   "station": "deploy",   "label": "Auslieferung: Ergebnis-Dokument"},
 ]
+FACTORY_PROTO_DIR = FACTORY_RESULTS_DIR / "Prototypen"
 
 
 def _load_factory_orders():
@@ -489,6 +492,58 @@ def _factory_run_step(order_id, step_key, agent, fallback_system, task, num_pred
     return text, engine
 
 
+def _extract_html(text):
+    """Extrahiert das HTML-Dokument aus einer LLM-Antwort (Markdown-Fences, Vor-/Nachtext)."""
+    m = re.search(r"```(?:html)?\s*(<!DOCTYPE.*?|<html.*?)```", text, re.S | re.I)
+    if m:
+        text = m.group(1)
+    start = text.find("<!DOCTYPE")
+    if start == -1:
+        start = text.lower().find("<html")
+    if start == -1:
+        return None
+    end = text.lower().rfind("</html>")
+    return text[start:end + 7] if end != -1 else text[start:]
+
+
+def _factory_build_prototype(order_id, briefing, concept):
+    """Testlabor: erzeugt einen klickbaren Ein-Datei-HTML-Prototyp als Testumgebung für den CEO."""
+    _factory_set_step(order_id, "prototyp", "active")
+    task = (
+        "Baue einen klickbaren HTML-Prototyp (Mockup) für dieses Produkt, damit der CEO es "
+        "vor der Freigabe testen kann.\n\n"
+        "STRIKTE REGELN:\n"
+        "- GENAU EINE HTML-Datei: CSS und JavaScript inline, KEINE externen Ressourcen/CDNs.\n"
+        "- Funktionierende Demo mit realistischen Beispieldaten und 2-3 klickbaren Kernfunktionen "
+        "(Buttons, Formulare, Tabs), Zustand nur im Speicher.\n"
+        "- Modernes, sauberes Design, deutsche Oberfläche, oben ein Hinweisbanner "
+        "'🧪 Prototyp — KI-Fabrik Testumgebung'.\n"
+        "- Antworte NUR mit dem vollständigen HTML-Code (beginnend mit <!DOCTYPE html>), "
+        "kein erklärender Text.\n\n"
+        f"BRIEFING:\n{briefing}\n\nTECHNISCHES KONZEPT:\n{concept[:2500]}"
+    )
+    text = _agent_system_execute("code", task, timeout=420)
+    engine = "Agent-System :5300 (code)"
+    if not text:
+        text, engine = _llm_generate(
+            "Du bist der CODE/DEV AGENT der KI-Fabrik und ein exzellenter Frontend-Entwickler. "
+            "Du lieferst ausschließlich lauffähigen Code ohne Erklärtext.",
+            task, num_predict=3000, timeout=600)
+    html = _extract_html(text)
+    if not html:
+        html = ("<!DOCTYPE html><html lang=\"de\"><head><meta charset=\"utf-8\">"
+                "<title>Prototyp</title></head><body style=\"font-family:sans-serif;padding:2rem;\">"
+                "<h2>🧪 Prototyp — KI-Fabrik Testumgebung</h2>"
+                "<p>Das Modell lieferte kein gültiges HTML. Rohausgabe:</p>"
+                f"<pre style=\"white-space:pre-wrap;\">{html_module.escape(text[:6000])}</pre></body></html>")
+    FACTORY_PROTO_DIR.mkdir(parents=True, exist_ok=True)
+    (FACTORY_PROTO_DIR / f"{order_id}.html").write_text(html, encoding="utf-8")
+    _factory_update_order(order_id, lambda o: o.update(prototype_file=f"/factory/prototype/{order_id}"))
+    summary = (f"Testumgebung bereit: klickbarer Prototyp ({len(html)} Zeichen) unter "
+               f"/factory/prototype/{order_id} — der CEO kann das Produkt vor der Freigabe testen.")
+    _factory_set_step(order_id, "prototyp", "done", output=summary, engine=engine)
+
+
 def _idea_briefing(order):
     idea = order.get("idea", {})
     parts = [
@@ -546,8 +601,11 @@ def _process_factory_order(order_id):
             "\n\nUMSETZUNGSPLAN:\n" + plan[:2500],
             num_predict=900)
 
+        # 3b) Testlabor: klickbarer Prototyp als Testumgebung für die CEO-Abnahme
+        _factory_build_prototype(order_id, briefing, concept)
+
         # 4) Qualitätsprüfung
-        review, _ = _factory_run_step(
+        _factory_run_step(
             order_id, "qualitaet", "analysis",
             "Du bist der ANALYSIS/QA AGENT der KI-Fabrik. Prüfe Konzepte kritisch auf Lücken und Risiken. Antworte auf Deutsch, kurz und strukturiert.",
             "Prüfe das folgende Konzept kritisch: größte Stärken, Top-3-Risiken, konkrete "
@@ -555,21 +613,52 @@ def _process_factory_order(order_id):
             "\n\nKONZEPT:\n" + concept[:3000],
             num_predict=500)
 
-        # 5) Abschluss: Ergebnis-Dokument in 10_Business ablegen
+        # 5) Human in the Loop: Fabrik pausiert, bis der CEO die Ergebnisse freigibt.
+        #    Die Auslieferung startet erst über /api/factory/orders/approve.
+        _factory_set_step(order_id, "abnahme", "active",
+                          output="Warte auf Prüfung und Freigabe durch den CEO. "
+                                 "Ergebnisse von Planung, Entwicklung und Qualität liegen vor.")
+        _factory_update_order(order_id, lambda o: o.update(status="awaiting_approval"))
+    except Exception as e:
+        err = f"Bearbeitung abgebrochen: {e}"
+        _factory_set_step(order_id, _load_current_step(order_id), "error", output=err)
+        _factory_update_order(order_id, lambda o: o.update(status="error", error=err))
+
+
+def _factory_step_output(order, key):
+    return next((s.get("output") or "" for s in order.get("steps", []) if s.get("key") == key), "")
+
+
+def _finalize_factory_order(order_id):
+    """Auslieferung nach CEO-Freigabe: Ergebnis-Dokument in 10_Business ablegen."""
+    with _factory_lock:
+        orders = _load_factory_orders()
+    order = next((o for o in orders if o["id"] == order_id), None)
+    if not order:
+        return
+    idea_name = order.get("idea", {}).get("name", "Unbenannt")
+    try:
         _factory_set_step(order_id, "abschluss", "active")
         safe_name = re.sub(r"[^\w\-]+", "_", idea_name)[:40] or "Auftrag"
         FACTORY_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
         result_path = FACTORY_RESULTS_DIR / f"{order_id}_{safe_name}.md"
+        approval = order.get("ceo_approval") or {}
+        approval_line = f"- CEO-Abnahme: freigegeben am {approval.get('decided_at', '?')}"
+        if approval.get("comment"):
+            approval_line += f" — Kommentar: {approval['comment']}"
         doc = (
             f"# 🏭 KI-Fabrik Auftrag: {idea_name}\n\n"
             f"- Auftrags-ID: {order_id}\n"
             f"- Erstellt: {order.get('created_at')}\n"
+            f"{approval_line}\n"
             f"- Abgeschlossen: {datetime.now().isoformat(timespec='seconds')}\n\n"
-            f"## 👔 CEO-Briefing\n\n{briefing}\n\n"
-            f"## 🧑‍💼 CTO-Bestätigung\n\n{confirmation}\n\n"
-            f"## 📋 Analyse & Umsetzungsplan\n\n{plan}\n\n"
-            f"## ⚙️ Technisches Konzept\n\n{concept}\n\n"
-            f"## 🧪 Qualitätsprüfung\n\n{review}\n"
+            f"## 👔 CEO-Briefing\n\n{_idea_briefing(order)}\n\n"
+            f"## 🧑‍💼 CTO-Bestätigung\n\n{order.get('cto_confirmation') or ''}\n\n"
+            f"## 📋 Analyse & Umsetzungsplan\n\n{_factory_step_output(order, 'analyse')}\n\n"
+            f"## ⚙️ Technisches Konzept\n\n{_factory_step_output(order, 'entwicklung')}\n\n"
+            f"## 🔬 Testlabor / Prototyp\n\n{_factory_step_output(order, 'prototyp')}\n\n"
+            f"## 🧪 Qualitätsprüfung\n\n{_factory_step_output(order, 'qualitaet')}\n\n"
+            f"## 👔 CEO-Abnahme (Human in the Loop)\n\n{_factory_step_output(order, 'abnahme')}\n"
         )
         result_path.write_text(doc, encoding="utf-8")
         summary = (f"Ergebnis-Dokument abgelegt: 10_Business/KI-Fabrik-Auftraege/{result_path.name}")
@@ -578,8 +667,8 @@ def _process_factory_order(order_id):
             status="completed",
             result_file=f"10_Business/KI-Fabrik-Auftraege/{result_path.name}"))
     except Exception as e:
-        err = f"Bearbeitung abgebrochen: {e}"
-        _factory_set_step(order_id, _load_current_step(order_id), "error", output=err)
+        err = f"Auslieferung fehlgeschlagen: {e}"
+        _factory_set_step(order_id, "abschluss", "error", output=err)
         _factory_update_order(order_id, lambda o: o.update(status="error", error=err))
 
 
@@ -591,7 +680,8 @@ def _load_current_step(order_id):
 
 
 def _factory_recover_stale():
-    """Markiert nach einem Dashboard-Neustart hängengebliebene Aufträge als unterbrochen."""
+    """Markiert nach einem Dashboard-Neustart hängengebliebene Aufträge als unterbrochen.
+    Aufträge in CEO-Abnahme (awaiting_approval) warten legitim auf den Menschen und bleiben erhalten."""
     with _factory_lock:
         orders = _load_factory_orders()
         changed = False
@@ -848,6 +938,8 @@ def factory_order_create():
         "status": "queued",
         "current_step": "annahme",
         "cto_confirmation": None,
+        "ceo_approval": None,
+        "prototype_file": None,
         "error": None,
         "result_file": None,
         "steps": [{**s, "status": "pending", "output": None, "engine": None,
@@ -863,6 +955,57 @@ def factory_order_create():
         _save_factory_orders(orders)
 
     threading.Thread(target=_process_factory_order, args=(order["id"],), daemon=True).start()
+    return jsonify({"order": order})
+
+
+@app.route("/factory/prototype/<order_id>")
+def factory_prototype(order_id):
+    """Testumgebung: liefert den klickbaren Prototyp eines Auftrags für die CEO-Abnahme aus."""
+    if not re.fullmatch(r"ord_[\w]+", order_id):
+        return "Ungültige Auftrags-ID", 400
+    path = FACTORY_PROTO_DIR / f"{order_id}.html"
+    if not path.exists():
+        return "Für diesen Auftrag existiert (noch) kein Prototyp.", 404
+    return path.read_text(encoding="utf-8"), 200, {
+        "Content-Type": "text/html; charset=utf-8",
+        # Prototyp ist LLM-generierter Code: keine externen Quellen, kein Zugriff auf das Dashboard
+        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; "
+                                   "script-src 'unsafe-inline'; img-src data:; sandbox allow-scripts",
+    }
+
+
+@app.route("/api/factory/orders/approve", methods=["POST"])
+def factory_order_approve():
+    """CEO-Abnahme (Human in the Loop): Freigabe startet die Auslieferung, Ablehnung stoppt den Auftrag."""
+    data = request.get_json(silent=True) or {}
+    order_id = data.get("id", "")
+    decision = data.get("decision", "")
+    comment = str(data.get("comment", "")).strip()[:500]
+    if decision not in ("approve", "reject"):
+        return jsonify({"error": "Ungültige Entscheidung (approve/reject)."}), 400
+
+    with _factory_lock:
+        orders = _load_factory_orders()
+    order = next((o for o in orders if o["id"] == order_id), None)
+    if not order:
+        return jsonify({"error": "Auftrag nicht gefunden."}), 404
+    if order.get("status") != "awaiting_approval":
+        return jsonify({"error": "Auftrag wartet nicht auf CEO-Abnahme."}), 409
+
+    now = datetime.now().isoformat(timespec="seconds")
+    if decision == "approve":
+        note = "✅ Freigegeben durch den CEO." + (f" Kommentar: {comment}" if comment else "")
+        _factory_set_step(order_id, "abnahme", "done", output=note, engine="CEO (Mensch)")
+        order = _factory_update_order(order_id, lambda o: o.update(
+            status="processing",
+            ceo_approval={"decision": "approve", "comment": comment, "decided_at": now}))
+        threading.Thread(target=_finalize_factory_order, args=(order_id,), daemon=True).start()
+    else:
+        note = "🚫 Abgelehnt durch den CEO." + (f" Begründung: {comment}" if comment else "")
+        _factory_set_step(order_id, "abnahme", "error", output=note, engine="CEO (Mensch)")
+        order = _factory_update_order(order_id, lambda o: o.update(
+            status="rejected",
+            ceo_approval={"decision": "reject", "comment": comment, "decided_at": now}))
     return jsonify({"order": order})
 
 
