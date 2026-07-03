@@ -2,9 +2,35 @@
 
 Willkommen in meiner **KI-Fabrik V2** – einem vollständigen Multi-Agent-System mit Workflow-Engine, RAG-Pipeline und Monitoring.
 
-## Was ist das?
+## 🎯 Was ist das?
 
-Die KI-Fabrik V2 ist ein **6-schichtiges Multi-Agent-System**, das auf Ollama (lokale KI-Modelle) aufbaut:
+Die KI-Fabrik V2 ist ein **lokales KI-Betriebssystem** mit 7 spezialisierten Agenten, das auf Ollama aufbaut und volle Kontrolle über deine KI-Workflows gibt.
+
+## ⚡ Schnellstart
+
+### 🚀 Ein-Klick-Start (empfohlen)
+```bash
+python 04_Infrastruktur/Runtime/start_ai_os.py
+```
+
+### 🎨 Dashboard starten
+```bash
+python 04_Infrastruktur/Gateway/ai_os_dashboard.py
+```
+Öffne dann: http://localhost:5000
+
+### 🖥️ Einzelne Komponenten starten
+```bash
+python 04_Infrastruktur/Gateway/ai_os_dashboard.py   # Dashboard (Port 5000)
+python 04_Infrastruktur/Gateway/mcp_server.py        # MCP Server (Port 5001)
+python 06_Gedächtnis/knowledge_agent.py              # RAG/Gedächtnis (Port 5002)
+python 04_Infrastruktur/Gateway/api_gateway.py       # API Gateway (Port 5100)
+python 05_Agenten/workflow_engine.py                 # Workflow Engine (Port 5200)
+python 05_Agenten/agent_system.py                    # Agent System (Port 5300)
+python 08_Monitoring/monitoring_service.py           # Monitoring (Port 5400)
+```
+
+## 🏗️ Architektur
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -17,75 +43,45 @@ Die KI-Fabrik V2 ist ein **6-schichtiges Multi-Agent-System**, das auf Ollama (l
 │         │    🔄 Orchestration Layer           │             │
 │  ┌──────┴──────────────────┴───────────────────┴────────┐  │
 │  │              Workflow Engine (Port 5200)              │  │
-│  └──────────────────────────────────────────────────────┘  │
-├───────────────────────────────────────────────────────────┤
-│              🤖 Agent Layer (Port 5300)                    │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐ │
-│  │Orchestr. │ │ Research │ │  Code    │ │ Writer/Plan/ │ │
-│  │ Agent    │ │ Agent    │ │  Agent   │ │ Memory/Analy │ │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────────┘ │
-├───────────────────────────────────────────────────────────┤
-│              📚 RAG Pipeline (Port 5002)                   │
-├───────────────────────────────────────────────────────────┤
-│              📊 Monitoring Layer (Port 5400)               │
-├───────────────────────────────────────────────────────────┤
-│              ⚙️ Infrastructure (Ollama Port 11434)         │
-└───────────────────────────────────────────────────────────┘
+│  │  ┌─────────────────┐  ┌──────────────────────────┐   │  │
+│  │  │ Task Orchestrator│  │  Pipeline Manager        │   │  │
+│  │  └────────┬────────┘  └───────────┬──────────────┘   │  │
+│  └───────────┼───────────────────────┼──────────────────┘  │
+├──────────────┼───────────────────────┼────────────────────┤
+│              │    🤖 Agent Layer     │                     │
+│  ┌───────────┴───────────────────────┴──────────────────┐ │
+│  │           Multi-Agent System (Port 5300)              │ │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐  │ │
+│  │  │Orchestr. │ │ Research │ │  Code    │ │ Writer │  │ │
+│  │  │ Agent    │ │ Agent    │ │  Agent   │ │ Agent  │  │ │
+│  │  └──────────┘ └──────────┘ └──────────┘ └────────┘  │ │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────────────┐     │ │
+│  │  │Analysis  │ │ Planner  │ │  Memory Agent    │     │ │
+│  │  │ Agent    │ │ Agent    │ │  (Context Mgr)   │     │ │
+│  │  └──────────┘ └──────────┘ └──────────────────┘     │ │
+│  └─────────────────────────────────────────────────────┘ │
+├──────────────────────────────────────────────────────────┤
+│                    📚 RAG Pipeline (Port 5002)            │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────────┐  │
+│  │Ingestion │ │ Chunking │ │Embedding │ │  Hybrid    │  │
+│  │ Pipeline │ │ Strategy │ │  Service │ │  Search    │  │
+│  └──────────┘ └──────────┘ └──────────┘ └────────────┘  │
+├──────────────────────────────────────────────────────────┤
+│                    📊 Monitoring Layer                    │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────────┐  │
+│  │ Metrics  │ │ Logging  │ │ Health   │ │  Tracing   │  │
+│  │ Collector│ │ Service  │ │ Checks   │ │  Service   │  │
+│  └──────────┘ └──────────┘ └──────────┘ └────────────┘  │
+├──────────────────────────────────────────────────────────┤
+│                    ⚙️ Infrastructure Layer                │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────────┐  │
+│  │  Ollama  │ │ Vector DB│ │ File Sys │ │  Queue     │  │
+│  │(Port11434)│(JSON/Chroma)│(Knowledge)│ │  (In-Mem) │  │
+│  └──────────┘ └──────────┘ └──────────┘ └────────────┘  │
+└──────────────────────────────────────────────────────────┘
 ```
 
-## Schnellstart
-
-### 🚀 Erste Schritte
-
-1. **System starten:**
-   ```bash
-   python 04_Infrastruktur/Runtime/start_ai_os.py
-   ```
-
-2. **CLAUDE.md ausfüllen:**
-   Öffne `CLAUDE.md` und trag deinen Namen, deine Rolle und deinen Arbeitsstil ein.
-
-3. **Obsidian Vault öffnen:**
-   - Obsidian starten
-   - "Open folder as vault" wählen
-   - Diesen Ordner (`AI-OS`) auswählen
-
-4. **Git initialisieren (bei Bedarf):**
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   ```
-
-### Einzelne Komponenten starten
-```bash
-python 04_Infrastruktur/Gateway/ai_os_dashboard.py   # Dashboard (Port 5000)
-python 04_Infrastruktur/Gateway/api_gateway.py       # API Gateway (Port 5100)
-python 05_Agenten/agent_system.py                    # Agent System (Port 5300)
-python 05_Agenten/workflow_engine.py                 # Workflow Engine (Port 5200)
-python 08_Monitoring/monitoring_service.py           # Monitoring (Port 5400)
-```
-
-### Mit Claude Desktop nutzen
-1. Claude Desktop öffnen
-2. Auf "Select Project" / "Projekt auswählen" klicken
-3. Diesen Ordner wählen
-4. Fertig!
-
-## Architektur
-
-| Schicht | Komponente | Port | Beschreibung |
-|---------|-----------|------|-------------|
-| 🌐 Interface | Dashboard | 5000 | Web UI |
-| 🌐 Interface | MCP Server | 5001 | AI-Client Interface |
-| 🌐 Interface | **API Gateway** | **5100** | **Zentraler Einstiegspunkt** |
-| 🔄 Orchestrierung | **Workflow Engine** | **5200** | **DAG-basierte Pipelines** |
-| 🤖 Agenten | **Agent System** | **5300** | **7 KI-Agenten** |
-| 📚 Wissen | RAG Pipeline | 5002 | Vektorsuche |
-| 📊 Monitoring | **Monitoring** | **5400** | **Health/Metriken** |
-| ⚙️ Infrastruktur | Ollama | 11434 | Lokale KI-Modelle |
-
-## 7 KI-Agenten
+## 🤖 7 KI-Agenten
 
 | Agent | Aufgabe | Modell |
 |-------|---------|--------|
@@ -97,92 +93,109 @@ python 08_Monitoring/monitoring_service.py           # Monitoring (Port 5400)
 | **Planner** | Planung & Strategie | llama3 |
 | **Memory** | Kontext- & Gedächtnisverwaltung | llama3 |
 
-## API Gateway (Zentraler Einstieg)
+## 🧠 Lernender Agent
 
-```bash
-# Chat mit Orchestrator
-curl -X POST http://localhost:5100/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Erstelle einen Bericht über KI-Trends"}'
+Das System lernt aus deinen Chat-Interaktionen und passt sich automatisch an:
+- **Episodic-Memory**: Speichert alle Interaktionen
+- **Lernzyklus**: Konsolidiert Wissen ins Long-Memory
+- **Personalisierung**: Passt Chat-Antworten basierend auf gelerntem Profil an
+- **Auto-Lernen**: Automatischer Lernzyklus alle 10 Interaktionen
 
-# Task mit bestimmtem Agenten
-curl -X POST http://localhost:5100/execute \
-  -H "Content-Type: application/json" \
-  -d '{"agent": "code", "task": "Schreibe ein Python-Skript"}'
+## 📦 Verfügbare Open-Source Modelle
 
-# Orchestrierte Ausführung (mehrere Agenten)
-curl -X POST http://localhost:5100/orchestrate \
-  -H "Content-Type: application/json" \
-  -d '{"task": "Analysiere und dokumentiere das Projekt"}'
+Über das Dashboard können folgende Modelle heruntergeladen werden:
+- **llama3** (4.7 GB) - Allgemeine Aufgaben
+- **mistral** (4.4 GB) - Chat & Textgenerierung
+- **deepseek-coder** (776 MB) - Code-Generierung
+- **qwen2.5-coder** (4.7 GB) - Code & Entwicklung
+- **gemma2** (9.6 GB) - Fortgeschrittene Aufgaben
+- **llama2** (3.8 GB) - Backup-Modell
 
-# Workflow starten
-curl -X POST http://localhost:5100/workflow/run \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Mein Workflow", "tasks": [{"name": "Recherche", "agent": "research", "prompt": "..."}]}'
+## 🎨 Dashboard Features
 
-# RAG Query
-curl -X POST http://localhost:5100/query \
-  -H "Content-Type: application/json" \
-  -d '{"query": "Was ist in meiner Wissensdatenbank zu KI?"}'
-```
+- **📊 Übersicht**: System-Status, Dienste, Statistiken
+- **📰 KI-News**: Tägliche Tech-News mit KI-generiertem CEO-Brief
+- **🧩 Dienste**: Verwaltung aller AI-OS Komponenten
+- **💬 Chat**: Business-Ideen-Chat mit Wissensmodus (RAG)
+- **📦 Modelle**: Herunterladen, löschen und verwalten von Ollama-Modellen
+- **🧠 Gedächtnis**: Wissenskategorien und Vektorsuche
+- **🎓 Lernen**: Lernender Agent mit Profilverwaltung
+- **📂 Dateien**: Wissensspeicher-Explorer
+- **🏛️ Architektur**: Live-Ansicht der Ebenen-Struktur
 
-## Ordnerstruktur
+## 📂 Ordnerstruktur
 
 ```
 AI-OS/
-├── 00_Wissen/              ← Wissensdatenbank für RAG (Obsidian Vault)
-│   ├── 01_Persönlich/      ← Infos, Ziele, Vorlieben
-│   ├── 02_Projekte/        ← Kunden, Produkte, abgeschlossene Projekte
-│   ├── 03_Aktuelles/       ← Aktuelle Arbeiten, Tagesnotizen, Backlog
-│   ├── 04_Referenzen/      ← Recherche, Notizen, Wiki-Dokumente
-│   ├── 05_Archiv/          ← Alte Notizen, abgeschlossenes
-│   └── 06_Transkripte/     ← Gesprächsaufzeichnungen
-├── 01_Verbindungen/        ← MCP, CLI und API Konfigurationen
-├── 02_Fähigkeiten/         ← Wiederverwendbare Arbeitsanleitungen (inkl. Vorlagen)
-├── 03_Abläufe/             ← Automatisierte Routinen
-├── 04_Infrastruktur/       ← Gateway, Runtime, Config, Architektur-Dokumentation
-├── 05_Agenten/             ← Agentenlayer (Agent-System, Workflow-Engine)
-├── 06_Gedächtnis/          ← Memory-Layer (RAG-Indexer, Wissenskategorien)
-├── 07_Sicherheit/          ← Security, Compliance
-├── 08_Monitoring/          ← Health-Checks, Metriken, Logs
-├── 09_Backup-Recovery/     ← Backup-Strategie, Disaster Recovery
+├── 00_Wissen/              ← Wissensdatenbank (Obsidian Vault)
+│   ├── 01_Persönlich/      ← Profil, Ziele, Vorlieben
+│   ├── 02_Projekte/        ← Kunden, Produkte, Projekte
+│   ├── 03_Aktuelles/       ← Tagesnotizen, aktuelle Arbeit
+│   ├── 04_Referenzen/      ← Wiki, Architektur-Doku
+│   └── 05_Archiv/          ← Abgeschlossene Notizen
+├── 01_Verbindungen/        ← APIs, CLI, MCP-Configs
+├── 02_Fähigkeiten/         ← Skills & Vorlagen
+├── 03_Abläufe/             ← Routinen & Automatisierung
+├── 04_Infrastruktur/       ← Gateway, Runtime, Config, Doku
+│   ├── Gateway/            ← Dashboard, MCP, API Gateway
+│   ├── Runtime/            ← Start-Skripte
+│   └── Dokumentation/      ← Architektur-Dokumente
+├── 05_Agenten/             ← Agentenlayer
+│   ├── agent_system.py     ← 7 KI-Agenten
+│   ├── workflow_engine.py  ← DAG-Pipelines
+│   └── Rollen/             ← Agent-Rollen-Konfigurationen
+├── 06_Gedächtnis/          ← Memory-Layer (RAG)
+│   ├── Knowledge/          ← Wissenskategorien
+│   ├── Memory/             ← Short/Long/Episodic Memory
+│   └── Vector-Database/    ← Vektor-Index
+├── 07_Sicherheit/          ← Security & Compliance
+├── 08_Monitoring/          ← Health-Checks, Metriken
+├── 09_Backup-Recovery/     ← Backup & Disaster Recovery
 ├── 10_Business/            ← Geschäftsprojekte
-└── README.md               ← Diese Datei
-    AGENTS.md               ← Claude-Systemanweisungen (Ordner-Kontext)
-    CLAUDE.md               ← Zentrale Systemanweisungen
-    AI-OS.code-workspace    ← VS Code Workspace
+├── README.md               ← Diese Datei
+├── AGENTS.md               ← Claude-Systemanweisungen
+├── CLAUDE.md               ← Zentrale Konfiguration
+└── AI-OS.code-workspace    ← VS Code Workspace
 ```
 
-## Wissen aufbauen
+## 🔌 MCP Server (Claude Desktop Integration)
 
-So startest du mit deinem persönlichen Wissensspeicher:
+Der MCP-Server ermöglicht die Nutzung des AI-OS aus Claude Desktop heraus:
+- `chat` - Chat mit lokaler KI
+- `generate` - Text generieren
+- `summarize` - Texte zusammenfassen
+- `search_knowledge` - Wissensdatenbank durchsuchen
+- `list_models` - Verfügbare Modelle auflisten
 
-1. **Profil anlegen:** `00_Wissen/01_Persönlich/`
-2. **Projekt starten:** `00_Wissen/02_Projekte/`
-3. **Tagesnotiz:** `00_Wissen/03_Aktuelles/Aktiv/`
-4. **Referenz speichern:** `00_Wissen/04_Referenzen/`
+**Ports & URLs:**
+| Komponente | Port | URL |
+|-----------|------|-----|
+| Dashboard | 5000 | http://localhost:5000 |
+| MCP Server | 5001 | http://localhost:5001 |
+| RAG Pipeline | 5002 | http://localhost:5002 |
+| API Gateway | 5100 | http://localhost:5100 |
+| Workflow Engine | 5200 | http://localhost:5200 |
+| Agent System | 5300 | http://localhost:5300 |
+| Monitoring | 5400 | http://localhost:5400/status |
+| Ollama API | 11434 | http://localhost:11434 |
 
-Nutze immer die Vorlagen aus `02_Fähigkeiten/Vorlagen/` für neue Notizen und Projekte.
+## 🛠️ Technologien
 
-## Fähigkeiten (Skills)
+- **Backend**: Python, Flask, Ollama
+- **Frontend**: HTML, CSS, JavaScript (Vanilla)
+- **Datenbank**: JSON, Vektordatenbank (JSON/Chroma)
+- **KI-Modelle**: Llama 3, Mistral, Qwen 2.5, DeepSeek
+- **RAG**: Vektorbasierte semantische Suche
+- **Monitoring**: Health-Checks, Metriken, Logging
 
-Skills findest du in `02_Fähigkeiten/Aktiv/`. Um einen Skill zu nutzen:
-1. In Claude: "Nutze den Skill [Name] für [Aufgabe]"
-2. Oder direkt den Inhalt des Skills referenzieren
+## 🔒 Sicherheit
 
-## Abläufe (Routines)
+- **API-Keys & Secrets** gehören NIE ins Git
+- Speicherung in `01_Verbindungen/APIs/Geheimnisse/` (`.gitignore` schützt diese)
+- Alternativ: Umgebungsvariablen nutzen
+- Alle Dienste laufen lokal auf `127.0.0.1`
 
-- **Lokale Routinen:** `03_Abläufe/Lokal/` – werden auf diesem PC ausgeführt
-- **Remote Routinen:** `03_Abläufe/Remote/` – laufen auf dem Server
-
-## Verbindungen
-
-Neue Tool-Verbindungen werden in `01_Verbindungen/` konfiguriert:
-- **APIs:** Externe API-Zugänge
-- **CLI:** Kommandozeilen-Tools
-- **MCP:** MCP-Server-Verbindungen
-
-## Git-Workflow
+## 📝 Git-Workflow
 
 **Vor Arbeit beginnen:**
 ```bash
@@ -196,20 +209,35 @@ git commit -m "Beschreibung der Änderung"
 git push
 ```
 
-## Wichtige Dateien
+## 🎓 Lernmodus
 
-| Datei | Zweck |
-|-------|-------|
-| `CLAUDE.md` | Zentrale Systemanweisungen für Claude |
-| `AGENTS.md` | Ordner-spezifische Anweisungen für KI-Agenten |
-| `README.md` | Diese Datei – Übersicht des Systems |
-| `.gitignore` | Ausgeschlossene Dateien für Git |
+Das System lernt kontinuierlich aus Interaktionen:
+1. Chatten im Dashboard
+2. Lernzyklus starten (manuell oder automatisch)
+3. Profil wird ins Long-Memory konsolidiert
+4. Zukünftige Chats nutzen das gelernte Profil
 
-## Sicherheit
+## 📚 Wissensmanagement
 
-- **API-Keys und Secrets** gehören NIE ins Git-Repository
-- Sie werden in `01_Verbindungen/APIs/Geheimnisse/` gespeichert (`.gitignore` schützt diese)
-- Alternativ: Umgebungsvariablen nutzen
+**Wissen aufbauen:**
+1. **Persönlich**: `00_Wissen/01_Persönlich/` - Dein Profil
+2. **Projekte**: `00_Wissen/02_Projekte/` - Kunden & Produkte
+3. **Aktuell**: `00_Wissen/03_Aktuelles/` - Tagesnotizen
+4. **Referenzen**: `00_Wissen/04_Referenzen/` - Wiki & Docs
+
+Nutze Vorlagen aus `02_Fähigkeiten/Vorlagen/` für neue Einträge.
+
+## 🚀 Nächste Schritte
+
+- [ ] Erweiterte Agenten-Rollen (CEO, CTO, Developer)
+- [ ] Fine-Tuning für spezifische Branchen
+- [ ] Plugin-System für externe Tools
+- [ ] Multi-User-Support
+- [ ] Cloud-Backup für Wissensdatenbank
+
+## 📄 Lizenz
+
+Privates Projekt - Alle Rechte vorbehalten.
 
 ---
 
