@@ -2834,14 +2834,14 @@
 
             // Fabrik-Stationen als Produktionslinie im Raum (x rechts, y hoch, z Tiefe)
             const stations = [
-                { id: 'ceo',      label: 'CEO-Büro',     icon: '👔',   x: -168, z: 55,  h: 34, color: '#a78bfa' },
-                { id: 'cto',      label: 'CTO-Agent',    icon: '🧑‍💼', x: -120, z: -45, h: 44, color: '#5b9cf5' },
-                { id: 'planner',  label: 'Planung',      icon: '📋',   x: -72,  z: 55,  h: 30, color: '#22d3ee' },
-                { id: 'dev',      label: 'Entwicklung',  icon: '⚙️',   x: -24,  z: -45, h: 38, color: '#34d399' },
-                { id: 'lab',      label: 'Testlabor',    icon: '🔬',   x: 24,   z: 55,  h: 34, color: '#38bdf8' },
+                { id: 'ceo',      label: 'CEO-Büro',     icon: '👔',   x: -168, z: 55,  h: 42, color: '#a78bfa' },
+                { id: 'cto',      label: 'CTO-Agent',    icon: '🧑‍💼', x: -120, z: -45, h: 42, color: '#5b9cf5' },
+                { id: 'planner',  label: 'Planung',      icon: '📋',   x: -72,  z: 55,  h: 23, color: '#22d3ee' },
+                { id: 'dev',      label: 'Entwicklung',  icon: '⚙️',   x: -24,  z: -45, h: 24, color: '#34d399' },
+                { id: 'lab',      label: 'Testlabor',    icon: '🔬',   x: 24,   z: 55,  h: 22, color: '#38bdf8' },
                 { id: 'test',     label: 'Qualität',     icon: '🧪',   x: 72,   z: -45, h: 30, color: '#fbbf24' },
-                { id: 'approval', label: 'CEO-Abnahme',  icon: '🤝',   x: 120,  z: 55,  h: 40, color: '#e879f9' },
-                { id: 'deploy',   label: 'Auslieferung', icon: '🚀',   x: 168,  z: -45, h: 36, color: '#f87171' }
+                { id: 'approval', label: 'CEO-Abnahme',  icon: '🤝',   x: 120,  z: 55,  h: 42, color: '#e879f9' },
+                { id: 'deploy',   label: 'Auslieferung', icon: '🚀',   x: 168,  z: -45, h: 29, color: '#f87171' }
             ];
 
             let rotY = -0.35, rotX = 0.62, zoom = 1;
@@ -2866,34 +2866,174 @@
                 return `rgb(${r},${g},${b})`;
             }
 
-            function drawBox(st, active, done, time) {
-                const size = 20;
-                const corners = [[-1,-1],[1,-1],[1,1],[-1,1]].map(d => [st.x + d[0]*size, st.z + d[1]*size]);
-                const base = corners.map(c => project(c[0], 0, c[1]));
-                const top = corners.map(c => project(c[0], st.h, c[1]));
+            // --- 3D-Primitive (liefern Flächen für den Painter's Algorithm) ---
+            function boxFaces(cx, y0, cz, w, d, h, color) {
+                const k = [[-1,-1],[1,-1],[1,1],[-1,1]].map(q => [cx + q[0]*w/2, cz + q[1]*d/2]);
+                const base = k.map(c => project(c[0], y0, c[1]));
+                const top = k.map(c => project(c[0], y0 + h, c[1]));
+                const faces = [];
+                for (let i = 0; i < 4; i++) {
+                    const j = (i + 1) % 4;
+                    faces.push({ pts: [base[i], base[j], top[j], top[i]], z: (base[i].z + base[j].z) / 2,
+                                 color, f: i % 2 ? 0.62 : 0.8 });
+                }
+                faces.push({ pts: top, z: top.reduce((a, p) => a + p.z, 0) / 4 - 8, color, f: 1.12 });
+                return faces;
+            }
+
+            function ringPoints(cx, cz, r, n) {
+                return Array.from({ length: n }, (_, i) => {
+                    const a = (i / n) * Math.PI * 2;
+                    return [cx + Math.cos(a) * r, cz + Math.sin(a) * r];
+                });
+            }
+
+            function prismFaces(cx, y0, cz, r, h, color, n = 8) {
+                const ring = ringPoints(cx, cz, r, n);
+                const base = ring.map(p => project(p[0], y0, p[1]));
+                const top = ring.map(p => project(p[0], y0 + h, p[1]));
+                const faces = [];
+                for (let i = 0; i < n; i++) {
+                    const j = (i + 1) % n;
+                    faces.push({ pts: [base[i], base[j], top[j], top[i]], z: (base[i].z + base[j].z) / 2,
+                                 color, f: 0.55 + 0.5 * Math.abs(Math.cos(((i + 0.5) / n) * Math.PI * 2)) });
+                }
+                faces.push({ pts: top, z: top.reduce((a, p) => a + p.z, 0) / n - 8, color, f: 1.12 });
+                return faces;
+            }
+
+            function coneFaces(cx, y0, cz, r, h, color, n = 8) {
+                const ring = ringPoints(cx, cz, r, n);
+                const base = ring.map(p => project(p[0], y0, p[1]));
+                const tip = project(cx, y0 + h, cz);
+                const faces = [];
+                for (let i = 0; i < n; i++) {
+                    const j = (i + 1) % n;
+                    faces.push({ pts: [base[i], base[j], tip], z: (base[i].z + base[j].z + tip.z) / 3,
+                                 color, f: 0.6 + 0.5 * Math.abs(Math.cos(((i + 0.5) / n) * Math.PI * 2)) });
+                }
+                return faces;
+            }
+
+            // Menschliche Figur mit Anatomie: Beine, Torso, Arme, Hals, Kopf.
+            // Aktive Figur nickt leicht und winkt mit dem rechten Arm.
+            function humanParts(suit, active, time) {
+                const bob = active ? Math.sin(time * 3) * 0.9 : 0;
+                const wave = active ? Math.abs(Math.sin(time * 3.5)) * 5 : 0;
+                const skin = '#f2c9a0';
+                return [
+                    { kind: 'box', x: -3.4, z: 0, y: 0,  w: 4.8, d: 5.4, h: 12, color: '#39404f' },
+                    { kind: 'box', x:  3.4, z: 0, y: 0,  w: 4.8, d: 5.4, h: 12, color: '#39404f' },
+                    { kind: 'box', x: -3.4, z: 1.2, y: 11.6, w: 5, d: 7, h: 1.6, color: '#22262f' },
+                    { kind: 'box', x:  3.4, z: 1.2, y: 11.6, w: 5, d: 7, h: 1.6, color: '#22262f' },
+                    { kind: 'box', x: 0,    z: 0, y: 12, w: 13.5, d: 7.5, h: 15, color: suit },
+                    { kind: 'box', x: 0,    z: 2.2, y: 18, w: 3.5, d: 2, h: 8, color: '#c22f4a' },
+                    { kind: 'box', x: -8.6, z: 0, y: 13, w: 3.8, d: 4.6, h: 13, color: suit },
+                    { kind: 'box', x:  8.6, z: 0, y: 13 + wave, w: 3.8, d: 4.6, h: 13, color: suit },
+                    { kind: 'sphere', x: -8.6, z: 0, y: 12.5 + (active ? 0 : 0), r: 2.1, color: skin },
+                    { kind: 'sphere', x:  8.6, z: 0, y: 12.5 + wave, r: 2.1, color: skin },
+                    { kind: 'box', x: 0,    z: 0, y: 27, w: 4.4, d: 4, h: 2.6, color: skin },
+                    { kind: 'sphere', x: 0, z: 0, y: 34 + bob, r: 5.4, color: skin },
+                    { kind: 'box', x: 0,    z: 0, y: 38.2 + bob, w: 11.5, d: 8, h: 2.2, color: shade(suit, 0.55) },
+                ];
+            }
+
+            // Erkennbare Objekte je Station statt einfacher Würfel
+            function stationParts(st, active, time) {
+                const spin = time * 2;
+                switch (st.id) {
+                    case 'ceo':      return humanParts('#a78bfa', active, time);
+                    case 'cto':      return humanParts('#5b9cf5', active, time);
+                    case 'approval': return humanParts('#e879f9', active || factoryScene.waiting, time);
+                    case 'planner': return [
+                        { kind: 'box', x: 0, z: 0, y: 0, w: 26, d: 13, h: 10, color: '#6b7280' },
+                        { kind: 'box', x: 0, z: -2, y: 10, w: 17, d: 2, h: 11, color: st.color },
+                        { kind: 'box', x: 0, z: 3.5, y: 10, w: 10, d: 6, h: 1.2, color: '#9ca3af' },
+                    ];
+                    case 'dev': return [
+                        { kind: 'box', x: 0, z: 0, y: 0, w: 25, d: 16, h: 13, color: '#4b5563' },
+                        { kind: 'box', x: -3, z: 0, y: 13, w: 13, d: 10, h: 9, color: st.color },
+                        { kind: 'prism', x: 8.5, z: -4, y: 13, r: 2.2, h: 9 + (active ? Math.sin(spin) * 1.5 : 0), color: '#94a3b8' },
+                        { kind: 'box', x: 8.5, z: 5, y: 13, w: 4, d: 4, h: 4, color: '#374151' },
+                    ];
+                    case 'lab': return [
+                        { kind: 'box', x: 0, z: 0, y: 0, w: 26, d: 13, h: 9, color: '#475569' },
+                        { kind: 'prism', x: 5, z: 0, y: 9, r: 3.8, h: 8, color: st.color },
+                        { kind: 'sphere', x: 5, z: 0, y: 18.5 + (active ? Math.sin(spin) * 1.2 : 0), r: 2.4, color: st.color },
+                        { kind: 'prism', x: -5.5, z: 1, y: 9, r: 2.4, h: 5.5, color: '#a5f3fc' },
+                    ];
+                    case 'test': return [
+                        { kind: 'box', x: -10, z: 0, y: 0, w: 5, d: 6, h: 24, color: '#64748b' },
+                        { kind: 'box', x: 10, z: 0, y: 0, w: 5, d: 6, h: 24, color: '#64748b' },
+                        { kind: 'box', x: 0, z: 0, y: 24, w: 26, d: 6, h: 4.5, color: st.color },
+                        { kind: 'box', x: 0, z: 0, y: 12 + (active ? Math.sin(spin * 1.5) * 8 : 0), w: 19, d: 1.5, h: 1.2, color: '#fde68a' },
+                    ];
+                    case 'deploy': return [
+                        { kind: 'box', x: -8, z: 6, y: 0, w: 5, d: 5, h: 4, color: st.color },
+                        { kind: 'box', x: 8, z: 6, y: 0, w: 5, d: 5, h: 4, color: st.color },
+                        { kind: 'box', x: 0, z: -8, y: 0, w: 5, d: 5, h: 4, color: st.color },
+                        { kind: 'prism', x: 0, z: 0, y: 1, r: 6.5, h: 17, color: '#e5e7eb' },
+                        { kind: 'cone', x: 0, z: 0, y: 18, r: 6.5, h: 9, color: st.color },
+                    ];
+                    default: return [{ kind: 'box', x: 0, z: 0, y: 0, w: 24, d: 24, h: st.h, color: st.color }];
+                }
+            }
+
+            function drawStation(st, active, done, time) {
                 // Weicher Bodenschatten für räumliche Tiefe
                 const sh = project(st.x, 0, st.z);
                 ctx.fillStyle = 'rgba(0,0,0,0.32)';
                 ctx.beginPath();
-                ctx.ellipse(sh.x, sh.y + 3, 30 * sh.s, 10 * sh.s, 0, 0, Math.PI * 2);
+                ctx.ellipse(sh.x, sh.y + 3, 26 * sh.s, 9 * sh.s, 0, 0, Math.PI * 2);
                 ctx.fill();
-                const faces = [];
-                for (let i = 0; i < 4; i++) {
-                    const j = (i + 1) % 4;
-                    faces.push({ pts: [base[i], base[j], top[j], top[i]],
-                                 z: (base[i].z + base[j].z) / 2, f: i % 2 ? 0.62 : 0.8 });
-                }
-                faces.push({ pts: top, z: top.reduce((a, p) => a + p.z, 0) / 4 - 30, f: 1.12 });
-                faces.sort((a, b) => b.z - a.z);
+
                 const dim = factoryScene.running && !active && !done ? 0.55 : 1;
-                faces.forEach(fc => {
-                    ctx.fillStyle = shade(st.color, fc.f * dim);
-                    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    fc.pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
-                    ctx.closePath(); ctx.fill(); ctx.stroke();
+                const draws = [];
+                stationParts(st, active, time).forEach(p => {
+                    if (p.kind === 'sphere') {
+                        const c = project(st.x + p.x, p.y, st.z + p.z);
+                        draws.push({ z: c.z, sphere: { c, r: p.r, color: p.color } });
+                    } else {
+                        const faces = p.kind === 'prism'
+                            ? prismFaces(st.x + p.x, p.y, st.z + p.z, p.r, p.h, p.color)
+                            : (p.kind === 'cone'
+                                ? coneFaces(st.x + p.x, p.y, st.z + p.z, p.r, p.h, p.color)
+                                : boxFaces(st.x + p.x, p.y, st.z + p.z, p.w, p.d, p.h, p.color));
+                        faces.forEach(fc => draws.push({ z: fc.z, face: fc }));
+                    }
                 });
+                draws.sort((a, b) => b.z - a.z);
+                draws.forEach(d => {
+                    if (d.face) {
+                        ctx.fillStyle = shade(d.face.color, d.face.f * dim);
+                        ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+                        ctx.lineWidth = 0.8;
+                        ctx.beginPath();
+                        d.face.pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+                        ctx.closePath(); ctx.fill(); ctx.stroke();
+                    } else {
+                        const { c, r, color } = d.sphere;
+                        const rr = Math.max(1, r * c.s);
+                        const g = ctx.createRadialGradient(c.x - rr * 0.35, c.y - rr * 0.35, rr * 0.2, c.x, c.y, rr);
+                        g.addColorStop(0, shade(color, 1.15 * dim));
+                        g.addColorStop(1, shade(color, 0.62 * dim));
+                        ctx.fillStyle = g;
+                        ctx.beginPath(); ctx.arc(c.x, c.y, rr, 0, Math.PI * 2); ctx.fill();
+                    }
+                });
+
+                // Raketen-Triebwerk zündet, wenn die Auslieferung aktiv ist
+                if (st.id === 'deploy' && active) {
+                    const fc = project(st.x, 1, st.z);
+                    const fr = (10 + Math.random() * 5) * fc.s;
+                    const fg = ctx.createRadialGradient(fc.x, fc.y, 1, fc.x, fc.y, fr);
+                    fg.addColorStop(0, 'rgba(253,224,71,0.9)');
+                    fg.addColorStop(0.5, 'rgba(249,115,22,0.5)');
+                    fg.addColorStop(1, 'rgba(249,115,22,0)');
+                    ctx.fillStyle = fg;
+                    ctx.beginPath(); ctx.arc(fc.x, fc.y, fr, 0, Math.PI * 2); ctx.fill();
+                }
+
                 const topC = project(st.x, st.h, st.z);
                 // Glüh-Puls an der aktiven Station (violett bei wartender CEO-Abnahme, sonst bernstein)
                 if (active) {
@@ -2979,7 +3119,7 @@
 
                 // Stationen von hinten nach vorn zeichnen
                 stations.slice().sort((a, b) => project(b.x, 0, b.z).z - project(a.x, 0, a.z).z)
-                    .forEach(st => drawBox(st,
+                    .forEach(st => drawStation(st,
                         factoryScene.running && st.id === factoryScene.activeStation,
                         factoryScene.doneStations.includes(st.id), time));
 
