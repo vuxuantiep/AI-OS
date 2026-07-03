@@ -1,0 +1,14 @@
+{
+  "name": "ai-os-ceo-dashboard",
+  "main": "worker.js",
+  "compatibility_date": "2026-07-03",
+  "observability": {
+    "enabled": true
+  },
+  "routes": [
+    {
+      "pattern": "ai-os.vuxuantiep.de/*",
+      "zone_name": "vuxuantiep.de"
+    }
+  ]
+}

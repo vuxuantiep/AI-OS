@@ -29,6 +29,7 @@ Thumbs.db
 
 # Node.js / Python (falls du Tools installierst)
 node_modules/
+.wrangler/
 __pycache__/
 *.pyc
 .Python
