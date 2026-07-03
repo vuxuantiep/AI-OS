@@ -13,9 +13,13 @@ API-Keys werden NIE im Code gespeichert. Konfiguration in der .env im Projekt-Ro
 
     OPENROUTER_API_KEY=sk-or-...
     HUGGINGFACE_API_KEY=hf_...
-    CLOUDFLARE_ACCOUNT_ID=...
-    CLOUDFLARE_API_TOKEN=...
-    CLOUDFLARE_AI_GATEWAY=optionaler-gateway-name
+    WORKERS_AI_ACCOUNT_ID=...
+    WORKERS_AI_API_TOKEN=...
+    WORKERS_AI_GATEWAY=optionaler-gateway-name
+
+Achtung: bewusst NICHT "CLOUDFLARE_API_TOKEN"/"CLOUDFLARE_ACCOUNT_ID" — diese
+Namen liest wrangler aus der .env mit und nutzt dann das eingeschränkte
+Workers-AI-Token für Deploys (schlägt fehl).
 
 Reihenfolge: echte Umgebungsvariablen > .env > (Alt-Fallback)
 01_Verbindungen/APIs/Geheimnisse/llm_router.json. Vorlage: .env.example
@@ -138,15 +142,22 @@ class LLMRouter:
         except Exception:
             pass
 
-        def get(env_key, cfg_key):
-            return _clean_secret(os.environ.get(env_key) or env.get(env_key) or cfg.get(cfg_key))
+        def get(*env_keys, cfg_key):
+            for key in env_keys:
+                value = _clean_secret(os.environ.get(key) or env.get(key))
+                if value:
+                    return value
+            return _clean_secret(cfg.get(cfg_key))
 
         return {
-            "openrouter_api_key": get("OPENROUTER_API_KEY", "openrouter_api_key"),
-            "huggingface_api_key": get("HUGGINGFACE_API_KEY", "huggingface_api_key"),
-            "cloudflare_account_id": get("CLOUDFLARE_ACCOUNT_ID", "cloudflare_account_id"),
-            "cloudflare_api_token": get("CLOUDFLARE_API_TOKEN", "cloudflare_api_token"),
-            "cloudflare_gateway": get("CLOUDFLARE_AI_GATEWAY", "cloudflare_gateway"),
+            "openrouter_api_key": get("OPENROUTER_API_KEY", cfg_key="openrouter_api_key"),
+            "huggingface_api_key": get("HUGGINGFACE_API_KEY", cfg_key="huggingface_api_key"),
+            "cloudflare_account_id": get("WORKERS_AI_ACCOUNT_ID", "CLOUDFLARE_ACCOUNT_ID",
+                                         cfg_key="cloudflare_account_id"),
+            "cloudflare_api_token": get("WORKERS_AI_API_TOKEN", "CLOUDFLARE_API_TOKEN",
+                                        cfg_key="cloudflare_api_token"),
+            "cloudflare_gateway": get("WORKERS_AI_GATEWAY", "CLOUDFLARE_AI_GATEWAY",
+                                      cfg_key="cloudflare_gateway"),
         }
 
     def _cf_endpoint(self, s):
@@ -356,7 +367,7 @@ class LLMRouter:
             {"key": "cloudflare", "name": f"Cloudflare {cf_via}", "icon": "☁️", "priority": 4,
              "desc": "Online-Fallback — Open-Source-LLMs auf Cloudflare Workers AI",
              "detail": CLOUDFLARE_MODEL_MAP["default"] if cloudflare_cfg
-                       else "CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN in .env eintragen",
+                       else "WORKERS_AI_ACCOUNT_ID + WORKERS_AI_API_TOKEN in .env eintragen",
              "configured": cloudflare_cfg, "online": cloudflare},
         ]
         return {
