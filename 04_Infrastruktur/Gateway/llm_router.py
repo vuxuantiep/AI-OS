@@ -8,18 +8,17 @@ Routet Chat-Anfragen mit automatischem Fallback über vier Provider:
   3. HuggingFace Inference (online, Open-Source-Modelle)
   4. Cloudflare Workers AI (online, optional über AI Gateway)
 
-API-Keys werden NIE im Code gespeichert. Konfiguration über Umgebungsvariablen
-oder die (nicht versionierte) Datei 01_Verbindungen/APIs/Geheimnisse/llm_router.json:
+API-Keys werden NIE im Code gespeichert. Konfiguration in der .env im Projekt-Root
+(nicht versioniert, siehe .gitignore):
 
-    {
-      "openrouter_api_key": "sk-or-...",
-      "huggingface_api_key": "hf_...",
-      "cloudflare_account_id": "....",
-      "cloudflare_api_token": "....",
-      "cloudflare_gateway": "optionaler-gateway-name"
-    }
+    OPENROUTER_API_KEY=sk-or-...
+    HUGGINGFACE_API_KEY=hf_...
+    CLOUDFLARE_ACCOUNT_ID=...
+    CLOUDFLARE_API_TOKEN=...
+    CLOUDFLARE_AI_GATEWAY=optionaler-gateway-name
 
-Vorlage: 01_Verbindungen/APIs/llm_router.example.json
+Reihenfolge: echte Umgebungsvariablen > .env > (Alt-Fallback)
+01_Verbindungen/APIs/Geheimnisse/llm_router.json. Vorlage: .env.example
 """
 
 import os
@@ -31,7 +30,8 @@ import urllib.error
 from pathlib import Path
 
 AI_OS_ROOT = Path(os.environ.get("AI_OS_ROOT", Path(__file__).parent.parent.parent))
-SECRETS_PATH = AI_OS_ROOT / "01_Verbindungen" / "APIs" / "Geheimnisse" / "llm_router.json"
+ENV_PATH = AI_OS_ROOT / ".env"
+SECRETS_PATH = AI_OS_ROOT / "01_Verbindungen" / "APIs" / "Geheimnisse" / "llm_router.json"  # Alt-Fallback
 
 OLLAMA_HOST = "127.0.0.1"
 OLLAMA_PORT = 11434
@@ -85,6 +85,21 @@ def _clean_secret(value):
     return "" if (not value or " " in value or value.startswith("HIER-EINTRAGEN")) else value
 
 
+def _load_env_file():
+    """Liest die .env im Projekt-Root (KEY=WERT pro Zeile, # = Kommentar)."""
+    data = {}
+    try:
+        for line in ENV_PATH.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            data[key.strip()] = value.strip().strip('"').strip("'")
+    except Exception:
+        pass
+    return data
+
+
 # Einige Anbieter (z.B. HuggingFace) blockieren den Standard-UA "Python-urllib" mit 403
 USER_AGENT = "AI-OS-Dashboard/1.0"
 
@@ -116,17 +131,22 @@ class LLMRouter:
     # ---------- Konfiguration ----------
 
     def _secrets(self):
+        env = _load_env_file()
         cfg = {}
         try:
             cfg = json.loads(SECRETS_PATH.read_text(encoding="utf-8"))
         except Exception:
             pass
+
+        def get(env_key, cfg_key):
+            return _clean_secret(os.environ.get(env_key) or env.get(env_key) or cfg.get(cfg_key))
+
         return {
-            "openrouter_api_key": _clean_secret(os.environ.get("OPENROUTER_API_KEY") or cfg.get("openrouter_api_key")),
-            "huggingface_api_key": _clean_secret(os.environ.get("HUGGINGFACE_API_KEY") or cfg.get("huggingface_api_key")),
-            "cloudflare_account_id": _clean_secret(os.environ.get("CLOUDFLARE_ACCOUNT_ID") or cfg.get("cloudflare_account_id")),
-            "cloudflare_api_token": _clean_secret(os.environ.get("CLOUDFLARE_API_TOKEN") or cfg.get("cloudflare_api_token")),
-            "cloudflare_gateway": _clean_secret(os.environ.get("CLOUDFLARE_AI_GATEWAY") or cfg.get("cloudflare_gateway")),
+            "openrouter_api_key": get("OPENROUTER_API_KEY", "openrouter_api_key"),
+            "huggingface_api_key": get("HUGGINGFACE_API_KEY", "huggingface_api_key"),
+            "cloudflare_account_id": get("CLOUDFLARE_ACCOUNT_ID", "cloudflare_account_id"),
+            "cloudflare_api_token": get("CLOUDFLARE_API_TOKEN", "cloudflare_api_token"),
+            "cloudflare_gateway": get("CLOUDFLARE_AI_GATEWAY", "cloudflare_gateway"),
         }
 
     def _cf_endpoint(self, s):
@@ -326,17 +346,17 @@ class LLMRouter:
             {"key": "openrouter", "name": "OpenRouter", "icon": "🌍", "priority": 2,
              "desc": "Online-Fallback — kostenlose Open-Source-LLMs",
              "detail": OPENROUTER_MODEL_MAP["default"] if openrouter_cfg
-                       else "API-Key fehlt (OPENROUTER_API_KEY oder Geheimnisse/llm_router.json)",
+                       else "API-Key fehlt (OPENROUTER_API_KEY in .env eintragen)",
              "configured": openrouter_cfg, "online": openrouter},
             {"key": "huggingface", "name": "HuggingFace", "icon": "🤗", "priority": 3,
              "desc": "Online-Fallback — Open-Source-LLMs via HF Inference Providers",
              "detail": HUGGINGFACE_MODEL_MAP["default"] if huggingface_cfg
-                       else "API-Key fehlt (HUGGINGFACE_API_KEY oder Geheimnisse/llm_router.json)",
+                       else "API-Key fehlt (HUGGINGFACE_API_KEY in .env eintragen)",
              "configured": huggingface_cfg, "online": huggingface},
             {"key": "cloudflare", "name": f"Cloudflare {cf_via}", "icon": "☁️", "priority": 4,
              "desc": "Online-Fallback — Open-Source-LLMs auf Cloudflare Workers AI",
              "detail": CLOUDFLARE_MODEL_MAP["default"] if cloudflare_cfg
-                       else "Account-ID + API-Token fehlen (Geheimnisse/llm_router.json)",
+                       else "CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN in .env eintragen",
              "configured": cloudflare_cfg, "online": cloudflare},
         ]
         return {
@@ -344,7 +364,7 @@ class LLMRouter:
             "active": active,
             "last_provider": self.last_provider,
             "any_available": active is not None,
-            "secrets_path": "01_Verbindungen/APIs/Geheimnisse/llm_router.json",
+            "secrets_path": ".env (Projekt-Root, nicht versioniert)",
         }
 
 

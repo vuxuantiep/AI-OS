@@ -1,8 +1,0 @@
-{
-  "_hinweis": "Kopiere diese Datei nach 01_Verbindungen/APIs/Geheimnisse/llm_router.json und trage deine Keys ein. Der Ordner Geheimnisse/ wird NICHT versioniert. Alternativ Umgebungsvariablen: OPENROUTER_API_KEY, HUGGINGFACE_API_KEY, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN, CLOUDFLARE_AI_GATEWAY.",
-  "openrouter_api_key": "sk-or-v1-DEIN-KEY (kostenlos auf openrouter.ai erstellen)",
-  "huggingface_api_key": "hf_DEIN-TOKEN (huggingface.co -> Settings -> Access Tokens, Berechtigung 'Inference')",
-  "cloudflare_account_id": "Cloudflare Dashboard -> Workers & Pages -> Account-ID",
-  "cloudflare_api_token": "API-Token mit Berechtigung 'Workers AI: Read/Edit'",
-  "cloudflare_gateway": "optional: Name deines AI Gateway (leer lassen fuer direkten Workers-AI-Zugriff)"
-}

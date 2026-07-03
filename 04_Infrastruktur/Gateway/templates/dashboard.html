@@ -1212,9 +1212,8 @@
                         <div class="desc">
                             Fällt Ollama aus, übernehmen automatisch kostenlose Open-Source-LLMs aus der Cloud.
                             Dafür einmalig API-Keys hinterlegen — <b>niemals im Code</b>, sondern in der nicht
-                            versionierten Datei <code>01_Verbindungen/APIs/Geheimnisse/llm_router.json</code>
-                            (Vorlage: <code>01_Verbindungen/APIs/llm_router.example.json</code>) oder als
-                            Umgebungsvariablen <code>OPENROUTER_API_KEY</code>, <code>HUGGINGFACE_API_KEY</code>,
+                            versionierten Datei <code>.env</code> im Projekt-Root (Vorlage: <code>.env.example</code>):
+                            <code>OPENROUTER_API_KEY</code>, <code>HUGGINGFACE_API_KEY</code>,
                             <code>CLOUDFLARE_ACCOUNT_ID</code>, <code>CLOUDFLARE_API_TOKEN</code>,
                             optional <code>CLOUDFLARE_AI_GATEWAY</code>.
                             Die Datei wird bei jeder Anfrage neu gelesen — kein Neustart nötig.
