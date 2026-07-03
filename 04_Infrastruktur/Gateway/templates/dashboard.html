@@ -1023,10 +1023,12 @@
                 <button class="nav-item" data-tab="fleet" onclick="showTab('fleet')">🎯 <span class="label">Agenten</span><span class="nav-badge" id="fleet-badge">-</span></button>
                 <button class="nav-item" data-tab="chat" onclick="showTab('chat')">💬 <span class="label">Chat</span></button>
                 <button class="nav-item" data-tab="models" onclick="showTab('models')">📦 <span class="label">Modelle</span></button>
+                <button class="nav-item" data-tab="llm" onclick="showTab('llm')">🔀 <span class="label">KI-Gateway</span><span class="nav-badge" id="llm-badge">-</span></button>
                 <button class="nav-item" data-tab="knowledge" onclick="showTab('knowledge')">🧠 <span class="label">Gedächtnis</span></button>
                 <button class="nav-item" data-tab="learning" onclick="showTab('learning')">🎓 <span class="label">Lernen</span><span class="nav-badge" id="learning-badge" style="display:none;">-</span></button>
                 <button class="nav-item" data-tab="files" onclick="showTab('files')">📂 <span class="label">Dateien</span></button>
                 <button class="nav-item" data-tab="architecture" onclick="showTab('architecture')">🏛️ <span class="label">Architektur</span></button>
+                <button class="nav-item" data-tab="ideas" onclick="showTab('ideas')">💡 <span class="label">CEO-Ideen</span></button>
             </nav>
             <div class="sidebar-footer">
                 <span class="status-dot" id="ollama-dot"></span>
@@ -1198,6 +1200,28 @@
                     </div>
                 </section>
 
+                <!-- === KI-Gateway / LLM-Router === -->
+                <section class="tab-panel" id="tab-llm">
+                    <div class="section-title">🔀 KI-Gateway / LLM-Router <span class="muted">— routet jede KI-Anfrage automatisch zum ersten erreichbaren Provider</span></div>
+                    <span class="pill" id="llm-summary">Lade Provider-Status...</span>
+                    <div class="services-grid" id="llm-grid" style="margin-top: 1rem;">
+                        <div class="empty-state">Lade Provider...</div>
+                    </div>
+                    <div class="section-title" style="margin-top: 1.5rem;">⚙️ Online-Fallback einrichten</div>
+                    <div class="service-card" style="max-width: 720px;">
+                        <div class="desc">
+                            Fällt Ollama aus, übernehmen automatisch kostenlose Open-Source-LLMs aus der Cloud.
+                            Dafür einmalig API-Keys hinterlegen — <b>niemals im Code</b>, sondern in der nicht
+                            versionierten Datei <code>01_Verbindungen/APIs/Geheimnisse/llm_router.json</code>
+                            (Vorlage: <code>01_Verbindungen/APIs/llm_router.example.json</code>) oder als
+                            Umgebungsvariablen <code>OPENROUTER_API_KEY</code>, <code>CLOUDFLARE_ACCOUNT_ID</code>,
+                            <code>CLOUDFLARE_API_TOKEN</code>, optional <code>CLOUDFLARE_AI_GATEWAY</code>.
+                            Danach das Dashboard neu starten. Lokale Modellnamen (llama3, mistral,
+                            qwen2.5-coder …) werden automatisch auf gleichwertige Online-Modelle abgebildet.
+                        </div>
+                    </div>
+                </section>
+
                 <!-- === Gedächtnis === -->
                 <section class="tab-panel" id="tab-knowledge">
                     <div class="section-title">🧠 Wissensmodell (06_Gedächtnis) <span class="muted">– bewusst getrennte Kategorien statt einem einzigen Vektorindex</span></div>
@@ -1275,6 +1299,160 @@
                         <div class="empty-state">Lade Dokumente...</div>
                     </div>
                 </section>
+
+                <!-- === CEO-Ideen === -->
+                <section class="tab-panel" id="tab-ideas">
+                    <div class="section-title">💡 CEO-Ideenwerkstatt <span class="muted">– Strategische Produktentwicklung & Business-Modelle</span></div>
+
+                    <!-- Hauptbereich: Graph + Creator -->
+                    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+                        <!-- 3D-Wissensgraph -->
+                        <div class="hover-lift" style="background:linear-gradient(135deg,var(--bg-card),var(--bg-tertiary));border:1px solid var(--accent);border-radius:var(--radius);padding:1.5rem;position:relative;overflow:hidden;box-shadow:0 0 20px rgba(91,156,245,0.15);">
+                            <div style="position:absolute;top:-20px;right:-20px;width:150px;height:150px;background:radial-gradient(circle,var(--accent-soft) 0%,transparent 70%);opacity:0.4;animation:float 6s ease-in-out infinite;"></div>
+                            <div class="section-title" style="margin-top:0;position:relative;z-index:1;">🌐 Wissensgraph 3D</div>
+                            <div id="graph-3d-container" style="width:100%;aspect-ratio:1/1;background:var(--bg-primary);border-radius:var(--radius-sm);position:relative;overflow:hidden;cursor:grab;border:2px solid var(--border-strong);box-shadow:inset 0 0 30px rgba(91,156,245,0.1);">
+                                <canvas id="graph-3d-canvas" style="width:100%;height:100%;display:block;"></canvas>
+                                <div style="position:absolute;bottom:0.5rem;left:50%;transform:translateX(-50%);font-size:0.7rem;color:var(--text-secondary);pointer-events:none;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.7),transparent);padding:0.4rem 1rem;border-radius:12px;">🖱️ Drag to Rotate | Scroll to Zoom</div>
+                            </div>
+                            <div style="display:flex;gap:0.4rem;margin-top:0.75rem;justify-content:center;">
+                                <span class="pill" style="font-size:0.65rem;">💼 Business</span>
+                                <span class="pill" style="font-size:0.65rem;">🛠️ Tech</span>
+                                <span class="pill" style="font-size:0.65rem;">🤖 Agents</span>
+                                <span class="pill" style="font-size:0.65rem;">🧠 Memory</span>
+                            </div>
+                        </div>
+
+                        <!-- Produktidee Creator -->
+                        <div class="hover-lift" style="background:linear-gradient(135deg,var(--bg-card),var(--bg-tertiary));border:1px solid var(--success);border-radius:var(--radius);padding:1.5rem;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 20px rgba(52,211,153,0.15);">
+                            <div style="position:absolute;top:-20px;right:-20px;width:150px;height:150px;background:radial-gradient(circle,var(--success-soft) 0%,transparent 70%);opacity:0.4;animation:float 6s ease-in-out infinite reverse;"></div>
+                            <div class="section-title" style="margin-top:0;position:relative;z-index:1;">🚀 Produktidee Canvas</div>
+                            <div style="flex:1;display:flex;flex-direction:column;gap:0.75rem;position:relative;z-index:1;">
+                                <div style="background:var(--bg-secondary);padding:0.3rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
+                                    <input type="text" id="idea-name" placeholder="💡 Ideenname (z.B. 'AI-Scout')" style="width:100%;padding:0.6rem;background:transparent;border:none;color:var(--text-primary);font-size:0.95rem;font-weight:600;outline:none;">
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
+                                    <div style="background:var(--bg-secondary);padding:0.5rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
+                                        <label style="font-size:0.7rem;color:var(--accent);margin-bottom:0.2rem;display:block;font-weight:600;">🎯 ZIELGRUPPE</label>
+                                        <input type="text" id="idea-target" placeholder="Wer profitiert?" style="width:100%;padding:0.4rem;background:transparent;border:none;color:var(--text-primary);font-size:0.85rem;outline:none;">
+                                    </div>
+                                    <div style="background:var(--bg-secondary);padding:0.5rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
+                                        <label style="font-size:0.7rem;color:var(--danger);margin-bottom:0.2rem;display:block;font-weight:600;">⚠️ PROBLEM</label>
+                                        <input type="text" id="idea-problem" placeholder="Welches Problem?" style="width:100%;padding:0.4rem;background:transparent;border:none;color:var(--text-primary);font-size:0.85rem;outline:none;">
+                                    </div>
+                                </div>
+                                <div style="flex:1;background:var(--bg-secondary);padding:0.5rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
+                                    <label style="font-size:0.7rem;color:var(--success);margin-bottom:0.2rem;display:block;font-weight:600;">💡 LÖSUNGSANSATZ</label>
+                                    <textarea id="idea-solution" placeholder="Wie löst du das Problem?" style="flex:1;width:100%;min-height:80px;padding:0.4rem;background:transparent;border:none;color:var(--text-primary);font-size:0.85rem;resize:vertical;font-family:inherit;outline:none;"></textarea>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem;">
+                                    <button class="btn btn-primary" onclick="saveIdea()" style="justify-content:center;padding:0.7rem;background:linear-gradient(135deg,var(--accent),var(--accent-hover));box-shadow:0 4px 12px rgba(91,156,245,0.3);">💾 Speichern</button>
+                                    <button class="btn btn-outline" onclick="exportIdeas()" style="justify-content:center;padding:0.7rem;">📤 Export</button>
+                                    <button class="btn btn-outline" onclick="clearIdeaForm()" style="justify-content:center;padding:0.7rem;color:var(--danger);border-color:var(--danger);">🔄 Neu</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Unterer Bereich: Skizze + Notizen + Ideen Liste -->
+                    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+                        <!-- Große Skizze -->
+                        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;">
+                            <div class="section-title" style="margin-top:0;">✏️ Strategie-Skizze</div>
+                            <div style="background:#ffffff;border-radius:var(--radius-sm);overflow:hidden;border:2px solid var(--border);">
+                                <canvas id="big-sketch-canvas" width="1200" height="600" style="width:100%;height:auto;display:block;cursor:crosshair;touch-action:none;"></canvas>
+                            </div>
+                            <div style="display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap;align-items:center;">
+                                <button class="btn btn-outline btn-sm sketch-tool active" onclick="setBigSketchTool('pen')" id="big-tool-pen" style="flex:0 0 auto;">✏️ Stift</button>
+                                <button class="btn btn-outline btn-sm sketch-tool" onclick="setBigSketchTool('eraser')" id="big-tool-eraser" style="flex:0 0 auto;">🧽 Radierer</button>
+                                <input type="color" id="big-sketch-color" value="#3987e5" title="Farbe" style="width:36px;height:32px;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;flex:0 0 auto;">
+                                <input type="range" id="big-sketch-size" min="1" max="32" value="4" title="Stiftdicke" style="width:80px;flex:0 0 auto;">
+                                <div style="flex:1;"></div>
+                                <button class="btn btn-outline btn-sm" onclick="undoBigSketch()" style="flex:0 0 auto;">↩️ Rückgängig</button>
+                                <button class="btn btn-outline btn-sm" onclick="clearBigSketch()" style="flex:0 0 auto;">🗑 Löschen</button>
+                                <button class="btn btn-success btn-sm" onclick="saveBigSketchAsPng()" style="flex:0 0 auto;">💾 PNG Export</button>
+                            </div>
+                        </div>
+
+                        <!-- Notizen + Schnellzugriff -->
+                        <div style="display:flex;flex-direction:column;gap:1.25rem;">
+                            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;flex:1;display:flex;flex-direction:column;">
+                                <div class="section-title" style="margin-top:0;">🗒️ Strategie-Notizen</div>
+                                <textarea id="big-notepad" placeholder="Sammle hier strategische Überlegungen, Fragen, Einsichten..." style="flex:1;min-height:200px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);padding:0.75rem;font-size:0.85rem;resize:vertical;font-family:inherit;line-height:1.6;"></textarea>
+                                <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+                                    <button class="btn btn-outline btn-sm" onclick="clearBigNotepad()" style="flex:1;">🗑 Leeren</button>
+                                    <button class="btn btn-primary btn-sm" onclick="insertBigNotepadIntoChat()" style="flex:1;">➡ In Chat</button>
+                                </div>
+                            </div>
+
+                            <!-- Quick Stats -->
+                            <div style="background:linear-gradient(135deg,var(--accent-soft),var(--bg-card));border:1px solid var(--border-strong);border-radius:var(--radius);padding:1rem;">
+                                <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.5rem;font-weight:600;">📊 Ideen-Statistik</div>
+                                <div id="idea-stats" style="font-size:1.5rem;font-weight:700;color:var(--accent);">0 gespeicherte Ideen</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gespeicherte Ideen Liste -->
+                    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                            <div class="section-title" style="margin:0;">📚 Ideen-Bibliothek</div>
+                            <button class="btn btn-outline btn-sm" onclick="loadSavedIdeas()">🔄 Aktualisieren</button>
+                        </div>
+                        <div id="ideas-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;">
+                            <div class="empty-state">Noch keine Ideen gespeichert. Erstelle deine erste Produktidee oben.</div>
+                        </div>
+                    </div>
+
+                    <!-- 🏭 KI-Fabrik -->
+                    <div style="background:linear-gradient(135deg,var(--bg-card),var(--bg-tertiary));border:1px solid var(--accent);border-radius:var(--radius);padding:1.5rem;position:relative;overflow:hidden;margin-top:1.5rem;">
+                        <div style="position:absolute;top:-20px;right:-20px;width:150px;height:150px;background:radial-gradient(circle,var(--accent-soft) 0%,transparent 70%);opacity:0.4;animation:float 6s ease-in-out infinite;"></div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;position:relative;z-index:1;">
+                            <div class="section-title" style="margin:0;">🏭 KI-Fabrik — Live <span class="muted">— CEO beauftragt den CTO-Agenten</span></div>
+                            <div style="display:flex;gap:0.4rem;">
+                                <span class="pill" id="factory-cto-status" style="font-size:0.65rem;">🧑‍💼 CTO: prüfe…</span>
+                                <span class="pill" id="factory-agents-status" style="font-size:0.65rem;">🤖 Agent-System: prüfe…</span>
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:1.5rem;position:relative;z-index:1;margin-top:1rem;">
+                            <!-- 3D-Fabrikraum Visualisierung -->
+                            <div>
+                                <div id="factory-3d-container" style="width:100%;aspect-ratio:4/3;background:var(--bg-primary);border-radius:var(--radius-sm);position:relative;overflow:hidden;cursor:grab;border:2px solid var(--border-strong);box-shadow:inset 0 0 30px rgba(91,156,245,0.1);">
+                                    <canvas id="factory-3d-canvas" style="width:100%;height:100%;display:block;"></canvas>
+                                    <div id="factory-3d-banner" style="position:absolute;top:0.6rem;left:50%;transform:translateX(-50%);font-size:0.72rem;color:var(--text-primary);pointer-events:none;background:rgba(0,0,0,0.55);padding:0.35rem 0.9rem;border-radius:12px;border:1px solid rgba(91,156,245,0.4);white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;">Fabrik im Leerlauf — sende eine Idee an den CTO</div>
+                                    <div style="position:absolute;bottom:0.5rem;left:50%;transform:translateX(-50%);font-size:0.7rem;color:var(--text-secondary);pointer-events:none;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.7),transparent);padding:0.4rem 1rem;border-radius:12px;white-space:nowrap;">🖱️ Ziehen = Drehen | Scrollen = Zoom</div>
+                                </div>
+                                <div style="display:flex;gap:0.4rem;margin-top:0.75rem;justify-content:center;flex-wrap:wrap;">
+                                    <span class="pill" style="font-size:0.65rem;">👔 CEO-Büro</span>
+                                    <span class="pill" style="font-size:0.65rem;">🧑‍💼 CTO-Agent</span>
+                                    <span class="pill" style="font-size:0.65rem;">📋 Planung</span>
+                                    <span class="pill" style="font-size:0.65rem;">⚙️ Entwicklung</span>
+                                    <span class="pill" style="font-size:0.65rem;">🧪 Qualität</span>
+                                    <span class="pill" style="font-size:0.65rem;">🚀 Auslieferung</span>
+                                </div>
+                            </div>
+                            <!-- Beauftragung + Auftragsübersicht -->
+                            <div style="display:flex;flex-direction:column;gap:1rem;">
+                                <div style="background:var(--bg-secondary);padding:1rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
+                                    <div style="font-weight:600;margin-bottom:0.5rem;">📤 Aufgabe an CTO-Agent</div>
+                                    <select id="factory-idea-select" style="width:100%;padding:0.5rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);margin-bottom:0.5rem;">
+                                        <option value="">-- Idee auswählen --</option>
+                                    </select>
+                                    <textarea id="factory-note" placeholder="Optionale Anweisung an den CTO (z.B. 'Fokus auf schnelles MVP')" style="width:100%;min-height:52px;padding:0.5rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:0.82rem;resize:vertical;font-family:inherit;margin-bottom:0.5rem;"></textarea>
+                                    <button class="btn btn-primary" id="factory-send-btn" onclick="sendToCTO()" style="width:100%;justify-content:center;">📨 CTO beauftragen</button>
+                                </div>
+                                <div style="background:var(--bg-secondary);padding:1rem;border-radius:var(--radius-sm);border:1px solid var(--border);flex:1;overflow-y:auto;max-height:520px;">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                                        <div style="font-weight:600;">📋 Auftragsstatus</div>
+                                        <button class="btn btn-outline btn-sm" onclick="pollFactoryOrders(true)">🔄</button>
+                                    </div>
+                                    <div id="factory-orders-list">
+                                        <div class="empty-state">Keine Aufträge vorhanden.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
@@ -1326,9 +1504,17 @@
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
             document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
-            const titles = {overview: '📊 Übersicht', news: '📰 KI-News', services: '🧩 Dienste', fleet: '🎯 Agenten', chat: '💬 Chat', models: '📦 Modelle', knowledge: '🧠 Gedächtnis', learning: '🎓 Lernen', files: '📂 Dateien', architecture: '🏛️ Architektur'};
+            const titles = {overview: '📊 Übersicht', news: '📰 KI-News', services: '🧩 Dienste', fleet: '🎯 Agenten', chat: '💬 Chat', models: '📦 Modelle', llm: '🔀 KI-Gateway', knowledge: '🧠 Gedächtnis', learning: '🎓 Lernen', files: '📂 Dateien', architecture: '🏛️ Architektur', ideas: '💡 CEO-Ideen'};
             document.getElementById('topbar-title').textContent = titles[tab] || tab;
             closeMobileNav();
+            if (tab === 'ideas') {
+                setTimeout(() => {
+                    init3DGraph();
+                    initBigSketch();
+                    loadSavedIdeas();
+                    initFactoryPanel();
+                }, 100);
+            }
         }
 
         // === Hamburger / Sidebar ===
@@ -1607,6 +1793,7 @@
                 if (data.error) {
                     grid.innerHTML = `<div class="empty-state error">❌ ${data.error}</div>`;
                     document.getElementById('ollama-dot').className = 'status-dot offline';
+                    ensureFallbackModelOption(select);
                     return;
                 }
 
@@ -1638,6 +1825,14 @@
             } catch (e) {
                 document.getElementById('ollama-dot').className = 'status-dot offline';
                 document.getElementById('models-grid').innerHTML = `<div class="empty-state error">❌ Verbindung zu Ollama fehlgeschlagen</div>`;
+                ensureFallbackModelOption(document.getElementById('model-select'));
+            }
+        }
+
+        // Ollama offline: Chat bleibt über den KI-Gateway-Fallback (OpenRouter/Cloudflare) nutzbar
+        function ensureFallbackModelOption(select) {
+            if (!select.options.length) {
+                select.innerHTML = '<option value="llama3">🔀 Online-Fallback (KI-Gateway)</option>';
             }
         }
 
@@ -1693,6 +1888,55 @@
                 summary.className = 'pill ' + (online === total ? 'ok' : (online === 0 ? 'warn' : ''));
             } catch (e) {
                 document.getElementById('services-grid').innerHTML = `<div class="empty-state error">❌ Dienste-Status konnte nicht geladen werden</div>`;
+            }
+        }
+
+        // === KI-Gateway / LLM-Router ===
+        function renderLlmProviderCard(p, active) {
+            const isActive = p.key === active;
+            const statusClass = p.online ? 'online' : 'offline';
+            const statusText = p.online ? 'Online' : (p.configured ? 'Offline / nicht erreichbar' : 'Nicht konfiguriert');
+            return `
+                <div class="service-card" style="${isActive ? 'border-color: var(--accent, #3987e5);' : ''}">
+                    <div class="head">
+                        <span class="icon">${p.icon}</span>
+                        <span class="name">${p.name}</span>
+                        <span class="status-dot ${statusClass}" title="${statusText}"></span>
+                    </div>
+                    <div class="desc">${p.desc}</div>
+                    <div class="meta">
+                        <span class="port">Priorität ${p.priority} · ${escapeHtml(p.detail)}</span>
+                        ${isActive ? '<span class="pill ok" style="padding:0.2rem 0.6rem;">aktiv</span>'
+                                   : (p.online ? '<span class="pill" style="padding:0.2rem 0.6rem;">bereit</span>' : '')}
+                    </div>
+                </div>`;
+        }
+
+        async function loadLlmStatus() {
+            try {
+                const resp = await fetch('/api/llm/status');
+                const data = await resp.json();
+                document.getElementById('llm-grid').innerHTML =
+                    data.providers.map(p => renderLlmProviderCard(p, data.active)).join('');
+
+                const names = {ollama: 'Ollama (lokal)', openrouter: 'OpenRouter', cloudflare: 'Cloudflare'};
+                const summary = document.getElementById('llm-summary');
+                const badge = document.getElementById('llm-badge');
+                if (data.active) {
+                    summary.textContent = `Aktiver Provider: ${names[data.active] || data.active}` +
+                        (data.active !== 'ollama' ? ' — Ollama offline, Online-Fallback aktiv' : '');
+                    summary.className = 'pill ' + (data.active === 'ollama' ? 'ok' : 'warn');
+                    badge.textContent = data.active === 'ollama' ? 'lokal' : 'cloud';
+                    badge.className = 'nav-badge' + (data.active === 'ollama' ? '' : ' warn');
+                } else {
+                    summary.textContent = 'Kein LLM-Provider erreichbar — Ollama starten oder Fallback-Keys hinterlegen';
+                    summary.className = 'pill warn';
+                    badge.textContent = 'aus';
+                    badge.className = 'nav-badge warn';
+                }
+            } catch (e) {
+                document.getElementById('llm-grid').innerHTML =
+                    `<div class="empty-state error">❌ KI-Gateway-Status konnte nicht geladen werden</div>`;
             }
         }
 
@@ -2101,6 +2345,9 @@
                     if (data.sources && data.sources.length) {
                         body += `<div class="rag-sources">📎 Quellen: ${data.sources.map(escapeHtml).join(' · ')}</div>`;
                     }
+                    if (data.provider && data.provider !== 'ollama') {
+                        body += `<div class="rag-sources">🔀 Ollama offline — beantwortet über ${escapeHtml(data.provider_label || data.provider)}</div>`;
+                    }
                     appendMessage('assistant', roleLabel, body, true, data.response);
                     chatHistory.push({ role: 'user', content: text });
                     chatHistory.push({ role: 'assistant', content: data.response });
@@ -2313,10 +2560,755 @@
         loadArchitecture();
         loadWikiDocs();
         loadFleet();
+        loadLlmStatus();
+        
+        // Big Sketch State
+        let bigSketchCtx = null;
+        let bigSketchDrawing = false;
+        let bigSketchTool = 'pen';
+        let bigSketchUndoStack = [];
+        
         setInterval(loadModels, 30000);
         setInterval(loadStats, 30000);
         setInterval(loadServices, 15000);
         setInterval(loadFleet, 20000);
+        setInterval(loadLlmStatus, 30000);
+
+        // === CEO-Ideen: 3D Graph (Force-Directed) ===
+        function init3DGraph() {
+            const canvas = document.getElementById('graph-3d-canvas');
+            if (!canvas) return;
+            const container = document.getElementById('graph-3d-container');
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            
+            // Demo-Daten aus Wissensbasis-Kategorien
+            const nodes = [
+                { id: 'business', label: 'Business', icon: '💼', x: 0, y: 0, z: 0 },
+                { id: 'technical', label: 'Technical', icon: '🛠️', x: 100, y: -80, z: 50 },
+                { id: 'agents', label: 'Agents', icon: '🤖', x: -100, y: -80, z: -50 },
+                { id: 'projects', label: 'Projects', icon: '📋', x: 80, y: 100, z: -30 },
+                { id: 'memory', label: 'Memory', icon: '🧠', x: -80, y: 100, z: 30 },
+                { id: 'prompts', label: 'Prompts', icon: '✍️', x: 0, y: 0, z: 120 },
+                { id: 'sop', label: 'SOP', icon: '📑', x: 0, y: 0, z: -120 },
+            ];
+            const edges = [
+                ['business', 'technical'], ['business', 'projects'], ['business', 'memory'],
+                ['technical', 'agents'], ['technical', 'prompts'], ['agents', 'memory'],
+                ['projects', 'sop'], ['memory', 'sop'], ['prompts', 'agents']
+            ];
+            
+            let rotationY = 0;
+            let rotationX = 0.3;
+            let zoom = 1;
+            let isDragging = false;
+            let lastMouse = { x: 0, y: 0 };
+            
+            function project(node) {
+                const cosY = Math.cos(rotationY), sinY = Math.sin(rotationY);
+                const cosX = Math.cos(rotationX), sinX = Math.sin(rotationX);
+                let x = node.x * cosY - node.z * sinY;
+                let z = node.x * sinY + node.z * cosY;
+                let y = node.y * cosX - z * sinX;
+                z = node.y * sinX + z * cosX;
+                const scale = 300 / (300 + z) * zoom;
+                return { x: x * scale + rect.width / 2, y: y * scale + rect.height / 2, z, scale };
+            }
+            
+            function draw() {
+                ctx.clearRect(0, 0, rect.width, rect.height);
+                ctx.fillStyle = '#0f0f11';
+                ctx.fillRect(0, 0, rect.width, rect.height);
+                
+                // Sort nodes by Z
+                const projected = nodes.map(n => ({ node: n, ...project(n) })).sort((a, b) => a.z - b.z);
+                
+                // Draw edges
+                ctx.strokeStyle = 'rgba(91,156,245,0.3)';
+                ctx.lineWidth = 1.5;
+                edges.forEach(([source, target]) => {
+                    const s = projected.find(p => p.node.id === source);
+                    const t = projected.find(p => p.node.id === target);
+                    if (s && t) {
+                        ctx.beginPath();
+                        ctx.moveTo(s.x, s.y);
+                        ctx.lineTo(t.x, t.y);
+                        ctx.stroke();
+                    }
+                });
+                
+                // Draw nodes
+                projected.forEach(p => {
+                    const radius = Math.max(8, 28 * p.scale);
+                    ctx.fillStyle = '#1e1e24';
+                    ctx.strokeStyle = 'rgba(91,156,245,0.6)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#f0f0f5';
+                    ctx.font = `${Math.max(10, 16 * p.scale)}px Inter`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(p.node.icon, p.x, p.y);
+                });
+                
+                requestAnimationFrame(draw);
+            }
+            
+            canvas.addEventListener('mousedown', e => { isDragging = true; lastMouse = { x: e.clientX, y: e.clientY }; });
+            canvas.addEventListener('wheel', e => { zoom *= e.deltaY > 0 ? 0.9 : 1.1; zoom = Math.max(0.5, Math.min(3, zoom)); e.preventDefault(); }, { passive: false });
+            window.addEventListener('mousemove', e => {
+                if (!isDragging) return;
+                const dx = e.clientX - lastMouse.x;
+                const dy = e.clientY - lastMouse.y;
+                rotationY += dx * 0.01;
+                rotationX += dy * 0.01;
+                rotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotationX));
+                lastMouse = { x: e.clientX, y: e.clientY };
+            });
+            window.addEventListener('mouseup', () => isDragging = false);
+            
+            draw();
+        }
+
+        // === CEO-Ideen: Big Sketch ===
+        function initBigSketch() {
+            const canvas = document.getElementById('big-sketch-canvas');
+            if (!canvas || bigSketchCtx) return;
+            bigSketchCtx = canvas.getContext('2d');
+            bigSketchCtx.lineCap = 'round';
+            bigSketchCtx.lineJoin = 'round';
+            
+            const saved = localStorage.getItem('aios-big-sketch');
+            if (saved) {
+                const img = new Image();
+                img.onload = () => bigSketchCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                img.src = saved;
+            }
+            
+            function pos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+            }
+            
+            function start(e) {
+                bigSketchDrawing = true;
+                bigSketchUndoStack.push(canvas.toDataURL());
+                if (bigSketchUndoStack.length > 25) bigSketchUndoStack.shift();
+                const p = pos(e);
+                bigSketchCtx.beginPath();
+                bigSketchCtx.moveTo(p.x, p.y);
+                e.preventDefault();
+            }
+            function move(e) {
+                if (!bigSketchDrawing) return;
+                const p = pos(e);
+                if (bigSketchTool === 'eraser') {
+                    bigSketchCtx.globalCompositeOperation = 'destination-out';
+                    bigSketchCtx.strokeStyle = 'rgba(0,0,0,1)';
+                    bigSketchCtx.lineWidth = document.getElementById('big-sketch-size').value * 3;
+                } else {
+                    bigSketchCtx.globalCompositeOperation = 'source-over';
+                    bigSketchCtx.strokeStyle = document.getElementById('big-sketch-color').value;
+                    bigSketchCtx.lineWidth = document.getElementById('big-sketch-size').value;
+                }
+                bigSketchCtx.lineTo(p.x, p.y);
+                bigSketchCtx.stroke();
+                e.preventDefault();
+            }
+            function end() {
+                if (!bigSketchDrawing) return;
+                bigSketchDrawing = false;
+                bigSketchCtx.globalCompositeOperation = 'source-over';
+                try { localStorage.setItem('aios-big-sketch', canvas.toDataURL()); } catch (e) {}
+            }
+            
+            canvas.addEventListener('mousedown', start);
+            canvas.addEventListener('mousemove', move);
+            window.addEventListener('mouseup', end);
+            canvas.addEventListener('touchstart', start, { passive: false });
+            canvas.addEventListener('touchmove', move, { passive: false });
+            canvas.addEventListener('touchend', end);
+        }
+        
+        function setBigSketchTool(tool) {
+            bigSketchTool = tool;
+            document.querySelectorAll('[id^="big-tool-"]').forEach(el => el.classList.remove('active'));
+            document.getElementById('big-tool-' + tool).classList.add('active');
+        }
+        
+        function undoBigSketch() {
+            if (!bigSketchUndoStack.length) { toast('Nichts zum Rückgängigmachen.'); return; }
+            const canvas = document.getElementById('big-sketch-canvas');
+            const prev = bigSketchUndoStack.pop();
+            const img = new Image();
+            img.onload = () => {
+                bigSketchCtx.globalCompositeOperation = 'source-over';
+                bigSketchCtx.clearRect(0, 0, canvas.width, canvas.height);
+                bigSketchCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                try { localStorage.setItem('aios-big-sketch', canvas.toDataURL()); } catch (e) {}
+            };
+            img.src = prev;
+        }
+        
+        function clearBigSketch() {
+            bigSketchUndoStack.push(document.getElementById('big-sketch-canvas').toDataURL());
+            const canvas = document.getElementById('big-sketch-canvas');
+            bigSketchCtx.globalCompositeOperation = 'source-over';
+            bigSketchCtx.clearRect(0, 0, canvas.width, canvas.height);
+            localStorage.removeItem('aios-big-sketch');
+        }
+        
+        function saveBigSketchAsPng() {
+            const canvas = document.getElementById('big-sketch-canvas');
+            const out = document.createElement('canvas');
+            out.width = canvas.width;
+            out.height = canvas.height;
+            const octx = out.getContext('2d');
+            octx.fillStyle = '#ffffff';
+            octx.fillRect(0, 0, out.width, out.height);
+            octx.drawImage(canvas, 0, 0);
+            const a = document.createElement('a');
+            a.download = 'ai-os-ideenskizze.png';
+            a.href = out.toDataURL('image/png');
+            a.click();
+            toast('Skizze als PNG gespeichert.', 'success');
+        }
+        
+        function clearBigNotepad() {
+            const pad = document.getElementById('big-notepad');
+            pad.value = '';
+            localStorage.removeItem('aios-big-notepad');
+            pad.focus();
+        }
+        
+        function insertBigNotepadIntoChat() {
+            const text = document.getElementById('big-notepad').value.trim();
+            if (!text) { toast('Notizen sind leer.', 'error'); return; }
+            const input = document.getElementById('chat-input');
+            input.value = (input.value.trim() ? input.value.trim() + '\n\n' : '') + text;
+            input.focus();
+            toast('Notizen in den Chat übernommen.', 'success');
+        }
+
+        // === CEO-Ideen: KI-Fabrik (echte CTO-Pipeline via /api/factory) ===
+        let factory3D = null;
+        let factoryPollTimer = null;
+        let factoryStepsMeta = [];
+        let factorySeenConfirmations = new Set();
+        let factoryFirstLoad = true;
+        // Live-Zustand, den die 3D-Szene rendert
+        const factoryScene = { activeStation: null, doneStations: [], running: false };
+
+        function initFactory3D() {
+            const canvas = document.getElementById('factory-3d-canvas');
+            const container = document.getElementById('factory-3d-container');
+            if (!canvas || !container) return null;
+            const ctx = canvas.getContext('2d');
+            let W = 0, H = 0;
+
+            function resize() {
+                const rect = container.getBoundingClientRect();
+                if (!rect.width) return;
+                W = rect.width; H = rect.height;
+                canvas.width = W * window.devicePixelRatio;
+                canvas.height = H * window.devicePixelRatio;
+                ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+            }
+            resize();
+            if (window.ResizeObserver) new ResizeObserver(resize).observe(container);
+
+            // Fabrik-Stationen als Produktionslinie im Raum (x rechts, y hoch, z Tiefe)
+            const stations = [
+                { id: 'ceo',     label: 'CEO-Büro',     icon: '👔',   x: -135, z: 55,  h: 34, color: '#a78bfa' },
+                { id: 'cto',     label: 'CTO-Agent',    icon: '🧑‍💼', x: -80,  z: -45, h: 44, color: '#5b9cf5' },
+                { id: 'planner', label: 'Planung',      icon: '📋',   x: -20,  z: 55,  h: 30, color: '#22d3ee' },
+                { id: 'dev',     label: 'Entwicklung',  icon: '⚙️',   x: 40,   z: -45, h: 38, color: '#34d399' },
+                { id: 'test',    label: 'Qualität',     icon: '🧪',   x: 95,   z: 55,  h: 30, color: '#fbbf24' },
+                { id: 'deploy',  label: 'Auslieferung', icon: '🚀',   x: 145,  z: -45, h: 36, color: '#f87171' }
+            ];
+
+            let rotY = -0.35, rotX = 0.62, zoom = 1;
+            let isDragging = false, lastMouse = { x: 0, y: 0 };
+
+            function project(x, y, z) {
+                const cy = Math.cos(rotY), sy = Math.sin(rotY);
+                const cx = Math.cos(rotX), sx = Math.sin(rotX);
+                let X = x * cy - z * sy;
+                let Z = x * sy + z * cy;
+                let Y = y * cx - Z * sx;
+                Z = y * sx + Z * cx;
+                const s = 420 / (420 + Z) * zoom;
+                return { x: X * s + W / 2, y: -Y * s + H / 2 + 14, z: Z, s };
+            }
+
+            function shade(hex, f) {
+                const n = parseInt(hex.slice(1), 16);
+                const r = Math.min(255, Math.round(((n >> 16) & 255) * f));
+                const g = Math.min(255, Math.round(((n >> 8) & 255) * f));
+                const b = Math.min(255, Math.round((n & 255) * f));
+                return `rgb(${r},${g},${b})`;
+            }
+
+            function drawBox(st, active, done, time) {
+                const size = 20;
+                const corners = [[-1,-1],[1,-1],[1,1],[-1,1]].map(d => [st.x + d[0]*size, st.z + d[1]*size]);
+                const base = corners.map(c => project(c[0], 0, c[1]));
+                const top = corners.map(c => project(c[0], st.h, c[1]));
+                const faces = [];
+                for (let i = 0; i < 4; i++) {
+                    const j = (i + 1) % 4;
+                    faces.push({ pts: [base[i], base[j], top[j], top[i]],
+                                 z: (base[i].z + base[j].z) / 2, f: i % 2 ? 0.62 : 0.8 });
+                }
+                faces.push({ pts: top, z: top.reduce((a, p) => a + p.z, 0) / 4 - 30, f: 1.12 });
+                faces.sort((a, b) => b.z - a.z);
+                const dim = factoryScene.running && !active && !done ? 0.55 : 1;
+                faces.forEach(fc => {
+                    ctx.fillStyle = shade(st.color, fc.f * dim);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    fc.pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+                    ctx.closePath(); ctx.fill(); ctx.stroke();
+                });
+                const topC = project(st.x, st.h, st.z);
+                // Glüh-Puls an der aktiven Station
+                if (active) {
+                    const pulse = 1 + 0.25 * Math.sin(time * 5);
+                    const r = 34 * topC.s * pulse;
+                    const glow = ctx.createRadialGradient(topC.x, topC.y, 4, topC.x, topC.y, r);
+                    glow.addColorStop(0, 'rgba(251,191,36,0.5)');
+                    glow.addColorStop(1, 'rgba(251,191,36,0)');
+                    ctx.fillStyle = glow;
+                    ctx.beginPath(); ctx.arc(topC.x, topC.y, r, 0, Math.PI * 2); ctx.fill();
+                    // Funken
+                    for (let i = 0; i < 4; i++) {
+                        ctx.fillStyle = 'rgba(251,191,36,0.85)';
+                        ctx.beginPath();
+                        ctx.arc(topC.x + (Math.random() - 0.5) * 40 * topC.s,
+                                topC.y - Math.random() * 30 * topC.s, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                ctx.font = `${Math.max(13, 22 * topC.s)}px Inter`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(st.icon, topC.x, topC.y - 14 * topC.s);
+                if (done) {
+                    ctx.font = `${Math.max(10, 14 * topC.s)}px Inter`;
+                    ctx.fillText('✅', topC.x + 18 * topC.s, topC.y - 26 * topC.s);
+                }
+                const baseC = project(st.x, 0, st.z);
+                ctx.fillStyle = active ? '#fbbf24' : '#b0b0bb';
+                ctx.font = `${Math.max(9, 11 * baseC.s)}px Inter`;
+                ctx.fillText(st.label, baseC.x, baseC.y + 14 * baseC.s);
+            }
+
+            function draw() {
+                if (!W) resize();
+                const time = performance.now() / 1000;
+                ctx.clearRect(0, 0, W, H);
+                ctx.fillStyle = '#0d0f14';
+                ctx.fillRect(0, 0, W, H);
+
+                // Hallenboden (Fläche + Raster)
+                const ext = 185;
+                const floor = [[-ext,-ext],[ext,-ext],[ext,ext],[-ext,ext]].map(c => project(c[0], 0, c[1]));
+                ctx.fillStyle = 'rgba(91,156,245,0.05)';
+                ctx.beginPath();
+                floor.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+                ctx.closePath(); ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+                ctx.lineWidth = 1;
+                for (let i = -ext; i <= ext; i += 37) {
+                    let a = project(i, 0, -ext), b = project(i, 0, ext);
+                    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+                    a = project(-ext, 0, i); b = project(ext, 0, i);
+                    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+                }
+
+                // Fließband entlang der Produktionslinie
+                const beltPts = stations.map(st => project(st.x, 2, st.z));
+                ctx.strokeStyle = 'rgba(120,130,150,0.5)';
+                ctx.lineWidth = 7; ctx.lineCap = 'round';
+                ctx.beginPath();
+                beltPts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+                ctx.stroke();
+
+                const activeIdx = stations.findIndex(s => s.id === factoryScene.activeStation);
+                // Laufende Förderband-Animation bis zur aktiven Station
+                if (factoryScene.running && activeIdx > 0) {
+                    ctx.strokeStyle = 'rgba(251,191,36,0.85)';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([6, 8]);
+                    ctx.lineDashOffset = -time * 40;
+                    ctx.beginPath();
+                    for (let i = 0; i <= activeIdx; i++) {
+                        const p = beltPts[i];
+                        if (i) { ctx.lineTo(p.x, p.y); } else { ctx.moveTo(p.x, p.y); }
+                    }
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                // Stationen von hinten nach vorn zeichnen
+                stations.slice().sort((a, b) => project(b.x, 0, b.z).z - project(a.x, 0, a.z).z)
+                    .forEach(st => drawBox(st,
+                        factoryScene.running && st.id === factoryScene.activeStation,
+                        factoryScene.doneStations.includes(st.id), time));
+
+                // Auftrags-Paket wandert das Band entlang zur aktiven Station
+                if (factoryScene.running && activeIdx > 0) {
+                    const journey = (time * 0.45) % 1;
+                    const segPos = journey * activeIdx;
+                    const seg = Math.min(activeIdx - 1, Math.floor(segPos));
+                    const t = segPos - seg;
+                    const a = stations[seg], b = stations[seg + 1];
+                    const p = project(a.x + (b.x - a.x) * t, 12 + Math.sin(time * 8) * 1.5, a.z + (b.z - a.z) * t);
+                    ctx.font = `${Math.max(12, 17 * p.s)}px Inter`;
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText('📦', p.x, p.y);
+                }
+
+                requestAnimationFrame(draw);
+            }
+
+            canvas.addEventListener('mousedown', e => { isDragging = true; lastMouse = { x: e.clientX, y: e.clientY }; });
+            canvas.addEventListener('wheel', e => {
+                zoom *= e.deltaY > 0 ? 0.9 : 1.1;
+                zoom = Math.max(0.5, Math.min(2.5, zoom));
+                e.preventDefault();
+            }, { passive: false });
+            window.addEventListener('mousemove', e => {
+                if (!isDragging) return;
+                rotY += (e.clientX - lastMouse.x) * 0.008;
+                rotX += (e.clientY - lastMouse.y) * 0.008;
+                rotX = Math.max(0.15, Math.min(1.35, rotX));
+                lastMouse = { x: e.clientX, y: e.clientY };
+            });
+            window.addEventListener('mouseup', () => isDragging = false);
+
+            draw();
+            return true;
+        }
+
+        function initFactoryPanel() {
+            if (!factory3D) factory3D = initFactory3D();
+            loadFactoryData();
+        }
+
+        function loadFactoryData() {
+            const ideas = JSON.parse(localStorage.getItem('aios-ideas') || '[]');
+            const select = document.getElementById('factory-idea-select');
+            if (select) {
+                const current = select.value;
+                select.innerHTML = '<option value="">-- Idee auswählen --</option>' +
+                    ideas.map(i => `<option value="${i.id}">${escapeHtml(i.name)}</option>`).join('');
+                select.value = current;
+            }
+            pollFactoryOrders(false);
+        }
+
+        async function pollFactoryOrders(manual) {
+            clearTimeout(factoryPollTimer);
+            let data;
+            try {
+                const resp = await fetch('/api/factory/orders');
+                data = await resp.json();
+            } catch (e) {
+                if (manual) toast('Fabrik-Status nicht erreichbar.', 'error');
+                return;
+            }
+            factoryStepsMeta = data.steps || [];
+
+            const ctoPill = document.getElementById('factory-cto-status');
+            const agentsPill = document.getElementById('factory-agents-status');
+            if (ctoPill) {
+                ctoPill.textContent = data.cto_online ? '🧑‍💼 CTO-Agent: online' : '🧑‍💼 CTO-Agent: offline';
+                ctoPill.style.color = data.cto_online ? 'var(--success)' : 'var(--danger)';
+            }
+            if (agentsPill) {
+                agentsPill.textContent = data.agent_system_online ? '🤖 Agent-System: online' : '🤖 Agent-System: Fallback Ollama';
+                agentsPill.style.color = data.agent_system_online ? 'var(--success)' : 'var(--warning)';
+            }
+            const sendBtn = document.getElementById('factory-send-btn');
+            if (sendBtn && sendBtn.textContent.indexOf('Übermittle') === -1) {
+                sendBtn.disabled = !data.cto_online;
+            }
+
+            const orders = data.orders || [];
+            renderFactoryOrders(orders);
+            updateFactoryScene(orders);
+
+            // CTO-Bestätigung als Live-Meldung an den CEO (nur neue Bestätigungen)
+            orders.forEach(o => {
+                if (o.cto_confirmation && !factorySeenConfirmations.has(o.id)) {
+                    factorySeenConfirmations.add(o.id);
+                    if (!factoryFirstLoad) toast('🧑‍💼 CTO: ' + o.cto_confirmation.slice(0, 180), 'success');
+                }
+            });
+            factoryFirstLoad = false;
+
+            if (orders.some(o => o.status === 'processing' || o.status === 'queued')) {
+                factoryPollTimer = setTimeout(() => pollFactoryOrders(false), 2500);
+            }
+        }
+
+        function updateFactoryScene(orders) {
+            const active = orders.find(o => o.status === 'processing' || o.status === 'queued');
+            const banner = document.getElementById('factory-3d-banner');
+            if (active) {
+                const step = (active.steps || []).find(s => s.key === active.current_step);
+                factoryScene.running = true;
+                factoryScene.activeStation = step ? step.station : 'cto';
+                factoryScene.doneStations = (active.steps || []).filter(s => s.status === 'done').map(s => s.station);
+                if (banner) banner.textContent = `🔄 „${active.idea.name}“ — ${step ? step.label : 'Bearbeitung läuft'}`;
+            } else {
+                factoryScene.running = false;
+                factoryScene.activeStation = null;
+                const last = orders[0];
+                factoryScene.doneStations = last && last.status === 'completed'
+                    ? (last.steps || []).map(s => s.station) : [];
+                if (banner) banner.textContent = last && last.status === 'completed'
+                    ? `✅ Letzter Auftrag „${last.idea.name}“ abgeschlossen`
+                    : 'Fabrik im Leerlauf — sende eine Idee an den CTO';
+            }
+        }
+
+        function factoryStepIcon(s) {
+            if (s.status === 'done') return '✅';
+            if (s.status === 'active') return '🔄';
+            if (s.status === 'error') return '❌';
+            return '⚪';
+        }
+
+        function renderFactoryOrders(orders) {
+            const container = document.getElementById('factory-orders-list');
+            if (!container) return;
+            if (!orders.length) {
+                container.innerHTML = '<div class="empty-state">Keine Aufträge vorhanden.</div>';
+                return;
+            }
+            const statusInfo = {
+                queued:     { color: 'var(--warning)', label: '⏳ Wartet auf CTO' },
+                processing: { color: 'var(--accent)',  label: '🔄 In Bearbeitung' },
+                completed:  { color: 'var(--success)', label: '✅ Abgeschlossen' },
+                error:      { color: 'var(--danger)',  label: '⚠️ Fehler' }
+            };
+            container.innerHTML = orders.map(order => {
+                const info = statusInfo[order.status] || statusInfo.queued;
+                const stepsHtml = (order.steps || []).map(s =>
+                    `<span title="${escapeHtml(s.label)}${s.engine ? ' — ' + escapeHtml(s.engine) : ''}" style="font-size:0.78rem;">${factoryStepIcon(s)}</span>`
+                ).join('<span style="color:var(--text-muted);font-size:0.6rem;">─</span>');
+                const confirmHtml = order.cto_confirmation
+                    ? `<div style="background:var(--accent-soft);border-left:3px solid var(--accent);padding:0.5rem;border-radius:0 6px 6px 0;font-size:0.74rem;margin:0.4rem 0;line-height:1.45;">🧑‍💼 <b>CTO:</b> ${escapeHtml(order.cto_confirmation)}</div>` : '';
+                const errorHtml = order.error
+                    ? `<div style="color:var(--danger);font-size:0.72rem;margin:0.3rem 0;">${escapeHtml(order.error)}</div>` : '';
+                const outputsHtml = (order.steps || []).filter(s => s.output && s.key !== 'annahme').map(s =>
+                    `<details style="margin:0.25rem 0;"><summary style="cursor:pointer;font-size:0.72rem;color:var(--text-secondary);">${factoryStepIcon(s)} ${escapeHtml(s.label)}</summary><div style="font-size:0.72rem;white-space:pre-wrap;background:var(--bg-primary);padding:0.5rem;border-radius:6px;margin-top:0.25rem;max-height:220px;overflow-y:auto;">${escapeHtml(s.output)}</div></details>`
+                ).join('');
+                const resultHtml = order.result_file
+                    ? `<div style="font-size:0.7rem;color:var(--success);margin-top:0.3rem;">📄 ${escapeHtml(order.result_file)}</div>` : '';
+                const deleteHtml = order.status !== 'processing'
+                    ? `<button class="btn btn-outline btn-sm" onclick="deleteFactoryOrder('${order.id}')" style="padding:0.1rem 0.4rem;font-size:0.7rem;">🗑</button>` : '';
+                return `
+                <div style="background:var(--bg-card);padding:0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:0.5rem;border-left:3px solid ${info.color};">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
+                        <div style="font-weight:600;font-size:0.85rem;">${escapeHtml(order.idea.name)}</div>
+                        ${deleteHtml}
+                    </div>
+                    <div style="font-size:0.72rem;color:var(--text-secondary);margin:0.25rem 0;">${info.label} · ${new Date(order.created_at).toLocaleString('de-DE')}</div>
+                    <div style="display:flex;align-items:center;gap:0.2rem;margin:0.3rem 0;">${stepsHtml}</div>
+                    ${confirmHtml}${errorHtml}${outputsHtml}${resultHtml}
+                </div>`;
+            }).join('');
+        }
+
+        async function deleteFactoryOrder(orderId) {
+            try {
+                const resp = await fetch('/api/factory/orders/delete', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: orderId })
+                });
+                const data = await resp.json();
+                if (data.error) { toast(data.error, 'error'); return; }
+                pollFactoryOrders(false);
+            } catch (e) {
+                toast('Löschen fehlgeschlagen: ' + e, 'error');
+            }
+        }
+
+        async function sendToCTO() {
+            const select = document.getElementById('factory-idea-select');
+            const ideaId = parseInt(select.value);
+            if (!ideaId) {
+                toast('Bitte wähle eine Idee aus.', 'error');
+                return;
+            }
+            const ideas = JSON.parse(localStorage.getItem('aios-ideas') || '[]');
+            const idea = ideas.find(i => i.id === ideaId);
+            if (!idea) {
+                toast('Idee nicht gefunden.', 'error');
+                return;
+            }
+            const btn = document.getElementById('factory-send-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Übermittle an CTO…';
+            try {
+                const resp = await fetch('/api/factory/orders', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        idea: { name: idea.name, target: idea.target, problem: idea.problem, solution: idea.solution },
+                        note: document.getElementById('factory-note').value.trim()
+                    })
+                });
+                const data = await resp.json();
+                if (data.error) {
+                    toast(data.error, 'error');
+                } else {
+                    toast('📨 Auftrag an den CTO-Agenten übermittelt — Bestätigung folgt gleich hier live.', 'success');
+                    document.getElementById('factory-note').value = '';
+                    pollFactoryOrders(false);
+                }
+            } catch (e) {
+                toast('Übermittlung fehlgeschlagen: ' + e, 'error');
+            }
+            btn.disabled = false;
+            btn.textContent = '📨 CTO beauftragen';
+        }
+
+        // === CEO-Ideen: Ideen-Management ===
+        function updateIdeaStats() {
+            const ideas = JSON.parse(localStorage.getItem('aios-ideas') || '[]');
+            const statsEl = document.getElementById('idea-stats');
+            if (statsEl) {
+                statsEl.textContent = `${ideas.length} gespeicherte Idee${ideas.length !== 1 ? 'n' : ''}`;
+            }
+        }
+        
+        function saveIdea() {
+            const name = document.getElementById('idea-name').value.trim();
+            const target = document.getElementById('idea-target').value.trim();
+            const problem = document.getElementById('idea-problem').value.trim();
+            const solution = document.getElementById('idea-solution').value.trim();
+            if (!name || !target || !problem) {
+                toast('Bitte fülle Name, Zielgruppe und Problem aus.', 'error');
+                return;
+            }
+            const ideas = JSON.parse(localStorage.getItem('aios-ideas') || '[]');
+            ideas.push({ 
+                id: Date.now(), 
+                name, 
+                target, 
+                problem, 
+                solution, 
+                created: new Date().toISOString(),
+                status: 'new'
+            });
+            localStorage.setItem('aios-ideas', JSON.stringify(ideas));
+            toast('Idee erfolgreich gespeichert!', 'success');
+            document.getElementById('idea-name').value = '';
+            document.getElementById('idea-target').value = '';
+            document.getElementById('idea-problem').value = '';
+            document.getElementById('idea-solution').value = '';
+            loadSavedIdeas();
+            updateIdeaStats();
+            loadFactoryData();
+        }
+
+        function sendIdeaToFactory(id) {
+            const select = document.getElementById('factory-idea-select');
+            if (select) {
+                select.value = String(id);
+                document.getElementById('factory-3d-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                sendToCTO();
+            }
+        }
+        
+        function clearIdeaForm() {
+            document.getElementById('idea-name').value = '';
+            document.getElementById('idea-target').value = '';
+            document.getElementById('idea-problem').value = '';
+            document.getElementById('idea-solution').value = '';
+            toast('Formular geleert.', 'info');
+        }
+        
+        function exportIdeas() {
+            const ideas = JSON.parse(localStorage.getItem('aios-ideas') || '[]');
+            if (!ideas.length) {
+                toast('Keine Ideen zum Exportieren.', 'error');
+                return;
+            }
+            
+            const exportData = ideas.map(idea => ({
+                Name: idea.name,
+                Zielgruppe: idea.target,
+                Problem: idea.problem,
+                Loesung: idea.solution,
+                Erstellt: new Date(idea.created).toLocaleString('de-DE'),
+                Status: idea.status || 'Neu'
+            }));
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.download = `ai-os-ideen-${new Date().toISOString().split('T')[0]}.json`;
+            a.href = URL.createObjectURL(blob);
+            a.click();
+            URL.revokeObjectURL(a.href);
+            toast(`${ideas.length} Ideen exportiert.`, 'success');
+        }
+        
+        function loadSavedIdeas() {
+            const ideas = JSON.parse(localStorage.getItem('aios-ideas') || '[]');
+            const container = document.getElementById('ideas-list');
+            if (!ideas.length) {
+                container.innerHTML = '<div class="empty-state">Noch keine Ideen gespeichert. Erstelle deine erste Produktidee oben.</div>';
+                updateIdeaStats();
+                return;
+            }
+            
+            container.innerHTML = ideas.reverse().map(idea => `
+                <div class="knowledge-card" style="border-left: 3px solid ${idea.status === 'new' ? 'var(--accent)' : 'var(--success)'};">
+                    <div class="name">💡 ${escapeHtml(idea.name)} ${idea.status === 'new' ? '<span class="pill" style="font-size:0.65rem;margin-left:0.5rem;">NEU</span>' : ''}</div>
+                    <div class="desc">
+                        <div style="margin-bottom:0.4rem;"><strong>🎯 Zielgruppe:</strong> ${escapeHtml(idea.target)}</div>
+                        <div style="margin-bottom:0.4rem;"><strong>⚠️ Problem:</strong> ${escapeHtml(idea.problem)}</div>
+                        ${idea.solution ? `<div><strong>💡 Lösung:</strong> ${escapeHtml(idea.solution)}</div>` : ''}
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border);">
+                        <div class="count-label">${new Date(idea.created).toLocaleString('de-DE')}</div>
+                        <div style="display:flex;gap:0.4rem;">
+                            <button class="btn btn-primary btn-sm" onclick="sendIdeaToFactory(${idea.id})" style="padding:0.3rem 0.6rem;font-size:0.7rem;">🏭 An CTO</button>
+                            <button class="btn btn-outline btn-sm" onclick="deleteIdea(${idea.id})" style="padding:0.3rem 0.6rem;font-size:0.7rem;">🗑 Löschen</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateIdeaStats();
+        }
+        
+        function deleteIdea(id) {
+            askConfirm('Idee löschen?', 'Diese Idee wird dauerhaft entfernt.', () => {
+                let ideas = JSON.parse(localStorage.getItem('aios-ideas') || '[]');
+                ideas = ideas.filter(i => i.id !== id);
+                localStorage.setItem('aios-ideas', JSON.stringify(ideas));
+                toast('Idee gelöscht.', 'success');
+                loadSavedIdeas();
+                updateIdeaStats();
+                loadFactoryData();
+            });
+        }
     </script>
 </body>
 </html>

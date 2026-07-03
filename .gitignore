@@ -3,6 +3,7 @@
 
 # Secrets und sensible Daten
 01_Verbindungen/APIs/Secrets/
+01_Verbindungen/APIs/Geheimnisse/
 01_Verbindungen/Secrets/
 *.key
 *.pem

@@ -35,6 +35,10 @@ OLLAMA_HOST = "127.0.0.1"
 OLLAMA_PORT = 11434
 FLASK_PORT = int(os.environ.get("FLASK_PORT", 5000))
 
+# LLM-Router: Ollama (lokal) mit Online-Fallback auf OpenRouter / Cloudflare Workers AI
+sys.path.insert(0, str(Path(__file__).parent))
+from llm_router import LLM_ROUTER
+
 app = Flask(__name__)
 
 # ========== DIENSTE-REGISTRY (Ebenen-Struktur) ==========
@@ -348,19 +352,10 @@ def run_learning_cycle(model="llama3"):
             "keine Erfindungen. Antworte nur mit dem Profil, auf Deutsch."
         )
 
-        payload = json.dumps({
-            "model": model,
-            "messages": [{"role": "user", "content": prompt}],
-            "stream": False,
-            "options": {"temperature": 0.3, "num_predict": 600},
-        }).encode("utf-8")
-        req = urllib.request.Request(
-            f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/api/chat",
-            data=payload, headers={"Content-Type": "application/json"}, method="POST"
-        )
-        with urllib.request.urlopen(req, timeout=180) as resp:
-            result = json.loads(resp.read())
-        profile = result.get("message", {}).get("content", "").strip()
+        result = LLM_ROUTER.chat(
+            [{"role": "user", "content": prompt}],
+            model=model, temperature=0.3, num_predict=600, timeout=180)
+        profile = result["content"].strip()
         if not profile:
             return {"error": "Modell lieferte kein Profil."}
 
@@ -393,6 +388,225 @@ def personalization_prompt():
     )
 
 
+# ========== KI-FABRIK: CEO -> CTO Auftrags-Pipeline ==========
+# Der CEO beauftragt aus der Ideenwerkstatt den CTO-Agenten. Der CTO bestätigt den
+# Eingang kurz und führt den Auftrag dann Schritt für Schritt durch die Fabrik
+# (Analyse -> Entwicklung -> Qualität -> Abschluss). Jeder Schritt läuft über das
+# Agent-System (:5300), fällt bei Nichtverfügbarkeit auf Ollama direkt zurück.
+# Aufträge = kurzfristiger Arbeitskontext -> Short-Memory; Ergebnis-Dokumente -> 10_Business.
+
+FACTORY_ORDERS_PATH = AI_OS_ROOT / "06_Gedächtnis" / "Memory" / "Short-Memory" / "factory_orders.json"
+FACTORY_RESULTS_DIR = AI_OS_ROOT / "10_Business" / "KI-Fabrik-Auftraege"
+FACTORY_MODEL = "llama3"
+_factory_lock = threading.Lock()
+
+FACTORY_STEPS = [
+    {"key": "annahme",     "station": "cto",     "label": "CTO-Agent: Auftrag annehmen & bestätigen"},
+    {"key": "analyse",     "station": "planner", "label": "Planung: Analyse & Umsetzungsplan"},
+    {"key": "entwicklung", "station": "dev",     "label": "Entwicklung: Technisches Konzept"},
+    {"key": "qualitaet",   "station": "test",    "label": "Qualität: Review & Risiken"},
+    {"key": "abschluss",   "station": "deploy",  "label": "Auslieferung: Ergebnis-Dokument"},
+]
+
+
+def _load_factory_orders():
+    try:
+        return json.loads(FACTORY_ORDERS_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+
+def _save_factory_orders(orders):
+    FACTORY_ORDERS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    FACTORY_ORDERS_PATH.write_text(json.dumps(orders, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def _factory_update_order(order_id, updater):
+    """Lädt, mutiert (per Callback) und speichert einen Auftrag atomar. Gibt den Auftrag zurück."""
+    with _factory_lock:
+        orders = _load_factory_orders()
+        order = next((o for o in orders if o["id"] == order_id), None)
+        if order is None:
+            return None
+        updater(order)
+        order["updated_at"] = datetime.now().isoformat(timespec="seconds")
+        _save_factory_orders(orders)
+        return order
+
+
+def _factory_set_step(order_id, step_key, status, output=None, engine=None):
+    def upd(order):
+        order["current_step"] = step_key
+        for s in order["steps"]:
+            if s["key"] == step_key:
+                s["status"] = status
+                if output is not None:
+                    s["output"] = output[:8000]
+                if engine is not None:
+                    s["engine"] = engine
+                now = datetime.now().isoformat(timespec="seconds")
+                if status == "active" and not s.get("started_at"):
+                    s["started_at"] = now
+                if status in ("done", "error"):
+                    s["finished_at"] = now
+    return _factory_update_order(order_id, upd)
+
+
+def _llm_generate(system, prompt, num_predict=800, temperature=0.5, timeout=300):
+    """LLM-Aufruf über den Router (Ollama -> OpenRouter -> Cloudflare).
+    Gibt (text, provider_label) zurück; wirft Exception, wenn kein Provider erreichbar."""
+    return LLM_ROUTER.generate(
+        system, prompt, model=FACTORY_MODEL,
+        temperature=temperature, num_predict=num_predict, timeout=timeout)
+
+
+def _agent_system_execute(agent, task, timeout=300):
+    """Führt eine Aufgabe über das Agent-System (:5300) aus; None wenn nicht verfügbar/fehlgeschlagen."""
+    try:
+        payload = json.dumps({"agent": agent, "task": task}).encode("utf-8")
+        req = urllib.request.Request(
+            "http://127.0.0.1:5300/execute",
+            data=payload, headers={"Content-Type": "application/json"}, method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            result = json.loads(resp.read())
+        if result.get("success") and result.get("response"):
+            return result["response"].strip()
+    except Exception:
+        pass
+    return None
+
+
+def _factory_run_step(order_id, step_key, agent, fallback_system, task, num_predict=800):
+    """Ein Fabrik-Schritt: bevorzugt Agent-System, sonst Ollama direkt. Gibt (text, engine) zurück."""
+    _factory_set_step(order_id, step_key, "active")
+    text = _agent_system_execute(agent, task)
+    engine = f"Agent-System :5300 ({agent})"
+    if not text:
+        text, provider_label = _llm_generate(fallback_system, task, num_predict=num_predict)
+        engine = provider_label
+    _factory_set_step(order_id, step_key, "done", output=text, engine=engine)
+    return text, engine
+
+
+def _idea_briefing(order):
+    idea = order.get("idea", {})
+    parts = [
+        f"Produktidee: {idea.get('name', '')}",
+        f"Zielgruppe: {idea.get('target', '')}",
+        f"Problem: {idea.get('problem', '')}",
+        f"Lösungsansatz: {idea.get('solution', '')}",
+    ]
+    if order.get("note"):
+        parts.append(f"Zusätzliche Anweisung des CEO: {order['note']}")
+    return "\n".join(parts)
+
+
+def _process_factory_order(order_id):
+    """Hintergrund-Worker: führt einen Auftrag durch alle Fabrik-Stationen."""
+    order = _factory_update_order(order_id, lambda o: o.update(status="processing"))
+    if not order:
+        return
+    briefing = _idea_briefing(order)
+    idea_name = order.get("idea", {}).get("name", "Unbenannt")
+
+    try:
+        # 1) CTO-Agent bestätigt den Auftragseingang (kurz, damit der CEO sofort Rückmeldung hat)
+        _factory_set_step(order_id, "annahme", "active")
+        cto_engine = f"CTO-Agent ({FACTORY_MODEL})"
+        try:
+            confirmation, provider_label = _llm_generate(
+                "Du bist der CTO-AGENT der KI-Fabrik. Der CEO hat dir soeben einen Auftrag erteilt. "
+                "Bestätige kurz und professionell auf Deutsch (2-3 Sätze): dass du den Auftrag erhalten "
+                "hast, wie du ihn verstanden hast, und dass du ihn jetzt durch die Fabrik-Pipeline "
+                "(Planung, Entwicklung, Qualität) führst. Keine Überschriften, nur die Bestätigung.",
+                briefing, num_predict=220, temperature=0.6, timeout=120)
+            cto_engine = f"CTO-Agent · {provider_label}"
+        except Exception:
+            confirmation = (f"Auftrag „{idea_name}“ erhalten. Ich habe das Briefing verstanden und "
+                            "starte jetzt die Bearbeitung in der KI-Fabrik: Planung, Entwicklung und "
+                            "Qualitätsprüfung laufen der Reihe nach an. Du wirst hier live informiert.")
+        _factory_update_order(order_id, lambda o: o.update(cto_confirmation=confirmation))
+        _factory_set_step(order_id, "annahme", "done", output=confirmation, engine=cto_engine)
+
+        # 2) Analyse & Umsetzungsplan
+        plan, _ = _factory_run_step(
+            order_id, "analyse", "planner",
+            "Du bist der PLANNER AGENT der KI-Fabrik. Erstelle strukturierte, realistische Umsetzungspläne. Antworte auf Deutsch in Markdown.",
+            "Der CTO hat folgenden CEO-Auftrag angenommen. Erstelle einen kompakten Umsetzungsplan "
+            "(Ziel, 3-5 Arbeitspakete, Risiken, grobe Zeitschätzung):\n\n" + briefing,
+            num_predict=800)
+
+        # 3) Technisches Konzept
+        concept, _ = _factory_run_step(
+            order_id, "entwicklung", "code",
+            "Du bist der CODE/DEV AGENT der KI-Fabrik. Erstelle technische Konzepte und Architektur-Vorschläge. Antworte auf Deutsch in Markdown.",
+            "Erstelle auf Basis von Briefing und Plan ein kompaktes technisches Konzept "
+            "(Architektur, Komponenten, Tech-Stack, MVP-Umfang):\n\nBRIEFING:\n" + briefing +
+            "\n\nUMSETZUNGSPLAN:\n" + plan[:2500],
+            num_predict=900)
+
+        # 4) Qualitätsprüfung
+        review, _ = _factory_run_step(
+            order_id, "qualitaet", "analysis",
+            "Du bist der ANALYSIS/QA AGENT der KI-Fabrik. Prüfe Konzepte kritisch auf Lücken und Risiken. Antworte auf Deutsch, kurz und strukturiert.",
+            "Prüfe das folgende Konzept kritisch: größte Stärken, Top-3-Risiken, konkrete "
+            "Verbesserungen, Gesamturteil (1 Satz):\n\nBRIEFING:\n" + briefing +
+            "\n\nKONZEPT:\n" + concept[:3000],
+            num_predict=500)
+
+        # 5) Abschluss: Ergebnis-Dokument in 10_Business ablegen
+        _factory_set_step(order_id, "abschluss", "active")
+        safe_name = re.sub(r"[^\w\-]+", "_", idea_name)[:40] or "Auftrag"
+        FACTORY_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+        result_path = FACTORY_RESULTS_DIR / f"{order_id}_{safe_name}.md"
+        doc = (
+            f"# 🏭 KI-Fabrik Auftrag: {idea_name}\n\n"
+            f"- Auftrags-ID: {order_id}\n"
+            f"- Erstellt: {order.get('created_at')}\n"
+            f"- Abgeschlossen: {datetime.now().isoformat(timespec='seconds')}\n\n"
+            f"## 👔 CEO-Briefing\n\n{briefing}\n\n"
+            f"## 🧑‍💼 CTO-Bestätigung\n\n{confirmation}\n\n"
+            f"## 📋 Analyse & Umsetzungsplan\n\n{plan}\n\n"
+            f"## ⚙️ Technisches Konzept\n\n{concept}\n\n"
+            f"## 🧪 Qualitätsprüfung\n\n{review}\n"
+        )
+        result_path.write_text(doc, encoding="utf-8")
+        summary = (f"Ergebnis-Dokument abgelegt: 10_Business/KI-Fabrik-Auftraege/{result_path.name}")
+        _factory_set_step(order_id, "abschluss", "done", output=summary, engine="Dashboard")
+        _factory_update_order(order_id, lambda o: o.update(
+            status="completed",
+            result_file=f"10_Business/KI-Fabrik-Auftraege/{result_path.name}"))
+    except Exception as e:
+        err = f"Bearbeitung abgebrochen: {e}"
+        _factory_set_step(order_id, _load_current_step(order_id), "error", output=err)
+        _factory_update_order(order_id, lambda o: o.update(status="error", error=err))
+
+
+def _load_current_step(order_id):
+    with _factory_lock:
+        orders = _load_factory_orders()
+    order = next((o for o in orders if o["id"] == order_id), None)
+    return order.get("current_step", "annahme") if order else "annahme"
+
+
+def _factory_recover_stale():
+    """Markiert nach einem Dashboard-Neustart hängengebliebene Aufträge als unterbrochen."""
+    with _factory_lock:
+        orders = _load_factory_orders()
+        changed = False
+        for o in orders:
+            if o.get("status") in ("queued", "processing"):
+                o["status"] = "error"
+                o["error"] = "Durch Dashboard-Neustart unterbrochen. Bitte erneut beauftragen."
+                for s in o.get("steps", []):
+                    if s.get("status") == "active":
+                        s["status"] = "error"
+                changed = True
+        if changed:
+            _save_factory_orders(orders)
+
+
 # ========== API ROUTES ==========
 
 @app.route("/")
@@ -417,6 +631,11 @@ def get_models():
             return jsonify({"models": models})
     except Exception as e:
         return jsonify({"error": str(e), "models": []})
+
+@app.route("/api/llm/status")
+def llm_status():
+    """Status des LLM-Routers: welche Provider konfiguriert/online sind, wer aktiv routet."""
+    return jsonify(LLM_ROUTER.status())
 
 @app.route("/api/stats")
 def get_stats():
@@ -589,6 +808,77 @@ def agent_action():
         return jsonify({"error": f"Agent auf Port {port} nicht erreichbar: {e}"}), 503
 
 
+@app.route("/api/factory/orders", methods=["GET"])
+def factory_orders_list():
+    """Live-Status aller KI-Fabrik-Aufträge + Verfügbarkeit von CTO (Ollama) und Agent-System."""
+    with _factory_lock:
+        orders = _load_factory_orders()
+    orders.sort(key=lambda o: o.get("created_at", ""), reverse=True)
+    return jsonify({
+        "orders": orders[:30],
+        "steps": FACTORY_STEPS,
+        "cto_online": LLM_ROUTER.any_available(),
+        "cto_engine": LLM_ROUTER.status()["active"],
+        "agent_system_online": check_service_health(5300),
+    })
+
+
+@app.route("/api/factory/orders", methods=["POST"])
+def factory_order_create():
+    """CEO beauftragt den CTO-Agenten mit einer Idee; Bearbeitung startet im Hintergrund."""
+    data = request.get_json(silent=True) or {}
+    idea = data.get("idea") or {}
+    if not idea.get("name"):
+        return jsonify({"error": "Keine Idee angegeben."}), 400
+    if not LLM_ROUTER.any_available():
+        return jsonify({"error": "CTO-Agent nicht erreichbar: Ollama (Port 11434) ist offline und "
+                                 "kein Online-Fallback (OpenRouter/Cloudflare) konfiguriert. "
+                                 "Siehe Tab 'KI-Gateway'."}), 503
+
+    now = datetime.now()
+    order = {
+        "id": f"ord_{now.strftime('%Y%m%d_%H%M%S')}",
+        "idea": {
+            "name": str(idea.get("name", ""))[:120],
+            "target": str(idea.get("target", ""))[:300],
+            "problem": str(idea.get("problem", ""))[:300],
+            "solution": str(idea.get("solution", ""))[:2000],
+        },
+        "note": str(data.get("note", ""))[:1000],
+        "status": "queued",
+        "current_step": "annahme",
+        "cto_confirmation": None,
+        "error": None,
+        "result_file": None,
+        "steps": [{**s, "status": "pending", "output": None, "engine": None,
+                   "started_at": None, "finished_at": None} for s in FACTORY_STEPS],
+        "created_at": now.isoformat(timespec="seconds"),
+        "updated_at": now.isoformat(timespec="seconds"),
+    }
+    with _factory_lock:
+        orders = _load_factory_orders()
+        if order["id"] in {o["id"] for o in orders}:
+            order["id"] += f"_{len(orders)}"
+        orders.append(order)
+        _save_factory_orders(orders)
+
+    threading.Thread(target=_process_factory_order, args=(order["id"],), daemon=True).start()
+    return jsonify({"order": order})
+
+
+@app.route("/api/factory/orders/delete", methods=["POST"])
+def factory_order_delete():
+    """Entfernt einen Auftrag aus der Liste (Ergebnis-Dokument in 10_Business bleibt erhalten)."""
+    order_id = (request.get_json(silent=True) or {}).get("id", "")
+    with _factory_lock:
+        orders = _load_factory_orders()
+        remaining = [o for o in orders if o["id"] != order_id]
+        if len(remaining) == len(orders):
+            return jsonify({"error": "Auftrag nicht gefunden"}), 404
+        _save_factory_orders(remaining)
+    return jsonify({"success": True})
+
+
 @app.route("/api/knowledge")
 def get_knowledge():
     """Datei-Anzahl pro Wissenskategorie in 06_Gedächtnis."""
@@ -699,26 +989,9 @@ def chat():
     messages.append({"role": "user", "content": message})
 
     try:
-        payload = json.dumps({
-            "model": model,
-            "messages": messages,
-            "stream": False,
-            "options": {
-                "temperature": 0.7,
-                "num_predict": 2048
-            }
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/api/chat",
-            data=payload,
-            headers={"Content-Type": "application/json"},
-            method="POST"
-        )
-
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            result = json.loads(resp.read())
-            response = result.get("message", {}).get("content", "")
+        result = LLM_ROUTER.chat(
+            messages, model=model, temperature=0.7, num_predict=2048, timeout=120)
+        response = result["content"]
 
         history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": response})
@@ -727,7 +1000,10 @@ def chat():
 
         return jsonify({
             "response": response,
-            "history": history
+            "history": history,
+            "provider": result["provider"],
+            "provider_label": result["provider_label"],
+            "model_used": result["model"]
         })
     except Exception as e:
         return jsonify({"error": str(e), "response": "", "history": history})
@@ -832,19 +1108,10 @@ def news_brief():
     )
 
     try:
-        payload = json.dumps({
-            "model": model,
-            "messages": [{"role": "user", "content": prompt}],
-            "stream": False,
-            "options": {"temperature": 0.4, "num_predict": 800},
-        }).encode("utf-8")
-        req = urllib.request.Request(
-            f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/api/chat",
-            data=payload, headers={"Content-Type": "application/json"}, method="POST"
-        )
-        with urllib.request.urlopen(req, timeout=180) as resp:
-            result = json.loads(resp.read())
-        brief = result.get("message", {}).get("content", "")
+        result = LLM_ROUTER.chat(
+            [{"role": "user", "content": prompt}],
+            model=model, temperature=0.4, num_predict=800, timeout=180)
+        brief = result["content"]
 
         cache["brief"] = brief
         with _news_lock:
@@ -900,5 +1167,8 @@ if __name__ == "__main__":
     print(f"🧠 AI-OS Dashboard startet auf http://localhost:{FLASK_PORT}")
     print(f"📁 Wissensbasis: {AI_OS_ROOT / '00_Wissen'}")
     print(f"🔧 Ollama: http://{OLLAMA_HOST}:{OLLAMA_PORT}")
+    _llm = LLM_ROUTER.status()
+    print(f"🔀 KI-Gateway: aktiver Provider = {_llm['active'] or 'KEINER (Ollama offline, keine Fallback-Keys)'}")
+    _factory_recover_stale()
     threading.Thread(target=_news_daily_worker, daemon=True).start()
     app.run(host="127.0.0.1", port=FLASK_PORT, debug=False, threaded=True)
