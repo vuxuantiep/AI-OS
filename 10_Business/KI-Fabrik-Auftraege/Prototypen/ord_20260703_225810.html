@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Aufgaben-Tracker</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			margin: 0;
+			padding: 0;
+		}
+		
+		#header {
+			background-color: #333;
+			color: #fff;
+			padding: 10px;
+			text-align: center;
+			border-bottom: 1px solid #ccc;
+		}
+		
+		#content {
+			max-width: 800px;
+			margin: 40px auto;
+			padding: 20px;
+			background-color: #f9f9f9;
+			border: 1px solid #ddd;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		}
+		
+		#kanban-board {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+		}
+		
+		.kanban-column {
+			width: 200px;
+			background-color: #eee;
+			padding: 10px;
+			border: 1px solid #ddd;
+			margin-right: 20px;
+		}
+		
+		.kanban-card {
+			background-color: #fff;
+			padding: 10px;
+			border: 1px solid #ddd;
+			width: calc(100% - 20px);
+			margin-bottom: 10px;
+		}
+		
+		.status-button {
+			background-color: #4CAF50;
+			color: #fff;
+			padding: 5px 10px;
+			border: none;
+			border-radius: 3px;
+			cursor: pointer;
+		}
+		
+		.status-button:hover {
+			background-color: #3e8e41;
+		}
+	</style>
+</head>
+<body>
+	<header id="header">
+		🧪 Prototyp — KI-Fabrik Testumgebung
+	</header>
+	<main id="content">
+		<h1>Aufgaben-Tracker</h1>
+		<section id="kanban-board">
+			<div class="kanban-column" style="width: 300px;">
+				<h2>To Do</h2>
+				<ul>
+					<li class="kanban-card">
+						<span>Aufgabe 1</span>
+						<button class="status-button">In Bearbeitung</button>
+					</li>
+					<li class="kanban-card">
+						<span>Aufgabe 2</span>
+						<button class="status-button">In Bearbeitung</button>
+					</li>
+				</ul>
+			</div>
+			<div class="kanban-column" style="width: 300px;">
+				<h2>In Bearbeitung</h2>
+				<ul>
+					<li class="kanban-card">
+						<span>Aufgabe 3</span>
+						<button class="status-button">Abgeschlossen</button>
+					</li>
+				</ul>
+			</div>
+			<div class="kanban-column" style="width: 300px;">
+				<h2>Abgeschlossen</h2>
+				<ul>
+					<li class="kanban-card">
+						<span>Aufgabe 4</span>
+					</li>
+				</ul>
+			</div>
+		</section>
+		<button id="new-task-button">Neue Aufgabe hinzufügen</button>
+		<form id="new-task-form">
+			<label for="task-name">Aufgabenname:</label>
+			<input type="text" id="task-name" name="task-name">
+			<label for="task-status">Status:</label>
+			<select id="task-status" name="task-status">
+				<option value="to-do">To Do</option>
+				<option value="in-progress">In Bearbeitung</option>
+				<option value="done">Abgeschlossen</option>
+			</select>
+			<button type="submit">Hinzufügen</button>
+		</form>
+	</main>
+	
+	<script>
+		const newTaskButton = document.getElementById('new-task-button');
+		const newTaskForm = document.getElementById('new-task-form');
+		
+		newTaskButton.addEventListener('click', () => {
+			newTaskForm.style.display = 'block';
+		});
+		
+		document.addEventListener('submit', (e) => {
+			if (e.target === newTaskForm) {
+				e.preventDefault();
+				const taskName = e.target.taskName.value;
+				const taskStatus = e.target.taskStatus.value;
+				console.log(`Neue Aufgabe hinzugefügt: ${taskName} - ${taskStatus}`);
+				newTaskForm.style.display = 'none';
+			}
+		});
+	</script>
+</body>
+</html>

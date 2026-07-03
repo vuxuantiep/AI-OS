@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Aufgaben-Tracker (Sprint/Version v2)</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			margin: 0;
+			padding: 0;
+		}
+		
+		#app {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding: 20px;
+			background-color: #f7f7f7;
+			border: 1px solid #ddd;
+			border-radius: 10px;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		}
+		
+		.kanban-board {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding: 20px;
+			background-color: #fff;
+			border: 1px solid #ddd;
+			border-radius: 10px;
+		}
+		
+		.filter-container {
+			margin-top: 20px;
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+		}
+		
+		.status-filter {
+			margin-right: 10px;
+		}
+		
+		.button {
+			background-color: #4CAF50;
+			color: #fff;
+			padding: 10px 20px;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+		}
+		
+		.button:hover {
+			background-color: #3e8e41;
+		}
+	</style>
+</head>
+<body><div style="position:fixed;top:8px;right:8px;z-index:99999;background:rgba(17,17,17,0.85);color:#fff;padding:4px 12px;border-radius:14px;font:600 12px sans-serif;">🏭 Prototyp v2 · ord_20260703_234218</div>
+	<header>
+		<h1>🧪 Prototyp — KI-Fabrik Testumgebung</h1>
+	</header>
+	<main id="app">
+		<section class="kanban-board">
+			<h2>Kanban-Board</h2>
+			<ul>
+				<li>Aufgabe 1: In Bearbeitung</li>
+				<li>Aufgabe 2: Erledigt</li>
+				<li>Aufgabe 3: In Bearbeitung</li>
+			</ul>
+			<button class="button">Neue Aufgabe hinzufügen</button>
+		</section>
+		<section class="filter-container">
+			<h2>Filter nach Status</h2>
+			<label for="status-filter" class="status-filter">Status:</label>
+			<select id="status-filter">
+				<option value="all">Alle</option>
+				<option value="in-progress">In Bearbeitung</option>
+				<option value="done">Erledigt</option>
+			</select>
+			<button class="button" onclick="filterAufgaben()">Filter anwenden</button>
+		</section>
+	</main>
+	<script>
+		let aufgaben = [
+			{ id: 1, title: "Aufgabe 1", status: "in-progress" },
+			{ id: 2, title: "Aufgabe 2", status: "done" },
+			{ id: 3, title: "Aufgabe 3", status: "in-progress" }
+		];
+		
+		function filterAufgaben() {
+			const selectedStatus = document.getElementById("status-filter").value;
+			aufgaben.forEach((aufgabe) => {
+				if (selectedStatus === "all") {
+					document.querySelector(`li[data-id="${aufgabe.id}"]`).style.display = "";
+				} else if (aufgabe.status === selectedStatus) {
+					document.querySelector(`li[data-id="${aufgabe.id}"]`).style.display = "";
+				} else {
+					document.querySelector(`li[data-id="${aufgabe.id}"]`).style.display = "none";
+				}
+			});
+		}
+	</script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lokal-Private-LLM-App v1</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f7f7f7;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+        }
+        
+        .header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .chat-log {
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .message {
+            margin-bottom: 10px;
+        }
+        
+        .message.author-1 {
+            background-color: #f7f7f7;
+        }
+        
+        .message.author-2 {
+            background-color: #e5e5e5;
+        }
+        
+        .button {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .button:hover {
+            background-color: #444;
+        }
+    </style>
+</head>
+<body><div style="position:fixed;top:8px;right:8px;z-index:99999;background:rgba(17,17,17,0.85);color:#fff;padding:4px 12px;border-radius:14px;font:600 12px sans-serif;">🏭 Prototyp v1 · ord_20260704_002626</div>
+    <div class="container">
+        <header class="header">
+            🧪 Prototyp — KI-Fabrik Testumgebung
+        </header>
+        <main>
+            <section>
+                <h2>Chat</h2>
+                <form>
+                    <input type="text" id="chat-input" placeholder="Schreiben Sie Ihre Nachricht...">
+                    <button class="button" id="send-chat">Senden</button>
+                </form>
+                <div class="chat-log">
+                    <div class="message author-1">Nutzer 1: Hallo!</div>
+                    <div class="message author-2">Nutzer 2: Hi!</div>
+                    <!-- Messages will be appended here -->
+                </div>
+            </section>
+            <section>
+                <h2>Dokumenten-Frage-Architekturen</h2>
+                <form>
+                    <input type="text" id="search-input" placeholder="Suchen Sie nach einem Dokument...">
+                    <button class="button" id="search-docs">Suchen</button>
+                </form>
+                <ul id="docs-list"></ul>
+            </section>
+        </main>
+    </div>
+    
+    <script>
+        // Add event listeners for chat and search
+        document.getElementById('send-chat').addEventListener('click', () => {
+            const message = document.getElementById('chat-input').value;
+            // Append the message to the chat log
+            document.querySelector('.chat-log').innerHTML += `<div class="message author-1">${message}</div>`;
+            document.getElementById('chat-input').value = '';
+        });
+        
+        document.getElementById('search-docs').addEventListener('click', () => {
+            const searchQuery = document.getElementById('search-input').value;
+            // Search for documents and append the results to the list
+            const docsList = document.getElementById('docs-list');
+            docsList.innerHTML += `<li>${searchQuery} - Ergebnis 1</li><li>${searchQuery} - Ergebnis 2</li>`;
+            document.getElementById('search-input').value = '';
+        });
+    </script>
+</body>
+</html>
