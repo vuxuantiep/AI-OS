@@ -126,7 +126,9 @@ FILE_ICONS = {
 }
 
 
-def check_service_health(port, timeout=1.2):
+# Timeout großzügig: die Spezial-Agenten prüfen in /health selbst Ollama mit,
+# das kann unter Last >1s dauern — sonst erscheinen laufende Dienste als offline.
+def check_service_health(port, timeout=4):
     """Prüft per HTTP, ob ein Dienst auf dem gegebenen Port antwortet."""
     try:
         req = urllib.request.Request(f"http://127.0.0.1:{port}/health")
@@ -918,7 +920,7 @@ def agents_fleet():
         registry = []
 
     def check(cfg):
-        health = _fetch_json(f"http://127.0.0.1:{cfg['port']}/health", timeout=2)
+        health = _fetch_json(f"http://127.0.0.1:{cfg['port']}/health", timeout=5)
         return {
             "id": cfg.get("id"), "name": cfg.get("name"), "description": cfg.get("description"),
             "port": cfg.get("port"), "capabilities": cfg.get("capabilities", []),

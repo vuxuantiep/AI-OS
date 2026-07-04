@@ -8,6 +8,7 @@ import json
 import os
 import re
 import sys
+import time
 from pathlib import Path
 from datetime import datetime
 
@@ -71,14 +72,24 @@ async def ollama_chat(prompt, system=None, model=None, temperature=0.7, timeout=
         return resp.json().get("message", {}).get("content", "")
 
 
+# 15s-Cache: /health der Agenten muss schnell antworten (Dashboard-Timeout),
+# darf also nicht bei jedem Aufruf live auf Ollama warten.
+_ollama_health = {"ts": 0.0, "val": False}
+
+
 async def ollama_online():
-    """Prüft ob Ollama erreichbar ist."""
+    """Prüft ob Ollama erreichbar ist (Ergebnis 15s gecacht)."""
+    now = time.monotonic()
+    if now - _ollama_health["ts"] < 15:
+        return _ollama_health["val"]
     try:
         async with httpx.AsyncClient(timeout=3) as client:
             resp = await client.get(f"{OLLAMA_URL}/api/tags")
-            return resp.status_code == 200
+            val = resp.status_code == 200
     except Exception:
-        return False
+        val = False
+    _ollama_health["ts"], _ollama_health["val"] = now, val
+    return val
 
 
 def extract_json(text):
