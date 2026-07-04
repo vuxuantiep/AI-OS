@@ -888,13 +888,23 @@ def start_service_route():
         env["AI_OS_ROOT"] = str(AI_OS_ROOT)
         if svc.get("env_key"):
             env[svc["env_key"]] = str(svc["port"])
-        subprocess.Popen(
-            [sys.executable, str(script_path)],
-            env=env,
-            cwd=str(AI_OS_ROOT),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        kwargs = {"env": env, "cwd": str(AI_OS_ROOT),
+                  "stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
+        if os.name == "nt":
+            # Vollständig entkoppeln — auch aus dem Job-Objekt der Aufgabenplanung
+            # ausbrechen, sonst killt ein Dashboard-Neustart alle gestarteten Dienste mit.
+            DETACHED = 0x00000008 | 0x00000200 | 0x08000000  # DETACHED|NEW_GROUP|NO_WINDOW
+            CREATE_BREAKAWAY_FROM_JOB = 0x01000000
+            try:
+                subprocess.Popen([sys.executable, str(script_path)],
+                                 creationflags=DETACHED | CREATE_BREAKAWAY_FROM_JOB, **kwargs)
+            except OSError:
+                # Breakaway nicht erlaubt (kein Job / Job verbietet es) -> ohne versuchen
+                subprocess.Popen([sys.executable, str(script_path)],
+                                 creationflags=DETACHED, **kwargs)
+        else:
+            subprocess.Popen([sys.executable, str(script_path)],
+                             start_new_session=True, **kwargs)
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)})

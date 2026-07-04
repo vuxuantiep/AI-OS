@@ -974,6 +974,54 @@
         .grid-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
         .grid-trio { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem; }
 
+        /* ===== LEGO-Look: auf-/zuklappbare Sektionen (CEO-Ideen) =====
+           Jede Sektion ist ein "LEGO-Stein": Noppenreihe oben, kräftige
+           Steinfarbe links (--lego), Chevron zum Auf-/Zuklappen. */
+        details.collapse-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg-card);
+            margin-bottom: 1.1rem;
+            overflow: hidden;
+        }
+        details.collapse-card > summary {
+            list-style: none;
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+            padding: 1rem 1.1rem 0.8rem 1rem;
+            font-weight: 700; font-size: 0.95rem;
+            border-left: 6px solid var(--lego, var(--accent));
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-tertiary));
+            transition: background-color 0.15s;
+        }
+        details.collapse-card > summary::before { /* LEGO-Noppenreihe */
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 7px;
+            background-image: radial-gradient(circle at 11px 3.5px, var(--lego, var(--accent)) 2.6px, transparent 3.4px);
+            background-size: 24px 7px;
+            background-repeat: repeat-x;
+            opacity: 0.55;
+        }
+        details.collapse-card > summary::-webkit-details-marker { display: none; }
+        details.collapse-card > summary::after {
+            content: '▾'; margin-left: 0.6rem; color: var(--text-secondary);
+            transition: transform 0.15s;
+        }
+        details.collapse-card:not([open]) > summary::after { transform: rotate(-90deg); }
+        details.collapse-card > summary:hover { background-color: var(--bg-hover); }
+        details.collapse-card[open] > summary { border-bottom: 1px solid var(--border); }
+        details.collapse-card > summary .muted { font-weight: 500; font-size: 0.75rem; color: var(--text-secondary); }
+        details.collapse-card .collapse-body { padding: 1.1rem 1.25rem 1.25rem; }
+        .summary-pills { display: flex; gap: 0.4rem; margin-left: auto; flex-wrap: wrap; }
+
+        /* Scrollbare Innenbereiche (Ideen-Bibliothek, Auftragsstatus) */
+        .scroll-y { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+        .scroll-y::-webkit-scrollbar { width: 8px; }
+        .scroll-y::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+        .scroll-y::-webkit-scrollbar-track { background: transparent; }
+
         /* Chat + Ideen-Panel stapeln, sobald es eng wird */
         @media (max-width: 1150px) {
             .chat-layout { flex-direction: column; height: auto; }
@@ -1327,31 +1375,69 @@
 
                 <!-- === CEO-Ideen === -->
                 <section class="tab-panel" id="tab-ideas">
-                    <div class="section-title">💡 CEO-Ideenwerkstatt <span class="muted">– Strategische Produktentwicklung & Business-Modelle</span></div>
+                    <div class="section-title">💡 CEO-Ideenwerkstatt <span class="muted">– LEGO-Fabrik: Baustein für Baustein von der Idee zum Produkt</span></div>
 
-                    <!-- Hauptbereich: Graph + Creator -->
-                    <div class="grid-split" style="--split:1.2fr 1fr;margin-bottom:1.5rem;">
-                        <!-- 3D-Wissensgraph -->
-                        <div class="hover-lift" style="background:linear-gradient(135deg,var(--bg-card),var(--bg-tertiary));border:1px solid var(--accent);border-radius:var(--radius);padding:1.5rem;position:relative;overflow:hidden;box-shadow:0 0 20px rgba(91,156,245,0.15);">
-                            <div style="position:absolute;top:-20px;right:-20px;width:150px;height:150px;background:radial-gradient(circle,var(--accent-soft) 0%,transparent 70%);opacity:0.4;animation:float 6s ease-in-out infinite;"></div>
-                            <div class="section-title" style="margin-top:0;position:relative;z-index:1;">🌐 Wissensgraph 3D</div>
-                            <div id="graph-3d-container" style="width:100%;aspect-ratio:1/1;background:var(--bg-primary);border-radius:var(--radius-sm);position:relative;overflow:hidden;cursor:grab;border:2px solid var(--border-strong);box-shadow:inset 0 0 30px rgba(91,156,245,0.1);">
-                                <canvas id="graph-3d-canvas" style="width:100%;height:100%;display:block;"></canvas>
-                                <div style="position:absolute;bottom:0.5rem;left:50%;transform:translateX(-50%);font-size:0.7rem;color:var(--text-secondary);pointer-events:none;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.7),transparent);padding:0.4rem 1rem;border-radius:12px;">🖱️ Drag to Rotate | Scroll to Zoom</div>
+                    <!-- 🧱 1: KI-Fabrik Live (wichtigster Bereich zuerst) -->
+                    <details class="collapse-card" id="sec-fabrik" data-init="factory" open style="--lego:#f5c518;">
+                        <summary>🏭 <span>KI-Fabrik — Live</span> <span class="muted">Scrum: CEO = Product Owner · CTO = Scrum Master · Agenten = Dev-Team</span>
+                            <span class="summary-pills">
+                                <span class="pill" id="factory-cto-status" style="font-size:0.65rem;">🧑‍💼 CTO: prüfe…</span>
+                                <span class="pill" id="factory-agents-status" style="font-size:0.65rem;">🤖 Agent-System: prüfe…</span>
+                            </span>
+                        </summary>
+                        <div class="collapse-body">
+                        <div class="grid-split" style="--split:1.2fr 1fr;">
+                            <!-- LEGO-Fabrikraum Visualisierung -->
+                            <div>
+                                <div id="factory-3d-container" style="width:100%;aspect-ratio:16/10;background:var(--bg-primary);border-radius:var(--radius-sm);position:relative;overflow:hidden;border:2px solid var(--border-strong);box-shadow:inset 0 0 30px rgba(245,197,24,0.08);">
+                                    <canvas id="factory-3d-canvas" style="width:100%;height:100%;display:block;"></canvas>
+                                    <div id="factory-3d-banner" style="position:absolute;top:0.6rem;left:50%;transform:translateX(-50%);font-size:0.72rem;color:var(--text-primary);pointer-events:none;background:rgba(0,0,0,0.55);padding:0.35rem 0.9rem;border-radius:12px;border:1px solid rgba(245,197,24,0.4);white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;">Fabrik im Leerlauf — sende eine Idee an den CTO</div>
+                                    <div style="position:absolute;bottom:0.5rem;left:50%;transform:translateX(-50%);font-size:0.7rem;color:var(--text-secondary);pointer-events:none;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.7),transparent);padding:0.4rem 1rem;border-radius:12px;white-space:nowrap;">🧱 LEGO-Fabrik mit Minifiguren — die ganze Produktionslinie auf einen Blick</div>
+                                </div>
+                                <div style="display:flex;gap:0.4rem;margin-top:0.75rem;justify-content:center;flex-wrap:wrap;">
+                                    <span class="pill" style="font-size:0.65rem;">👔 CEO-Büro</span>
+                                    <span class="pill" style="font-size:0.65rem;">🧑‍💼 CTO-Agent</span>
+                                    <span class="pill" style="font-size:0.65rem;">📋 Planung</span>
+                                    <span class="pill" style="font-size:0.65rem;">⚙️ Entwicklung</span>
+                                    <span class="pill" style="font-size:0.65rem;border-color:#38bdf8;">🔬 Testlabor</span>
+                                    <span class="pill" style="font-size:0.65rem;">🧪 Qualität</span>
+                                    <span class="pill" style="font-size:0.65rem;border-color:#e879f9;">🤝 CEO-Abnahme</span>
+                                    <span class="pill" style="font-size:0.65rem;">🚀 Auslieferung</span>
+                                </div>
                             </div>
-                            <div style="display:flex;gap:0.4rem;margin-top:0.75rem;justify-content:center;">
-                                <span class="pill" style="font-size:0.65rem;">💼 Business</span>
-                                <span class="pill" style="font-size:0.65rem;">🛠️ Tech</span>
-                                <span class="pill" style="font-size:0.65rem;">🤖 Agents</span>
-                                <span class="pill" style="font-size:0.65rem;">🧠 Memory</span>
+                            <!-- Beauftragung + Auftragsübersicht -->
+                            <div style="display:flex;flex-direction:column;gap:1rem;">
+                                <div style="background:var(--bg-secondary);padding:1rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
+                                    <div style="font-weight:600;margin-bottom:0.5rem;">📤 Aufgabe an CTO-Agent</div>
+                                    <select id="factory-idea-select" style="width:100%;padding:0.5rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);margin-bottom:0.5rem;">
+                                        <option value="">-- Idee auswählen --</option>
+                                    </select>
+                                    <textarea id="factory-note" placeholder="Optionale Anweisung an den CTO (z.B. 'Fokus auf schnelles MVP')" style="width:100%;min-height:52px;padding:0.5rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:0.82rem;resize:vertical;font-family:inherit;margin-bottom:0.5rem;"></textarea>
+                                    <button class="btn btn-primary" id="factory-send-btn" onclick="sendToCTO()" style="width:100%;justify-content:center;">📨 CTO beauftragen</button>
+                                </div>
+                                <div class="scroll-y" style="background:var(--bg-secondary);padding:1rem;border-radius:var(--radius-sm);border:1px solid var(--border);flex:1;max-height:520px;">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                                        <div style="font-weight:600;">📋 Auftragsstatus</div>
+                                        <button class="btn btn-outline btn-sm" onclick="pollFactoryOrders(true)">🔄</button>
+                                    </div>
+                                    <div id="factory-orders-list">
+                                        <div class="empty-state">Keine Aufträge vorhanden.</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        </div>
+                    </details>
 
-                        <!-- Produktidee Creator -->
-                        <div class="hover-lift" style="background:linear-gradient(135deg,var(--bg-card),var(--bg-tertiary));border:1px solid var(--success);border-radius:var(--radius);padding:1.5rem;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 20px rgba(52,211,153,0.15);">
-                            <div style="position:absolute;top:-20px;right:-20px;width:150px;height:150px;background:radial-gradient(circle,var(--success-soft) 0%,transparent 70%);opacity:0.4;animation:float 6s ease-in-out infinite reverse;"></div>
-                            <div class="section-title" style="margin-top:0;position:relative;z-index:1;">🚀 Produktidee Canvas</div>
-                            <div style="flex:1;display:flex;flex-direction:column;gap:0.75rem;position:relative;z-index:1;">
+                    <!-- 🧱 2: Produktidee erstellen + Bibliothek -->
+                    <details class="collapse-card" id="sec-idee" open style="--lego:#34d399;">
+                        <summary>🚀 <span>Produktidee Canvas & Ideen-Bibliothek</span> <span class="muted">Ideen bauen, speichern und an die Fabrik übergeben</span>
+                            <span class="summary-pills"><span class="pill" id="idea-stats" style="font-size:0.65rem;">0 gespeicherte Ideen</span></span>
+                        </summary>
+                        <div class="collapse-body">
+                        <div class="grid-split" style="--split:1fr 1.2fr;">
+                            <!-- Produktidee Creator -->
+                            <div style="display:flex;flex-direction:column;gap:0.75rem;">
                                 <div style="background:var(--bg-secondary);padding:0.3rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
                                     <input type="text" id="idea-name" placeholder="💡 Ideenname (z.B. 'AI-Scout')" style="width:100%;padding:0.6rem;background:transparent;border:none;color:var(--text-primary);font-size:0.95rem;font-weight:600;outline:none;">
                                 </div>
@@ -1375,13 +1461,47 @@
                                     <button class="btn btn-outline" onclick="clearIdeaForm()" style="justify-content:center;padding:0.7rem;color:var(--danger);border-color:var(--danger);">🔄 Neu</button>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Unterer Bereich: Skizze + Notizen + Ideen Liste -->
-                    <div class="grid-split" style="--split:1.5fr 1fr;margin-bottom:1.5rem;">
+                            <!-- Ideen-Bibliothek (scrollbar) -->
+                            <div style="display:flex;flex-direction:column;min-width:0;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+                                    <div style="font-weight:600;">📚 Ideen-Bibliothek</div>
+                                    <button class="btn btn-outline btn-sm" onclick="loadSavedIdeas()">🔄 Aktualisieren</button>
+                                </div>
+                                <div id="ideas-list" class="scroll-y" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;max-height:460px;align-content:start;padding-right:0.25rem;">
+                                    <div class="empty-state">Noch keine Ideen gespeichert. Erstelle deine erste Produktidee links.</div>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    </details>
+
+                    <!-- 🧱 3: Wissensgraph 3D (Standard: zugeklappt) -->
+                    <details class="collapse-card" id="sec-graph" data-init="graph" style="--lego:#5b9cf5;">
+                        <summary>🌐 <span>Wissensgraph 3D</span> <span class="muted">Wissenskategorien als drehbarer Graph</span></summary>
+                        <div class="collapse-body">
+                            <div style="max-width:520px;margin:0 auto;">
+                                <div id="graph-3d-container" style="width:100%;aspect-ratio:1/1;background:var(--bg-primary);border-radius:var(--radius-sm);position:relative;overflow:hidden;cursor:grab;border:2px solid var(--border-strong);box-shadow:inset 0 0 30px rgba(91,156,245,0.1);">
+                                    <canvas id="graph-3d-canvas" style="width:100%;height:100%;display:block;"></canvas>
+                                    <div style="position:absolute;bottom:0.5rem;left:50%;transform:translateX(-50%);font-size:0.7rem;color:var(--text-secondary);pointer-events:none;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.7),transparent);padding:0.4rem 1rem;border-radius:12px;">🖱️ Drag to Rotate | Scroll to Zoom</div>
+                                </div>
+                                <div style="display:flex;gap:0.4rem;margin-top:0.75rem;justify-content:center;">
+                                    <span class="pill" style="font-size:0.65rem;">💼 Business</span>
+                                    <span class="pill" style="font-size:0.65rem;">🛠️ Tech</span>
+                                    <span class="pill" style="font-size:0.65rem;">🤖 Agents</span>
+                                    <span class="pill" style="font-size:0.65rem;">🧠 Memory</span>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- 🧱 4: Strategie-Werkzeuge (Standard: zugeklappt) -->
+                    <details class="collapse-card" id="sec-tools" data-init="sketch" style="--lego:#e879f9;">
+                        <summary>✏️ <span>Strategie-Werkzeuge</span> <span class="muted">Skizze & Notizen für strategische Überlegungen</span></summary>
+                        <div class="collapse-body">
+                        <div class="grid-split" style="--split:1.5fr 1fr;">
                         <!-- Große Skizze -->
-                        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;">
+                        <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;">
                             <div class="section-title" style="margin-top:0;">✏️ Strategie-Skizze</div>
                             <div style="background:#ffffff;border-radius:var(--radius-sm);overflow:hidden;border:2px solid var(--border);">
                                 <canvas id="big-sketch-canvas" width="1200" height="600" style="width:100%;height:auto;display:block;cursor:crosshair;touch-action:none;"></canvas>
@@ -1409,76 +1529,10 @@
                                 </div>
                             </div>
 
-                            <!-- Quick Stats -->
-                            <div style="background:linear-gradient(135deg,var(--accent-soft),var(--bg-card));border:1px solid var(--border-strong);border-radius:var(--radius);padding:1rem;">
-                                <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.5rem;font-weight:600;">📊 Ideen-Statistik</div>
-                                <div id="idea-stats" style="font-size:1.5rem;font-weight:700;color:var(--accent);">0 gespeicherte Ideen</div>
-                            </div>
                         </div>
-                    </div>
-
-                    <!-- Gespeicherte Ideen Liste -->
-                    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-                            <div class="section-title" style="margin:0;">📚 Ideen-Bibliothek</div>
-                            <button class="btn btn-outline btn-sm" onclick="loadSavedIdeas()">🔄 Aktualisieren</button>
                         </div>
-                        <div id="ideas-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;">
-                            <div class="empty-state">Noch keine Ideen gespeichert. Erstelle deine erste Produktidee oben.</div>
                         </div>
-                    </div>
-
-                    <!-- 🏭 KI-Fabrik -->
-                    <div style="background:linear-gradient(135deg,var(--bg-card),var(--bg-tertiary));border:1px solid var(--accent);border-radius:var(--radius);padding:1.5rem;position:relative;overflow:hidden;margin-top:1.5rem;">
-                        <div style="position:absolute;top:-20px;right:-20px;width:150px;height:150px;background:radial-gradient(circle,var(--accent-soft) 0%,transparent 70%);opacity:0.4;animation:float 6s ease-in-out infinite;"></div>
-                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;position:relative;z-index:1;">
-                            <div class="section-title" style="margin:0;">🏭 KI-Fabrik — Live <span class="muted">— Scrum: CEO = Product Owner, CTO = Scrum Master, Agenten = Dev-Team</span></div>
-                            <div style="display:flex;gap:0.4rem;">
-                                <span class="pill" id="factory-cto-status" style="font-size:0.65rem;">🧑‍💼 CTO: prüfe…</span>
-                                <span class="pill" id="factory-agents-status" style="font-size:0.65rem;">🤖 Agent-System: prüfe…</span>
-                            </div>
-                        </div>
-                        <div class="grid-split" style="--split:1.2fr 1fr;position:relative;z-index:1;margin-top:1rem;">
-                            <!-- 3D-Fabrikraum Visualisierung -->
-                            <div>
-                                <div id="factory-3d-container" style="width:100%;aspect-ratio:16/10;background:var(--bg-primary);border-radius:var(--radius-sm);position:relative;overflow:hidden;border:2px solid var(--border-strong);box-shadow:inset 0 0 30px rgba(91,156,245,0.1);">
-                                    <canvas id="factory-3d-canvas" style="width:100%;height:100%;display:block;"></canvas>
-                                    <div id="factory-3d-banner" style="position:absolute;top:0.6rem;left:50%;transform:translateX(-50%);font-size:0.72rem;color:var(--text-primary);pointer-events:none;background:rgba(0,0,0,0.55);padding:0.35rem 0.9rem;border-radius:12px;border:1px solid rgba(91,156,245,0.4);white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;">Fabrik im Leerlauf — sende eine Idee an den CTO</div>
-                                    <div style="position:absolute;bottom:0.5rem;left:50%;transform:translateX(-50%);font-size:0.7rem;color:var(--text-secondary);pointer-events:none;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.7),transparent);padding:0.4rem 1rem;border-radius:12px;white-space:nowrap;">🧍 2D-Raumansicht mit 3D-Figuren — die ganze Produktionslinie auf einen Blick</div>
-                                </div>
-                                <div style="display:flex;gap:0.4rem;margin-top:0.75rem;justify-content:center;flex-wrap:wrap;">
-                                    <span class="pill" style="font-size:0.65rem;">👔 CEO-Büro</span>
-                                    <span class="pill" style="font-size:0.65rem;">🧑‍💼 CTO-Agent</span>
-                                    <span class="pill" style="font-size:0.65rem;">📋 Planung</span>
-                                    <span class="pill" style="font-size:0.65rem;">⚙️ Entwicklung</span>
-                                    <span class="pill" style="font-size:0.65rem;border-color:#38bdf8;">🔬 Testlabor</span>
-                                    <span class="pill" style="font-size:0.65rem;">🧪 Qualität</span>
-                                    <span class="pill" style="font-size:0.65rem;border-color:#e879f9;">🤝 CEO-Abnahme</span>
-                                    <span class="pill" style="font-size:0.65rem;">🚀 Auslieferung</span>
-                                </div>
-                            </div>
-                            <!-- Beauftragung + Auftragsübersicht -->
-                            <div style="display:flex;flex-direction:column;gap:1rem;">
-                                <div style="background:var(--bg-secondary);padding:1rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
-                                    <div style="font-weight:600;margin-bottom:0.5rem;">📤 Aufgabe an CTO-Agent</div>
-                                    <select id="factory-idea-select" style="width:100%;padding:0.5rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);margin-bottom:0.5rem;">
-                                        <option value="">-- Idee auswählen --</option>
-                                    </select>
-                                    <textarea id="factory-note" placeholder="Optionale Anweisung an den CTO (z.B. 'Fokus auf schnelles MVP')" style="width:100%;min-height:52px;padding:0.5rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:0.82rem;resize:vertical;font-family:inherit;margin-bottom:0.5rem;"></textarea>
-                                    <button class="btn btn-primary" id="factory-send-btn" onclick="sendToCTO()" style="width:100%;justify-content:center;">📨 CTO beauftragen</button>
-                                </div>
-                                <div style="background:var(--bg-secondary);padding:1rem;border-radius:var(--radius-sm);border:1px solid var(--border);flex:1;overflow-y:auto;max-height:520px;">
-                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
-                                        <div style="font-weight:600;">📋 Auftragsstatus</div>
-                                        <button class="btn btn-outline btn-sm" onclick="pollFactoryOrders(true)">🔄</button>
-                                    </div>
-                                    <div id="factory-orders-list">
-                                        <div class="empty-state">Keine Aufträge vorhanden.</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    </details>
                 </section>
             </div>
         </div>
@@ -1567,6 +1621,26 @@
             if (!isMobile() && localStorage.getItem('aios-sidebar-collapsed') === '1') {
                 document.querySelector('.app').classList.add('sidebar-collapsed');
             }
+        }
+
+        // === CEO-Ideen: LEGO-Sektionen auf-/zuklappen (Zustand wird gemerkt) ===
+        function setupCollapsibles() {
+            document.querySelectorAll('details.collapse-card[id]').forEach(d => {
+                const saved = localStorage.getItem('aios-collapse-' + d.id);
+                if (saved === '0') d.open = false;
+                else if (saved === '1') d.open = true;
+                d.addEventListener('toggle', () => {
+                    localStorage.setItem('aios-collapse-' + d.id, d.open ? '1' : '0');
+                    if (!d.open) return;
+                    // Canvas-Inhalte brauchen nach dem Aufklappen eine (Re-)Initialisierung,
+                    // weil sie im zugeklappten Zustand keine Größe hatten
+                    setTimeout(() => {
+                        if (d.dataset.init === 'graph') init3DGraph();
+                        if (d.dataset.init === 'sketch') initBigSketch();
+                        if (d.dataset.init === 'factory') initFactoryPanel();
+                    }, 60);
+                });
+            });
         }
 
         // === Ideen-Panel: Notizzettel & Skizze ===
@@ -2598,6 +2672,7 @@
 
         // === Init ===
         restoreSidebarPreference();
+        setupCollapsibles();
         setupNotepad();
         setupSketch();
         setupSpeechRecognition();
@@ -2632,15 +2707,24 @@
         setInterval(loadLlmStatus, 30000);
 
         // === CEO-Ideen: 3D Graph (Force-Directed) ===
+        let graph3DResize = null;
         function init3DGraph() {
+            // Bereits initialisiert: nur die Größe anpassen (verhindert gestapelte Animations-Loops)
+            if (graph3DResize) { graph3DResize(); return; }
             const canvas = document.getElementById('graph-3d-canvas');
             if (!canvas) return;
             const container = document.getElementById('graph-3d-container');
-            const rect = container.getBoundingClientRect();
-            canvas.width = rect.width * window.devicePixelRatio;
-            canvas.height = rect.height * window.devicePixelRatio;
             const ctx = canvas.getContext('2d');
-            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            let rect = container.getBoundingClientRect();
+            function resizeGraph() {
+                rect = container.getBoundingClientRect();
+                if (!rect.width) return;
+                canvas.width = rect.width * window.devicePixelRatio;
+                canvas.height = rect.height * window.devicePixelRatio;
+                ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+            }
+            resizeGraph();
+            graph3DResize = resizeGraph;
             
             // Demo-Daten aus Wissensbasis-Kategorien
             const nodes = [
@@ -2965,27 +3049,37 @@
                 return faces;
             }
 
-            // Menschliche Figur mit Anatomie: Beine, Torso, Arme, Hals, Kopf.
-            // Aktive Figur nickt leicht und winkt mit dem rechten Arm.
+            // LEGO-Minifigur: blockige Beine, Trapez-Torso, gelber Zylinderkopf mit
+            // Noppe (Stud) obendrauf und gelben Scheiben-Händen. Aktive Figur winkt & nickt.
+            const LEGO_YELLOW = '#f5c518';
+            const LEGO_BLUE = '#0d69ab';
             function humanParts(suit, active, time) {
                 const bob = active ? Math.sin(time * 3) * 0.9 : 0;
-                const wave = active ? Math.abs(Math.sin(time * 3.5)) * 5 : 0;
-                const skin = '#f2c9a0';
+                const wave = active ? Math.abs(Math.sin(time * 3.5)) * 6 : 0;
                 return [
-                    { kind: 'box', x: -3.4, z: 0, y: 0,  w: 4.8, d: 5.4, h: 12, color: '#39404f' },
-                    { kind: 'box', x:  3.4, z: 0, y: 0,  w: 4.8, d: 5.4, h: 12, color: '#39404f' },
-                    { kind: 'box', x: -3.4, z: 1.2, y: 11.6, w: 5, d: 7, h: 1.6, color: '#22262f' },
-                    { kind: 'box', x:  3.4, z: 1.2, y: 11.6, w: 5, d: 7, h: 1.6, color: '#22262f' },
-                    { kind: 'box', x: 0,    z: 0, y: 12, w: 13.5, d: 7.5, h: 15, color: suit },
-                    { kind: 'box', x: 0,    z: 2.2, y: 18, w: 3.5, d: 2, h: 8, color: '#c22f4a' },
-                    { kind: 'box', x: -8.6, z: 0, y: 13, w: 3.8, d: 4.6, h: 13, color: suit },
-                    { kind: 'box', x:  8.6, z: 0, y: 13 + wave, w: 3.8, d: 4.6, h: 13, color: suit },
-                    { kind: 'sphere', x: -8.6, z: 0, y: 12.5 + (active ? 0 : 0), r: 2.1, color: skin },
-                    { kind: 'sphere', x:  8.6, z: 0, y: 12.5 + wave, r: 2.1, color: skin },
-                    { kind: 'box', x: 0,    z: 0, y: 27, w: 4.4, d: 4, h: 2.6, color: skin },
-                    { kind: 'sphere', x: 0, z: 0, y: 34 + bob, r: 5.4, color: skin },
-                    { kind: 'box', x: 0,    z: 0, y: 38.2 + bob, w: 11.5, d: 8, h: 2.2, color: shade(suit, 0.55) },
+                    // Beine + Hüftstein (LEGO-blau, bewusst klobig)
+                    { kind: 'box', x: -3.6, z: 0, y: 0, w: 6.4, d: 7.2, h: 10, color: LEGO_BLUE },
+                    { kind: 'box', x:  3.6, z: 0, y: 0, w: 6.4, d: 7.2, h: 10, color: LEGO_BLUE },
+                    { kind: 'box', x: 0, z: 0, y: 10, w: 13.6, d: 7.2, h: 3, color: LEGO_BLUE },
+                    // Torso (unten breiter — angedeutetes LEGO-Trapez)
+                    { kind: 'box', x: 0, z: 0, y: 13, w: 15, d: 8, h: 4, color: suit },
+                    { kind: 'box', x: 0, z: 0, y: 17, w: 13.5, d: 7.6, h: 8, color: suit },
+                    // Arme (rechter winkt bei Aktivität)
+                    { kind: 'box', x: -9.4, z: 0, y: 14.5, w: 4.4, d: 5.2, h: 10, color: shade(suit, 0.85) },
+                    { kind: 'box', x:  9.4, z: 0, y: 14.5 + wave, w: 4.4, d: 5.2, h: 10, color: shade(suit, 0.85) },
+                    // Gelbe LEGO-Hände (C-Scheiben)
+                    { kind: 'sphere', x: -9.4, z: 0, y: 13.5, r: 2.5, color: LEGO_YELLOW },
+                    { kind: 'sphere', x:  9.4, z: 0, y: 13.5 + wave, r: 2.5, color: LEGO_YELLOW },
+                    // Hals, Zylinderkopf & Kopf-Noppe
+                    { kind: 'box', x: 0, z: 0, y: 25, w: 5, d: 4.5, h: 1.8, color: LEGO_YELLOW },
+                    { kind: 'prism', x: 0, z: 0, y: 26.8 + bob, r: 5.4, h: 8.6, color: LEGO_YELLOW, n: 12 },
+                    { kind: 'prism', x: 0, z: 0, y: 35.4 + bob, r: 2.7, h: 2.2, color: LEGO_YELLOW, n: 10 },
                 ];
+            }
+
+            // LEGO-Noppen für Maschinen-Oberseiten (kleine Zylinder in Reihe)
+            function legoStuds(y, color, xs, z = 0) {
+                return xs.map(x => ({ kind: 'prism', x, z, y, r: 2, h: 1.8, color, n: 8 }));
             }
 
             // Erkennbare Objekte je Station statt einfacher Würfel
@@ -2996,36 +3090,50 @@
                     case 'cto':      return humanParts('#5b9cf5', active, time);
                     case 'approval': return humanParts('#e879f9', active || factoryScene.waiting, time);
                     case 'planner': return [
+                        // LEGO-Zeichentisch: Grundstein mit Noppen + aufgesteckte Tafel
                         { kind: 'box', x: 0, z: 0, y: 0, w: 26, d: 13, h: 10, color: '#6b7280' },
+                        ...legoStuds(10, '#8a93a3', [-10, 4, 10], 3.5),
                         { kind: 'box', x: 0, z: -2, y: 10, w: 17, d: 2, h: 11, color: st.color },
-                        { kind: 'box', x: 0, z: 3.5, y: 10, w: 10, d: 6, h: 1.2, color: '#9ca3af' },
+                        ...legoStuds(21, st.color, [-5, 0, 5], -2),
                     ];
                     case 'dev': return [
+                        // LEGO-Maschinenstein mit Noppen + rotierender Achse
                         { kind: 'box', x: 0, z: 0, y: 0, w: 25, d: 16, h: 13, color: '#4b5563' },
                         { kind: 'box', x: -3, z: 0, y: 13, w: 13, d: 10, h: 9, color: st.color },
+                        ...legoStuds(22, st.color, [-6.5, -3, 0.5]),
                         { kind: 'prism', x: 8.5, z: -4, y: 13, r: 2.2, h: 9 + (active ? Math.sin(spin) * 1.5 : 0), color: '#94a3b8' },
                         { kind: 'box', x: 8.5, z: 5, y: 13, w: 4, d: 4, h: 4, color: '#374151' },
                     ];
                     case 'lab': return [
+                        // LEGO-Labortisch mit Noppen + Kolben
                         { kind: 'box', x: 0, z: 0, y: 0, w: 26, d: 13, h: 9, color: '#475569' },
+                        ...legoStuds(9, '#64748b', [-11, 11], 3.5),
                         { kind: 'prism', x: 5, z: 0, y: 9, r: 3.8, h: 8, color: st.color },
                         { kind: 'sphere', x: 5, z: 0, y: 18.5 + (active ? Math.sin(spin) * 1.2 : 0), r: 2.4, color: st.color },
                         { kind: 'prism', x: -5.5, z: 1, y: 9, r: 2.4, h: 5.5, color: '#a5f3fc' },
                     ];
                     case 'test': return [
+                        // LEGO-Prüfportal: zwei Steinsäulen + Balkenstein mit Noppen
                         { kind: 'box', x: -10, z: 0, y: 0, w: 5, d: 6, h: 24, color: '#64748b' },
                         { kind: 'box', x: 10, z: 0, y: 0, w: 5, d: 6, h: 24, color: '#64748b' },
                         { kind: 'box', x: 0, z: 0, y: 24, w: 26, d: 6, h: 4.5, color: st.color },
+                        ...legoStuds(28.5, st.color, [-9, -3, 3, 9]),
                         { kind: 'box', x: 0, z: 0, y: 12 + (active ? Math.sin(spin * 1.5) * 8 : 0), w: 19, d: 1.5, h: 1.2, color: '#fde68a' },
                     ];
                     case 'deploy': return [
-                        { kind: 'box', x: -8, z: 6, y: 0, w: 5, d: 5, h: 4, color: st.color },
-                        { kind: 'box', x: 8, z: 6, y: 0, w: 5, d: 5, h: 4, color: st.color },
-                        { kind: 'box', x: 0, z: -8, y: 0, w: 5, d: 5, h: 4, color: st.color },
-                        { kind: 'prism', x: 0, z: 0, y: 1, r: 6.5, h: 17, color: '#e5e7eb' },
+                        // LEGO-Rakete auf Noppen-Startrampe
+                        { kind: 'box', x: 0, z: 0, y: 0, w: 22, d: 16, h: 3, color: '#6b7280' },
+                        ...legoStuds(3, '#8a93a3', [-8, 8], 6),
+                        ...legoStuds(3, '#8a93a3', [0], -6),
+                        { kind: 'prism', x: 0, z: 0, y: 3, r: 6.5, h: 15, color: '#e5e7eb' },
                         { kind: 'cone', x: 0, z: 0, y: 18, r: 6.5, h: 9, color: st.color },
+                        { kind: 'box', x: -7.5, z: 0, y: 3, w: 2.5, d: 5, h: 7, color: st.color },
+                        { kind: 'box', x: 7.5, z: 0, y: 3, w: 2.5, d: 5, h: 7, color: st.color },
                     ];
-                    default: return [{ kind: 'box', x: 0, z: 0, y: 0, w: 24, d: 24, h: st.h, color: st.color }];
+                    default: return [
+                        { kind: 'box', x: 0, z: 0, y: 0, w: 24, d: 24, h: st.h, color: st.color },
+                        ...legoStuds(st.h, st.color, [-8, 0, 8]),
+                    ];
                 }
             }
 
@@ -3045,7 +3153,7 @@
                         draws.push({ z: c.z, sphere: { c, r: p.r, color: p.color } });
                     } else {
                         const faces = p.kind === 'prism'
-                            ? prismFaces(st.x + p.x, p.y, st.z + p.z, p.r, p.h, p.color)
+                            ? prismFaces(st.x + p.x, p.y, st.z + p.z, p.r, p.h, p.color, p.n || 8)
                             : (p.kind === 'cone'
                                 ? coneFaces(st.x + p.x, p.y, st.z + p.z, p.r, p.h, p.color)
                                 : boxFaces(st.x + p.x, p.y, st.z + p.z, p.w, p.d, p.h, p.color));
@@ -3150,12 +3258,23 @@
                 // 2D-Raumansicht: Hallen-Querschnitt mit einem Raum pro Station
                 const kk = project(0, 0, 0).s;
                 const baseY = project(0, 0, 0).y;
-                // Hallenboden als flaches Band
-                ctx.fillStyle = 'rgba(91,156,245,0.07)';
+                // Hallenboden als LEGO-Bauplatte: flaches Band mit Noppenraster
+                ctx.fillStyle = 'rgba(245,197,24,0.06)';
                 ctx.fillRect(0, baseY + 4 * kk, W, H - baseY);
                 ctx.strokeStyle = 'rgba(255,255,255,0.15)';
                 ctx.lineWidth = 1.5;
                 ctx.beginPath(); ctx.moveTo(0, baseY + 4 * kk); ctx.lineTo(W, baseY + 4 * kk); ctx.stroke();
+                ctx.fillStyle = 'rgba(255,255,255,0.05)';
+                const studStep = Math.max(14, 18 * kk);
+                let studRow = 0;
+                for (let sy = baseY + 12 * kk; sy < H - 6; sy += studStep * 0.6) {
+                    for (let sx = (studRow % 2 ? studStep / 2 : 0); sx < W; sx += studStep) {
+                        ctx.beginPath();
+                        ctx.ellipse(sx, sy, 4 * kk, 1.9 * kk, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    studRow++;
+                }
                 // Räume (Wände + dezente Innenfläche), aktiver Raum leuchtet
                 const roomW = 50, roomH = 68;
                 stations.forEach(st => {
