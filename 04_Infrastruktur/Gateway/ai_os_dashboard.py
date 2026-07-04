@@ -791,6 +791,11 @@ def llm_status():
     """Status des LLM-Routers: welche Provider konfiguriert/online sind, wer aktiv routet."""
     return jsonify(LLM_ROUTER.status())
 
+@app.route("/api/llm/start", methods=["POST"])
+def llm_start():
+    """Startet die lokale KI-Engine (Ollama oder LM Studio) als entkoppelten Hintergrundprozess."""
+    return jsonify(LLM_ROUTER.autostart_local_engine(force=True, wait=12))
+
 @app.route("/api/stats")
 def get_stats():
     """System-Statistiken"""
@@ -985,9 +990,11 @@ def factory_order_create():
     if not idea.get("name"):
         return jsonify({"error": "Keine Idee angegeben."}), 400
     if not LLM_ROUTER.any_available():
-        return jsonify({"error": "CTO-Agent nicht erreichbar: Ollama (Port 11434) ist offline und "
-                                 "kein Online-Fallback (OpenRouter/Cloudflare) konfiguriert. "
-                                 "Siehe Tab 'KI-Gateway'."}), 503
+        LLM_ROUTER.kick_autostart()
+        return jsonify({"error": "CTO-Agent nicht erreichbar: keine lokale KI-Engine "
+                                 "(Ollama/LM Studio) online und kein Fallback (Pi-Gateway/"
+                                 "GitHub Models/OpenRouter/Cloudflare) konfiguriert. "
+                                 "Autostart wurde angestoßen — siehe Tab 'KI-Gateway'."}), 503
 
     order = _factory_create_order(idea, str(data.get("note", ""))[:1000])
     return jsonify({"order": order})
@@ -1417,8 +1424,13 @@ if __name__ == "__main__":
     print(f"🧠 AI-OS Dashboard startet auf http://localhost:{FLASK_PORT}")
     print(f"📁 Wissensbasis: {AI_OS_ROOT / '00_Wissen'}")
     print(f"🔧 Ollama: http://{OLLAMA_HOST}:{OLLAMA_PORT}")
+    # Lokale KI-Engine (Ollama/LM Studio) bei Bedarf automatisch mitstarten —
+    # das Dashboard ist damit unabhängig von VSCode oder manuell gestarteten Terminals.
+    _auto = LLM_ROUTER.autostart_local_engine(wait=6)
+    if _auto.get("started"):
+        print(f"⚙️ {_auto['message']}")
     _llm = LLM_ROUTER.status()
-    print(f"🔀 KI-Gateway: aktiver Provider = {_llm['active'] or 'KEINER (Ollama offline, keine Fallback-Keys)'}")
+    print(f"🔀 KI-Gateway: aktiver Provider = {_llm['active'] or 'KEINER (lokale Engine offline, keine Fallback-Keys)'}")
     _factory_recover_stale()
     threading.Thread(target=_news_daily_worker, daemon=True).start()
     app.run(host="127.0.0.1", port=FLASK_PORT, debug=False, threaded=True)

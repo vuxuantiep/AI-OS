@@ -966,11 +966,20 @@
         .wiki-doc .name { font-size: 0.8rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .wiki-doc .size { font-size: 0.7rem; color: var(--text-secondary); flex-shrink: 0; }
 
+        /* ===== Responsive Grid-Helfer =====
+           Zweispaltige Layouts (Ideen-Canvas, Skizze, KI-Fabrik) bekommen ihre
+           Spaltenaufteilung über die CSS-Variable --split und stapeln auf
+           schmalen Screens automatisch untereinander. */
+        .grid-split { display: grid; grid-template-columns: var(--split, 1fr 1fr); gap: 1.5rem; }
+        .grid-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+        .grid-trio { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem; }
+
         /* Chat + Ideen-Panel stapeln, sobald es eng wird */
         @media (max-width: 1150px) {
             .chat-layout { flex-direction: column; height: auto; }
             .chat-layout .chat-section { height: 62vh; }
             .idea-panel { width: 100%; height: 380px; }
+            .grid-split { grid-template-columns: 1fr; }
         }
 
         /* Sidebar wird zur ausklappbaren Drawer-Leiste (Hamburger) */
@@ -1008,7 +1017,14 @@
 
         @media (max-width: 480px) {
             .topbar-actions { width: 100%; justify-content: space-between; }
+            .topbar h2 { font-size: 1.05rem; }
             .stat-card { padding: 1rem; }
+            .content { padding: 0.9rem 0.75rem 2rem; }
+            .grid-duo, .grid-trio { grid-template-columns: 1fr; }
+            .section-title .muted { display: block; margin-top: 0.15rem; }
+            .modal-content { padding: 1.25rem; }
+            .btn { min-height: 40px; } /* Touch-freundliche Zielgröße */
+            .message { max-width: 100%; }
         }
     </style>
 </head>
@@ -1203,22 +1219,30 @@
                 <!-- === KI-Gateway / LLM-Router === -->
                 <section class="tab-panel" id="tab-llm">
                     <div class="section-title">🔀 KI-Gateway / LLM-Router <span class="muted">— routet jede KI-Anfrage automatisch zum ersten erreichbaren Provider</span></div>
-                    <span class="pill" id="llm-summary">Lade Provider-Status...</span>
+                    <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
+                        <span class="pill" id="llm-summary">Lade Provider-Status...</span>
+                        <button class="btn btn-success btn-sm" id="llm-start-btn" style="display:none;" onclick="startLocalEngine(this)">▶ Lokale KI-Engine starten</button>
+                    </div>
                     <div class="services-grid" id="llm-grid" style="margin-top: 1rem;">
                         <div class="empty-state">Lade Provider...</div>
                     </div>
-                    <div class="section-title" style="margin-top: 1.5rem;">⚙️ Online-Fallback einrichten</div>
+                    <div class="section-title" style="margin-top: 1.5rem;">⚙️ Fallbacks einrichten</div>
                     <div class="service-card" style="max-width: 720px;">
                         <div class="desc">
-                            Fällt Ollama aus, übernehmen automatisch kostenlose Open-Source-LLMs aus der Cloud.
-                            Dafür einmalig API-Keys hinterlegen — <b>niemals im Code</b>, sondern in der nicht
+                            Die lokale Engine (Ollama oder LM Studio) wird bei Bedarf <b>automatisch im
+                            Hintergrund gestartet</b> — unabhängig von VSCode oder offenen Terminals
+                            (abschaltbar mit <code>AI_OS_LLM_AUTOSTART=0</code>).
+                            Fällt sie aus, übernehmen automatisch das private Pi-Gateway oder Online-LLMs.
+                            Dafür einmalig Werte hinterlegen — <b>niemals im Code</b>, sondern in der nicht
                             versionierten Datei <code>.env</code> im Projekt-Root (Vorlage: <code>.env.example</code>):
+                            <code>PI_LLM_URL</code> (miniLLM auf dem Raspberry Pi 4),
+                            <code>GITHUB_MODELS_TOKEN</code> (GitHub/Copilot-Konto),
                             <code>OPENROUTER_API_KEY</code>, <code>HUGGINGFACE_API_KEY</code>,
                             <code>WORKERS_AI_ACCOUNT_ID</code>, <code>WORKERS_AI_API_TOKEN</code>,
                             optional <code>WORKERS_AI_GATEWAY</code>.
                             Die Datei wird bei jeder Anfrage neu gelesen — kein Neustart nötig.
                             Lokale Modellnamen (llama3, mistral,
-                            qwen2.5-coder …) werden automatisch auf gleichwertige Online-Modelle abgebildet.
+                            qwen2.5-coder …) werden automatisch auf gleichwertige Modelle abgebildet.
                         </div>
                     </div>
                 </section>
@@ -1306,7 +1330,7 @@
                     <div class="section-title">💡 CEO-Ideenwerkstatt <span class="muted">– Strategische Produktentwicklung & Business-Modelle</span></div>
 
                     <!-- Hauptbereich: Graph + Creator -->
-                    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+                    <div class="grid-split" style="--split:1.2fr 1fr;margin-bottom:1.5rem;">
                         <!-- 3D-Wissensgraph -->
                         <div class="hover-lift" style="background:linear-gradient(135deg,var(--bg-card),var(--bg-tertiary));border:1px solid var(--accent);border-radius:var(--radius);padding:1.5rem;position:relative;overflow:hidden;box-shadow:0 0 20px rgba(91,156,245,0.15);">
                             <div style="position:absolute;top:-20px;right:-20px;width:150px;height:150px;background:radial-gradient(circle,var(--accent-soft) 0%,transparent 70%);opacity:0.4;animation:float 6s ease-in-out infinite;"></div>
@@ -1331,7 +1355,7 @@
                                 <div style="background:var(--bg-secondary);padding:0.3rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
                                     <input type="text" id="idea-name" placeholder="💡 Ideenname (z.B. 'AI-Scout')" style="width:100%;padding:0.6rem;background:transparent;border:none;color:var(--text-primary);font-size:0.95rem;font-weight:600;outline:none;">
                                 </div>
-                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
+                                <div class="grid-duo">
                                     <div style="background:var(--bg-secondary);padding:0.5rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
                                         <label style="font-size:0.7rem;color:var(--accent);margin-bottom:0.2rem;display:block;font-weight:600;">🎯 ZIELGRUPPE</label>
                                         <input type="text" id="idea-target" placeholder="Wer profitiert?" style="width:100%;padding:0.4rem;background:transparent;border:none;color:var(--text-primary);font-size:0.85rem;outline:none;">
@@ -1345,7 +1369,7 @@
                                     <label style="font-size:0.7rem;color:var(--success);margin-bottom:0.2rem;display:block;font-weight:600;">💡 LÖSUNGSANSATZ</label>
                                     <textarea id="idea-solution" placeholder="Wie löst du das Problem?" style="flex:1;width:100%;min-height:80px;padding:0.4rem;background:transparent;border:none;color:var(--text-primary);font-size:0.85rem;resize:vertical;font-family:inherit;outline:none;"></textarea>
                                 </div>
-                                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem;">
+                                <div class="grid-trio">
                                     <button class="btn btn-primary" onclick="saveIdea()" style="justify-content:center;padding:0.7rem;background:linear-gradient(135deg,var(--accent),var(--accent-hover));box-shadow:0 4px 12px rgba(91,156,245,0.3);">💾 Speichern</button>
                                     <button class="btn btn-outline" onclick="exportIdeas()" style="justify-content:center;padding:0.7rem;">📤 Export</button>
                                     <button class="btn btn-outline" onclick="clearIdeaForm()" style="justify-content:center;padding:0.7rem;color:var(--danger);border-color:var(--danger);">🔄 Neu</button>
@@ -1355,7 +1379,7 @@
                     </div>
 
                     <!-- Unterer Bereich: Skizze + Notizen + Ideen Liste -->
-                    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+                    <div class="grid-split" style="--split:1.5fr 1fr;margin-bottom:1.5rem;">
                         <!-- Große Skizze -->
                         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;">
                             <div class="section-title" style="margin-top:0;">✏️ Strategie-Skizze</div>
@@ -1414,13 +1438,13 @@
                                 <span class="pill" id="factory-agents-status" style="font-size:0.65rem;">🤖 Agent-System: prüfe…</span>
                             </div>
                         </div>
-                        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:1.5rem;position:relative;z-index:1;margin-top:1rem;">
+                        <div class="grid-split" style="--split:1.2fr 1fr;position:relative;z-index:1;margin-top:1rem;">
                             <!-- 3D-Fabrikraum Visualisierung -->
                             <div>
-                                <div id="factory-3d-container" style="width:100%;aspect-ratio:4/3;background:var(--bg-primary);border-radius:var(--radius-sm);position:relative;overflow:hidden;cursor:grab;border:2px solid var(--border-strong);box-shadow:inset 0 0 30px rgba(91,156,245,0.1);">
+                                <div id="factory-3d-container" style="width:100%;aspect-ratio:4/3;background:var(--bg-primary);border-radius:var(--radius-sm);position:relative;overflow:hidden;border:2px solid var(--border-strong);box-shadow:inset 0 0 30px rgba(91,156,245,0.1);">
                                     <canvas id="factory-3d-canvas" style="width:100%;height:100%;display:block;"></canvas>
                                     <div id="factory-3d-banner" style="position:absolute;top:0.6rem;left:50%;transform:translateX(-50%);font-size:0.72rem;color:var(--text-primary);pointer-events:none;background:rgba(0,0,0,0.55);padding:0.35rem 0.9rem;border-radius:12px;border:1px solid rgba(91,156,245,0.4);white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;">Fabrik im Leerlauf — sende eine Idee an den CTO</div>
-                                    <div style="position:absolute;bottom:0.5rem;left:50%;transform:translateX(-50%);font-size:0.7rem;color:var(--text-secondary);pointer-events:none;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.7),transparent);padding:0.4rem 1rem;border-radius:12px;white-space:nowrap;">🖱️ Ziehen = Drehen | Scrollen = Zoom | Doppelklick = CEO-Blick</div>
+                                    <div style="position:absolute;bottom:0.5rem;left:50%;transform:translateX(-50%);font-size:0.7rem;color:var(--text-secondary);pointer-events:none;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.7),transparent);padding:0.4rem 1rem;border-radius:12px;white-space:nowrap;">🧍 2D-Raumansicht mit 3D-Figuren — die ganze Produktionslinie auf einen Blick</div>
                                 </div>
                                 <div style="display:flex;gap:0.4rem;margin-top:0.75rem;justify-content:center;flex-wrap:wrap;">
                                     <span class="pill" style="font-size:0.65rem;">👔 CEO-Büro</span>
@@ -1922,25 +1946,47 @@
                 document.getElementById('llm-grid').innerHTML =
                     data.providers.map(p => renderLlmProviderCard(p, data.active)).join('');
 
-                const names = {ollama: 'Ollama (lokal)', openrouter: 'OpenRouter', huggingface: 'HuggingFace', cloudflare: 'Cloudflare'};
+                const names = {ollama: 'Ollama (lokal)', lmstudio: 'LM Studio (lokal)', pi: 'Raspberry Pi Gateway',
+                               github: 'GitHub Models', openrouter: 'OpenRouter', huggingface: 'HuggingFace', cloudflare: 'Cloudflare'};
+                const localKeys = ['ollama', 'lmstudio'];
                 const summary = document.getElementById('llm-summary');
                 const badge = document.getElementById('llm-badge');
+                const startBtn = document.getElementById('llm-start-btn');
+                const isLocal = localKeys.includes(data.active);
                 if (data.active) {
                     summary.textContent = `Aktiver Provider: ${names[data.active] || data.active}` +
-                        (data.active !== 'ollama' ? ' — Ollama offline, Online-Fallback aktiv' : '');
-                    summary.className = 'pill ' + (data.active === 'ollama' ? 'ok' : 'warn');
-                    badge.textContent = data.active === 'ollama' ? 'lokal' : 'cloud';
-                    badge.className = 'nav-badge' + (data.active === 'ollama' ? '' : ' warn');
+                        (isLocal ? '' : (data.active === 'pi' ? ' — lokale Engine offline, privater Pi-Fallback aktiv'
+                                                              : ' — lokale Engine offline, Online-Fallback aktiv'));
+                    summary.className = 'pill ' + (isLocal ? 'ok' : (data.active === 'pi' ? '' : 'warn'));
+                    badge.textContent = isLocal ? 'lokal' : (data.active === 'pi' ? 'pi' : 'cloud');
+                    badge.className = 'nav-badge' + (isLocal || data.active === 'pi' ? '' : ' warn');
                 } else {
-                    summary.textContent = 'Kein LLM-Provider erreichbar — Ollama starten oder Fallback-Keys hinterlegen';
+                    summary.textContent = 'Kein LLM-Provider erreichbar — lokale Engine starten oder Fallbacks in der .env hinterlegen';
                     summary.className = 'pill warn';
                     badge.textContent = 'aus';
                     badge.className = 'nav-badge warn';
                 }
+                if (startBtn) startBtn.style.display = data.local_engine_online ? 'none' : 'inline-flex';
             } catch (e) {
                 document.getElementById('llm-grid').innerHTML =
                     `<div class="empty-state error">❌ KI-Gateway-Status konnte nicht geladen werden</div>`;
             }
+        }
+
+        // Startet Ollama/LM Studio serverseitig als Hintergrundprozess (VSCode-unabhängig)
+        async function startLocalEngine(btnEl) {
+            btnEl.disabled = true;
+            btnEl.textContent = '⏳ Engine startet...';
+            try {
+                const resp = await fetch('/api/llm/start', { method: 'POST' });
+                const data = await resp.json();
+                toast(data.message || 'Startversuch ausgeführt', data.online ? 'success' : (data.started ? 'success' : 'error'));
+                setTimeout(() => { loadLlmStatus(); loadModels(); }, 1500);
+            } catch (e) {
+                toast('Fehler: ' + e.message, 'error');
+            }
+            btnEl.disabled = false;
+            btnEl.textContent = '▶ Lokale KI-Engine starten';
         }
 
         async function startService(key, btnEl) {
@@ -2833,32 +2879,23 @@
             if (window.ResizeObserver) new ResizeObserver(resize).observe(container);
 
             // Fabrik-Stationen als Produktionslinie im Raum (x rechts, y hoch, z Tiefe)
+            // 2D-Raumansicht: alle Stationen in EINER Reihe (Hallen-Querschnitt wie ein Puppenhaus)
             const stations = [
-                { id: 'ceo',      label: 'CEO (Product Owner)', icon: '👔',   x: -168, z: 55,  h: 42, color: '#a78bfa' },
-                { id: 'cto',      label: 'CTO (Scrum Master)',  icon: '🧑‍💼', x: -120, z: -45, h: 42, color: '#5b9cf5' },
-                { id: 'planner',  label: 'Planung',      icon: '📋',   x: -72,  z: 55,  h: 23, color: '#22d3ee' },
-                { id: 'dev',      label: 'Dev-Team',     icon: '⚙️',   x: -24,  z: -45, h: 24, color: '#34d399' },
-                { id: 'lab',      label: 'Testlabor',    icon: '🔬',   x: 24,   z: 55,  h: 22, color: '#38bdf8' },
-                { id: 'test',     label: 'Qualität',     icon: '🧪',   x: 72,   z: -45, h: 30, color: '#fbbf24' },
-                { id: 'approval', label: 'CEO-Abnahme',  icon: '🤝',   x: 120,  z: 55,  h: 42, color: '#e879f9' },
-                { id: 'deploy',   label: 'Auslieferung', icon: '🚀',   x: 168,  z: -45, h: 29, color: '#f87171' }
+                { id: 'ceo',      label: 'CEO (PO)',     icon: '👔',   x: -186, z: 0, h: 42, color: '#a78bfa' },
+                { id: 'cto',      label: 'CTO (SM)',     icon: '🧑‍💼', x: -133, z: 0, h: 42, color: '#5b9cf5' },
+                { id: 'planner',  label: 'Planung',      icon: '📋',   x: -80,  z: 0, h: 23, color: '#22d3ee' },
+                { id: 'dev',      label: 'Dev-Team',     icon: '⚙️',   x: -27,  z: 0, h: 24, color: '#34d399' },
+                { id: 'lab',      label: 'Testlabor',    icon: '🔬',   x: 26,   z: 0, h: 22, color: '#38bdf8' },
+                { id: 'test',     label: 'Qualität',     icon: '🧪',   x: 79,   z: 0, h: 30, color: '#fbbf24' },
+                { id: 'approval', label: 'CEO-Abnahme',  icon: '🤝',   x: 132,  z: 0, h: 42, color: '#e879f9' },
+                { id: 'deploy',   label: 'Auslieferung', icon: '🚀',   x: 185,  z: 0, h: 29, color: '#f87171' }
             ];
 
-            // CEO-Vogelperspektive: Kamera schaut aus der Ecke ~30° nach unten auf die Produktionslinie.
-            // rotX ist so begrenzt, dass der Boden IMMER unten bleibt (kein Kippen unter die Halle).
-            const CEO_VIEW = { rotY: -0.785, rotX: 0.52, zoom: 1 };
-            let rotY = CEO_VIEW.rotY, rotX = CEO_VIEW.rotX, zoom = CEO_VIEW.zoom;
-            let isDragging = false, lastMouse = { x: 0, y: 0 };
-
+            // Feste 2D-Ansicht ohne Kamera: Kavalier-Projektion gibt den Figuren ihre 3D-Plastizität
+            // (Tiefe z läuft leicht nach rechts oben), die Szene selbst bleibt ein flacher Raum.
             function project(x, y, z) {
-                const cy = Math.cos(rotY), sy = Math.sin(rotY);
-                const cx = Math.cos(rotX), sx = Math.sin(rotX);
-                let X = x * cy - z * sy;
-                let Z = x * sy + z * cy;
-                let Y = y * cx - Z * sx;
-                Z = y * sx + Z * cx;
-                const s = 420 / (420 + Z) * zoom;
-                return { x: X * s + W / 2, y: -Y * s + H / 2 + 14, z: Z, s };
+                const k = W / 470;
+                return { x: W / 2 + (x + z * 0.45) * k, y: H * 0.70 - (y + z * 0.30) * k, z: z, s: k };
             }
 
             function shade(hex, f) {
@@ -3080,39 +3117,47 @@
                 ctx.fillStyle = '#0d0f14';
                 ctx.fillRect(0, 0, W, H);
 
-                // Hallenboden (Fläche + Raster)
-                const ext = 185;
-                const floor = [[-ext,-ext],[ext,-ext],[ext,ext],[-ext,ext]].map(c => project(c[0], 0, c[1]));
-                ctx.fillStyle = 'rgba(91,156,245,0.05)';
-                ctx.beginPath();
-                floor.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
-                ctx.closePath(); ctx.fill();
-                ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-                ctx.lineWidth = 1;
-                for (let i = -ext; i <= ext; i += 37) {
-                    let a = project(i, 0, -ext), b = project(i, 0, ext);
-                    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-                    a = project(-ext, 0, i); b = project(ext, 0, i);
-                    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-                }
+                // 2D-Raumansicht: Hallen-Querschnitt mit einem Raum pro Station
+                const kk = project(0, 0, 0).s;
+                const baseY = project(0, 0, 0).y;
+                // Hallenboden als flaches Band
+                ctx.fillStyle = 'rgba(91,156,245,0.07)';
+                ctx.fillRect(0, baseY + 4 * kk, W, H - baseY);
+                ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(0, baseY + 4 * kk); ctx.lineTo(W, baseY + 4 * kk); ctx.stroke();
+                // Räume (Wände + dezente Innenfläche), aktiver Raum leuchtet
+                const roomW = 50, roomH = 68;
+                stations.forEach(st => {
+                    const c = project(st.x, 0, 0);
+                    const x0 = c.x - (roomW / 2) * kk, y0 = c.y - roomH * kk;
+                    const activeRoom = factoryScene.running && st.id === factoryScene.activeStation;
+                    const waitRoom = factoryScene.waiting && st.id === 'approval';
+                    ctx.fillStyle = waitRoom ? 'rgba(232,121,249,0.12)'
+                        : (activeRoom ? 'rgba(251,191,36,0.10)' : 'rgba(255,255,255,0.03)');
+                    ctx.fillRect(x0, y0, roomW * kk, (roomH + 4) * kk);
+                    ctx.strokeStyle = waitRoom ? 'rgba(232,121,249,0.55)'
+                        : (activeRoom ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.10)');
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(x0, y0, roomW * kk, (roomH + 4) * kk);
+                });
 
-                // Kreislauf: Rückführung von der Auslieferung zurück zum Scrum Master (CTO)
-                // für Folge-Sprints / neue Versionen — als dezenter, langsam laufender Pfad
-                const loopWorld = [[168, -45], [200, -100], [-200, -100], [-120, -45]];
-                const loopPts = loopWorld.map(c => project(c[0], 2, c[1]));
-                ctx.strokeStyle = 'rgba(167,139,250,0.35)';
+                // Kreislauf: flacher Bogen über den Räumen von der Auslieferung zurück zum Scrum Master
+                const loopA = project(185, 0, 0), loopB = project(-133, 0, 0);
+                const loopTopY = baseY - (roomH + 24) * kk;
+                ctx.strokeStyle = 'rgba(167,139,250,0.4)';
                 ctx.lineWidth = 2;
                 ctx.setLineDash([4, 10]);
                 ctx.lineDashOffset = time * 18;
                 ctx.beginPath();
-                loopPts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+                ctx.moveTo(loopA.x, loopA.y - roomH * kk);
+                ctx.quadraticCurveTo((loopA.x + loopB.x) / 2, loopTopY, loopB.x, loopB.y - roomH * kk);
                 ctx.stroke();
                 ctx.setLineDash([]);
-                const loopMid = project(0, 2, -100);
-                ctx.fillStyle = 'rgba(167,139,250,0.75)';
-                ctx.font = `${Math.max(9, 11 * loopMid.s)}px Inter`;
+                ctx.fillStyle = 'rgba(167,139,250,0.8)';
+                ctx.font = `${Math.max(9, 10 * kk)}px Inter`;
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText('🔁 Kreislauf: nächster Sprint / neue Version', loopMid.x, loopMid.y);
+                ctx.fillText('🔁 Kreislauf: nächster Sprint / neue Version', (loopA.x + loopB.x) / 2, loopTopY + 8 * kk);
 
                 // Fließband entlang der Produktionslinie
                 const beltPts = stations.map(st => project(st.x, 2, st.z));
@@ -3172,24 +3217,8 @@
                 requestAnimationFrame(draw);
             }
 
-            canvas.addEventListener('mousedown', e => { isDragging = true; lastMouse = { x: e.clientX, y: e.clientY }; });
-            canvas.addEventListener('wheel', e => {
-                zoom *= e.deltaY > 0 ? 0.9 : 1.1;
-                zoom = Math.max(0.5, Math.min(2.5, zoom));
-                e.preventDefault();
-            }, { passive: false });
-            window.addEventListener('mousemove', e => {
-                if (!isDragging) return;
-                rotY += (e.clientX - lastMouse.x) * 0.008;
-                rotX += (e.clientY - lastMouse.y) * 0.008;
-                // Blick bleibt immer von oben (ca. 20°-60° nach unten) — Boden bleibt Boden
-                rotX = Math.max(0.35, Math.min(1.05, rotX));
-                lastMouse = { x: e.clientX, y: e.clientY };
-            });
-            window.addEventListener('mouseup', () => isDragging = false);
-            canvas.addEventListener('dblclick', () => {
-                rotY = CEO_VIEW.rotY; rotX = CEO_VIEW.rotX; zoom = CEO_VIEW.zoom;
-            });
+            // Feste 2D-Ansicht: keine Kamera-Interaktion — der CEO sieht immer die ganze Linie
+            canvas.style.cursor = 'default';
 
             draw();
             return true;

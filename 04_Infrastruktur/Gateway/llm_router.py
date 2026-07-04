@@ -2,20 +2,30 @@
 """
 LLM-Router für das AI-OS Dashboard.
 
-Routet Chat-Anfragen mit automatischem Fallback über vier Provider:
-  1. Ollama (lokal, Port 11434) — bevorzugt, kostenlos, privat
-  2. OpenRouter (online, kostenlose Open-Source-Modelle)
-  3. HuggingFace Inference (online, Open-Source-Modelle)
-  4. Cloudflare Workers AI (online, optional über AI Gateway)
+Routet Chat-Anfragen mit automatischem Fallback über sieben Provider:
+  1. Ollama (lokal, Port 11434) — bevorzugt, kostenlos, privat.
+     Wird bei Bedarf automatisch als Hintergrundprozess gestartet
+     (unabhängig von VSCode/Terminal).
+  2. LM Studio (lokal, Port 1234, OpenAI-kompatibel) — lokale Alternative
+  3. Raspberry Pi Gateway (privat im LAN, PI_LLM_URL) — Ollama- oder OpenAI-kompatibel
+  4. GitHub Models (online, GitHub-Konto/Copilot, models.github.ai)
+  5. OpenRouter (online, kostenlose Open-Source-Modelle)
+  6. HuggingFace Inference (online, Open-Source-Modelle)
+  7. Cloudflare Workers AI (online, optional über AI Gateway)
 
 API-Keys werden NIE im Code gespeichert. Konfiguration in der .env im Projekt-Root
 (nicht versioniert, siehe .gitignore):
 
+    PI_LLM_URL=http://raspberrypi.local:11434   (oder http://<ip>:8080 für llama.cpp)
+    PI_LLM_MODEL=optionaler-modellname
+    PI_LLM_API_KEY=optional
+    GITHUB_MODELS_TOKEN=github_pat_... (oder GITHUB_TOKEN; Scope "models:read")
     OPENROUTER_API_KEY=sk-or-...
     HUGGINGFACE_API_KEY=hf_...
     WORKERS_AI_ACCOUNT_ID=...
     WORKERS_AI_API_TOKEN=...
     WORKERS_AI_GATEWAY=optionaler-gateway-name
+    AI_OS_LLM_AUTOSTART=0  (deaktiviert den Ollama/LM-Studio-Autostart)
 
 Achtung: bewusst NICHT "CLOUDFLARE_API_TOKEN"/"CLOUDFLARE_ACCOUNT_ID" — diese
 Namen liest wrangler aus der .env mit und nutzt dann das eingeschränkte
@@ -28,7 +38,9 @@ Reihenfolge: echte Umgebungsvariablen > .env > (Alt-Fallback)
 import os
 import json
 import time
+import shutil
 import threading
+import subprocess
 import urllib.request
 import urllib.error
 from pathlib import Path
@@ -39,6 +51,10 @@ SECRETS_PATH = AI_OS_ROOT / "01_Verbindungen" / "APIs" / "Geheimnisse" / "llm_ro
 
 OLLAMA_HOST = "127.0.0.1"
 OLLAMA_PORT = 11434
+LMSTUDIO_HOST = "127.0.0.1"
+LMSTUDIO_PORT = 1234
+GITHUB_MODELS_CHAT_URL = "https://models.github.ai/inference/chat/completions"
+GITHUB_MODELS_CATALOG_URL = "https://models.github.ai/catalog/models"
 
 # Lokale Modellnamen -> gleichwertige Open-Source-Modelle bei den Online-Providern.
 # Unbekannte Modelle fallen auf "default" zurück.
@@ -57,6 +73,14 @@ HUGGINGFACE_MODEL_MAP = {
     "mistral": "mistralai/Mistral-7B-Instruct-v0.3",
     "deepseek-coder": "Qwen/Qwen2.5-Coder-32B-Instruct",
     "qwen2.5-coder": "Qwen/Qwen2.5-Coder-32B-Instruct",
+}
+GITHUB_MODEL_MAP = {
+    "default": "openai/gpt-4o-mini",
+    "llama3": "meta/llama-3.3-70b-instruct",
+    "llama2": "meta/llama-3.3-70b-instruct",
+    "mistral": "mistral-ai/mistral-small-2503",
+    "deepseek-coder": "openai/gpt-4o-mini",
+    "qwen2.5-coder": "openai/gpt-4o-mini",
 }
 CLOUDFLARE_MODEL_MAP = {
     "default": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
@@ -124,12 +148,67 @@ def _get_json(url, headers=None, timeout=6):
         return json.loads(resp.read())
 
 
+# ---------- Autostart der lokalen KI-Engine (Ollama / LM Studio) ----------
+# Das Dashboard darf nicht davon abhängen, dass Ollama manuell (z.B. in einem
+# VSCode-Terminal) gestartet wurde: fehlt die lokale Engine, wird sie hier als
+# eigenständiger, vom Dashboard entkoppelter Hintergrundprozess gestartet.
+
+AUTOSTART_ENABLED = (os.environ.get("AI_OS_LLM_AUTOSTART", "1").strip() != "0")
+AUTOSTART_COOLDOWN = 120  # Sekunden zwischen zwei Startversuchen
+
+
+def _find_executable(name, extra_paths):
+    """Sucht eine ausführbare Datei im PATH und an typischen Installationsorten."""
+    found = shutil.which(name)
+    if found:
+        return found
+    for p in extra_paths:
+        if p and Path(p).exists():
+            return str(p)
+    return None
+
+
+def _find_ollama():
+    local_app = os.environ.get("LOCALAPPDATA", "")
+    return _find_executable("ollama", [
+        Path(local_app) / "Programs" / "Ollama" / "ollama.exe" if local_app else None,
+        Path("C:/Program Files/Ollama/ollama.exe"),
+        Path("/usr/local/bin/ollama"),
+        Path("/usr/bin/ollama"),
+    ])
+
+
+def _find_lmstudio_cli():
+    home = Path.home()
+    return _find_executable("lms", [
+        home / ".lmstudio" / "bin" / "lms.exe",
+        home / ".lmstudio" / "bin" / "lms",
+        home / ".cache" / "lm-studio" / "bin" / "lms",
+    ])
+
+
+def _spawn_detached(args):
+    """Startet einen Prozess vollständig entkoppelt (überlebt das Beenden des Dashboards)."""
+    kwargs = {"stdin": subprocess.DEVNULL, "stdout": subprocess.DEVNULL,
+              "stderr": subprocess.DEVNULL, "close_fds": True}
+    if os.name == "nt":
+        DETACHED_PROCESS = 0x00000008
+        CREATE_NEW_PROCESS_GROUP = 0x00000200
+        CREATE_NO_WINDOW = 0x08000000
+        kwargs["creationflags"] = DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW
+    else:
+        kwargs["start_new_session"] = True
+    subprocess.Popen(args, **kwargs)
+
+
 class LLMRouter:
     """Provider-Kette mit Health-Cache. Thread-sicher (Flask threaded=True)."""
 
     def __init__(self):
         self._lock = threading.Lock()
         self._health_cache = {}   # key -> (timestamp, bool)
+        self._autostart_ts = 0
+        self._pi_style = None     # "ollama" | "openai", per Health-Check erkannt
         self.last_provider = None
 
     # ---------- Konfiguration ----------
@@ -150,6 +229,10 @@ class LLMRouter:
             return _clean_secret(cfg.get(cfg_key))
 
         return {
+            "pi_url": get("PI_LLM_URL", cfg_key="pi_llm_url").rstrip("/"),
+            "pi_model": get("PI_LLM_MODEL", cfg_key="pi_llm_model"),
+            "pi_api_key": get("PI_LLM_API_KEY", cfg_key="pi_llm_api_key"),
+            "github_token": get("GITHUB_MODELS_TOKEN", "GITHUB_TOKEN", cfg_key="github_models_token"),
             "openrouter_api_key": get("OPENROUTER_API_KEY", cfg_key="openrouter_api_key"),
             "huggingface_api_key": get("HUGGINGFACE_API_KEY", cfg_key="huggingface_api_key"),
             "cloudflare_account_id": get("WORKERS_AI_ACCOUNT_ID", "CLOUDFLARE_ACCOUNT_ID",
@@ -190,6 +273,44 @@ class LLMRouter:
                 return resp.status == 200
         return self._cached_check("ollama", 15, check)
 
+    def lmstudio_online(self):
+        def check():
+            data = _get_json(f"http://{LMSTUDIO_HOST}:{LMSTUDIO_PORT}/v1/models", timeout=1.5)
+            return isinstance(data.get("data"), list)
+        return self._cached_check("lmstudio", 15, check)
+
+    def pi_online(self):
+        s = self._secrets()
+        if not s["pi_url"]:
+            return False
+        def check():
+            # Erst Ollama-Stil (/api/tags), dann OpenAI-Stil (/v1/models) probieren
+            headers = {"Authorization": f"Bearer {s['pi_api_key']}"} if s["pi_api_key"] else {}
+            try:
+                _get_json(f"{s['pi_url']}/api/tags", headers=headers, timeout=2.5)
+                self._pi_style = "ollama"
+                return True
+            except Exception:
+                _get_json(f"{s['pi_url']}/v1/models", headers=headers, timeout=2.5)
+                self._pi_style = "openai"
+                return True
+        return self._cached_check("pi", 30, check)
+
+    def github_online(self):
+        s = self._secrets()
+        if not s["github_token"]:
+            return False
+        def check():
+            data = _get_json(
+                GITHUB_MODELS_CATALOG_URL,
+                headers={"Authorization": f"Bearer {s['github_token']}",
+                         "Accept": "application/vnd.github+json"})
+            return bool(data)
+        return self._cached_check("github", 60, check)
+
+    def local_engine_online(self):
+        return self.ollama_online() or self.lmstudio_online()
+
     def openrouter_online(self):
         s = self._secrets()
         if not s["openrouter_api_key"]:
@@ -223,8 +344,74 @@ class LLMRouter:
         return self._cached_check("cloudflare", 60, check)
 
     def any_available(self):
-        return (self.ollama_online() or self.openrouter_online()
+        return (self.ollama_online() or self.lmstudio_online() or self.pi_online()
+                or self.github_online() or self.openrouter_online()
                 or self.huggingface_online() or self.cloudflare_online())
+
+    # ---------- Autostart der lokalen Engine ----------
+
+    def autostart_local_engine(self, force=False, wait=0):
+        """Startet Ollama (bevorzugt) oder LM Studio als entkoppelten Hintergrundprozess.
+
+        wait > 0: blockiert bis zu `wait` Sekunden, bis die Engine antwortet.
+        Gibt dict mit "started", "online" und "message" zurück.
+        """
+        if self.local_engine_online():
+            return {"started": None, "online": True, "message": "Lokale KI-Engine läuft bereits."}
+        if not (AUTOSTART_ENABLED or force):
+            return {"started": None, "online": False,
+                    "message": "Autostart deaktiviert (AI_OS_LLM_AUTOSTART=0)."}
+
+        now = time.time()
+        with self._lock:
+            if not force and now - self._autostart_ts < AUTOSTART_COOLDOWN:
+                return {"started": None, "online": False,
+                        "message": "Startversuch läuft bereits (Cooldown aktiv)."}
+            self._autostart_ts = now
+
+        started, message = None, ""
+        ollama = _find_ollama()
+        if ollama:
+            try:
+                _spawn_detached([ollama, "serve"])
+                started = "ollama"
+                message = f"Ollama wird im Hintergrund gestartet ({ollama})."
+            except Exception as e:
+                message = f"Ollama-Start fehlgeschlagen: {e}"
+        if not started:
+            lms = _find_lmstudio_cli()
+            if lms:
+                try:
+                    _spawn_detached([lms, "server", "start"])
+                    started = "lmstudio"
+                    message = f"LM Studio Server wird im Hintergrund gestartet ({lms})."
+                except Exception as e:
+                    message += f" LM-Studio-Start fehlgeschlagen: {e}"
+        if not started and not message:
+            message = ("Weder Ollama noch LM Studio gefunden. Installation: "
+                       "https://ollama.com/download oder https://lmstudio.ai — "
+                       "alternativ Pi-Gateway/Online-Fallback in der .env konfigurieren.")
+
+        online = False
+        if started:
+            deadline = time.time() + max(0, wait)
+            while True:
+                with self._lock:
+                    self._health_cache.pop("ollama", None)
+                    self._health_cache.pop("lmstudio", None)
+                online = self.local_engine_online()
+                if online or time.time() >= deadline:
+                    break
+                time.sleep(1.0)
+            if online:
+                message += " Engine ist jetzt erreichbar."
+        return {"started": started, "online": online, "message": message.strip()}
+
+    def kick_autostart(self):
+        """Nicht-blockierender Autostart-Anstoß (z.B. beim Laden des Dashboards)."""
+        if AUTOSTART_ENABLED and not self.local_engine_online():
+            threading.Thread(target=self.autostart_local_engine,
+                             kwargs={"wait": 10}, daemon=True).start()
 
     # ---------- Provider-Aufrufe ----------
 
@@ -253,6 +440,57 @@ class LLMRouter:
             raise RuntimeError(f"Leere Antwort: {str(result)[:200]}")
         return content, model
 
+    def _lmstudio_model(self, base):
+        """Wählt das in LM Studio geladene Modell (passend zum Wunschnamen, sonst das erste)."""
+        try:
+            data = _get_json(f"http://{LMSTUDIO_HOST}:{LMSTUDIO_PORT}/v1/models", timeout=3)
+            ids = [m.get("id", "") for m in data.get("data", []) if m.get("id")]
+            for mid in ids:
+                if base and base in mid.lower():
+                    return mid
+            for mid in ids:
+                if "embed" not in mid.lower():
+                    return mid
+        except Exception:
+            pass
+        return base or "local-model"
+
+    def _chat_pi(self, s, messages, model, temperature, num_predict, timeout):
+        """Chat gegen das Raspberry-Pi-Gateway (Ollama- oder OpenAI-kompatibel)."""
+        url = s["pi_url"]
+        headers = {"Authorization": f"Bearer {s['pi_api_key']}"} if s["pi_api_key"] else {}
+        if self._pi_style == "ollama":
+            target = s["pi_model"]
+            if not target:
+                try:
+                    tags = _get_json(f"{url}/api/tags", headers=headers, timeout=4)
+                    names = [m.get("name", "") for m in tags.get("models", [])]
+                    target = next((n for n in names if _base_model_name(model) in n.lower()),
+                                  names[0] if names else model)
+                except Exception:
+                    target = model
+            result = _post_json(
+                f"{url}/api/chat",
+                {"model": target, "messages": messages, "stream": False,
+                 "options": {"temperature": temperature, "num_predict": num_predict}},
+                headers=headers, timeout=timeout)
+            content = result.get("message", {}).get("content", "").strip()
+            if not content:
+                raise RuntimeError("Pi-Gateway lieferte leere Antwort")
+            return content, target
+        # OpenAI-kompatibel (llama.cpp-Server, LocalAI, vLLM, ...)
+        target = s["pi_model"]
+        if not target:
+            try:
+                data = _get_json(f"{url}/v1/models", headers=headers, timeout=4)
+                ids = [m.get("id", "") for m in data.get("data", []) if m.get("id")]
+                target = ids[0] if ids else model
+            except Exception:
+                target = model
+        return self._chat_openai_compatible(
+            f"{url}/v1/chat/completions", s["pi_api_key"] or "none",
+            messages, target, temperature, num_predict, timeout)
+
     # ---------- Öffentliche API ----------
 
     def chat(self, messages, model="llama3", temperature=0.7, num_predict=800, timeout=180):
@@ -265,6 +503,10 @@ class LLMRouter:
         base = _base_model_name(model)
         errors = []
 
+        # Lokale Engine bei Bedarf automatisch hochfahren (entkoppelt von VSCode/Terminal)
+        if not self.local_engine_online():
+            self.autostart_local_engine(wait=8)
+
         if self.ollama_online():
             try:
                 content, used = self._chat_ollama(messages, model, temperature, num_predict, timeout)
@@ -273,6 +515,40 @@ class LLMRouter:
                         "provider_label": "Ollama (lokal)", "model": used}
             except Exception as e:
                 errors.append(f"Ollama: {e}")
+
+        if self.lmstudio_online():
+            try:
+                lm_model = self._lmstudio_model(base)
+                content, used = self._chat_openai_compatible(
+                    f"http://{LMSTUDIO_HOST}:{LMSTUDIO_PORT}/v1/chat/completions",
+                    "lm-studio", messages, lm_model, temperature, num_predict, timeout)
+                self.last_provider = "lmstudio"
+                return {"content": content, "provider": "lmstudio",
+                        "provider_label": f"LM Studio (lokal, {used})", "model": used}
+            except Exception as e:
+                errors.append(f"LM Studio: {e}")
+
+        if s["pi_url"] and self.pi_online():
+            try:
+                content, used = self._chat_pi(s, messages, model, temperature,
+                                              num_predict, min(timeout, 240))
+                self.last_provider = "pi"
+                return {"content": content, "provider": "pi",
+                        "provider_label": f"Raspberry Pi Gateway ({used})", "model": used}
+            except Exception as e:
+                errors.append(f"Pi-Gateway: {e}")
+
+        if s["github_token"]:
+            try:
+                gh_model = GITHUB_MODEL_MAP.get(base, GITHUB_MODEL_MAP["default"])
+                content, used = self._chat_openai_compatible(
+                    GITHUB_MODELS_CHAT_URL, s["github_token"], messages,
+                    gh_model, temperature, num_predict, min(timeout, 120))
+                self.last_provider = "github"
+                return {"content": content, "provider": "github",
+                        "provider_label": f"GitHub Models ({used})", "model": used}
+            except Exception as e:
+                errors.append(f"GitHub Models: {e}")
 
         if s["openrouter_api_key"]:
             # Freie Modelle sind oft überlastet (429) -> mehrere Kandidaten durchprobieren
@@ -320,8 +596,9 @@ class LLMRouter:
                 errors.append(f"Cloudflare: {e}")
 
         if not errors:
-            errors.append("Ollama offline und kein Online-Provider konfiguriert "
-                          "(OpenRouter/Cloudflare-Keys fehlen).")
+            errors.append("Keine lokale Engine (Ollama/LM Studio) erreichbar und kein "
+                          "Fallback konfiguriert (PI_LLM_URL / GITHUB_MODELS_TOKEN / "
+                          "OPENROUTER_API_KEY / Cloudflare-Keys fehlen in der .env).")
         raise RuntimeError("Kein LLM-Provider verfügbar. " + " | ".join(errors))
 
     def generate(self, system, prompt, model="llama3", temperature=0.5,
@@ -338,33 +615,53 @@ class LLMRouter:
         """Status aller Provider für den Dashboard-Tab 'KI-Gateway'."""
         s = self._secrets()
         ollama = self.ollama_online()
+        lmstudio = self.lmstudio_online()
+        pi_cfg = bool(s["pi_url"])
+        github_cfg = bool(s["github_token"])
         openrouter_cfg = bool(s["openrouter_api_key"])
         huggingface_cfg = bool(s["huggingface_api_key"])
         cloudflare_cfg = bool(s["cloudflare_account_id"] and s["cloudflare_api_token"])
+        pi = self.pi_online()
+        github = self.github_online()
         openrouter = self.openrouter_online()
         huggingface = self.huggingface_online()
         cloudflare = self.cloudflare_online()
 
         active = next((key for key, online in [
-            ("ollama", ollama), ("openrouter", openrouter),
-            ("huggingface", huggingface), ("cloudflare", cloudflare)] if online), None)
+            ("ollama", ollama), ("lmstudio", lmstudio), ("pi", pi), ("github", github),
+            ("openrouter", openrouter), ("huggingface", huggingface),
+            ("cloudflare", cloudflare)] if online), None)
         cf_via = "AI Gateway" if s["cloudflare_gateway"] else "Workers AI"
         providers = [
             {"key": "ollama", "name": "Ollama", "icon": "🖥️", "priority": 1,
-             "desc": "Lokale KI-Engine — bevorzugt, privat & kostenlos",
+             "desc": "Lokale KI-Engine — bevorzugt, privat & kostenlos (Autostart aktiv)",
              "detail": f"http://{OLLAMA_HOST}:{OLLAMA_PORT}",
              "configured": True, "online": ollama},
-            {"key": "openrouter", "name": "OpenRouter", "icon": "🌍", "priority": 2,
+            {"key": "lmstudio", "name": "LM Studio", "icon": "🎛️", "priority": 2,
+             "desc": "Lokale Alternative — OpenAI-kompatibler Server",
+             "detail": f"http://{LMSTUDIO_HOST}:{LMSTUDIO_PORT}/v1",
+             "configured": True, "online": lmstudio},
+            {"key": "pi", "name": "Raspberry Pi Gateway", "icon": "🍓", "priority": 3,
+             "desc": "Privater LAN-Fallback — miniLLM auf dem Raspberry Pi 4",
+             "detail": s["pi_url"] if pi_cfg
+                       else "PI_LLM_URL in .env eintragen (z.B. http://raspberrypi.local:11434)",
+             "configured": pi_cfg, "online": pi},
+            {"key": "github", "name": "GitHub Models", "icon": "🐙", "priority": 4,
+             "desc": "Online-Fallback über dein GitHub/Copilot-Konto (models.github.ai)",
+             "detail": GITHUB_MODEL_MAP["default"] if github_cfg
+                       else "GITHUB_MODELS_TOKEN in .env eintragen (PAT mit Scope models:read)",
+             "configured": github_cfg, "online": github},
+            {"key": "openrouter", "name": "OpenRouter", "icon": "🌍", "priority": 5,
              "desc": "Online-Fallback — kostenlose Open-Source-LLMs",
              "detail": OPENROUTER_MODEL_MAP["default"] if openrouter_cfg
                        else "API-Key fehlt (OPENROUTER_API_KEY in .env eintragen)",
              "configured": openrouter_cfg, "online": openrouter},
-            {"key": "huggingface", "name": "HuggingFace", "icon": "🤗", "priority": 3,
+            {"key": "huggingface", "name": "HuggingFace", "icon": "🤗", "priority": 6,
              "desc": "Online-Fallback — Open-Source-LLMs via HF Inference Providers",
              "detail": HUGGINGFACE_MODEL_MAP["default"] if huggingface_cfg
                        else "API-Key fehlt (HUGGINGFACE_API_KEY in .env eintragen)",
              "configured": huggingface_cfg, "online": huggingface},
-            {"key": "cloudflare", "name": f"Cloudflare {cf_via}", "icon": "☁️", "priority": 4,
+            {"key": "cloudflare", "name": f"Cloudflare {cf_via}", "icon": "☁️", "priority": 7,
              "desc": "Online-Fallback — Open-Source-LLMs auf Cloudflare Workers AI",
              "detail": CLOUDFLARE_MODEL_MAP["default"] if cloudflare_cfg
                        else "WORKERS_AI_ACCOUNT_ID + WORKERS_AI_API_TOKEN in .env eintragen",
@@ -375,6 +672,8 @@ class LLMRouter:
             "active": active,
             "last_provider": self.last_provider,
             "any_available": active is not None,
+            "autostart_enabled": AUTOSTART_ENABLED,
+            "local_engine_online": ollama or lmstudio,
             "secrets_path": ".env (Projekt-Root, nicht versioniert)",
         }
 
