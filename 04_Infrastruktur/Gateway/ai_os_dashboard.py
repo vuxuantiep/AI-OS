@@ -31,13 +31,13 @@ except ImportError:
     sys.exit(1)
 
 AI_OS_ROOT = Path(os.environ.get("AI_OS_ROOT", Path(__file__).parent.parent.parent))
-OLLAMA_HOST = "127.0.0.1"
-OLLAMA_PORT = 11434
 FLASK_PORT = int(os.environ.get("FLASK_PORT", 5000))
 
-# LLM-Router: Ollama (lokal) mit Online-Fallback auf OpenRouter / Cloudflare Workers AI
+# LLM-Router: lokale Engine (Ollama/LM Studio) mit Fallback auf Pi-Gateway (Tailscale),
+# GitHub Models, OpenRouter, HuggingFace und Cloudflare Workers AI.
+# OLLAMA_URL kommt aus der .env (Default lokal, alternativ Tailscale-Gerät).
 sys.path.insert(0, str(Path(__file__).parent))
-from llm_router import LLM_ROUTER
+from llm_router import LLM_ROUTER, OLLAMA_URL
 
 app = Flask(__name__)
 
@@ -772,7 +772,7 @@ def index():
 def get_models():
     """Listet alle installierten Ollama-Modelle"""
     try:
-        req = urllib.request.Request(f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/api/tags")
+        req = urllib.request.Request(f"{OLLAMA_URL}/api/tags")
         with urllib.request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read())
             models = []
@@ -1387,7 +1387,7 @@ def pull_model():
     try:
         payload = json.dumps({"name": name}).encode("utf-8")
         req = urllib.request.Request(
-            f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/api/pull",
+            f"{OLLAMA_URL}/api/pull",
             data=payload,
             headers={"Content-Type": "application/json"},
             method="POST"
@@ -1409,7 +1409,7 @@ def delete_model():
     try:
         payload = json.dumps({"name": name}).encode("utf-8")
         req = urllib.request.Request(
-            f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/api/delete",
+            f"{OLLAMA_URL}/api/delete",
             data=payload,
             headers={"Content-Type": "application/json"},
             method="DELETE"
@@ -1423,7 +1423,7 @@ def delete_model():
 if __name__ == "__main__":
     print(f"🧠 AI-OS Dashboard startet auf http://localhost:{FLASK_PORT}")
     print(f"📁 Wissensbasis: {AI_OS_ROOT / '00_Wissen'}")
-    print(f"🔧 Ollama: http://{OLLAMA_HOST}:{OLLAMA_PORT}")
+    print(f"🔧 Ollama: {OLLAMA_URL}")
     # Lokale KI-Engine (Ollama/LM Studio) bei Bedarf automatisch mitstarten —
     # das Dashboard ist damit unabhängig von VSCode oder manuell gestarteten Terminals.
     _auto = LLM_ROUTER.autostart_local_engine(wait=6)

@@ -16,7 +16,8 @@ Routet Chat-Anfragen mit automatischem Fallback über sieben Provider:
 API-Keys werden NIE im Code gespeichert. Konfiguration in der .env im Projekt-Root
 (nicht versioniert, siehe .gitignore):
 
-    PI_LLM_URL=http://raspberrypi.local:11434   (oder http://<ip>:8080 für llama.cpp)
+    OLLAMA_URL=http://127.0.0.1:11434  (oder Tailscale: http://tiep-laptop.tailed32d1.ts.net:11434)
+    PI_LLM_URL=http://pi-ki-tiep.tailed32d1.ts.net:11434   (Tailscale MagicDNS, verschlüsselt)
     PI_LLM_MODEL=optionaler-modellname
     PI_LLM_API_KEY=optional
     GITHUB_MODELS_TOKEN=github_pat_... (oder GITHUB_TOKEN; Scope "models:read")
@@ -126,6 +127,15 @@ def _load_env_file():
     except Exception:
         pass
     return data
+
+
+# Ollama-Endpunkt konfigurierbar: Default lokal, per OLLAMA_URL in der .env aber
+# auch ein Tailscale-Gerät (z.B. http://tiep-laptop.tailed32d1.ts.net:11434) —
+# Tailscale verschlüsselt Ende-zu-Ende (WireGuard), sicherer als offenes LAN.
+_boot_env = _load_env_file()
+OLLAMA_URL = (os.environ.get("OLLAMA_URL") or _boot_env.get("OLLAMA_URL")
+              or f"http://{OLLAMA_HOST}:{OLLAMA_PORT}").rstrip("/")
+OLLAMA_IS_LOCAL = ("127.0.0.1" in OLLAMA_URL) or ("localhost" in OLLAMA_URL.lower())
 
 
 # Einige Anbieter (z.B. HuggingFace) blockieren den Standard-UA "Python-urllib" mit 403
@@ -268,8 +278,9 @@ class LLMRouter:
 
     def ollama_online(self):
         def check():
-            with urllib.request.urlopen(
-                    f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/api/tags", timeout=1.5) as resp:
+            req = urllib.request.Request(f"{OLLAMA_URL}/api/tags",
+                                         headers={"User-Agent": USER_AGENT})
+            with urllib.request.urlopen(req, timeout=2.5) as resp:
                 return resp.status == 200
         return self._cached_check("ollama", 15, check)
 
@@ -370,7 +381,11 @@ class LLMRouter:
             self._autostart_ts = now
 
         started, message = None, ""
-        ollama = _find_ollama()
+        # Zeigt OLLAMA_URL auf ein entferntes Gerät (z.B. via Tailscale), kann ein
+        # lokaler Prozessstart es nicht erreichbar machen — dann nur LM Studio probieren.
+        ollama = _find_ollama() if OLLAMA_IS_LOCAL else None
+        if not OLLAMA_IS_LOCAL:
+            message = f"Ollama-Endpunkt ist entfernt ({OLLAMA_URL}) — dort manuell starten."
         if ollama:
             try:
                 _spawn_detached([ollama, "serve"])
@@ -417,7 +432,7 @@ class LLMRouter:
 
     def _chat_ollama(self, messages, model, temperature, num_predict, timeout):
         result = _post_json(
-            f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/api/chat",
+            f"{OLLAMA_URL}/api/chat",
             {"model": model, "messages": messages, "stream": False,
              "options": {"temperature": temperature, "num_predict": num_predict}},
             timeout=timeout)
@@ -634,8 +649,10 @@ class LLMRouter:
         cf_via = "AI Gateway" if s["cloudflare_gateway"] else "Workers AI"
         providers = [
             {"key": "ollama", "name": "Ollama", "icon": "🖥️", "priority": 1,
-             "desc": "Lokale KI-Engine — bevorzugt, privat & kostenlos (Autostart aktiv)",
-             "detail": f"http://{OLLAMA_HOST}:{OLLAMA_PORT}",
+             "desc": ("Lokale KI-Engine — bevorzugt, privat & kostenlos (Autostart aktiv)"
+                      if OLLAMA_IS_LOCAL else
+                      "Ollama über Tailscale — privat & Ende-zu-Ende verschlüsselt"),
+             "detail": OLLAMA_URL,
              "configured": True, "online": ollama},
             {"key": "lmstudio", "name": "LM Studio", "icon": "🎛️", "priority": 2,
              "desc": "Lokale Alternative — OpenAI-kompatibler Server",
