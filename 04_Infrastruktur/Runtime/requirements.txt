@@ -17,3 +17,10 @@ uvicorn>=0.29.0
 python-dotenv>=1.0.0
 pydantic>=2.0.0
 tenacity>=8.2.0  # für Retry-Logik
+
+# LLM-Tooling (04_Infrastruktur/Gateway + 05_Agenten)
+litellm[proxy]>=1.70.0   # LiteLLM-Gateway (:4000) — OpenAI-kompatibler Proxy über alle Provider
+langgraph>=0.4.0         # LangGraph Engine (:5500) — Fabrik-Pipeline als Zustandsgraph
+# Hinweis Python 3.14: vorab `pip install --only-binary :all: orjson`, falls der
+# litellm-Pin von orjson kein Wheel für die Python-Version mitbringt.
+# OpenHands (:3000) läuft als Docker-Container — siehe 05_Agenten/openhands_launcher.py

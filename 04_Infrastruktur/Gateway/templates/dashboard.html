@@ -1083,7 +1083,7 @@
                             <div>
                                 <h3>Dienste online</h3>
                                 <div class="stat-value" id="services-count">-</div>
-                                <div class="stat-detail">von 7 Ebenen-Diensten</div>
+                                <div class="stat-detail">im AI-OS Dienste-Stack</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -1948,8 +1948,9 @@
                 document.getElementById('llm-grid').innerHTML =
                     data.providers.map(p => renderLlmProviderCard(p, data.active)).join('');
 
-                const names = {ollama: 'Ollama (lokal)', lmstudio: 'LM Studio (lokal)', pi: 'Raspberry Pi Gateway',
-                               github: 'GitHub Models', openrouter: 'OpenRouter', huggingface: 'HuggingFace', cloudflare: 'Cloudflare'};
+                const names = {ollama: 'Ollama (lokal)', lmstudio: 'LM Studio (lokal)', litellm: 'LiteLLM Gateway',
+                               pi: 'Raspberry Pi Gateway', github: 'GitHub Models', openrouter: 'OpenRouter',
+                               huggingface: 'HuggingFace', cloudflare: 'Cloudflare'};
                 const localKeys = ['ollama', 'lmstudio'];
                 const summary = document.getElementById('llm-summary');
                 const badge = document.getElementById('llm-badge');

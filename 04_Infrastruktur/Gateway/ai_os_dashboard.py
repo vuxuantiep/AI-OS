@@ -62,12 +62,20 @@ SERVICES = [
     {"key": "gateway", "name": "API Gateway", "icon": "🌐", "port": 5100,
      "desc": "Zentraler Einstiegspunkt für alle Dienste", "layer": "04_Infrastruktur",
      "script": "04_Infrastruktur/Gateway/api_gateway.py", "env_key": "GATEWAY_PORT"},
+    {"key": "litellm", "name": "LiteLLM Gateway", "icon": "🚦", "port": 4000,
+     "desc": "OpenAI-kompatibler Proxy über alle LLM-Provider (Ollama, Pi, Cloud)",
+     "layer": "04_Infrastruktur", "script": "04_Infrastruktur/Gateway/litellm_gateway.py",
+     "env_key": "LITELLM_PORT", "health_path": "/health/liveliness"},
     {"key": "workflow", "name": "Workflow Engine", "icon": "🔄", "port": 5200,
      "desc": "DAG-basierte Aufgaben-Pipelines", "layer": "05_Agenten",
      "script": "05_Agenten/workflow_engine.py", "env_key": "WORKFLOW_PORT"},
     {"key": "agents", "name": "Agent System", "icon": "🤖", "port": 5300,
      "desc": "10 spezialisierte KI-Agenten", "layer": "05_Agenten",
      "script": "05_Agenten/agent_system.py", "env_key": "AGENT_PORT"},
+    {"key": "langgraph", "name": "LangGraph Engine", "icon": "🕸️", "port": 5500,
+     "desc": "Fabrik-Pipeline als Zustandsgraph (Plan → Dev → QA-Schleife)",
+     "layer": "05_Agenten", "script": "05_Agenten/langgraph_engine.py",
+     "env_key": "LANGGRAPH_PORT"},
     {"key": "monitoring", "name": "Monitoring", "icon": "📊", "port": 5400,
      "desc": "Health-Checks, Metriken, Logs", "layer": "08_Monitoring",
      "script": "08_Monitoring/monitoring_service.py", "env_key": "MONITOR_PORT"},
@@ -80,6 +88,10 @@ SERVICES = [
     {"key": "higgsfield_agent", "name": "Video Agent", "icon": "🎬", "port": 5303,
      "desc": "KI-Videoproduktion & Content-Pipeline (Higgsfield)", "layer": "05_Agenten",
      "script": "05_Agenten/agents/higgsfield_agent.py", "env_key": "HIGGSFIELD_AGENT_PORT"},
+    {"key": "openhands", "name": "OpenHands Dev-Agent", "icon": "🙌", "port": 3000,
+     "desc": "Autonomer Coding-Agent (Docker) — nutzt LiteLLM als LLM-Backend",
+     "layer": "05_Agenten", "script": "05_Agenten/openhands_launcher.py",
+     "env_key": "OPENHANDS_PORT", "health_path": "/"},
 ]
 
 AGENTS_REGISTRY_PATH = AI_OS_ROOT / "05_Agenten" / "agents" / "agents.json"
@@ -136,10 +148,10 @@ FILE_ICONS = {
 
 # Timeout großzügig: die Spezial-Agenten prüfen in /health selbst Ollama mit,
 # das kann unter Last >1s dauern — sonst erscheinen laufende Dienste als offline.
-def check_service_health(port, timeout=4):
+def check_service_health(port, timeout=4, path="/health"):
     """Prüft per HTTP, ob ein Dienst auf dem gegebenen Port antwortet."""
     try:
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/health")
+        req = urllib.request.Request(f"http://127.0.0.1:{port}{path}")
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return resp.status == 200
     except Exception:
@@ -849,8 +861,10 @@ def health():
 def get_services():
     """Prüft parallel den Online-Status aller AI-OS-Dienste (Ebenen-Struktur)."""
     def check(svc):
-        online = True if svc["key"] == "dashboard" else check_service_health(svc["port"])
-        return {**{k: v for k, v in svc.items() if k not in ("script", "env_key")}, "online": online}
+        online = True if svc["key"] == "dashboard" else check_service_health(
+            svc["port"], path=svc.get("health_path", "/health"))
+        return {**{k: v for k, v in svc.items() if k not in ("script", "env_key", "health_path")},
+                "online": online}
 
     with ThreadPoolExecutor(max_workers=len(SERVICES)) as pool:
         results = list(pool.map(check, SERVICES))

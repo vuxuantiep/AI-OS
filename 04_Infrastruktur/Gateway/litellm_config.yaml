@@ -1,0 +1,59 @@
+# LiteLLM-Proxy Konfiguration für das AI-OS (Port 4000)
+# Vereinheitlichtes OpenAI-kompatibles Gateway über alle Provider des AI-OS.
+# Secrets kommen aus der .env im Projekt-Root (os.environ/...-Referenzen).
+# Einträge, deren Umgebungsvariablen fehlen, entfernt litellm_gateway.py beim Start.
+#
+# Aufruf-Beispiel:
+#   POST http://127.0.0.1:4000/v1/chat/completions
+#   {"model": "llama3", "messages": [{"role": "user", "content": "Hallo"}]}
+
+model_list:
+  # --- Lokal: Ollama (bevorzugt, privat & kostenlos) ---
+  - model_name: llama3
+    litellm_params:
+      model: ollama_chat/llama3
+      api_base: os.environ/OLLAMA_URL
+  - model_name: mistral
+    litellm_params:
+      model: ollama_chat/mistral
+      api_base: os.environ/OLLAMA_URL
+  - model_name: qwen2.5-coder
+    litellm_params:
+      model: ollama_chat/qwen2.5-coder
+      api_base: os.environ/OLLAMA_URL
+  - model_name: deepseek-coder
+    litellm_params:
+      model: ollama_chat/deepseek-coder
+      api_base: os.environ/OLLAMA_URL
+
+  # --- Privat im Tailscale-Netz: Raspberry Pi 4 (miniLLM) ---
+  - model_name: pi-llm
+    litellm_params:
+      model: ollama_chat/llama3
+      api_base: os.environ/PI_LLM_URL
+
+  # --- Online-Fallbacks ---
+  - model_name: openrouter-free
+    litellm_params:
+      model: openrouter/openai/gpt-oss-120b:free
+      api_key: os.environ/OPENROUTER_API_KEY
+  - model_name: huggingface-llama
+    litellm_params:
+      model: huggingface/meta-llama/Llama-3.3-70B-Instruct
+      api_key: os.environ/HUGGINGFACE_API_KEY
+  - model_name: github-gpt4o-mini
+    litellm_params:
+      model: github/gpt-4o-mini
+      api_key: os.environ/GITHUB_MODELS_TOKEN
+
+router_settings:
+  # Fällt Ollama aus, routet LiteLLM selbstständig auf die Online-Modelle
+  fallbacks:
+    - llama3: ["openrouter-free", "huggingface-llama", "github-gpt4o-mini"]
+    - mistral: ["openrouter-free", "huggingface-llama"]
+    - qwen2.5-coder: ["openrouter-free"]
+  num_retries: 1
+
+litellm_settings:
+  drop_params: true
+  request_timeout: 300

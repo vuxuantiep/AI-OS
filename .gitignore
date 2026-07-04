@@ -62,3 +62,6 @@ venv/
 06_Gedächtnis/Memory/Episodic-Memory/chat_log.jsonl
 06_Gedächtnis/Memory/Long-Memory/nutzerprofil.md
 06_Gedächtnis/Memory/Long-Memory/learn_meta.json
+
+# LiteLLM: generierte Laufzeit-Config (enthaelt keine Secrets, aber maschinenspezifisch)
+04_Infrastruktur/Gateway/.litellm_config.runtime.yaml

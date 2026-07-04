@@ -137,6 +137,12 @@ OLLAMA_URL = (os.environ.get("OLLAMA_URL") or _boot_env.get("OLLAMA_URL")
               or f"http://{OLLAMA_HOST}:{OLLAMA_PORT}").rstrip("/")
 OLLAMA_IS_LOCAL = ("127.0.0.1" in OLLAMA_URL) or ("localhost" in OLLAMA_URL.lower())
 
+# LiteLLM-Proxy (AI-OS-Dienst :4000): vereinheitlichtes Gateway mit eigenen Fallbacks
+LITELLM_URL = (os.environ.get("LITELLM_URL") or _boot_env.get("LITELLM_URL")
+               or "http://127.0.0.1:4000").rstrip("/")
+# Modelle, die litellm_config.yaml kennt — unbekannte Namen fallen auf llama3 zurück
+LITELLM_KNOWN_MODELS = {"llama3", "mistral", "qwen2.5-coder", "deepseek-coder"}
+
 
 # Einige Anbieter (z.B. HuggingFace) blockieren den Standard-UA "Python-urllib" mit 403
 USER_AGENT = "AI-OS-Dashboard/1.0"
@@ -290,6 +296,12 @@ class LLMRouter:
             return isinstance(data.get("data"), list)
         return self._cached_check("lmstudio", 15, check)
 
+    def litellm_online(self):
+        def check():
+            data = _get_json(f"{LITELLM_URL}/health/liveliness", timeout=1.5)
+            return bool(data)
+        return self._cached_check("litellm", 15, check)
+
     def pi_online(self):
         s = self._secrets()
         if not s["pi_url"]:
@@ -355,8 +367,8 @@ class LLMRouter:
         return self._cached_check("cloudflare", 60, check)
 
     def any_available(self):
-        return (self.ollama_online() or self.lmstudio_online() or self.pi_online()
-                or self.github_online() or self.openrouter_online()
+        return (self.ollama_online() or self.lmstudio_online() or self.litellm_online()
+                or self.pi_online() or self.github_online() or self.openrouter_online()
                 or self.huggingface_online() or self.cloudflare_online())
 
     # ---------- Autostart der lokalen Engine ----------
@@ -543,6 +555,19 @@ class LLMRouter:
             except Exception as e:
                 errors.append(f"LM Studio: {e}")
 
+        if self.litellm_online():
+            try:
+                ll_model = base if base in LITELLM_KNOWN_MODELS else "llama3"
+                content, used = self._chat_openai_compatible(
+                    f"{LITELLM_URL}/v1/chat/completions",
+                    os.environ.get("LITELLM_MASTER_KEY", "sk-ai-os"),
+                    messages, ll_model, temperature, num_predict, timeout)
+                self.last_provider = "litellm"
+                return {"content": content, "provider": "litellm",
+                        "provider_label": f"LiteLLM Gateway ({used})", "model": used}
+            except Exception as e:
+                errors.append(f"LiteLLM: {e}")
+
         if s["pi_url"] and self.pi_online():
             try:
                 content, used = self._chat_pi(s, messages, model, temperature,
@@ -631,6 +656,7 @@ class LLMRouter:
         s = self._secrets()
         ollama = self.ollama_online()
         lmstudio = self.lmstudio_online()
+        litellm = self.litellm_online()
         pi_cfg = bool(s["pi_url"])
         github_cfg = bool(s["github_token"])
         openrouter_cfg = bool(s["openrouter_api_key"])
@@ -643,7 +669,8 @@ class LLMRouter:
         cloudflare = self.cloudflare_online()
 
         active = next((key for key, online in [
-            ("ollama", ollama), ("lmstudio", lmstudio), ("pi", pi), ("github", github),
+            ("ollama", ollama), ("lmstudio", lmstudio), ("litellm", litellm),
+            ("pi", pi), ("github", github),
             ("openrouter", openrouter), ("huggingface", huggingface),
             ("cloudflare", cloudflare)] if online), None)
         cf_via = "AI Gateway" if s["cloudflare_gateway"] else "Workers AI"
@@ -658,27 +685,31 @@ class LLMRouter:
              "desc": "Lokale Alternative — OpenAI-kompatibler Server",
              "detail": f"http://{LMSTUDIO_HOST}:{LMSTUDIO_PORT}/v1",
              "configured": True, "online": lmstudio},
-            {"key": "pi", "name": "Raspberry Pi Gateway", "icon": "🍓", "priority": 3,
+            {"key": "litellm", "name": "LiteLLM Gateway", "icon": "🚦", "priority": 3,
+             "desc": "AI-OS-Dienst :4000 — ein OpenAI-Endpunkt, routet selbst mit Fallbacks",
+             "detail": f"{LITELLM_URL}/v1 (Start im Tab 'Dienste')",
+             "configured": True, "online": litellm},
+            {"key": "pi", "name": "Raspberry Pi Gateway", "icon": "🍓", "priority": 4,
              "desc": "Privater LAN-Fallback — miniLLM auf dem Raspberry Pi 4",
              "detail": s["pi_url"] if pi_cfg
                        else "PI_LLM_URL in .env eintragen (z.B. http://raspberrypi.local:11434)",
              "configured": pi_cfg, "online": pi},
-            {"key": "github", "name": "GitHub Models", "icon": "🐙", "priority": 4,
+            {"key": "github", "name": "GitHub Models", "icon": "🐙", "priority": 5,
              "desc": "Online-Fallback über dein GitHub/Copilot-Konto (models.github.ai)",
              "detail": GITHUB_MODEL_MAP["default"] if github_cfg
                        else "GITHUB_MODELS_TOKEN in .env eintragen (PAT mit Scope models:read)",
              "configured": github_cfg, "online": github},
-            {"key": "openrouter", "name": "OpenRouter", "icon": "🌍", "priority": 5,
+            {"key": "openrouter", "name": "OpenRouter", "icon": "🌍", "priority": 6,
              "desc": "Online-Fallback — kostenlose Open-Source-LLMs",
              "detail": OPENROUTER_MODEL_MAP["default"] if openrouter_cfg
                        else "API-Key fehlt (OPENROUTER_API_KEY in .env eintragen)",
              "configured": openrouter_cfg, "online": openrouter},
-            {"key": "huggingface", "name": "HuggingFace", "icon": "🤗", "priority": 6,
+            {"key": "huggingface", "name": "HuggingFace", "icon": "🤗", "priority": 7,
              "desc": "Online-Fallback — Open-Source-LLMs via HF Inference Providers",
              "detail": HUGGINGFACE_MODEL_MAP["default"] if huggingface_cfg
                        else "API-Key fehlt (HUGGINGFACE_API_KEY in .env eintragen)",
              "configured": huggingface_cfg, "online": huggingface},
-            {"key": "cloudflare", "name": f"Cloudflare {cf_via}", "icon": "☁️", "priority": 7,
+            {"key": "cloudflare", "name": f"Cloudflare {cf_via}", "icon": "☁️", "priority": 8,
              "desc": "Online-Fallback — Open-Source-LLMs auf Cloudflare Workers AI",
              "detail": CLOUDFLARE_MODEL_MAP["default"] if cloudflare_cfg
                        else "WORKERS_AI_ACCOUNT_ID + WORKERS_AI_API_TOKEN in .env eintragen",

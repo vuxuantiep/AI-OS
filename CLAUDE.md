@@ -95,11 +95,24 @@ python 04_Infrastruktur/Runtime/start_ai_os.py
 | Dashboard | 5000 | http://localhost:5000 |
 | MCP Server | 5001 | http://localhost:5001 |
 | RAG Pipeline | 5002 | http://localhost:5002 |
+| **OpenHands Dev-Agent** | **3000** | **http://localhost:3000** (Docker) |
+| **LiteLLM Gateway** | **4000** | **http://localhost:4000/v1** (OpenAI-kompatibel) |
 | **API Gateway** | **5100** | **http://localhost:5100** |
 | **Workflow Engine** | **5200** | **http://localhost:5200** |
 | **Agent System** | **5300** | **http://localhost:5300** |
 | **Monitoring** | **5400** | **http://localhost:5400/status** |
+| **LangGraph Engine** | **5500** | **http://localhost:5500** (Fabrik-Pipeline als Graph) |
 | Ollama API | 11434 | http://localhost:11434 |
+
+### LLM-Tooling (seit 04.07.2026)
+- **LiteLLM** (`04_Infrastruktur/Gateway/litellm_gateway.py` + `litellm_config.yaml`):
+  EIN OpenAI-kompatibler Endpunkt für alle Provider (Ollama, Pi via Tailscale,
+  OpenRouter, HuggingFace, GitHub Models) inkl. eigener Fallback-Ketten.
+- **LangGraph** (`05_Agenten/langgraph_engine.py`): Scrum-Pipeline der KI-Fabrik
+  als Zustandsgraph (Planung → Entwicklung → QA mit Nachbesserungs-Schleife),
+  `POST /run` mit `{"briefing": "..."}`.
+- **OpenHands** (`05_Agenten/openhands_launcher.py`): autonomer Coding-Agent als
+  Docker-Container, LLM-Backend = LiteLLM (`http://host.docker.internal:4000/v1`).
 
 ## Meine Identität & Arbeitsweise
 
