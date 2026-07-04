@@ -20,7 +20,15 @@ from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
-if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+# Headless-Start (pythonw.exe, z.B. Windows-Aufgabenplanung): stdout/stderr sind
+# dann None -> in Logdatei umleiten, sonst stürzt jeder print() ab.
+if sys.stdout is None or sys.stderr is None:
+    _log_path = Path(__file__).parent.parent.parent / "08_Monitoring" / "dashboard_headless.log"
+    _log_path.parent.mkdir(parents=True, exist_ok=True)
+    _log_file = open(_log_path, "a", buffering=1, encoding="utf-8", errors="replace")
+    sys.stdout = sys.stdout or _log_file
+    sys.stderr = sys.stderr or _log_file
+elif sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 

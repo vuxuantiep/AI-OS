@@ -1441,7 +1441,7 @@
                         <div class="grid-split" style="--split:1.2fr 1fr;position:relative;z-index:1;margin-top:1rem;">
                             <!-- 3D-Fabrikraum Visualisierung -->
                             <div>
-                                <div id="factory-3d-container" style="width:100%;aspect-ratio:4/3;background:var(--bg-primary);border-radius:var(--radius-sm);position:relative;overflow:hidden;border:2px solid var(--border-strong);box-shadow:inset 0 0 30px rgba(91,156,245,0.1);">
+                                <div id="factory-3d-container" style="width:100%;aspect-ratio:16/10;background:var(--bg-primary);border-radius:var(--radius-sm);position:relative;overflow:hidden;border:2px solid var(--border-strong);box-shadow:inset 0 0 30px rgba(91,156,245,0.1);">
                                     <canvas id="factory-3d-canvas" style="width:100%;height:100%;display:block;"></canvas>
                                     <div id="factory-3d-banner" style="position:absolute;top:0.6rem;left:50%;transform:translateX(-50%);font-size:0.72rem;color:var(--text-primary);pointer-events:none;background:rgba(0,0,0,0.55);padding:0.35rem 0.9rem;border-radius:12px;border:1px solid rgba(91,156,245,0.4);white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;">Fabrik im Leerlauf — sende eine Idee an den CTO</div>
                                     <div style="position:absolute;bottom:0.5rem;left:50%;transform:translateX(-50%);font-size:0.7rem;color:var(--text-secondary);pointer-events:none;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.7),transparent);padding:0.4rem 1rem;border-radius:12px;white-space:nowrap;">🧍 2D-Raumansicht mit 3D-Figuren — die ganze Produktionslinie auf einen Blick</div>
@@ -1533,6 +1533,8 @@
             document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
             const titles = {overview: '📊 Übersicht', news: '📰 KI-News', services: '🧩 Dienste', fleet: '🎯 Agenten', chat: '💬 Chat', models: '📦 Modelle', llm: '🔀 KI-Gateway', knowledge: '🧠 Gedächtnis', learning: '🎓 Lernen', files: '📂 Dateien', architecture: '🏛️ Architektur', ideas: '💡 CEO-Ideen'};
             document.getElementById('topbar-title').textContent = titles[tab] || tab;
+            // Deep-Link: aktiven Tab in der URL halten (z.B. /#ideas für die KI-Fabrik)
+            if (history.replaceState) history.replaceState(null, '', '#' + tab);
             closeMobileNav();
             if (tab === 'ideas') {
                 setTimeout(() => {
@@ -2610,7 +2612,12 @@
         loadWikiDocs();
         loadFleet();
         loadLlmStatus();
-        
+        // Deep-Link: /#ideas öffnet direkt die KI-Fabrik, /#services die Dienste usw.
+        (function () {
+            const hashTab = location.hash.replace('#', '');
+            if (hashTab && document.getElementById('tab-' + hashTab)) showTab(hashTab);
+        })();
+
         // Big Sketch State
         let bigSketchCtx = null;
         let bigSketchDrawing = false;
@@ -2880,22 +2887,24 @@
 
             // Fabrik-Stationen als Produktionslinie im Raum (x rechts, y hoch, z Tiefe)
             // 2D-Raumansicht: alle Stationen in EINER Reihe (Hallen-Querschnitt wie ein Puppenhaus)
+            // row 0/1 staffelt die Namensschilder in zwei Zeilen, damit sie sich nie überlappen
             const stations = [
-                { id: 'ceo',      label: 'CEO (PO)',     icon: '👔',   x: -186, z: 0, h: 42, color: '#a78bfa' },
-                { id: 'cto',      label: 'CTO (SM)',     icon: '🧑‍💼', x: -133, z: 0, h: 42, color: '#5b9cf5' },
-                { id: 'planner',  label: 'Planung',      icon: '📋',   x: -80,  z: 0, h: 23, color: '#22d3ee' },
-                { id: 'dev',      label: 'Dev-Team',     icon: '⚙️',   x: -27,  z: 0, h: 24, color: '#34d399' },
-                { id: 'lab',      label: 'Testlabor',    icon: '🔬',   x: 26,   z: 0, h: 22, color: '#38bdf8' },
-                { id: 'test',     label: 'Qualität',     icon: '🧪',   x: 79,   z: 0, h: 30, color: '#fbbf24' },
-                { id: 'approval', label: 'CEO-Abnahme',  icon: '🤝',   x: 132,  z: 0, h: 42, color: '#e879f9' },
-                { id: 'deploy',   label: 'Auslieferung', icon: '🚀',   x: 185,  z: 0, h: 29, color: '#f87171' }
+                { id: 'ceo',      label: 'CEO (PO)',     icon: '👔',   x: -186, z: 0, h: 42, color: '#a78bfa', row: 0 },
+                { id: 'cto',      label: 'CTO (SM)',     icon: '🧑‍💼', x: -133, z: 0, h: 42, color: '#5b9cf5', row: 1 },
+                { id: 'planner',  label: 'Planung',      icon: '📋',   x: -80,  z: 0, h: 23, color: '#22d3ee', row: 0 },
+                { id: 'dev',      label: 'Dev-Team',     icon: '⚙️',   x: -27,  z: 0, h: 24, color: '#34d399', row: 1 },
+                { id: 'lab',      label: 'Testlabor',    icon: '🔬',   x: 26,   z: 0, h: 22, color: '#38bdf8', row: 0 },
+                { id: 'test',     label: 'Qualität',     icon: '🧪',   x: 79,   z: 0, h: 30, color: '#fbbf24', row: 1 },
+                { id: 'approval', label: 'CEO-Abnahme',  icon: '🤝',   x: 132,  z: 0, h: 42, color: '#e879f9', row: 0 },
+                { id: 'deploy',   label: 'Auslieferung', icon: '🚀',   x: 185,  z: 0, h: 29, color: '#f87171', row: 1 }
             ];
+            const UI_FONT = "'Segoe UI', system-ui, sans-serif";
 
             // Feste 2D-Ansicht ohne Kamera: Kavalier-Projektion gibt den Figuren ihre 3D-Plastizität
             // (Tiefe z läuft leicht nach rechts oben), die Szene selbst bleibt ein flacher Raum.
             function project(x, y, z) {
-                const k = W / 470;
-                return { x: W / 2 + (x + z * 0.45) * k, y: H * 0.70 - (y + z * 0.30) * k, z: z, s: k };
+                const k = W / 450;
+                return { x: W / 2 + (x + z * 0.45) * k, y: H * 0.72 - (y + z * 0.30) * k, z: z, s: k };
             }
 
             function shade(hex, f) {
@@ -3097,17 +3106,37 @@
                         }
                     }
                 }
-                ctx.font = `${Math.max(13, 22 * topC.s)}px Inter`;
+                ctx.font = `${Math.max(16, 22 * topC.s)}px ${UI_FONT}`;
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillText(st.icon, topC.x, topC.y - 14 * topC.s);
-                if (done) {
-                    ctx.font = `${Math.max(10, 14 * topC.s)}px Inter`;
-                    ctx.fillText('✅', topC.x + 18 * topC.s, topC.y - 26 * topC.s);
-                }
+
+                // Namensschild: dunkle Plakette mit Status-Rahmen, in zwei Zeilen gestaffelt —
+                // feste Pixelgrößen, damit die Beschriftung auch auf kleinen Screens lesbar bleibt
                 const baseC = project(st.x, 0, st.z);
-                ctx.fillStyle = active ? '#fbbf24' : '#b0b0bb';
-                ctx.font = `${Math.max(9, 11 * baseC.s)}px Inter`;
-                ctx.fillText(st.label, baseC.x, baseC.y + 14 * baseC.s);
+                const fontPx = Math.max(10, Math.min(13, 12 * baseC.s));
+                ctx.font = `600 ${fontPx}px ${UI_FONT}`;
+                const text = (done ? '✓ ' : '') + st.label;
+                const plateW = ctx.measureText(text).width + 22;
+                const plateH = fontPx + 10;
+                const plateY = baseC.y + 8 + (st.row ? plateH + 5 : 0);
+                // An den Canvas-Rand geklemmt, damit Randstationen (CEO/Auslieferung) nie abgeschnitten werden
+                const plateX = Math.min(W - plateW - 4, Math.max(4, baseC.x - plateW / 2));
+                ctx.fillStyle = 'rgba(10,12,18,0.9)';
+                ctx.strokeStyle = active ? '#fbbf24' : (done ? 'rgba(52,211,153,0.85)' : 'rgba(255,255,255,0.28)');
+                ctx.lineWidth = active ? 1.6 : 1;
+                ctx.beginPath();
+                if (ctx.roundRect) { ctx.roundRect(plateX, plateY, plateW, plateH, 6); }
+                else { ctx.rect(plateX, plateY, plateW, plateH); }
+                ctx.fill(); ctx.stroke();
+                // Farbpunkt links im Schild = Stationsfarbe (gleiche Farbe wie der Dachstreifen)
+                ctx.fillStyle = st.color;
+                ctx.beginPath();
+                ctx.arc(plateX + 8, plateY + plateH / 2, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = active ? '#fde68a' : (done ? '#a7f3d0' : '#eceef4');
+                ctx.textAlign = 'left';
+                ctx.fillText(text, plateX + 14, plateY + plateH / 2 + 0.5);
+                ctx.textAlign = 'center';
             }
 
             function draw() {
@@ -3140,6 +3169,12 @@
                         : (activeRoom ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.10)');
                     ctx.lineWidth = 1.5;
                     ctx.strokeRect(x0, y0, roomW * kk, (roomH + 4) * kk);
+                    // Farbiger Dachstreifen: gleiche Farbe wie der Punkt im Namensschild —
+                    // so ist jeder Raum auf einen Blick seiner Station zuzuordnen
+                    ctx.globalAlpha = (activeRoom || waitRoom) ? 0.95 : 0.5;
+                    ctx.fillStyle = st.color;
+                    ctx.fillRect(x0, y0, roomW * kk, 3);
+                    ctx.globalAlpha = 1;
                 });
 
                 // Kreislauf: flacher Bogen über den Räumen von der Auslieferung zurück zum Scrum Master
@@ -3154,10 +3189,20 @@
                 ctx.quadraticCurveTo((loopA.x + loopB.x) / 2, loopTopY, loopB.x, loopB.y - roomH * kk);
                 ctx.stroke();
                 ctx.setLineDash([]);
-                ctx.fillStyle = 'rgba(167,139,250,0.8)';
-                ctx.font = `${Math.max(9, 10 * kk)}px Inter`;
+                // Beschriftung des Kreislaufs mit dezentem Hintergrund für Lesbarkeit
+                const loopLabel = '🔁 Kreislauf: nächster Sprint / neue Version';
+                const loopFont = Math.max(10.5, Math.min(12, 11 * kk));
+                ctx.font = `600 ${loopFont}px ${UI_FONT}`;
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText('🔁 Kreislauf: nächster Sprint / neue Version', (loopA.x + loopB.x) / 2, loopTopY + 8 * kk);
+                const loopW = ctx.measureText(loopLabel).width + 16;
+                const loopX = (loopA.x + loopB.x) / 2, loopY = loopTopY + 8 * kk;
+                ctx.fillStyle = 'rgba(10,12,18,0.75)';
+                ctx.beginPath();
+                if (ctx.roundRect) { ctx.roundRect(loopX - loopW / 2, loopY - loopFont / 2 - 5, loopW, loopFont + 10, 6); }
+                else { ctx.rect(loopX - loopW / 2, loopY - loopFont / 2 - 5, loopW, loopFont + 10); }
+                ctx.fill();
+                ctx.fillStyle = 'rgba(196,181,253,0.95)';
+                ctx.fillText(loopLabel, loopX, loopY + 0.5);
 
                 // Fließband entlang der Produktionslinie
                 const beltPts = stations.map(st => project(st.x, 2, st.z));
