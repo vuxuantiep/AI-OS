@@ -4,6 +4,7 @@ from fastapi import Request
 
 from app.agents.hermes import HermesAgent
 from app.agents.pipeline import AgentPipeline
+from app.prompts.registry import PromptRegistry
 from app.rag.service import RagService
 from app.services.llm_service import LLMClient
 
@@ -26,3 +27,8 @@ def get_pipeline(request: Request) -> AgentPipeline:
 def get_hermes(request: Request) -> HermesAgent:
     hermes: HermesAgent = request.app.state.hermes
     return hermes
+
+
+def get_prompts(request: Request) -> PromptRegistry:
+    prompts: PromptRegistry = request.app.state.prompts
+    return prompts

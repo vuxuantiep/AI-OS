@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 from app.agents.hermes import HermesAgent
 from app.agents.pipeline import AgentPipeline
 from app.main import create_app
+from app.prompts.registry import PromptRegistry
 from app.rag.service import RagService
 from app.rag.vector_store import JsonVectorStore
 
@@ -72,4 +73,5 @@ def client(tmp_path: Path, fake_llm: FakeLLMClient, knowledge_dir: Path) -> Iter
             project_root=knowledge_dir,
             knowledge_files=["CLAUDE.md", "ROADMAP.md", "FEHLT.md"],
         )
+        app.state.prompts = PromptRegistry(tmp_path / "prompts")
         yield test_client

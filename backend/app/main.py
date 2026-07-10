@@ -12,6 +12,7 @@ from app.agents.hermes import HermesAgent
 from app.agents.pipeline import AgentPipeline
 from app.api.routes import router
 from app.core.config import Settings, get_settings
+from app.prompts.registry import PromptRegistry
 from app.rag.qdrant_store import QdrantVectorStore
 from app.rag.service import RagService
 from app.rag.vector_store import JsonVectorStore, VectorStore
@@ -50,6 +51,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         project_root=settings.project_root,
         knowledge_files=settings.hermes_knowledge_files,
     )
+    app.state.prompts = PromptRegistry(settings.prompts_dir)
     try:
         yield
     finally:

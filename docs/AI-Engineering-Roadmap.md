@@ -17,6 +17,7 @@ Stand: 10.07.2026
 | 4 | LangGraph: Multi-Agent-Workflow (CEO → Planner → Developer → Reviewer → Tester) | 🟡 sequenzielle Pipeline fertig, LangGraph-Migration offen | `backend/app/agents/pipeline.py`, bestehend: `05_Agenten/langgraph_engine.py` |
 | 5 | Coding Agent: Tool Calling / Function Calling (read_file, write_file, run_python …) | ⬜ offen | `backend/app/agents/` |
 | — | **Hermes**: autonomer Mitarbeiter (lernt Ziele/Historie per RAG, arbeitet Aufträge ab, führt Journal) | ✅ umgesetzt (10.07.2026), Pi-4B-Hosting: [Hermes-Pi4-Tailscale-Setup.md](Hermes-Pi4-Tailscale-Setup.md) | `backend/app/agents/hermes.py` |
+| M4 | **Prompt Registry**: Prompt-Repo als Kanban-Board (Status/Version/Tags als Frontmatter in den .md-Dateien) | ✅ umgesetzt (10.07.2026): Board unter `/prompts`, Versionierung bei Inhalts-Änderung | `backend/app/prompts/registry.py` |
 | 6 | Knowledge Graph: Neo4j, Entitäten-/Beziehungsextraktion, Hybrid Search | ⬜ offen (bewusst später) | — |
 | 7 | Cloud: Docker, GitHub Actions, AWS S3/Lambda/Bedrock, Terraform | ⬜ offen | `docker/`, `terraform/` (geplant) |
 | 8 | Qualität: pytest, RAG-Evaluation (Relevanz/Treue), CI/CD | 🟡 pytest+MyPy+Ruff von Anfang an aktiv, Evaluation & CI offen | `backend/tests/` |

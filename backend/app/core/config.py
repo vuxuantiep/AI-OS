@@ -34,6 +34,11 @@ class Settings(BaseSettings):
 
     # Hermes — autonomer Mitarbeiter: diese Dateien bilden sein Projektwissen
     project_root: Path = Path(__file__).resolve().parents[3]
+
+    # Prompt-Repository (Kanban-Board unter /prompts)
+    prompts_dir: Path = (
+        Path(__file__).resolve().parents[3] / "04_Infrastruktur" / "Gateway" / "Prompts"
+    )
     hermes_knowledge_files: list[str] = [
         "CLAUDE.md",
         "README.md",

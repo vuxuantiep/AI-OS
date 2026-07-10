@@ -11,9 +11,16 @@ from app.agents.hermes import (
     HermesWorkResult,
 )
 from app.agents.pipeline import AgentPipeline, PipelineResult
-from app.api.deps import get_hermes, get_llm, get_pipeline, get_rag
+from app.api.deps import get_hermes, get_llm, get_pipeline, get_prompts, get_rag
 from app.core.config import get_settings
 from app.models import ChatRequest, ChatResponse, DocumentMeta, RagAnswer, RagQuery
+from app.prompts.registry import (
+    PromptCard,
+    PromptCreate,
+    PromptDetail,
+    PromptRegistry,
+    PromptUpdate,
+)
 from app.rag.parser import UnsupportedFormatError
 from app.rag.service import RagService
 from app.services.llm_service import LLMClient, OllamaClient
@@ -109,3 +116,43 @@ async def hermes_work(
 @router.get("/api/hermes/status", response_model=HermesStatus)
 async def hermes_status(hermes: Annotated[HermesAgent, Depends(get_hermes)]) -> HermesStatus:
     return hermes.status()
+
+
+@router.get("/prompts", include_in_schema=False)
+async def prompts_board() -> FileResponse:
+    """Kanban-Board für das Prompt-Repository."""
+    return FileResponse(STATIC_DIR / "prompts.html", media_type="text/html")
+
+
+@router.get("/api/prompts", response_model=list[PromptCard])
+async def list_prompts(
+    prompts: Annotated[PromptRegistry, Depends(get_prompts)],
+) -> list[PromptCard]:
+    return prompts.list()
+
+
+@router.get("/api/prompts/{name}", response_model=PromptDetail)
+async def get_prompt(
+    name: str, prompts: Annotated[PromptRegistry, Depends(get_prompts)]
+) -> PromptDetail:
+    detail = prompts.get(name)
+    if detail is None:
+        raise HTTPException(status_code=404, detail=f"Prompt nicht gefunden: {name}")
+    return detail
+
+
+@router.post("/api/prompts", response_model=PromptDetail, status_code=201)
+async def create_prompt(
+    body: PromptCreate, prompts: Annotated[PromptRegistry, Depends(get_prompts)]
+) -> PromptDetail:
+    return prompts.create(body)
+
+
+@router.patch("/api/prompts/{name}", response_model=PromptDetail)
+async def update_prompt(
+    name: str, body: PromptUpdate, prompts: Annotated[PromptRegistry, Depends(get_prompts)]
+) -> PromptDetail:
+    detail = prompts.update(name, body)
+    if detail is None:
+        raise HTTPException(status_code=404, detail=f"Prompt nicht gefunden: {name}")
+    return detail

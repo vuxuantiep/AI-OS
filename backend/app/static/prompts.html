@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prompt-Board · AI-OS</title>
+<style>
+  :root {
+    --ground: #f2f4f8; --surface: #ffffff; --ink: #1c2534; --ink-soft: #55647a;
+    --line: #d7dde7; --accent: #2b59c3; --accent-ink: #fff; --chip: #e5ebf7;
+    --col-backlog: #8a93a6; --col-entwurf: #b06a10; --col-test: #7a4bbf; --col-frei: #0e7f6f;
+    --shadow: 0 1px 3px rgba(27,36,50,.10), 0 4px 14px rgba(27,36,50,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #121826; --surface: #1a2233; --ink: #e7ecf4; --ink-soft: #9aa7bb;
+      --line: #2c3850; --accent: #7fa3f0; --accent-ink: #101828; --chip: #24304a;
+      --col-backlog: #7e8aa0; --col-entwurf: #e0a95c; --col-test: #b795ec; --col-frei: #5cc7b4;
+      --shadow: 0 1px 3px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px;
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+  header {
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    padding: 13px 20px; display: flex; align-items: center; gap: 12px;
+  }
+  header h1 { font-size: 17px; margin: 0; }
+  header .sub { font-size: 12.5px; color: var(--ink-soft); }
+  .spacer { flex: 1; }
+  button {
+    font: inherit; border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink); border-radius: 8px; padding: 8px 14px; cursor: pointer;
+  }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+  .board {
+    flex: 1; display: grid; grid-template-columns: repeat(4, minmax(230px, 1fr));
+    gap: 14px; padding: 16px; overflow-x: auto; align-items: start;
+  }
+  .col {
+    background: color-mix(in srgb, var(--surface) 55%, var(--ground));
+    border: 1px solid var(--line); border-radius: 12px;
+    display: flex; flex-direction: column; max-height: calc(100vh - 110px);
+  }
+  .col-head {
+    padding: 11px 14px; display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .col-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--cc); }
+  .col-head h2 { font-size: 13px; margin: 0; letter-spacing: .06em; text-transform: uppercase; }
+  .col-count {
+    margin-left: auto; font-size: 12px; color: var(--ink-soft);
+    background: var(--chip); border-radius: 999px; padding: 1px 9px;
+    font-variant-numeric: tabular-nums;
+  }
+  .col-cards { padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; min-height: 60px; }
+  .col.dragover { outline: 2px dashed var(--cc); outline-offset: -4px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 4px solid var(--cc); border-radius: 9px;
+    padding: 10px 12px; cursor: grab; box-shadow: var(--shadow);
+  }
+  .card:active { cursor: grabbing; }
+  .card .t { font-weight: 600; font-size: 14px; line-height: 1.35; }
+  .card .m { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; font-size: 11px; color: var(--ink-soft); }
+  .card .m span { background: var(--chip); border-radius: 5px; padding: 1px 7px; }
+  .card.dragging { opacity: .45; }
+
+  dialog {
+    border: 1px solid var(--line); border-radius: 14px; background: var(--surface);
+    color: var(--ink); width: min(720px, 92vw); padding: 0; box-shadow: var(--shadow);
+  }
+  dialog::backdrop { background: rgba(10, 14, 22, .55); }
+  .dlg-head { padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+  .dlg-head h3 { margin: 0; font-size: 16px; flex: 1; }
+  .dlg-body { padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .dlg-body label { font-size: 12px; color: var(--ink-soft); }
+  .dlg-body input, .dlg-body textarea, .dlg-body select {
+    font: inherit; width: 100%; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--ground); color: var(--ink); padding: 8px 10px;
+  }
+  .dlg-body textarea { min-height: 260px; font-family: Consolas, monospace; font-size: 13px; resize: vertical; }
+  .dlg-foot { padding: 12px 18px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; }
+  .meta-line { font-size: 12px; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🗂️ Prompt-Board</h1>
+    <div class="sub">Prompt-Repository · <span id="dir">04_Infrastruktur/Gateway/Prompts</span></div>
+  </div>
+  <div class="spacer"></div>
+  <button class="primary" id="newBtn">+ Neuer Prompt</button>
+</header>
+
+<div class="board" id="board"></div>
+
+<dialog id="dlg">
+  <div class="dlg-head">
+    <h3 id="dlgTitle">Prompt</h3>
+    <button id="dlgClose" aria-label="Schließen">✕</button>
+  </div>
+  <div class="dlg-body">
+    <div id="titleRow">
+      <label for="fTitle">Titel</label>
+      <input id="fTitle" maxlength="200" placeholder="z.B. Dashboard-Sektion umbauen">
+    </div>
+    <div>
+      <label for="fStatus">Status</label>
+      <select id="fStatus">
+        <option value="backlog">📥 Backlog</option>
+        <option value="entwurf">✏️ Entwurf</option>
+        <option value="test">🧪 Test</option>
+        <option value="freigegeben">✅ Freigegeben</option>
+      </select>
+    </div>
+    <div>
+      <label for="fTags">Tags (kommagetrennt)</label>
+      <input id="fTags" placeholder="dashboard, agenten">
+    </div>
+    <div>
+      <label for="fContent">Inhalt (Markdown)</label>
+      <textarea id="fContent" spellcheck="false"></textarea>
+    </div>
+    <div class="meta-line" id="metaLine"></div>
+  </div>
+  <div class="dlg-foot">
+    <button id="dlgCancel">Abbrechen</button>
+    <button class="primary" id="dlgSave">Speichern</button>
+  </div>
+</dialog>
+
+<script>
+  const COLUMNS = [
+    { key: "backlog", label: "Backlog", icon: "📥", cssVar: "--col-backlog" },
+    { key: "entwurf", label: "Entwurf", icon: "✏️", cssVar: "--col-entwurf" },
+    { key: "test", label: "Test", icon: "🧪", cssVar: "--col-test" },
+    { key: "freigegeben", label: "Freigegeben", icon: "✅", cssVar: "--col-frei" },
+  ];
+  const board = document.getElementById("board");
+  const dlg = document.getElementById("dlg");
+  let editingName = null;
+
+  async function api(path, options) {
+    const response = await fetch(path, options);
+    if (!response.ok) throw new Error("HTTP " + response.status + ": " + (await response.text()).slice(0, 200));
+    return response.json();
+  }
+
+  function cardEl(prompt, color) {
+    const el = document.createElement("div");
+    el.className = "card";
+    el.style.setProperty("--cc", "var(" + color + ")");
+    el.draggable = true;
+    el.dataset.name = prompt.name;
+
+    const title = document.createElement("div");
+    title.className = "t";
+    title.textContent = prompt.title;
+    el.appendChild(title);
+
+    const meta = document.createElement("div");
+    meta.className = "m";
+    const version = document.createElement("span");
+    version.textContent = "v" + prompt.version;
+    meta.appendChild(version);
+    (prompt.tags || []).forEach((tag) => {
+      const chip = document.createElement("span");
+      chip.textContent = "#" + tag;
+      meta.appendChild(chip);
+    });
+    if (prompt.updated) {
+      const when = document.createElement("span");
+      when.textContent = new Date(prompt.updated).toLocaleDateString("de-DE");
+      meta.appendChild(when);
+    }
+    el.appendChild(meta);
+
+    el.addEventListener("click", () => openEdit(prompt.name));
+    el.addEventListener("dragstart", (event) => {
+      event.dataTransfer.setData("text/plain", prompt.name);
+      el.classList.add("dragging");
+    });
+    el.addEventListener("dragend", () => el.classList.remove("dragging"));
+    return el;
+  }
+
+  async function render() {
+    const prompts = await api("/api/prompts");
+    board.innerHTML = "";
+    for (const column of COLUMNS) {
+      const col = document.createElement("div");
+      col.className = "col";
+      col.style.setProperty("--cc", "var(" + column.cssVar + ")");
+
+      const inColumn = prompts.filter((p) => p.status === column.key);
+      const head = document.createElement("div");
+      head.className = "col-head";
+      head.innerHTML = '<span class="col-dot"></span>';
+      const h2 = document.createElement("h2");
+      h2.textContent = column.icon + " " + column.label;
+      head.appendChild(h2);
+      const count = document.createElement("span");
+      count.className = "col-count";
+      count.textContent = String(inColumn.length);
+      head.appendChild(count);
+      col.appendChild(head);
+
+      const cards = document.createElement("div");
+      cards.className = "col-cards";
+      inColumn.forEach((p) => cards.appendChild(cardEl(p, column.cssVar)));
+      col.appendChild(cards);
+
+      col.addEventListener("dragover", (event) => { event.preventDefault(); col.classList.add("dragover"); });
+      col.addEventListener("dragleave", () => col.classList.remove("dragover"));
+      col.addEventListener("drop", async (event) => {
+        event.preventDefault();
+        col.classList.remove("dragover");
+        const name = event.dataTransfer.getData("text/plain");
+        if (!name) return;
+        await api("/api/prompts/" + encodeURIComponent(name), {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: column.key }),
+        });
+        render();
+      });
+
+      board.appendChild(col);
+    }
+  }
+
+  function openDialog(title, prompt) {
+    document.getElementById("dlgTitle").textContent = title;
+    document.getElementById("fTitle").value = prompt ? prompt.title : "";
+    document.getElementById("titleRow").style.display = prompt ? "none" : "block";
+    document.getElementById("fStatus").value = prompt ? prompt.status : "backlog";
+    document.getElementById("fTags").value = prompt ? (prompt.tags || []).join(", ") : "";
+    document.getElementById("fContent").value = prompt ? prompt.content : "";
+    document.getElementById("metaLine").textContent = prompt
+      ? "Datei: " + prompt.name + ".md · Version " + prompt.version + " (Version erhöht sich bei Inhalts-Änderung automatisch)"
+      : "Der Dateiname wird aus dem Titel erzeugt.";
+    dlg.showModal();
+  }
+
+  async function openEdit(name) {
+    editingName = name;
+    openDialog("Prompt bearbeiten", await api("/api/prompts/" + encodeURIComponent(name)));
+  }
+
+  document.getElementById("newBtn").addEventListener("click", () => {
+    editingName = null;
+    openDialog("Neuer Prompt", null);
+  });
+  document.getElementById("dlgClose").addEventListener("click", () => dlg.close());
+  document.getElementById("dlgCancel").addEventListener("click", () => dlg.close());
+
+  document.getElementById("dlgSave").addEventListener("click", async () => {
+    const tags = document.getElementById("fTags").value.split(",").map((t) => t.trim()).filter(Boolean);
+    const status = document.getElementById("fStatus").value;
+    const content = document.getElementById("fContent").value;
+    try {
+      if (editingName) {
+        await api("/api/prompts/" + encodeURIComponent(editingName), {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content, status, tags }),
+        });
+      } else {
+        const title = document.getElementById("fTitle").value.trim();
+        if (!title) return;
+        await api("/api/prompts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, content, status, tags }),
+        });
+      }
+      dlg.close();
+      render();
+    } catch (err) {
+      alert("Speichern fehlgeschlagen: " + err.message);
+    }
+  });
+
+  render();
+</script>
+</body>
+</html>
