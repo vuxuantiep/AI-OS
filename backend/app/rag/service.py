@@ -4,7 +4,7 @@ from app.models.documents import ChunkRecord, DocumentMeta
 from app.models.rag import RagAnswer, RetrievedChunk
 from app.rag.chunker import chunk_text
 from app.rag.parser import parse_bytes
-from app.rag.vector_store import JsonVectorStore
+from app.rag.vector_store import VectorStore
 from app.services.llm_service import LLMClient
 
 RAG_SYSTEM_PROMPT = (
@@ -18,7 +18,7 @@ class RagService:
     def __init__(
         self,
         llm: LLMClient,
-        store: JsonVectorStore,
+        store: VectorStore,
         chunk_size: int = 800,
         chunk_overlap: int = 150,
     ) -> None:

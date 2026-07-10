@@ -39,5 +39,12 @@ services:
       - ./10_Business/content:/app/ai-os/10_Business/content
     depends_on: [ollama]
 
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports: ["6333:6333"]
+    volumes:
+      - qdrant-data:/qdrant/storage
+
 volumes:
   ollama-data:
+  qdrant-data:

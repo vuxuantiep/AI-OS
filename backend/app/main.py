@@ -10,10 +10,18 @@ from fastapi import FastAPI
 
 from app.agents.pipeline import AgentPipeline
 from app.api.routes import router
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
+from app.rag.qdrant_store import QdrantVectorStore
 from app.rag.service import RagService
-from app.rag.vector_store import JsonVectorStore
+from app.rag.vector_store import JsonVectorStore, VectorStore
 from app.services.llm_service import OllamaClient
+
+
+def build_vector_store(settings: Settings) -> VectorStore:
+    """Composition Root für den Vector Store: AIOS_VECTOR_BACKEND entscheidet."""
+    if settings.vector_backend == "qdrant":
+        return QdrantVectorStore(settings.qdrant_url, settings.qdrant_collection)
+    return JsonVectorStore(settings.data_dir / "vector_store.json")
 
 
 @asynccontextmanager
@@ -24,7 +32,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         chat_model=settings.chat_model,
         embedding_model=settings.embedding_model,
     )
-    store = JsonVectorStore(settings.data_dir / "vector_store.json")
+    store = build_vector_store(settings)
     app.state.llm = llm
     app.state.rag = RagService(
         llm=llm,

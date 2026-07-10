@@ -11,7 +11,7 @@ Stand: 09.07.2026
 |-------|-------|--------|-------------|
 | 1 | Fundament: FastAPI, Pydantic v2, uv, Ruff, MyPy, pytest, asyncio | ✅ umgesetzt | `backend/` |
 | 2 | Dokumentenplattform: Upload → Parsing → Chunking → Embeddings | ✅ umgesetzt (PDF, DOCX, TXT/MD) | `backend/app/rag/` |
-| 3 | Vektordatenbank: JSON-Store mit Kosinus-Suche → Migration auf **Qdrant** | 🟡 JSON-Store fertig, Qdrant offen | `backend/app/rag/vector_store.py` |
+| 3 | Vektordatenbank: JSON-Store mit Kosinus-Suche + **Qdrant** als zweites Backend | ✅ umgesetzt (10.07.2026): `VectorStore`-Protocol, `QdrantVectorStore`, Auswahl via `AIOS_VECTOR_BACKEND` | `backend/app/rag/vector_store.py`, `backend/app/rag/qdrant_store.py` |
 | 4 | LangGraph: Multi-Agent-Workflow (CEO → Planner → Developer → Reviewer → Tester) | 🟡 sequenzielle Pipeline fertig, LangGraph-Migration offen | `backend/app/agents/pipeline.py`, bestehend: `05_Agenten/langgraph_engine.py` |
 | 5 | Coding Agent: Tool Calling / Function Calling (read_file, write_file, run_python …) | ⬜ offen | `backend/app/agents/` |
 | 6 | Knowledge Graph: Neo4j, Entitäten-/Beziehungsextraktion, Hybrid Search | ⬜ offen (bewusst später) | — |
@@ -29,7 +29,7 @@ Stand: 09.07.2026
 
 ## Nächste Schritte (Reihenfolge nach Konzept-Priorität)
 
-1. **Qdrant** als zweite `VectorStore`-Implementierung (Docker-Service in `docker-compose.yml`), Interface ist schon dafür geschnitten
+1. ~~**Qdrant** als zweite `VectorStore`-Implementierung~~ ✅ 10.07.2026 — `docker compose up -d qdrant` + `AIOS_VECTOR_BACKEND=qdrant`
 2. **LangGraph-Migration** der Agent-Pipeline: State Machine mit QA-Schleife und Human Approval — die bestehende `05_Agenten/langgraph_engine.py` als Vorbild, aber im neuen typisierten Backend
 3. **Tool Calling** für den Developer-Agent (read_file, write_file, run_python, search_docs)
 4. **Evaluation-Modul**: pro RAG-Antwort Frage/Chunks/Antwort/Score protokollieren (Relevanz, Treue, Latenz)

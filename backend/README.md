@@ -31,6 +31,19 @@ API-Dokumentation (Swagger): http://localhost:8000/docs
 - Embedding-Modell: `ollama pull nomic-embed-text`
 - Konfiguration über Env-Variablen mit Prefix `AIOS_` (z.B. `AIOS_CHAT_MODEL=mistral`) oder `.env`
 
+## Vector Store: JSON oder Qdrant
+
+Standard ist der dependency-freie JSON-Store (`backend/data/vector_store.json`).
+Für Qdrant (Roadmap Phase 3b):
+
+```bash
+docker compose up -d qdrant          # startet Qdrant auf Port 6333
+AIOS_VECTOR_BACKEND=qdrant uv run uvicorn app.main:app --port 8000
+```
+
+Beide Implementierungen erfüllen denselben `VectorStore`-Vertrag
+(`app/rag/vector_store.py`) und laufen durch dieselbe Test-Suite.
+
 ## Qualität (Phase 8 des Konzepts — von Anfang an dabei)
 
 ```bash

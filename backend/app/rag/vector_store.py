@@ -9,8 +9,23 @@ import json
 import math
 import threading
 from pathlib import Path
+from typing import Protocol
 
 from app.models.documents import ChunkRecord, DocumentMeta
+
+
+class VectorStore(Protocol):
+    """Vertrag für alle Vector-Store-Implementierungen (JSON, Qdrant, ...)."""
+
+    def add_document(self, meta: DocumentMeta, chunks: list[ChunkRecord]) -> None: ...
+
+    def list_documents(self) -> list[DocumentMeta]: ...
+
+    def get_document(self, document_id: str) -> DocumentMeta | None: ...
+
+    def search(
+        self, query_embedding: list[float], top_k: int = 4
+    ) -> list[tuple[ChunkRecord, float]]: ...
 
 
 def cosine_similarity(a: list[float], b: list[float]) -> float:

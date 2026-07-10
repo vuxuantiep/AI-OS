@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -22,6 +23,11 @@ class Settings(BaseSettings):
     chunk_size: int = 800
     chunk_overlap: int = 150
     top_k: int = 4
+
+    # Vector Store: "json" (Datei, kein Server noetig) oder "qdrant" (Docker :6333)
+    vector_backend: Literal["json", "qdrant"] = "json"
+    qdrant_url: str = "http://localhost:6333"
+    qdrant_collection: str = "aios"
 
     # Persistenz
     data_dir: Path = Path(__file__).resolve().parents[2] / "data"
