@@ -1,6 +1,8 @@
+from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi.responses import FileResponse, RedirectResponse
 
 from app.agents.hermes import (
     HermesAgent,
@@ -17,6 +19,19 @@ from app.rag.service import RagService
 from app.services.llm_service import LLMClient, OllamaClient
 
 router = APIRouter()
+
+STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
+
+
+@router.get("/", include_in_schema=False)
+async def index() -> RedirectResponse:
+    return RedirectResponse(url="/ui")
+
+
+@router.get("/ui", include_in_schema=False)
+async def hermes_ui() -> FileResponse:
+    """Hermes-Bedienoberfläche (Chat für Fragen und Aufträge)."""
+    return FileResponse(STATIC_DIR / "hermes.html", media_type="text/html")
 
 
 @router.get("/health")

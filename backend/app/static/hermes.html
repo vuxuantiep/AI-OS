@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hermes — Autonomer Mitarbeiter · AI-OS</title>
+<style>
+  :root {
+    --ground: #f2f4f8; --surface: #ffffff; --ink: #1c2534; --ink-soft: #55647a;
+    --line: #d7dde7; --accent: #2b59c3; --accent-ink: #fff; --ok: #0e7f6f;
+    --chip: #e5ebf7; --user-bg: #2b59c3; --user-ink: #fff; --hermes-bg: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #121826; --surface: #1a2233; --ink: #e7ecf4; --ink-soft: #9aa7bb;
+      --line: #2c3850; --accent: #7fa3f0; --accent-ink: #101828; --ok: #5cc7b4;
+      --chip: #24304a; --user-bg: #33518f; --user-ink: #eaf0fb; --hermes-bg: #1a2233;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px;
+    display: flex; flex-direction: column; min-height: 100vh;
+  }
+  header {
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    padding: 14px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 10px; background: var(--accent);
+    color: var(--accent-ink); display: grid; place-items: center;
+    font-size: 21px; flex: 0 0 auto;
+  }
+  header h1 { font-size: 17px; margin: 0; }
+  header .sub { font-size: 12.5px; color: var(--ink-soft); }
+  .spacer { flex: 1; }
+  .status {
+    font-size: 12.5px; color: var(--ink-soft); display: flex; gap: 8px;
+    align-items: center; flex-wrap: wrap;
+  }
+  .pill {
+    background: var(--chip); border-radius: 999px; padding: 3px 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  button {
+    font: inherit; border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink); border-radius: 8px; padding: 8px 14px; cursor: pointer;
+  }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: wait; }
+
+  main { flex: 1; width: 100%; max-width: 860px; margin: 0 auto; padding: 18px 16px 0; }
+  #log { display: flex; flex-direction: column; gap: 12px; padding-bottom: 16px; }
+  .msg { max-width: 85%; border-radius: 12px; padding: 10px 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .msg.user { align-self: flex-end; background: var(--user-bg); color: var(--user-ink); border-bottom-right-radius: 4px; }
+  .msg.hermes { align-self: flex-start; background: var(--hermes-bg); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+  .msg.system { align-self: center; background: none; color: var(--ink-soft); font-size: 12.5px; max-width: 100%; text-align: center; }
+  .meta { margin-top: 8px; font-size: 12px; color: var(--ink-soft); }
+  .meta .src { display: inline-block; background: var(--chip); border-radius: 5px; padding: 1px 8px; margin: 2px 4px 0 0; }
+  details { margin-top: 8px; font-size: 13px; }
+  details summary { cursor: pointer; color: var(--accent); }
+  details .role { font-weight: 600; margin: 8px 0 2px; }
+
+  .composer {
+    position: sticky; bottom: 0; background: var(--ground);
+    padding: 10px 16px 16px; border-top: 1px solid var(--line);
+  }
+  .composer-inner { max-width: 860px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; }
+  select {
+    font: inherit; border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink); border-radius: 8px; padding: 9px 8px;
+  }
+  textarea {
+    flex: 1; font: inherit; border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink); border-radius: 8px; padding: 9px 12px; resize: none;
+    min-height: 42px; max-height: 160px;
+  }
+  .hint { max-width: 860px; margin: 6px auto 0; font-size: 11.5px; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="avatar">🪽</div>
+  <div>
+    <h1>Hermes</h1>
+    <div class="sub">Autonomer Mitarbeiter · AI-OS Backend</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="status" id="status"><span class="pill">Status wird geladen…</span></div>
+  <button id="learnBtn" title="Projekt-Dokumente (Ziele, Roadmap) in die Wissensbasis einlesen">📚 Wissen lernen</button>
+</header>
+
+<main>
+  <div id="log">
+    <div class="msg system">Willkommen! Klicke zuerst auf „Wissen lernen", dann stelle eine <b>Frage</b> zum Projekt oder gib Hermes einen <b>Auftrag</b>.</div>
+  </div>
+</main>
+
+<div class="composer">
+  <div class="composer-inner">
+    <select id="mode" title="Frage = Antwort aus dem Wissen · Auftrag = Planner→Developer→Reviewer + Journal">
+      <option value="ask">❓ Frage</option>
+      <option value="work">🛠️ Auftrag</option>
+    </select>
+    <textarea id="input" rows="1" placeholder="Frage oder Auftrag an Hermes… (Enter = senden, Shift+Enter = Zeilenumbruch)"></textarea>
+    <button class="primary" id="sendBtn">Senden</button>
+  </div>
+  <div class="hint">Frage → RAG-Antwort mit Quellen · Auftrag → Hermes arbeitet (Planner → Developer → Reviewer) und merkt sich das Ergebnis im Journal.</div>
+</div>
+
+<script>
+  const log = document.getElementById("log");
+  const input = document.getElementById("input");
+  const mode = document.getElementById("mode");
+  const sendBtn = document.getElementById("sendBtn");
+  const learnBtn = document.getElementById("learnBtn");
+  const statusEl = document.getElementById("status");
+
+  function addMsg(cls, text) {
+    const div = document.createElement("div");
+    div.className = "msg " + cls;
+    div.textContent = text;
+    log.appendChild(div);
+    div.scrollIntoView({ block: "end" });
+    return div;
+  }
+
+  async function api(path, options) {
+    const response = await fetch(path, options);
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error("HTTP " + response.status + ": " + body.slice(0, 300));
+    }
+    return response.json();
+  }
+
+  async function refreshStatus() {
+    try {
+      const s = await api("/api/hermes/status");
+      statusEl.innerHTML = "";
+      const docs = document.createElement("span");
+      docs.className = "pill";
+      docs.textContent = "📄 " + s.known_documents.length + " Dokumente";
+      const journal = document.createElement("span");
+      journal.className = "pill";
+      journal.textContent = "📓 " + s.journal_entries + " Journal-Einträge";
+      statusEl.append(docs, journal);
+    } catch {
+      statusEl.innerHTML = '<span class="pill">⚠️ Backend nicht erreichbar</span>';
+    }
+  }
+
+  learnBtn.addEventListener("click", async () => {
+    learnBtn.disabled = true;
+    const note = addMsg("system", "Hermes liest die Projekt-Dokumente…");
+    try {
+      const report = await api("/api/hermes/learn", { method: "POST" });
+      let text = "";
+      if (report.learned.length) text += "Neu gelernt: " + report.learned.join(", ") + ". ";
+      if (report.skipped.length) text += report.skipped.length + " Dokumente kannte ich schon. ";
+      if (report.missing.length) text += "Nicht gefunden: " + report.missing.join(", ") + ".";
+      note.textContent = "📚 " + (text || "Nichts zu lernen gefunden.");
+      refreshStatus();
+    } catch (err) {
+      note.textContent = "⚠️ Lernen fehlgeschlagen: " + err.message;
+    } finally {
+      learnBtn.disabled = false;
+    }
+  });
+
+  async function send() {
+    const text = input.value.trim();
+    if (!text || sendBtn.disabled) return;
+    input.value = "";
+    input.style.height = "auto";
+    addMsg("user", text);
+    sendBtn.disabled = true;
+    const pending = addMsg("system", mode.value === "ask" ? "Hermes denkt nach…" : "Hermes arbeitet (Planner → Developer → Reviewer)…");
+
+    try {
+      if (mode.value === "ask") {
+        const answer = await api("/api/hermes/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: text, top_k: 4 }),
+        });
+        pending.remove();
+        const msg = addMsg("hermes", answer.answer);
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.append("Quellen: ");
+        answer.sources.forEach((source) => {
+          const chip = document.createElement("span");
+          chip.className = "src";
+          chip.textContent = source.filename + " (" + source.score.toFixed(2) + ")";
+          meta.appendChild(chip);
+        });
+        msg.appendChild(meta);
+      } else {
+        const result = await api("/api/hermes/work", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text }),
+        });
+        pending.remove();
+        const msg = addMsg("hermes", result.final);
+        const details = document.createElement("details");
+        const summary = document.createElement("summary");
+        summary.textContent = "Arbeitsschritte anzeigen (" + result.steps.map((s) => s.role).join(" → ") + ")";
+        details.appendChild(summary);
+        result.steps.forEach((step) => {
+          const role = document.createElement("div");
+          role.className = "role";
+          role.textContent = step.role;
+          const output = document.createElement("div");
+          output.textContent = step.output;
+          details.append(role, output);
+        });
+        msg.appendChild(details);
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = "📓 Ins Journal gelernt: " + result.journal_filename;
+        msg.appendChild(meta);
+        refreshStatus();
+      }
+    } catch (err) {
+      pending.textContent = "⚠️ " + err.message;
+    } finally {
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  sendBtn.addEventListener("click", send);
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      send();
+    }
+  });
+  input.addEventListener("input", () => {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 160) + "px";
+  });
+
+  refreshStatus();
+  input.focus();
+</script>
+</body>
+</html>

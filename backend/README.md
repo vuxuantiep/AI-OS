@@ -5,13 +5,19 @@ FastAPI + Pydantic v2 + asyncio, verwaltet mit **uv**, geprüft mit **Ruff, MyPy
 
 ## Quickstart
 
+**Windows, ohne Terminal:** Doppelklick auf `backend/Hermes-Starten.bat` —
+startet den Server und öffnet die Hermes-Oberfläche im Browser.
+
+**Per Terminal:**
+
 ```bash
 cd backend
 uv sync                                          # Dependencies installieren
 uv run uvicorn app.main:app --reload --port 8000 # Server starten
 ```
 
-API-Dokumentation (Swagger): http://localhost:8000/docs
+- **Hermes-GUI (Chat):** http://localhost:8000/ui — Wissen lernen, Fragen stellen, Aufträge geben
+- **API-Dokumentation (Swagger):** http://localhost:8000/docs — alle Endpunkte interaktiv testen
 
 ## Endpunkte
 
