@@ -77,9 +77,7 @@ class QdrantVectorStore:
     def list_documents(self) -> list[DocumentMeta]:
         if not self._client.collection_exists(self._documents_collection):
             return []
-        points, _ = self._client.scroll(
-            self._documents_collection, limit=1_000, with_payload=True
-        )
+        points, _ = self._client.scroll(self._documents_collection, limit=1_000, with_payload=True)
         return [DocumentMeta.model_validate(point.payload) for point in points]
 
     def get_document(self, document_id: str) -> DocumentMeta | None:

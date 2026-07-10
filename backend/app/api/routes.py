@@ -2,8 +2,14 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 
+from app.agents.hermes import (
+    HermesAgent,
+    HermesLearnReport,
+    HermesStatus,
+    HermesWorkResult,
+)
 from app.agents.pipeline import AgentPipeline, PipelineResult
-from app.api.deps import get_llm, get_pipeline, get_rag
+from app.api.deps import get_hermes, get_llm, get_pipeline, get_rag
 from app.core.config import get_settings
 from app.models import ChatRequest, ChatResponse, DocumentMeta, RagAnswer, RagQuery
 from app.rag.parser import UnsupportedFormatError
@@ -61,3 +67,30 @@ async def run_pipeline(
     body: ChatRequest, pipeline: Annotated[AgentPipeline, Depends(get_pipeline)]
 ) -> PipelineResult:
     return await pipeline.run(body.message)
+
+
+@router.post("/api/hermes/learn", response_model=HermesLearnReport)
+async def hermes_learn(hermes: Annotated[HermesAgent, Depends(get_hermes)]) -> HermesLearnReport:
+    """Hermes liest die Projekt-Dokumente (Ziele, Roadmap, bisherige Arbeit) ein."""
+    return await hermes.learn()
+
+
+@router.post("/api/hermes/ask", response_model=RagAnswer)
+async def hermes_ask(
+    body: RagQuery, hermes: Annotated[HermesAgent, Depends(get_hermes)]
+) -> RagAnswer:
+    """Frage an Hermes über Projekt, Ziele und bisherige Arbeit."""
+    return await hermes.ask(body.question, body.top_k)
+
+
+@router.post("/api/hermes/work", response_model=HermesWorkResult)
+async def hermes_work(
+    body: ChatRequest, hermes: Annotated[HermesAgent, Depends(get_hermes)]
+) -> HermesWorkResult:
+    """Auftrag an Hermes: kontextbewusst erledigen + Ergebnis ins Journal lernen."""
+    return await hermes.work(body.message)
+
+
+@router.get("/api/hermes/status", response_model=HermesStatus)
+async def hermes_status(hermes: Annotated[HermesAgent, Depends(get_hermes)]) -> HermesStatus:
+    return hermes.status()

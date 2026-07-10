@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from app.agents.hermes import HermesAgent
 from app.agents.pipeline import AgentPipeline
 from app.main import create_app
 from app.rag.service import RagService
@@ -40,11 +41,35 @@ def fake_llm() -> FakeLLMClient:
 
 
 @pytest.fixture
-def client(tmp_path: Path, fake_llm: FakeLLMClient) -> Iterator[TestClient]:
+def knowledge_dir(tmp_path: Path) -> Path:
+    """Mini-Projektwissen für Hermes-Tests."""
+    root = tmp_path / "project"
+    root.mkdir()
+    (root / "CLAUDE.md").write_text(
+        "# Ziel\n\nDas AI-OS wird zur AI Engineering Platform ausgebaut.",
+        encoding="utf-8",
+    )
+    (root / "ROADMAP.md").write_text(
+        "# Roadmap\n\nPhase 4 ist die LangGraph Migration der Agenten.",
+        encoding="utf-8",
+    )
+    return root
+
+
+@pytest.fixture
+def client(tmp_path: Path, fake_llm: FakeLLMClient, knowledge_dir: Path) -> Iterator[TestClient]:
     app = create_app()
     with TestClient(app) as test_client:
         store = JsonVectorStore(tmp_path / "vector_store.json")
+        rag = RagService(llm=fake_llm, store=store, chunk_size=200, chunk_overlap=40)
+        pipeline = AgentPipeline(llm=fake_llm)
         app.state.llm = fake_llm
-        app.state.rag = RagService(llm=fake_llm, store=store, chunk_size=200, chunk_overlap=40)
-        app.state.pipeline = AgentPipeline(llm=fake_llm)
+        app.state.rag = rag
+        app.state.pipeline = pipeline
+        app.state.hermes = HermesAgent(
+            rag=rag,
+            pipeline=pipeline,
+            project_root=knowledge_dir,
+            knowledge_files=["CLAUDE.md", "ROADMAP.md", "FEHLT.md"],
+        )
         yield test_client

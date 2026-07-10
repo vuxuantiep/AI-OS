@@ -42,7 +42,8 @@ class RagService:
         self._store.add_document(meta, chunks)
         return meta
 
-    async def query(self, question: str, top_k: int = 4) -> RagAnswer:
+    async def retrieve(self, question: str, top_k: int = 4) -> list[RetrievedChunk]:
+        """Nur Vektorsuche, keine Antwort-Generierung."""
         query_embedding = (await self._llm.embed([question]))[0]
         results = self._store.search(query_embedding, top_k)
 
@@ -58,7 +59,10 @@ class RagService:
                     score=round(score, 4),
                 )
             )
+        return sources
 
+    async def query(self, question: str, top_k: int = 4) -> RagAnswer:
+        sources = await self.retrieve(question, top_k)
         context = "\n\n---\n\n".join(
             f"[{source.filename} / Chunk {source.chunk_index}]\n{source.text}" for source in sources
         )

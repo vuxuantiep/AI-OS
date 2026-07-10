@@ -24,6 +24,10 @@ API-Dokumentation (Swagger): http://localhost:8000/docs
 | GET | `/api/documents` | Ingestierte Dokumente auflisten |
 | POST | `/api/rag/query` | RAG-Frage: Vektorsuche + LLM-Antwort mit Quellen |
 | POST | `/api/agents/run` | Multi-Agent-Pipeline (Planner → Developer → Reviewer) |
+| POST | `/api/hermes/learn` | Hermes liest Projekt-Dokumente (Ziele, Roadmap) in seine Wissensbasis |
+| POST | `/api/hermes/ask` | Frage an Hermes über Projekt, Ziele und bisherige Arbeit |
+| POST | `/api/hermes/work` | Auftrag an Hermes: kontextbewusst erledigen + ins Journal lernen |
+| GET | `/api/hermes/status` | Hermes' Wissensstand (Dokumente, Journal-Einträge) |
 
 ## Voraussetzungen
 

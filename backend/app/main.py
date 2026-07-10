@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.agents.hermes import HermesAgent
 from app.agents.pipeline import AgentPipeline
 from app.api.routes import router
 from app.core.config import Settings, get_settings
@@ -33,14 +34,22 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         embedding_model=settings.embedding_model,
     )
     store = build_vector_store(settings)
-    app.state.llm = llm
-    app.state.rag = RagService(
+    rag = RagService(
         llm=llm,
         store=store,
         chunk_size=settings.chunk_size,
         chunk_overlap=settings.chunk_overlap,
     )
-    app.state.pipeline = AgentPipeline(llm=llm)
+    pipeline = AgentPipeline(llm=llm)
+    app.state.llm = llm
+    app.state.rag = rag
+    app.state.pipeline = pipeline
+    app.state.hermes = HermesAgent(
+        rag=rag,
+        pipeline=pipeline,
+        project_root=settings.project_root,
+        knowledge_files=settings.hermes_knowledge_files,
+    )
     try:
         yield
     finally:

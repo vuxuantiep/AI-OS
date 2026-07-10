@@ -32,6 +32,16 @@ class Settings(BaseSettings):
     # Persistenz
     data_dir: Path = Path(__file__).resolve().parents[2] / "data"
 
+    # Hermes — autonomer Mitarbeiter: diese Dateien bilden sein Projektwissen
+    project_root: Path = Path(__file__).resolve().parents[3]
+    hermes_knowledge_files: list[str] = [
+        "CLAUDE.md",
+        "README.md",
+        "ARCHITEKTUR.md",
+        "docs/AI-Engineering-Roadmap.md",
+        "backend/README.md",
+    ]
+
 
 @lru_cache
 def get_settings() -> Settings:
