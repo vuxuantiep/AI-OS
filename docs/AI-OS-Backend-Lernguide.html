@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-OS Backend — Architektur & Lernpfad</title>
+<style>
+  :root {
+    --ground: #f4f6f9;
+    --surface: #ffffff;
+    --surface-2: #eaeef4;
+    --ink: #1b2432;
+    --ink-soft: #4a586c;
+    --ink-faint: #7b8799;
+    --line: #d4dbe5;
+    --accent: #2b59c3;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3eafc;
+    --api: #2b59c3;
+    --api-bg: #e3eafc;
+    --svc: #0e7f6f;
+    --svc-bg: #dcf2ee;
+    --agent: #7a4bbf;
+    --agent-bg: #eee5fb;
+    --infra: #b06a10;
+    --infra-bg: #fbeed7;
+    --test: #9a2f4f;
+    --test-bg: #fae2ea;
+    --code-bg: #1b2432;
+    --code-ink: #d8e1ee;
+    --code-accent: #8fb3ff;
+    --code-str: #9fd8b2;
+    --code-cmt: #71809a;
+    --why-bg: #fbf6e8;
+    --why-line: #d9c27a;
+    --shadow: 0 1px 3px rgba(27, 36, 50, 0.08), 0 6px 20px rgba(27, 36, 50, 0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #121824;
+      --surface: #1a2231;
+      --surface-2: #212b3d;
+      --ink: #e6ebf3;
+      --ink-soft: #a9b4c5;
+      --ink-faint: #78849a;
+      --line: #2e3a50;
+      --accent: #7fa3f0;
+      --accent-ink: #101828;
+      --accent-soft: #223154;
+      --api: #7fa3f0;
+      --api-bg: #223154;
+      --svc: #5cc7b4;
+      --svc-bg: #17372f;
+      --agent: #b795ec;
+      --agent-bg: #32254d;
+      --infra: #e0a95c;
+      --infra-bg: #3c2e17;
+      --test: #e58aa8;
+      --test-bg: #3d2230;
+      --code-bg: #0e1420;
+      --code-ink: #ccd7e6;
+      --code-accent: #8fb3ff;
+      --code-str: #9fd8b2;
+      --code-cmt: #5f6f8a;
+      --why-bg: #2b2717;
+      --why-line: #8a763b;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #f4f6f9;
+    --surface: #ffffff;
+    --surface-2: #eaeef4;
+    --ink: #1b2432;
+    --ink-soft: #4a586c;
+    --ink-faint: #7b8799;
+    --line: #d4dbe5;
+    --accent: #2b59c3;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3eafc;
+    --api: #2b59c3;
+    --api-bg: #e3eafc;
+    --svc: #0e7f6f;
+    --svc-bg: #dcf2ee;
+    --agent: #7a4bbf;
+    --agent-bg: #eee5fb;
+    --infra: #b06a10;
+    --infra-bg: #fbeed7;
+    --test: #9a2f4f;
+    --test-bg: #fae2ea;
+    --code-bg: #1b2432;
+    --code-ink: #d8e1ee;
+    --code-accent: #8fb3ff;
+    --code-str: #9fd8b2;
+    --code-cmt: #71809a;
+    --why-bg: #fbf6e8;
+    --why-line: #d9c27a;
+    --shadow: 0 1px 3px rgba(27, 36, 50, 0.08), 0 6px 20px rgba(27, 36, 50, 0.05);
+  }
+  :root[data-theme="dark"] {
+    --ground: #121824;
+    --surface: #1a2231;
+    --surface-2: #212b3d;
+    --ink: #e6ebf3;
+    --ink-soft: #a9b4c5;
+    --ink-faint: #78849a;
+    --line: #2e3a50;
+    --accent: #7fa3f0;
+    --accent-ink: #101828;
+    --accent-soft: #223154;
+    --api: #7fa3f0;
+    --api-bg: #223154;
+    --svc: #5cc7b4;
+    --svc-bg: #17372f;
+    --agent: #b795ec;
+    --agent-bg: #32254d;
+    --infra: #e0a95c;
+    --infra-bg: #3c2e17;
+    --test: #e58aa8;
+    --test-bg: #3d2230;
+    --code-bg: #0e1420;
+    --code-ink: #ccd7e6;
+    --code-accent: #8fb3ff;
+    --code-str: #9fd8b2;
+    --code-cmt: #5f6f8a;
+    --why-bg: #2b2717;
+    --why-line: #8a763b;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 24px 96px; }
+  code, pre, .mono {
+    font-family: "Cascadia Code", Consolas, "SF Mono", Menlo, monospace;
+  }
+
+  /* ---------- Hero ---------- */
+  header.hero {
+    padding: 64px 0 40px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 48px;
+  }
+  .eyebrow {
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-size: clamp(30px, 5.5vw, 46px);
+    line-height: 1.12;
+    margin: 0 0 16px;
+    font-weight: 750;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  .lede {
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 0 0 24px;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-family: Consolas, monospace;
+    font-size: 12.5px;
+    padding: 4px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--ink-soft);
+  }
+  .chip strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Sections ---------- */
+  section { margin-bottom: 72px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
+  .sec-num {
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+  }
+  h2 {
+    font-size: 26px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .sec-intro { color: var(--ink-soft); max-width: 68ch; margin: 8px 0 28px; }
+  h3 { font-size: 18px; margin: 0 0 10px; font-weight: 650; }
+
+  p { max-width: 68ch; }
+
+  /* ---------- Architecture diagram ---------- */
+  .diagram-scroll { overflow-x: auto; }
+  .arch { min-width: 640px; display: flex; flex-direction: column; }
+  .layer {
+    display: grid;
+    grid-template-columns: 118px 1fr;
+    gap: 16px;
+    align-items: stretch;
+  }
+  .layer-label {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    border-right: 3px solid var(--lc, var(--accent));
+    padding-right: 12px;
+    text-align: right;
+  }
+  .layer-label .t {
+    font-family: Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--lc, var(--accent));
+    font-weight: 700;
+  }
+  .layer-label .s { font-size: 12px; color: var(--ink-faint); line-height: 1.35; }
+  .layer-boxes { display: flex; gap: 12px; flex-wrap: wrap; }
+  .node {
+    flex: 1 1 140px;
+    background: var(--surface);
+    border: 1.5px solid var(--lc, var(--line));
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: var(--shadow);
+    min-width: 130px;
+  }
+  .node .n { font-weight: 650; font-size: 14.5px; }
+  .node .f {
+    font-family: Consolas, monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    display: block;
+    margin-top: 2px;
+    word-break: break-all;
+  }
+  .node .d { font-size: 12.5px; color: var(--ink-soft); margin-top: 6px; line-height: 1.45; }
+  .node.tint { background: var(--lb, var(--surface)); }
+  .connector {
+    display: grid;
+    grid-template-columns: 118px 1fr;
+    gap: 16px;
+    padding: 2px 0;
+  }
+  .connector .arrow {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-left: 28px;
+    color: var(--ink-faint);
+    font-size: 12.5px;
+  }
+  .connector .glyph { color: var(--accent); font-size: 17px; line-height: 1; }
+  .connector .how { font-family: Consolas, monospace; font-size: 11.5px; background: var(--surface-2); padding: 2px 8px; border-radius: 4px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 20px; font-size: 12.5px; color: var(--ink-soft); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+  /* ---------- Flow (pipeline) diagram ---------- */
+  .flow-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 22px;
+  }
+  .flow-title { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .flow-title .badge {
+    font-family: Consolas, monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 5px;
+    color: var(--fc, var(--accent));
+    background: var(--fb, var(--accent-soft));
+  }
+  .flow-title h3 { margin: 0; }
+  .flow-sub { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 18px; }
+  .flow { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding: 4px 0 10px; }
+  .fstep {
+    flex: 0 0 auto;
+    width: 150px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--fc, var(--accent));
+    border-radius: 7px;
+    padding: 10px 12px;
+  }
+  .fstep .k { font-family: Consolas, monospace; font-size: 10.5px; color: var(--fc, var(--accent)); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .fstep .n { font-weight: 650; font-size: 13.5px; margin: 2px 0; }
+  .fstep .d { font-size: 11.8px; color: var(--ink-soft); line-height: 1.4; }
+  .farrow {
+    flex: 0 0 auto;
+    align-self: center;
+    padding: 0 7px;
+    color: var(--ink-faint);
+    font-size: 16px;
+  }
+
+  /* ---------- Relationship table ---------- */
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  .table-scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  th {
+    font-family: Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    background: var(--surface-2);
+  }
+  td code { font-size: 12.5px; background: var(--surface-2); padding: 1px 6px; border-radius: 4px; }
+
+  /* ---------- Steps ---------- */
+  .step {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 20px;
+    margin-bottom: 44px;
+  }
+  .step-num {
+    font-family: Consolas, monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    border-top: 2px solid var(--accent);
+    padding-top: 8px;
+    text-align: left;
+  }
+  .step-body { border-top: 2px solid var(--line); padding-top: 8px; min-width: 0; }
+  .step-body > p { color: var(--ink-soft); margin: 6px 0 14px; }
+  .filetag {
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 9px;
+    border-radius: 5px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .tag {
+    font-family: Consolas, monospace;
+    font-size: 11px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    border: 1px dashed var(--ink-faint);
+    color: var(--ink-soft);
+  }
+
+  pre {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 8px;
+    padding: 16px 18px;
+    font-size: 12.8px;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+  pre .kw { color: var(--code-accent); }
+  pre .st { color: var(--code-str); }
+  pre .cm { color: var(--code-cmt); font-style: italic; }
+
+  .why {
+    background: var(--why-bg);
+    border-left: 3px solid var(--why-line);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 18px;
+    margin: 14px 0;
+    font-size: 14.5px;
+  }
+  .why .w-label {
+    font-family: Consolas, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--why-line);
+    display: block;
+    margin-bottom: 4px;
+    filter: brightness(0.75);
+  }
+  @media (prefers-color-scheme: dark) { .why .w-label { filter: brightness(1.3); } }
+  :root[data-theme="dark"] .why .w-label { filter: brightness(1.3); }
+  :root[data-theme="light"] .why .w-label { filter: brightness(0.75); }
+  .why p { margin: 0; max-width: none; }
+
+  /* ---------- Try it ---------- */
+  .try {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px 26px;
+    box-shadow: var(--shadow);
+  }
+  .try ol { margin: 10px 0 0; padding-left: 20px; }
+  .try li { margin-bottom: 14px; }
+  .try li:last-child { margin-bottom: 0; }
+
+  /* ---------- Next steps ---------- */
+  .next-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .next-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+  .next-card .phase {
+    font-family: Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .next-card h3 { margin: 4px 0 6px; font-size: 16px; }
+  .next-card p { font-size: 13.5px; color: var(--ink-soft); margin: 0; }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 640px) {
+    .step { grid-template-columns: 1fr; gap: 4px; }
+    .step-num { border-top: none; padding-top: 0; }
+    .layer { grid-template-columns: 86px 1fr; }
+    .connector { grid-template-columns: 86px 1fr; }
+    .layer-label .s { display: none; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .node, .fstep { transition: transform 0.15s ease; }
+    .node:hover, .fstep:hover { transform: translateY(-2px); }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">AI-OS · backend/ · Phase 1–3 umgesetzt</p>
+  <h1>Vom Upload zur Antwort: Die Architektur deines neuen Backends</h1>
+  <p class="lede">Was am 09.07.2026 gebaut wurde, wie die Komponenten zusammenhängen — und warum jede Entscheidung genau so getroffen wurde. Dein Lernpfad entlang echtem, laufendem Code.</p>
+  <div class="chips">
+    <span class="chip">Commit <strong>0ffc4a8</strong></span>
+    <span class="chip"><strong>19/19</strong> Tests grün</span>
+    <span class="chip">MyPy <strong>strict</strong> · 0 Fehler</span>
+    <span class="chip">FastAPI · Pydantic v2 · uv · asyncio</span>
+    <span class="chip">Port <strong>8000</strong></span>
+  </div>
+</header>
+
+<!-- ================= 1. GESAMTARCHITEKTUR ================= -->
+<section>
+  <div class="sec-head"><span class="sec-num">01</span><h2>Die Gesamtarchitektur: vier Schichten</h2></div>
+  <p class="sec-intro">Das Backend ist in Schichten organisiert. Die wichtigste Regel: <strong>Abhängigkeiten zeigen immer nur nach unten.</strong> Die API-Schicht kennt die Services, aber kein Service kennt die API. Dadurch kannst du jede Schicht einzeln testen und austauschen — genau das prüfen Arbeitgeber, wenn sie „saubere Architektur" sagen.</p>
+
+  <div class="diagram-scroll"><div class="arch">
+
+    <div class="layer" style="--lc: var(--api); --lb: var(--api-bg);">
+      <div class="layer-label"><span class="t">API</span><span class="s">HTTP-Grenze: validieren &amp; übersetzen</span></div>
+      <div class="layer-boxes">
+        <div class="node tint"><span class="n">Routes</span><span class="f">app/api/routes.py</span><span class="d">7 Endpunkte: /health, /api/chat, /api/documents/*, /api/rag/query, /api/agents/run</span></div>
+        <div class="node tint"><span class="n">Dependencies</span><span class="f">app/api/deps.py</span><span class="d">get_llm(), get_rag(), get_pipeline() — holen Services aus app.state</span></div>
+        <div class="node tint"><span class="n">Pydantic-Modelle</span><span class="f">app/models/*.py</span><span class="d">ChatRequest, RagQuery, RagAnswer … validieren jede Ein- und Ausgabe</span></div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="arrow"><span class="glyph">▼</span> injiziert per <span class="how">Depends(...)</span> — Routen erhalten fertige Services</div></div>
+
+    <div class="layer" style="--lc: var(--svc); --lb: var(--svc-bg);">
+      <div class="layer-label"><span class="t">Services</span><span class="s">Geschäftslogik, kennt kein HTTP</span></div>
+      <div class="layer-boxes">
+        <div class="node tint"><span class="n">RagService</span><span class="f">app/rag/service.py</span><span class="d">Orchestriert: ingest() = Parse→Chunk→Embed→Store · query() = Retrieve→Generate</span></div>
+        <div class="node tint" style="--lc: var(--agent); --lb: var(--agent-bg);"><span class="n">AgentPipeline</span><span class="f">app/agents/pipeline.py</span><span class="d">Planner → Developer → Reviewer, jeder mit eigenem System-Prompt</span></div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="arrow"><span class="glyph">▼</span> nutzen Bausteine &amp; den <span class="how">LLMClient</span>-Vertrag (Protocol)</div></div>
+
+    <div class="layer" style="--lc: var(--svc); --lb: var(--svc-bg);">
+      <div class="layer-label"><span class="t">Bausteine</span><span class="s">kleine, einzeln testbare Einheiten</span></div>
+      <div class="layer-boxes">
+        <div class="node tint"><span class="n">Parser</span><span class="f">app/rag/parser.py</span><span class="d">PDF (pypdf), DOCX, TXT/MD → Klartext</span></div>
+        <div class="node tint"><span class="n">Chunker</span><span class="f">app/rag/chunker.py</span><span class="d">Absatzbewusst, mit Überlappung</span></div>
+        <div class="node tint"><span class="n">JsonVectorStore</span><span class="f">app/rag/vector_store.py</span><span class="d">Kosinus-Suche + JSON-Persistenz</span></div>
+        <div class="node tint"><span class="n">OllamaClient</span><span class="f">app/services/llm_service.py</span><span class="d">async chat() &amp; embed() via httpx</span></div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="arrow"><span class="glyph">▼</span> sprechen mit der Außenwelt über <span class="how">HTTP / Dateisystem</span></div></div>
+
+    <div class="layer" style="--lc: var(--infra); --lb: var(--infra-bg);">
+      <div class="layer-label"><span class="t">Infrastruktur</span><span class="s">austauschbar, außerhalb des Codes</span></div>
+      <div class="layer-boxes">
+        <div class="node tint"><span class="n">Ollama</span><span class="f">localhost:11434</span><span class="d">llama3 (Chat) · nomic-embed-text (Embeddings)</span></div>
+        <div class="node tint"><span class="n">Vector-Datei</span><span class="f">backend/data/vector_store.json</span><span class="d">Persistenz — später: Qdrant</span></div>
+        <div class="node tint"><span class="n">Settings</span><span class="f">app/core/config.py</span><span class="d">Env-Variablen mit Prefix AIOS_ (pydantic-settings)</span></div>
+      </div>
+    </div>
+
+  </div></div>
+
+  <div class="legend">
+    <span><span class="swatch" style="background: var(--api);"></span> API-Schicht</span>
+    <span><span class="swatch" style="background: var(--svc);"></span> Services &amp; RAG-Bausteine</span>
+    <span><span class="swatch" style="background: var(--agent);"></span> Agenten</span>
+    <span><span class="swatch" style="background: var(--infra);"></span> Infrastruktur</span>
+  </div>
+</section>
+
+<!-- ================= 2. DATENFLÜSSE ================= -->
+<section>
+  <div class="sec-head"><span class="sec-num">02</span><h2>Die drei Datenflüsse</h2></div>
+  <p class="sec-intro">Architekturdiagramme zeigen, <em>wer existiert</em>. Datenflüsse zeigen, <em>was bei einem Request wirklich passiert</em>. Diese drei Abläufe sind das Herz des Systems — wenn du sie erklären kannst, verstehst du RAG.</p>
+
+  <div class="flow-card" style="--fc: var(--svc); --fb: var(--svc-bg);">
+    <div class="flow-title"><span class="badge">FLUSS A</span><h3>Ingestion — ein Dokument wird Wissen</h3></div>
+    <p class="flow-sub"><code>POST /api/documents/upload</code> · RagService.ingest()</p>
+    <div class="flow">
+      <div class="fstep"><span class="k">1 · Upload</span><span class="n">Datei empfangen</span><span class="d">FastAPI UploadFile liest die Bytes (PDF, DOCX, TXT, MD)</span></div>
+      <span class="farrow">→</span>
+      <div class="fstep"><span class="k">2 · Parse</span><span class="n">Text extrahieren</span><span class="d">parser.py wählt anhand der Endung den richtigen Parser</span></div>
+      <span class="farrow">→</span>
+      <div class="fstep"><span class="k">3 · Chunk</span><span class="n">In Stücke teilen</span><span class="d">~800 Zeichen, 150 Überlappung, Absätze bleiben zusammen</span></div>
+      <span class="farrow">→</span>
+      <div class="fstep"><span class="k">4 · Embed</span><span class="n">Vektoren berechnen</span><span class="d">Ollama nomic-embed-text: jeder Chunk → Zahlenvektor</span></div>
+      <span class="farrow">→</span>
+      <div class="fstep"><span class="k">5 · Store</span><span class="n">Speichern</span><span class="d">DocumentMeta + ChunkRecords in den Vector Store (JSON)</span></div>
+    </div>
+  </div>
+
+  <div class="flow-card" style="--fc: var(--api); --fb: var(--api-bg);">
+    <div class="flow-title"><span class="badge">FLUSS B</span><h3>RAG-Query — eine Frage wird beantwortet</h3></div>
+    <p class="flow-sub"><code>POST /api/rag/query</code> · RagService.query()</p>
+    <div class="flow">
+      <div class="fstep"><span class="k">1 · Frage</span><span class="n">Frage einbetten</span><span class="d">Dieselbe Embedding-Funktion wie bei den Chunks — sonst passt der Vergleich nicht</span></div>
+      <span class="farrow">→</span>
+      <div class="fstep"><span class="k">2 · Suche</span><span class="n">Kosinus-Vergleich</span><span class="d">Fragevektor gegen alle Chunk-Vektoren, Top-k gewinnt</span></div>
+      <span class="farrow">→</span>
+      <div class="fstep"><span class="k">3 · Kontext</span><span class="n">Prompt bauen</span><span class="d">Gefundene Chunks + Frage in eine Prompt-Vorlage einsetzen</span></div>
+      <span class="farrow">→</span>
+      <div class="fstep"><span class="k">4 · LLM</span><span class="n">llama3 antwortet</span><span class="d">System-Prompt erzwingt: nur aus dem Kontext antworten</span></div>
+      <span class="farrow">→</span>
+      <div class="fstep"><span class="k">5 · Antwort</span><span class="n">Mit Quellen</span><span class="d">RagAnswer: Antwort + Chunks + Ähnlichkeits-Scores</span></div>
+    </div>
+  </div>
+
+  <div class="flow-card" style="--fc: var(--agent); --fb: var(--agent-bg);">
+    <div class="flow-title"><span class="badge">FLUSS C</span><h3>Agenten-Pipeline — deine LEGO-Rollen als Code</h3></div>
+    <p class="flow-sub"><code>POST /api/agents/run</code> · AgentPipeline.run() — Vorstufe zu LangGraph (Phase 4)</p>
+    <div class="flow">
+      <div class="fstep"><span class="k">Rolle 1</span><span class="n">Planner</span><span class="d">Zerlegt das Briefing in max. 5 nummerierte Schritte</span></div>
+      <span class="farrow">→</span>
+      <div class="fstep"><span class="k">Rolle 2</span><span class="n">Developer</span><span class="d">Setzt den Plan um — bekommt Briefing + Plan als Input</span></div>
+      <span class="farrow">→</span>
+      <div class="fstep"><span class="k">Rolle 3</span><span class="n">Reviewer</span><span class="d">Prüft, verbessert, liefert die finale Fassung</span></div>
+    </div>
+    <div class="why"><span class="w-label">Warum sequenziell statt LangGraph?</span><p>Erst das Muster verstehen (Output von Agent A = Input von Agent B), dann das Framework lernen. LangGraph fügt später Schleifen („Tester lehnt ab → zurück zum Developer"), Zustand und Human Approval hinzu — aber der Kern bleibt genau diese Kette.</p></div>
+  </div>
+</section>
+
+<!-- ================= 3. BEZIEHUNGEN ================= -->
+<section>
+  <div class="sec-head"><span class="sec-num">03</span><h2>Wer kennt wen? Die Abhängigkeits-Regeln</h2></div>
+  <p class="sec-intro">Das ist der Teil, der ein „Skript" von einer „Plattform" unterscheidet. Jede Komponente hat einen klar definierten Platz — und darf nur bestimmte andere kennen.</p>
+
+  <div class="table-scroll"><table>
+    <thead><tr><th>Komponente</th><th>Kennt (hängt ab von)</th><th>Kennt bewusst NICHT</th><th>Darum</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>routes.py</strong></td>
+        <td>Modelle, <code>deps.py</code>, Service-Interfaces</td>
+        <td>Ollama, httpx, Dateipfade</td>
+        <td>Routen nur übersetzen: HTTP ↔ Python. Logik lebt in Services.</td>
+      </tr>
+      <tr>
+        <td><strong>RagService</strong></td>
+        <td>Parser, Chunker, Store, <code>LLMClient</code>-Protocol</td>
+        <td>FastAPI, Request, HTTP-Statuscodes</td>
+        <td>Dadurch im Test ohne Webserver direkt aufrufbar.</td>
+      </tr>
+      <tr>
+        <td><strong>OllamaClient</strong></td>
+        <td>httpx, Ollama-API-Format</td>
+        <td>RAG, Agenten, Routen</td>
+        <td>Einziger Ort, der weiß, wie man mit Ollama spricht. Provider-Wechsel = 1 Datei.</td>
+      </tr>
+      <tr>
+        <td><strong>JsonVectorStore</strong></td>
+        <td>ChunkRecord/DocumentMeta, Dateisystem</td>
+        <td>Embeddings-Herkunft, LLM</td>
+        <td>Bekommt fertige Vektoren. Qdrant kann mit identischer Schnittstelle daneben.</td>
+      </tr>
+      <tr>
+        <td><strong>main.py (Lifespan)</strong></td>
+        <td><em>alles</em> — er verdrahtet die Objekte</td>
+        <td>—</td>
+        <td>Die „Composition Root": der einzige Ort, an dem konkrete Klassen zusammengesteckt werden.</td>
+      </tr>
+      <tr>
+        <td><strong>Tests</strong></td>
+        <td>App + <code>FakeLLMClient</code></td>
+        <td>Netzwerk, echtes Ollama</td>
+        <td>Deterministisch &amp; schnell: 13 Tests in 0,4 s, laufen auch offline und in CI.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="why" style="margin-top: 18px;"><span class="w-label">Das Schlüsselkonzept: Dependency Injection</span><p>Kein Service erzeugt seine Abhängigkeiten selbst — er <em>bekommt</em> sie im Konstruktor (<code>RagService(llm=..., store=...)</code>). Beim Serverstart steckt <code>main.py</code> die echten Teile zusammen (OllamaClient, JSON-Store); im Test steckt <code>conftest.py</code> Fakes hinein. Gleicher Code, andere Verkabelung. Das ist die eine Idee, die fast alle anderen Entscheidungen hier erklärt.</p></div>
+</section>
+
+<!-- ================= 4. SCHRITT FÜR SCHRITT ================= -->
+<section>
+  <div class="sec-head"><span class="sec-num">04</span><h2>Der Bauplan: 8 Schritte in Build-Reihenfolge</h2></div>
+  <p class="sec-intro">So wurde das Backend aufgebaut — von innen nach außen. Die Reihenfolge ist selbst eine Lektion: erst Verträge und Bausteine, dann Komposition, zuletzt die HTTP-Schicht. Zum Nachbauen: jeden Schritt lesen, die Datei daneben öffnen, dann selbst variieren.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3>Projekt-Setup mit uv, Ruff, MyPy, pytest</h3>
+      <span class="filetag">backend/pyproject.toml</span>
+      <p>Eine einzige Datei definiert Dependencies, Linting-Regeln, Typprüfung und Test-Konfiguration. <code>uv sync</code> erzeugt daraus eine reproduzierbare Umgebung inklusive <code>uv.lock</code>.</p>
+<pre><span class="kw">[dependency-groups]</span>
+dev = [<span class="st">"ruff"</span>, <span class="st">"mypy"</span>, <span class="st">"pytest"</span>, <span class="st">"pytest-asyncio"</span>]
+
+<span class="kw">[tool.mypy]</span>
+strict = <span class="kw">true</span>   <span class="cm"># kein Any rutscht unbemerkt durch</span>
+
+<span class="kw">[tool.pytest.ini_options]</span>
+asyncio_mode = <span class="st">"auto"</span>  <span class="cm"># async-Tests ohne Boilerplate</span></pre>
+      <div class="why"><span class="w-label">Warum?</span><p>Die Stellenanzeige verlangt genau diese Toolchain. Wichtiger: <code>strict</code>-MyPy von Tag 1 ist billig, nachträglich einführen ist teuer. Der Lockfile macht „läuft bei mir" zu „läuft überall".</p></div>
+      <div class="tags"><span class="tag">uv</span><span class="tag">Lockfile</span><span class="tag">Ruff</span><span class="tag">MyPy strict</span></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3>Konfiguration als typisierte Settings</h3>
+      <span class="filetag">app/core/config.py</span>
+      <p>Alle Stellschrauben (Ollama-URL, Modellnamen, Chunk-Größe) leben in einer <code>Settings</code>-Klasse. Werte kommen aus Umgebungsvariablen mit Prefix <code>AIOS_</code> oder einer <code>.env</code>-Datei.</p>
+<pre><span class="kw">class</span> Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix=<span class="st">"AIOS_"</span>, env_file=<span class="st">".env"</span>)
+    ollama_url: <span class="kw">str</span> = <span class="st">"http://localhost:11434"</span>
+    chat_model: <span class="kw">str</span> = <span class="st">"llama3"</span>
+    chunk_size: <span class="kw">int</span> = 800
+
+<span class="kw">@lru_cache</span>  <span class="cm"># wird nur einmal gelesen</span>
+<span class="kw">def</span> get_settings() -&gt; Settings: <span class="kw">return</span> Settings()</pre>
+      <div class="why"><span class="w-label">Warum?</span><p>12-Factor-Prinzip: Konfiguration gehört in die Umgebung, nicht in den Code. <code>AIOS_CHAT_MODEL=mistral</code> setzen — fertig, kein Code-Change. Und weil es Pydantic ist, crasht ein Tippfehler beim Start statt irgendwann zur Laufzeit.</p></div>
+      <div class="tags"><span class="tag">pydantic-settings</span><span class="tag">12-Factor</span><span class="tag">lru_cache</span></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h3>Datenmodelle: Validierung an der Grenze</h3>
+      <span class="filetag">app/models/chat.py · documents.py · rag.py</span>
+      <p>Jede Ein- und Ausgabe der API ist ein Pydantic-v2-Modell. <code>ChatRequest</code> lehnt leere Nachrichten ab, <code>RagQuery</code> begrenzt <code>top_k</code> auf 1–20 — bevor deine Logik überhaupt läuft.</p>
+<pre><span class="kw">class</span> RagQuery(BaseModel):
+    question: <span class="kw">str</span> = Field(min_length=1, max_length=8_000)
+    top_k: <span class="kw">int</span> = Field(default=4, ge=1, le=20)</pre>
+      <div class="why"><span class="w-label">Warum?</span><p>„Parse, don't validate": Sobald ein Objekt existiert, ist es garantiert gültig — der Rest des Codes braucht keine if-Prüfungen mehr. FastAPI generiert daraus außerdem automatisch die Swagger-Doku und die 422-Fehlerantworten (siehe Test <code>test_chat_validation_rejects_empty_message</code>).</p></div>
+      <div class="tags"><span class="tag">Pydantic v2</span><span class="tag">Field-Constraints</span><span class="tag">Schema = Doku</span></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h3>Der LLM-Client: ein Vertrag, zwei Welten</h3>
+      <span class="filetag">app/services/llm_service.py</span>
+      <p>Zuerst wurde der <em>Vertrag</em> definiert (<code>Protocol</code>): Was muss jeder LLM-Client können? Dann die echte Implementierung: <code>OllamaClient</code> mit async httpx.</p>
+<pre><span class="kw">class</span> LLMClient(Protocol):          <span class="cm"># der Vertrag</span>
+    <span class="kw">async def</span> chat(self, prompt: <span class="kw">str</span>, ...) -&gt; <span class="kw">str</span>: ...
+    <span class="kw">async def</span> embed(self, texts: <span class="kw">list</span>[<span class="kw">str</span>]) -&gt; <span class="kw">list</span>[<span class="kw">list</span>[<span class="kw">float</span>]]: ...
+
+<span class="kw">class</span> OllamaClient:                 <span class="cm"># die echte Welt</span>
+    <span class="kw">async def</span> chat(self, prompt, system=<span class="kw">None</span>, model=<span class="kw">None</span>) -&gt; <span class="kw">str</span>:
+        response = <span class="kw">await</span> self._client.post(<span class="st">f"{base}/api/chat"</span>, json=payload)</pre>
+      <div class="why"><span class="w-label">Warum Protocol? Warum async?</span><p><strong>Protocol</strong> = strukturelle Typisierung: Der <code>FakeLLMClient</code> in den Tests erfüllt den Vertrag, ohne von irgendetwas zu erben. <strong>async</strong>, weil ein LLM-Aufruf sekundenlang dauert — währenddessen kann der Server andere Requests bedienen, statt blockiert zu warten. Das ist der Kern von „Starke Beherrschung in asynchroner Programmierung" aus der Stellenanzeige.</p></div>
+      <div class="tags"><span class="tag">typing.Protocol</span><span class="tag">async/await</span><span class="tag">httpx</span><span class="tag">Duck Typing</span></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h3>Die RAG-Bausteine: Parser, Chunker, Vector Store</h3>
+      <span class="filetag">app/rag/parser.py · chunker.py · vector_store.py</span>
+      <p>Drei kleine Module, jedes mit genau einer Aufgabe. Der Chunker hält Absätze zusammen und überlappt Chunks um 150 Zeichen. Der Vector Store misst Ähnlichkeit per Kosinus — bewusst in purem Python, ohne numpy.</p>
+<pre><span class="kw">def</span> cosine_similarity(a, b) -&gt; <span class="kw">float</span>:
+    dot = <span class="kw">sum</span>(x * y <span class="kw">for</span> x, y <span class="kw">in</span> zip(a, b, strict=<span class="kw">True</span>))
+    <span class="kw">return</span> dot / (norm_a * norm_b)   <span class="cm"># 1.0 = gleiche Richtung = ähnliche Bedeutung</span></pre>
+      <div class="why"><span class="w-label">Warum Überlappung? Warum JSON statt Qdrant?</span><p><strong>Überlappung</strong>, damit ein Satz an der Chunk-Grenze nicht zerrissen wird — er kommt in beiden Chunks vor und bleibt findbar. <strong>JSON zuerst</strong>, weil du so den Suchalgorithmus selbst verstehst, statt ihn hinter einer Datenbank zu verstecken. Die Schnittstelle (<code>add_document</code>, <code>search</code>) ist schon so geschnitten, dass Qdrant in Phase 3b als Drop-in daneben passt.</p></div>
+      <div class="tags"><span class="tag">Chunking</span><span class="tag">Embeddings</span><span class="tag">Kosinus-Ähnlichkeit</span><span class="tag">Single Responsibility</span></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">6</div>
+    <div class="step-body">
+      <h3>RagService: Komposition statt Monolith</h3>
+      <span class="filetag">app/rag/service.py</span>
+      <p>Der Service besitzt keine eigene „Intelligenz" — er ist der Dirigent, der die Bausteine in der richtigen Reihenfolge aufruft. Alle Abhängigkeiten kommen von außen herein.</p>
+<pre><span class="kw">class</span> RagService:
+    <span class="kw">def</span> __init__(self, llm: LLMClient, store: JsonVectorStore, ...):
+        self._llm = llm        <span class="cm"># injiziert — echt oder Fake</span>
+
+    <span class="kw">async def</span> ingest(self, filename, data, media_type) -&gt; DocumentMeta:
+        text   = parse_bytes(filename, data)      <span class="cm"># 1 Parse</span>
+        pieces = chunk_text(text, ...)            <span class="cm"># 2 Chunk</span>
+        vecs   = <span class="kw">await</span> self._llm.embed(pieces)    <span class="cm"># 3 Embed</span>
+        self._store.add_document(meta, chunks)    <span class="cm"># 4 Store</span></pre>
+      <div class="why"><span class="w-label">Warum?</span><p>Weil <code>ingest()</code> exakt der Pipeline aus deinem Konzept-Dokument entspricht (Upload → Parsing → Chunking → Embeddings → Vector DB) — nur als Code. Wer diese Methode liest, versteht das ganze System. Das nennt man „die Architektur schreit ihren Zweck heraus".</p></div>
+      <div class="tags"><span class="tag">Dependency Injection</span><span class="tag">Orchestrierung</span><span class="tag">RAG-Pipeline</span></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">7</div>
+    <div class="step-body">
+      <h3>FastAPI-Verdrahtung: Lifespan, app.state, Depends</h3>
+      <span class="filetag">app/main.py · app/api/deps.py · app/api/routes.py</span>
+      <p>Beim Serverstart baut der <code>lifespan</code>-Kontext alle Objekte genau einmal und legt sie in <code>app.state</code> ab. Die Routen holen sie sich per <code>Depends()</code> — und beim Shutdown wird der HTTP-Client sauber geschlossen.</p>
+<pre><span class="kw">@asynccontextmanager</span>
+<span class="kw">async def</span> lifespan(app: FastAPI):
+    llm = OllamaClient(settings.ollama_url, ...)
+    app.state.rag = RagService(llm=llm, store=JsonVectorStore(...))
+    <span class="kw">yield</span>                      <span class="cm"># ← hier läuft der Server</span>
+    <span class="kw">await</span> llm.aclose()         <span class="cm"># sauberer Shutdown</span>
+
+<span class="cm"># in routes.py:</span>
+<span class="kw">async def</span> rag_query(body: RagQuery,
+                    rag: Annotated[RagService, Depends(get_rag)]):
+    <span class="kw">return await</span> rag.query(body.question, body.top_k)</pre>
+      <div class="why"><span class="w-label">Warum nicht einfach globale Variablen?</span><p>Drei Gründe: (1) Der Lebenszyklus ist explizit — erzeugt beim Start, geschlossen beim Stop, kein Zombie-Zustand. (2) Tests können die Objekte in <code>app.state</code> einfach austauschen. (3) Es gibt genau <em>eine</em> Stelle im Code, die entscheidet, welche konkreten Klassen laufen — die „Composition Root". Suchst du einen Bug in der Verkabelung, weißt du sofort, wo.</p></div>
+      <div class="tags"><span class="tag">Lifespan</span><span class="tag">app.state</span><span class="tag">Depends()</span><span class="tag">Composition Root</span></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">8</div>
+    <div class="step-body">
+      <h3>Tests ohne Netzwerk: der Fake-LLM-Trick</h3>
+      <span class="filetag">tests/conftest.py · test_api.py · test_chunker.py · test_vector_store.py</span>
+      <p>Der <code>FakeLLMClient</code> erfüllt das <code>LLMClient</code>-Protocol, braucht aber kein Ollama: Embeddings entstehen deterministisch aus Wort-Hashes — gleiche Wörter ergeben ähnliche Vektoren, also funktioniert sogar die semantische Suche im Test.</p>
+<pre><span class="kw">class</span> FakeLLMClient:
+    <span class="kw">async def</span> embed(self, texts): <span class="kw">return</span> [self._vector(t) <span class="kw">for</span> t <span class="kw">in</span> texts]
+
+    <span class="kw">@staticmethod</span>
+    <span class="kw">def</span> _vector(text):
+        vector = [0.0] * 64          <span class="cm"># Wort-Hash-Histogramm:</span>
+        <span class="kw">for</span> word <span class="kw">in</span> text.lower().split():   <span class="cm"># gleiche Wörter →</span>
+            vector[hash_of(word) % 64] += 1.0 <span class="cm"># ähnliche Vektoren</span>
+        <span class="kw">return</span> vector</pre>
+      <p>Damit testet <code>test_upload_and_rag_query</code> den kompletten Fluss A + B: Upload → Chunking → „Embeddings" → Suche → Antwort. Und prüft, dass wirklich der richtige Chunk als Top-Quelle zurückkommt.</p>
+      <div class="why"><span class="w-label">Warum keine echten LLM-Aufrufe im Test?</span><p>Echte LLM-Antworten sind langsam, kosten Ressourcen und sind <em>nicht deterministisch</em> — derselbe Test würde mal grün, mal rot. Die Tests hier laufen in 0,4 Sekunden, offline, in jeder CI. Das ist „Implementierung von Integrationstests für KI-Systeme" aus der Stellenanzeige — die Fähigkeit, die kaum ein Bewerber zeigt.</p></div>
+      <div class="tags"><span class="tag">pytest</span><span class="tag">Fixtures</span><span class="tag">Determinismus</span><span class="tag">TestClient</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 5. SELBST AUSPROBIEREN ================= -->
+<section>
+  <div class="sec-head"><span class="sec-num">05</span><h2>Selbst ausprobieren (10 Minuten)</h2></div>
+  <p class="sec-intro">Lernen heißt anfassen. Diese Sequenz führt einmal durch alle drei Datenflüsse — Ollama muss laufen.</p>
+  <div class="try">
+    <ol>
+      <li><strong>Starten:</strong>
+<pre>cd backend
+uv run uvicorn app.main:app --reload --port 8000</pre>
+      Dann <code>http://localhost:8000/docs</code> öffnen — die Swagger-UI ist dein interaktiver Spielplatz.</li>
+      <li><strong>Fluss A — Dokument ingestieren:</strong> In Swagger <code>POST /api/documents/upload</code> aufklappen, eine PDF oder TXT hochladen. Danach in <code>backend/data/vector_store.json</code> hineinschauen: Du siehst deine Chunks samt Vektoren als Klartext. <em>Das</em> ist eine Vektordatenbank, entzaubert.</li>
+      <li><strong>Fluss B — Frage stellen:</strong> <code>POST /api/rag/query</code> mit einer Frage zum Dokument. Beachte die <code>sources</code> in der Antwort: Welcher Chunk hat welchen Score?</li>
+      <li><strong>Fluss C — Agenten:</strong> <code>POST /api/agents/run</code> mit <code>{"message": "Baue eine Login-Seite"}</code> — und lies, wie Planner, Developer und Reviewer aufeinander aufbauen.</li>
+      <li><strong>Experimentieren:</strong> Setze <code>AIOS_CHUNK_SIZE=300</code>, starte neu, lade dasselbe Dokument — wie verändern sich Trefferqualität und Scores? Genau solche Experimente sind „Bewertung von RAG-Systemen".</li>
+      <li><strong>Qualität prüfen wie in der CI:</strong>
+<pre>uv run ruff check . &amp;&amp; uv run mypy &amp;&amp; uv run pytest</pre></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= 6. AUSBLICK ================= -->
+<section>
+  <div class="sec-head"><span class="sec-num">06</span><h2>Wo die Architektur schon auf morgen wartet</h2></div>
+  <p class="sec-intro">Gute Architektur erkennt man daran, dass die nächsten Schritte keine Umbauten brauchen — nur Ergänzungen. Diese Andockpunkte sind bereits vorbereitet:</p>
+  <div class="next-grid">
+    <div class="next-card"><span class="phase">Phase 3b — ✅ fertig (10.07.)</span><h3>Qdrant</h3><p>Umgesetzt: <code>QdrantVectorStore</code> mit identischem Vertrag, Umschalten per <code>AIOS_VECTOR_BACKEND=qdrant</code>. Wie vorhergesagt: kein anderer Code musste sich ändern — der Lohn des Interface-Schnitts.</p></div>
+    <div class="next-card"><span class="phase">Phase 4</span><h3>LangGraph</h3><p>Die AgentPipeline wird zum Zustandsgraphen: Schleifen (Reviewer lehnt ab → zurück), persistenter State, Human Approval. Der LLMClient bleibt derselbe.</p></div>
+    <div class="next-card"><span class="phase">Phase 5</span><h3>Tool Calling</h3><p>Der Developer-Agent bekommt Werkzeuge: read_file(), write_file(), run_python(). Structured Output über — natürlich — Pydantic-Modelle.</p></div>
+    <div class="next-card"><span class="phase">Phase 8</span><h3>Evaluation &amp; CI</h3><p>Jede RAG-Antwort protokollieren (Frage, Chunks, Score, Latenz) und GitHub Actions, die ruff + mypy + pytest bei jedem Push ausführen.</p></div>
+  </div>
+</section>
+
+<footer>
+  AI-OS · AI Engineering Platform · Stand 09.07.2026 · Commit 85855f6 · Roadmap: docs/AI-Engineering-Roadmap.md
+</footer>
+
+</div>
+
+</body>
+</html>

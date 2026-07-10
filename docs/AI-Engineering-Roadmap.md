@@ -3,7 +3,9 @@
 Umsetzung des Lernkonzepts (Stellenprofil AI Engineer / Platform Engineer) direkt im AI-OS.
 Jede Phase liefert ein echtes Feature **und** vermittelt genau die Technologien aus dem Anforderungsprofil.
 
-Stand: 09.07.2026
+Stand: 10.07.2026
+
+> 📖 **Visueller Lernguide:** [AI-OS-Backend-Lernguide.html](AI-OS-Backend-Lernguide.html) — Architektur-Diagramm, Datenflüsse, Abhängigkeitsregeln und der 8-Schritte-Bauplan mit „Warum so?"-Erklärungen. Einfach im Browser öffnen.
 
 ## Phasen-Überblick
 
