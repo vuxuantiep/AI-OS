@@ -423,7 +423,9 @@ function kontextFuer(frage, k = 4, mitAnfang = false) {
 
 function updateReady() {
   const ready = engine && docText.length > 0 && !generating;
-  ["sumBtn", "riskBtn", "transBtn", "qBtn", "qInput"].forEach((id) => ($(id).disabled = !ready));
+  ["sumBtn", "riskBtn", "qBtn", "qInput"].forEach((id) => ($(id).disabled = !ready));
+  // Übersetzen braucht kein SLM (v0.3: eigenes NMT-Modell, WASM/CPU)
+  $("transBtn").disabled = !(docText.length > 0 && !generating);
   document.querySelectorAll("[data-routine-run]").forEach((b) => (b.disabled = !ready));
   const presetReady = ready && $("presetSelUse").value;
   $("presetRunBtn").disabled = !presetReady;
@@ -447,7 +449,9 @@ function updateStepStatus() {
   $("step2Status").textContent = docOk ? t("s2.ready") : "";
   const komplett = modellOk && docOk;
   $("step3Status").textContent = komplett ? t("step.ready") : "";
-  $("sec3").classList.toggle("section-off", !komplett);
+  // Schritt 3 wird schon mit Dokument aktiv — Übersetzen läuft ohne SLM,
+  // nur die Analyse-Buttons bleiben bis zum Modell-Laden gesperrt
+  $("sec3").classList.toggle("section-off", !docOk);
   setStepProgress(komplett ? 3 : docOk ? 2 : modellOk ? 1 : 0);
   const hint = $("nextHint");
   if (docOk && !modellOk) {
@@ -498,9 +502,10 @@ async function generate(messages, { onDelta, maxTokens, temperature } = {}) {
   return text;
 }
 
-/* Rahmen für jede Aktion: Sperren, Stopp-Knopf, Episodic Memory */
-async function runAktion(aktion, frage, arbeit) {
-  if (generating || !engine || !docText) return;
+/* Rahmen für jede Aktion: Sperren, Stopp-Knopf, Episodic Memory.
+   brauchtEngine=false für Aktionen ohne SLM (Übersetzen via OPUS-MT). */
+async function runAktion(aktion, frage, arbeit, brauchtEngine = true) {
+  if (generating || !docText || (brauchtEngine && !engine)) return;
   generating = true;
   stopFlag = false;
   $("stopBtn").hidden = false;
@@ -510,7 +515,7 @@ async function runAktion(aktion, frage, arbeit) {
   try {
     const antwort = await arbeit();
     if (antwort && antwort.trim()) {
-      await episodic.saveAnalyse({ docName, aktion, frage, modell: aktivesModell, antwort });
+      await episodic.saveAnalyse({ docName, aktion, frage, modell: brauchtEngine ? aktivesModell : "OPUS-MT (lokal)", antwort });
       renderAnalysen();
     }
   } catch (err) {
@@ -531,7 +536,10 @@ async function runAktion(aktion, frage, arbeit) {
   }
 }
 
-$("stopBtn").addEventListener("click", () => { stopFlag = true; });
+$("stopBtn").addEventListener("click", () => {
+  stopFlag = true;
+  if (transWorker) transWorker.postMessage({ typ: "stopp" });
+});
 
 /* --- Zusammenfassen: Map-Reduce-Light für lange Dokumente --- */
 const MAX_GRUPPEN = 6;
@@ -603,45 +611,77 @@ function risikoCheck() {
   });
 }
 
-/* --- Übersetzen: Abschnitt für Abschnitt über das SLM ---
-   Prompt bewusst NICHT aus i18n: Er muss unabhängig von der UI-Sprache sein.
-   Kleine Modelle folgen englischen Anweisungen am zuverlässigsten — mit
-   deutschem System-Prompt kommentieren sie auf Deutsch statt zu übersetzen.
-   Zielsprache doppelt benannt (englisch + nativ), Anweisung zusätzlich in
-   der User-Nachricht wiederholt. */
-const MAX_UEBERSETZUNG = 6;
-const TRANS_ZIEL = {
-  de: "German (Deutsch)",
-  en: "English",
-  vi: "Vietnamese (Tiếng Việt)",
-};
+/* --- Übersetzen (v0.3): dediziertes NMT-Modell statt SLM ---
+   OPUS-MT über transformers.js im eigenen Worker (trans-worker.js) —
+   WASM/CPU, braucht weder WebGPU noch das geladene KI-Modell.
+   Quellsprache wird heuristisch erkannt, de↔vi läuft als Pivot über en. */
+const MAX_TRANS_ZEICHEN = 9000;
+let transWorker = null;
+function holeTransWorker() {
+  if (!transWorker) {
+    transWorker = new Worker(new URL("./trans-worker.js", import.meta.url), { type: "module" });
+  }
+  return transWorker;
+}
+
+/* Grobe Spracherkennung: vietnamesische Diakritika sind eindeutig,
+   Deutsch/Englisch über Stoppwort-Zählung im Textanfang. */
+function erkenneSprache(text) {
+  const probe = text.slice(0, 4000).toLowerCase();
+  if (/[ăđơưạảấầẩẫậắằẳẵặẹẻẽếềểễệịỉĩọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]/.test(probe)) return "vi";
+  const de = (probe.match(/\b(und|der|die|das|nicht|mit|für|ist|ein|eine|von|dem|den|sich|werden|oder|auch|bei|nach|über)\b/g) || []).length;
+  const en = (probe.match(/\b(the|and|of|to|is|that|for|with|are|this|from|not|have|will|shall|been|which|their)\b/g) || []).length;
+  return de >= en ? "de" : "en";
+}
+
 function uebersetzen() {
   const zielCode = $("transLang").value;         // de | en | vi
   const zielName = t("lang." + zielCode);        // Sprachname in der UI-Sprache (nur Anzeige)
-  const ziel = TRANS_ZIEL[zielCode] || zielCode;
-  runAktion(t("action.trans"), zielName, async () => {
-    let teile = chunks;
+  runAktion(t("action.trans"), zielName, () => new Promise((resolve, reject) => {
+    const quelle = erkenneSprache(docText);
+    if (quelle === zielCode) {
+      const s = t("trans.same", { ziel: zielName });
+      $("output").textContent = s;
+      resolve("");
+      return;
+    }
+    let quelltext = docText;
     let hinweis = "";
-    if (teile.length > MAX_UEBERSETZUNG) {
-      hinweis = "\n\n" + t("note.transLong", { max: MAX_UEBERSETZUNG, n: teile.length });
-      teile = teile.slice(0, MAX_UEBERSETZUNG);
+    if (quelltext.length > MAX_TRANS_ZEICHEN) {
+      hinweis = "\n\n" + t("note.transCut", { n: MAX_TRANS_ZEICHEN.toLocaleString("de-DE") });
+      quelltext = quelltext.slice(0, MAX_TRANS_ZEICHEN);
     }
+    const w = holeTransWorker();
+    // Modell-Downloads (einmalig, HuggingFace) zählen zum Modell-Zähler,
+    // nicht als Datenabfluss — die Übersetzung selbst läuft ohne Netz
+    const phaseVorher = netPhase;
+    netPhase = "model";
     let gesamt = "";
-    for (let i = 0; i < teile.length; i++) {
-      if (stopFlag) break;
-      const teil = await generate([
-        { role: "system", content: "You are a translation engine. Translate the user's text into " + ziel + ". Reply with ONLY the translated text in " + ziel + " — no comments, no explanations, no preamble." },
-        { role: "user", content: "Translate the following text into " + ziel + ". Output only the translation:\n\n" + teile[i].text },
-      ], {
-        maxTokens: 900, temperature: 0.2,
-        onDelta: (_, text) => ($("output").textContent = gesamt ? gesamt + "\n\n" + text : text),
-      });
-      gesamt += (gesamt ? "\n\n" : "") + teil;
-      $("output").textContent = gesamt;
-    }
-    $("output").textContent = gesamt + hinweis;
-    return gesamt + hinweis;
-  });
+    w.onmessage = (ev) => {
+      const m = ev.data || {};
+      if (m.typ === "lade") {
+        $("output").textContent = t("trans.loading") + "\n" + (m.datei || "") + " · " + (m.prozent ?? 0) + " %";
+      } else if (m.typ === "modelleBereit") {
+        netPhase = phaseVorher === "boot" ? "watch" : phaseVorher;
+        $("output").textContent = t("trans.running", { i: 1, n: "?" });
+      } else if (m.typ === "teil") {
+        gesamt += m.text + (m.absatzEnde ? "\n\n" : " ");
+        $("output").textContent = gesamt + (m.i + 1 < m.n ? t("trans.running", { i: m.i + 2, n: m.n }) : "");
+      } else if (m.typ === "gestoppt") {
+        netPhase = phaseVorher === "boot" ? "watch" : phaseVorher;
+        $("output").textContent = gesamt.trim();
+        resolve(gesamt.trim());
+      } else if (m.typ === "fertig") {
+        netPhase = phaseVorher === "boot" ? "watch" : phaseVorher;
+        $("output").textContent = gesamt.trim() + hinweis;
+        resolve(gesamt.trim() + hinweis);
+      } else if (m.typ === "fehler") {
+        netPhase = phaseVorher === "boot" ? "watch" : phaseVorher;
+        reject(new Error(m.msg));
+      }
+    };
+    w.postMessage({ typ: "uebersetzen", text: quelltext, quelle, ziel: zielCode });
+  }), false); // false = braucht das SLM nicht
 }
 
 /* --- Freie Frage: BM25 Top-3 --- */

@@ -82,6 +82,10 @@ nicht; dort OCR-only oder HTTPS (z. B. Cloudflare Tunnel) verwenden.
 - **WebLLM 0.2.79** (MLC AI, Apache 2.0) — im Web Worker (`worker.js`), UI bleibt responsiv.
   Version ist gepinnt: das gevendorte JS und die Model-Lib-WASMs sind versionsgekoppelt —
   bei einem Upgrade beides zusammen testen.
+- **transformers.js 3.8.1** (HuggingFace) + **OPUS-MT** (Helsinki-NLP, MarianMT) — neuronale
+  Übersetzung ohne LLM im eigenen Worker (`trans-worker.js`), ONNX/WASM auf der CPU, läuft
+  ohne WebGPU. Paare de↔en und en↔vi; de↔vi als Pivot über Englisch. Gewichte (~45 MB/Paar,
+  int8) einmalig von HuggingFace, danach im Browser-Cache.
 - **Tesseract.js 5.1.1** (OCR, WASM, Single-File-Core mit eingebettetem Binary)
 - **pdf.js 4.4.168** (lokales PDF-Parsing)
 - **BM25-Retrieval** (vanilla JS, deutsche Stoppwörter) statt Embeddings — bewusste
@@ -96,7 +100,7 @@ nicht; dort OCR-only oder HTTPS (z. B. Cloudflare Tunnel) verwenden.
 |---|---|---|
 | v0.1 | Prototyp (CDN, ein HTML) | 1 SLM einsetzen ✓ |
 | **v0.2** | **Vendoring, Worker, OCR, Übersetzen, PWA, BM25, Multi-Memory-Panel** | 2 Memory + 4 WASM + 5 WebGPU ✓ |
-| v0.3 | Echte Embeddings (transformers.js) für Q&A + Semantic Memory | 3 RAG |
+| **v0.3** | **NMT-Übersetzung ohne LLM (transformers.js + OPUS-MT, WASM/CPU, de↔en↔vi mit Pivot) ✓** — noch offen: echte Embeddings für Q&A + Semantic Memory (gleiche Lib) | 3 RAG (teilweise) |
 | v0.4 | CPU-Fallback ohne WebGPU (wllama/llama.cpp-WASM), Self-Hosting der Modellgewichte | — |
 | v0.5 | GraphRAG / Knowledge-Graph über Dokumente; optionaler Hybrid-Sync zum FastAPI-RAG (`backend/app/rag/`, Port 8000, Opt-in, default aus) | 3b GraphRAG + 6 AI-OS ✓ |
 

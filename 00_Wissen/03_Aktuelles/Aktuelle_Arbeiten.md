@@ -124,6 +124,37 @@ const TRANS_ZIEL = { de: "German (Deutsch)", en: "English", vi: "Vietnamese (Ti�
 (Zusammenfassen, Fragen) — aber nie einen Prompt, dessen Zielsprache der Nutzer
 separat wählt. Task-Prompts für SLMs: englisch, Anweisung nah am Text wiederholen.
 
+### Nachtrag 12.07.: v0.3 — Übersetzen ohne LLM (transformers.js + OPUS-MT)
+
+Erkenntnis aus dem Übersetzungs-Bug: Reine Übersetzung ist keine LLM-Aufgabe.
+Spezialisierte NMT-Modelle (OPUS-MT/MarianMT, ~45 MB int8 statt ~800 MB SLM)
+übersetzen besser, schneller und ohne Geplauder — und laufen als ONNX/WASM
+auf der **CPU**, brauchen also kein WebGPU.
+
+**Architektur:**
+- `trans-worker.js` — eigener Web Worker mit transformers.js 3.8.1 (gevendort
+  inkl. 21-MB-ONNX-Runtime-WASM in `vendor/transformers/`), lazy eine
+  `pipeline("translation", ...)` je Sprachpaar, Gewichte einmalig von
+  HuggingFace → Browser-Cache (gleiche Beweis-Logik wie WebLLM-Downloads:
+  eigener `PerformanceObserver` + BroadcastChannel, in app.js `netPhase="model"`).
+- Sprachpaare: `Xenova/opus-mt-{de-en,en-de,en-vi,vi-en}` (auf HF verifiziert);
+  **de↔vi existiert nicht** → Pivot über Englisch (de→en→vi).
+- Quellsprache heuristisch: vietnamesische Diakritika sind eindeutig,
+  Deutsch vs. Englisch per Stoppwort-Zählung.
+- MarianMT verkraftet nur ~512 Tokens → Text absatzweise in Satzgruppen
+  (~420 Zeichen) zerlegen, `absatzEnde`-Flag erhält die Absatzstruktur.
+
+**UI-Konsequenz:** Übersetzen ist vom SLM entkoppelt — `runAktion(...,
+brauchtEngine=false)`, `transBtn` nur noch an Dokument gebunden, Schritt 3
+wird schon mit Dokument aktiv (nur Analyse-Buttons warten aufs Modell).
+Damit funktioniert Übersetzen erstmals auch auf Geräten **ohne WebGPU**.
+
+**Lehre:** Werkzeug nach Aufgabe wählen — ein 1B-Chat-SLM für Übersetzung
+einzusetzen war v0.2-Pragmatismus („keine neue Bibliothek"); das dedizierte
+Seq2Seq-Modell ist in jeder Dimension überlegen. Und: `.mjs`-MIME-Type war
+im Dashboard zum Glück schon registriert — sonst wäre die ONNX-Runtime
+(dynamischer Import von `ort-wasm-simd-threaded.jsep.mjs`) still gestorben.
+
 ### Stolpersteine
 - `node --check` behandelt `.js` als CommonJS → für ES-Module-Check als `.mjs`-Kopie prüfen.
 - Der cp1252-Print-Bug schlug wieder zu (Häkchen-Zeichen im Python-Check) → `PYTHONUTF8=1`.
