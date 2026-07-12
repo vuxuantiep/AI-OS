@@ -1,4 +1,4 @@
-/* Episodic Memory — Analyse-Verlauf ("Was habe ich wann gemacht?") */
+/* Episodic Memory — DocuCheck Local Analyse-Verlauf */
 import { dbPut, dbGetAll, dbDelete } from "./db.js";
 
 export async function saveAnalyse({ docName, aktion, frage, modell, antwort }) {

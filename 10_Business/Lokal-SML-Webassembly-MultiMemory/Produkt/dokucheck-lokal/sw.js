@@ -1,9 +1,9 @@
-/* DokuCheck Lokal — Service Worker (PWA)
+/* DocuCheck Local — Service Worker (PWA)
    Cacht die komplette App-Shell inkl. gevendorter Bibliotheken,
    damit die App installierbar ist und offline startet.
    Die Modellgewichte verwaltet WebLLM selbst über die Cache API —
    Cross-Origin-Anfragen werden hier bewusst NICHT angefasst. */
-const CACHE = "dokucheck-v0.2.2";
+const CACHE = "docucheck-v0.2.3";
 
 const APP_SHELL = [
   "./",

@@ -1,5 +1,5 @@
 /* =========================================================
-   DokuCheck Lokal v0.2 — Hauptmodul
+   DocuCheck Local v0.2 — Hauptmodul
    Architektur: UI (dieser Thread) + WebLLM-Engine im Web
    Worker (worker.js) + OCR im Tesseract-Worker (ocr.js).
    Mehrsprachig (DE/EN/VI) über i18n.js — die Sprachwahl
@@ -32,6 +32,21 @@ let bmIndex = null;
 let generating = false;
 let stopFlag = false;
 
+/* ---------- DOM-Referenzen ---------- */
+const netCount = $("netCount");
+const netModel = $("netModel");
+const netVerdict = $("netVerdict");
+const gpuCard = $("gpuCard");
+const loadProg = $("loadProg");
+const loadStatus = $("loadStatus");
+const loadBtn = $("loadBtn");
+const presetSel = $("presetSel");
+const modelSel = $("modelSel");
+const fileMeta = $("fileMeta");
+const ocrProg = $("ocrProg");
+const ocrStatus = $("ocrStatus");
+const safetyHint = $("safetyHint");
+
 /* =========================================================
    Netzwerk-Beweis (Signatur-Feature)
    Phase "model": Downloads während des Modell-Ladens (einmalig, erwartet).
@@ -61,7 +76,7 @@ function meldeNetz(url) {
   v.innerHTML = '<span class="net-alert">' + t("proof.alert") + "</span>";
 }
 
-new BroadcastChannel("dokucheck-net").onmessage = (e) => {
+new BroadcastChannel("docucheck-net").onmessage = (e) => {
   if (e.data && e.data.kind === "net") meldeNetz(e.data.url);
 };
 new PerformanceObserver((list) => {
@@ -91,17 +106,40 @@ async function zeigeCacheStatus() {
   } catch { /* Cache-API nicht verfügbar (z. B. file://) */ }
 }
 
+/* =========================================================
+   Modell-Presets: Profil → Modell + Inferenz-Parameter
+   ========================================================= */
+const PRESETS = {
+  schnell:   { modell: "Qwen2-0.5B-Instruct-q4f16_1-MLC", temperature: 0.3, max_tokens: 500, repetition_penalty: 1.1 },
+  standard:  { modell: "Llama-3.2-1B-Instruct-q4f16_1-MLC", temperature: 0.25, max_tokens: 800, repetition_penalty: 1.15 },
+  praezise:  { modell: "Llama-3.2-3B-Instruct-q4f16_1-MLC", temperature: 0.2, max_tokens: 1200, repetition_penalty: 1.2 },
+  experimental: { modell: "Phi-3.5-mini-instruct-q4f16_1-MLC", temperature: 0.2, max_tokens: 1000, repetition_penalty: 1.1 },
+};
+
+function wendePresetAn(name) {
+  const p = PRESETS[name] || PRESETS.standard;
+  $("modelSel").value = p.modell;
+  sessionSet("modell", p.modell);
+  sessionSet("preset", name);
+  zeigeCacheStatus();
+}
+
+$("presetSel").addEventListener("change", () => wendePresetAn($("presetSel").value));
 $("modelSel").addEventListener("change", () => {
-  sessionSet("modell", $("modelSel").value); // Tool Memory: Modellwahl merken
+  sessionSet("modell", $("modelSel").value);
   zeigeCacheStatus();
 });
 
-$("loadBtn").addEventListener("click", async () => {
+/* ---------- Schritt 1: Modell laden (im Web Worker) ---------- */
+async function ladeModell() {
   const modell = $("modelSel").value;
   $("loadBtn").disabled = true;
   $("loadProg").hidden = false;
   netPhase = "model";
   try {
+    if (!hatWebGPU) {
+      throw new Error(t("err.webgpu"));
+    }
     engine = await webllm.CreateWebWorkerMLCEngine(
       new Worker(new URL("./worker.js", import.meta.url), { type: "module" }),
       modell,
@@ -116,16 +154,21 @@ $("loadBtn").addEventListener("click", async () => {
     netPhase = "watch";
     $("loadStatus").innerHTML = '<span class="badge-ok">' + t("s1.ready") + "</span>";
     $("loadBtn").disabled = false;
-    // data-i18n mit umstellen, damit ein Sprachwechsel den Text nicht zurücksetzt
     $("loadBtn").setAttribute("data-i18n", "s1.switchBtn");
     $("loadBtn").textContent = t("s1.switchBtn");
     updateReady();
   } catch (err) {
     netPhase = "boot";
-    $("loadStatus").innerHTML = '<span class="badge-warn">' + t("s1.error") + " " + err.message + "</span>";
+    const msg = err && err.message ? err.message : String(err);
+    if (msg.toLowerCase().includes("webgpu") || msg.toLowerCase().includes("gpu")) {
+      $("loadStatus").innerHTML = '<span class="badge-warn">' + t("err.webgpu") + "</span>";
+    } else {
+      $("loadStatus").innerHTML = '<span class="badge-warn">' + t("s1.error") + " " + msg + "</span>";
+    }
     $("loadBtn").disabled = false;
   }
-});
+}
+$("loadBtn").addEventListener("click", ladeModell);
 
 /* ---------- Schritt 2: Dokument einlesen (lokal) ---------- */
 const drop = $("drop");
@@ -143,6 +186,9 @@ $("cameraInput").addEventListener("change", () => $("cameraInput").files[0] && h
 async function handleFile(file) {
   $("fileMeta").textContent = t("file.reading") + " " + file.name + " …";
   try {
+    if (file.size > 100 * 1024 * 1024) {
+      throw new Error(t("s2.fileTooBig"));
+    }
     const name = file.name.toLowerCase();
     if (file.type.startsWith("image/") || /\.(png|jpe?g|webp|bmp|gif)$/.test(name)) {
       await handleBild(file);
@@ -157,7 +203,6 @@ async function handleFile(file) {
         const tc = await page.getTextContent();
         text += tc.items.map((it) => it.str).join(" ") + "\n";
       }
-      // Gescanntes PDF (keine Textebene)? → Seiten rendern und per OCR lesen
       if (text.replace(/\s+/g, "").length < 20) {
         text = await ocrPdf(pdf);
       }
@@ -166,7 +211,8 @@ async function handleFile(file) {
       setzeDokument(file.name, await file.text());
     }
   } catch (err) {
-    $("fileMeta").textContent = t("file.error") + " " + err.message;
+    const msg = err && err.message ? err.message : String(err);
+    $("fileMeta").innerHTML = '<span class="badge-warn">' + t("s2.error") + " " + msg + "</span>";
   }
 }
 
@@ -219,19 +265,44 @@ async function handleBild(file) {
       $("ocrStatus").innerHTML = '<span class="badge-warn">' + t("ocr.none") + "</span>";
       return;
     }
-    $("ocrStatus").innerHTML = '<span class="badge-ok">' + t("ocr.done") + "</span>";
+    const qualitaet = schaetzeOcrQualitaet(text);
+    if (qualitaet.schlecht) {
+      $("ocrStatus").innerHTML = '<span class="badge-warn">' + t("ocr.badQuality") + "</span>";
+    } else {
+      $("ocrStatus").innerHTML = '<span class="badge-ok">' + t("ocr.done") + "</span>";
+    }
     $("ocrText").hidden = false;
     $("ocrText").textContent = text;
     setzeDokument(file.name || "Foto", text);
   } catch (err) {
     $("ocrProg").hidden = true;
-    $("ocrStatus").innerHTML = '<span class="badge-warn">' + t("ocr.error") + " " + err.message + "</span>";
+    const msg = err && err.message ? err.message : String(err);
+    if (msg.toLowerCase().includes("model") && msg.toLowerCase().includes("image")) {
+      $("ocrStatus").innerHTML = '<span class="badge-warn">' + t("ocr.error") + " Das Bildformat wird nicht unterstützt. Versuche ein JPEG oder ein schärferes Foto.</span>";
+    } else if (msg.toLowerCase().includes("tesseract") || msg.toLowerCase().includes("worker")) {
+      $("ocrStatus").innerHTML = '<span class="badge-warn">' + t("ocr.workerFailed") + "</span>";
+    } else {
+      $("ocrStatus").innerHTML = '<span class="badge-warn">' + t("ocr.error") + " " + msg + "</span>";
+    }
   }
+}
+
+function schaetzeOcrQualitaet(text) {
+  if (!text || text.length < 15) return { schlecht: true, grund: "zu kurz" };
+  const woerter = text.split(/[\s\n]+/).filter((w) => w.length > 1);
+  if (!woerter.length) return { schlecht: true, grund: "keine wörter" };
+  const nurFragmente = woerter.filter((w) => w.length <= 2).length;
+  const anteil = nurFragmente / woerter.length;
+  const kuerzel = /(.)\1\1+/;
+  const vieleSonderzeichen = (text.match(/[^a-zA-ZäöüÄÖÜß0-9\s.,!?;:'"()\[\]{}<>/\\@#$%^&*_+=~`|·\-–—\n\r\tàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŸšŠžŽřŘčČćĆżŻłŁőŐűŰ]/gu) || []).length;
+  if (anteil > 0.6 || vieleSonderzeichen > text.length * 0.15 || kuerzel.test(text)) {
+    return { schlecht: true, grund: "fragmente" };
+  }
+  return { schlecht: false };
 }
 
 function setzeDokument(name, text, ausSpeicher = false) {
   const bereinigt = text.replace(/\s{3,}/g, " ").trim();
-  // Leere/kaputte Extraktion NICHT als Erfolg verkaufen (z. B. Scan ohne OCR-Treffer)
   if (bereinigt.length < 20) {
     docText = "";
     docName = "";
@@ -241,22 +312,34 @@ function setzeDokument(name, text, ausSpeicher = false) {
     updateReady();
     return;
   }
+  const qualitaet = schaetzeOcrQualitaet(bereinigt);
   docText = bereinigt;
   docName = name;
   chunks = makeChunks(docText, 1400);
   bmIndex = bm25Index(chunks);
-  $("fileMeta").textContent = `✓ ${name} · ${docText.length.toLocaleString("de-DE")} ${t("file.chars")} · ${chunks.length} ${t("file.sections")}`;
+  const meta = `✓ ${name} · ${docText.length.toLocaleString("de-DE")} ${t("file.chars")} · ${chunks.length} ${t("file.sections")}`;
+  if (qualitaet.schlecht && !ausSpeicher) {
+    // Warnung ZUSÄTZLICH zur Meta-Zeile — nicht von ihr überschreiben lassen
+    $("fileMeta").innerHTML = meta + '<br><span class="badge-warn">' + t("s2.ocrBad") + "</span>";
+  } else {
+    $("fileMeta").textContent = meta;
+  }
   updateReady();
   if (!ausSpeicher) {
-    // Semantic Memory: Dokument + Chunks persistieren
     semantic.saveDokument(name, docText, chunks).then(renderDokumente).catch(() => {});
   }
 }
 
-/* Chunking mit Überlappung */
-function makeChunks(text, size) {
+/* Chunking mit Überlappung und Metadaten */
+function makeChunks(text, size = 1400) {
   const out = [];
-  for (let i = 0; i < text.length; i += size - 200) out.push(text.slice(i, i + size));
+  let i = 0;
+  let reihe = 0;
+  while (i < text.length) {
+    const slice = text.slice(i, i + size);
+    out.push({ text: slice, reihe: ++reihe, start: i, end: i + slice.length });
+    i += size - 200;
+  }
   return out;
 }
 
@@ -277,7 +360,7 @@ function tokenisiere(s) {
 
 function bm25Index(chunkListe) {
   const docs = chunkListe.map((c) => {
-    const toks = tokenisiere(c);
+    const toks = tokenisiere(c.text);
     const tf = new Map();
     for (const t of toks) tf.set(t, (tf.get(t) || 0) + 1);
     return { len: toks.length, tf };
@@ -314,27 +397,37 @@ function kontextFuer(frage, k = 4, mitAnfang = false) {
   if (mitAnfang && !idx.includes(0)) idx.push(0);
   if (idx.length === 0) idx = chunks.slice(0, k).map((_, i) => i); // Fallback: Anfang
   idx.sort((a, b) => a - b);
-  return idx.map((i) => chunks[i]).join("\n---\n");
+  return idx.map((i) => chunks[i]?.text || "").join("\n---\n");
 }
 
 function updateReady() {
   const ready = engine && docText.length > 0 && !generating;
   ["sumBtn", "riskBtn", "transBtn", "qBtn", "qInput"].forEach((id) => ($(id).disabled = !ready));
   document.querySelectorAll("[data-routine-run]").forEach((b) => (b.disabled = !ready));
-  statusFlow();
+  const presetReady = ready && $("presetSelUse").value;
+  $("presetRunBtn").disabled = !presetReady;
+  updateStepStatus();
 }
 
-/* Schritt-Führung: Badges an Schritt 1/2/3, Schritt 3 erst aktiv, wenn
-   Modell UND Dokument bereit sind — mit Hinweis, was als Nächstes zu tun ist. */
+/* ---------- Schrittbalken / Fortschrittsanzeige ---------- */
 let warKomplett = false;
-function statusFlow() {
+function setStepProgress(step) {
+  const bar = $("stepBar");
+  if (!bar) return;
+  const pct = step === 1 ? 33 : step === 2 ? 66 : step === 3 ? 100 : 0;
+  bar.style.width = pct + "%";
+  bar.textContent = pct > 0 ? pct + "%" : "";
+}
+
+function updateStepStatus() {
   const modellOk = !!engine;
   const docOk = docText.length > 0;
-  const komplett = modellOk && docOk;
   $("step1Status").textContent = modellOk ? t("step.ready") : "";
-  $("step2Status").textContent = docOk ? t("step.ready") : "";
+  $("step2Status").textContent = docOk ? t("s2.ready") : "";
+  const komplett = modellOk && docOk;
   $("step3Status").textContent = komplett ? t("step.ready") : "";
   $("sec3").classList.toggle("section-off", !komplett);
+  setStepProgress(komplett ? 3 : docOk ? 2 : modellOk ? 1 : 0);
   const hint = $("nextHint");
   if (docOk && !modellOk) {
     hint.hidden = false;
@@ -345,7 +438,9 @@ function statusFlow() {
   } else {
     hint.hidden = true;
   }
-  // Beim ersten Komplett-Zustand: Schritt 3 anscrollen und kurz hervorheben
+  if (safetyHint) {
+    safetyHint.hidden = !komplett;
+  }
   if (komplett && !warKomplett) {
     warKomplett = true;
     const sec = $("sec3");
@@ -361,9 +456,12 @@ function statusFlow() {
    System- und Aufgaben-Prompts kommen aus i18n.js —
    die gewählte Sprache bestimmt die Antwortsprache.
    ========================================================= */
-async function generate(messages, { onDelta, maxTokens = 700, temperature = 0.3 } = {}) {
+async function generate(messages, { onDelta, maxTokens, temperature } = {}) {
+  const preset = PRESETS[$("presetSel")?.value] || PRESETS.standard;
+  const temp = temperature ?? preset.temperature;
+  const max = maxTokens ?? preset.max_tokens;
   const stream = await engine.chat.completions.create({
-    stream: true, messages, temperature, max_tokens: maxTokens,
+    stream: true, messages, temperature: temp, max_tokens: max,
   });
   let text = "";
   for await (const part of stream) {
@@ -384,7 +482,6 @@ async function runAktion(aktion, frage, arbeit) {
   generating = true;
   stopFlag = false;
   $("stopBtn").hidden = false;
-  // Ab jetzt zeigt #output Ergebnisse — Sprachwechsel darf sie nicht überschreiben
   $("output").removeAttribute("data-i18n");
   $("output").textContent = "";
   updateReady();
@@ -395,7 +492,16 @@ async function runAktion(aktion, frage, arbeit) {
       renderAnalysen();
     }
   } catch (err) {
-    $("output").textContent = t("err.prefix") + " " + err.message;
+    const msg = err && err.message ? err.message : String(err);
+    if (msg.toLowerCase().includes("webgpu") || msg.toLowerCase().includes("gpu")) {
+      $("output").textContent = t("err.webgpu") + " " + t("err.reload");
+    } else if (msg.toLowerCase().includes("tesseract") || msg.toLowerCase().includes("worker")) {
+      $("output").textContent = t("err.tesseract") + " " + t("err.reload");
+    } else if (msg.toLowerCase().includes("memory") || msg.toLowerCase().includes("allocation")) {
+      $("output").textContent = t("err.memory");
+    } else {
+      $("output").textContent = t("err.prefix") + " " + msg;
+    }
   } finally {
     generating = false;
     $("stopBtn").hidden = true;
@@ -412,13 +518,13 @@ function gruppiereChunks(maxZeichen = 4200) {
   let aktuelle = [];
   let len = 0;
   for (const c of chunks) {
-    if (len + c.length > maxZeichen && aktuelle.length) {
-      gruppen.push(aktuelle.join("\n"));
+    if (len + c.text.length > maxZeichen && aktuelle.length) {
+      gruppen.push(aktuelle.map(x => x.text).join("\n---\n"));
       aktuelle = []; len = 0;
     }
-    aktuelle.push(c); len += c.length;
+    aktuelle.push(c); len += c.text.length;
   }
-  if (aktuelle.length) gruppen.push(aktuelle.join("\n"));
+  if (aktuelle.length) gruppen.push(aktuelle.map(x => x.text).join("\n---\n"));
   return gruppen;
 }
 
@@ -428,7 +534,7 @@ function zusammenfassen() {
     if (chunks.length <= 4) {
       return generate([
         sys,
-        { role: "user", content: t("prompt.sumShort", { doc: chunks.join("\n---\n") }) },
+        { role: "user", content: t("prompt.sumShort", { doc: chunks.map(c => c.text).join("\n---\n") }) },
       ], { onDelta: (_, text) => ($("output").textContent = text) });
     }
     // Map: Stichpunkte je Abschnittsgruppe
@@ -469,7 +575,7 @@ function risikoCheck() {
   runAktion(t("action.risk"), null, async () => {
     const ctx = kontextFuer(RISIKO_QUERY, 5, true);
     return generate([
-      { role: "system", content: t("prompt.sys") },
+      { role: "system", content: t("prompt.sysVertrag") },
       { role: "user", content: t("prompt.risk", { doc: ctx }) },
     ], { onDelta: (_, text) => ($("output").textContent = text) });
   });
@@ -492,7 +598,7 @@ function uebersetzen() {
       if (stopFlag) break;
       const teil = await generate([
         { role: "system", content: t("prompt.transSys", { ziel: zielName }) },
-        { role: "user", content: teile[i] },
+        { role: "user", content: teile[i].text },
       ], {
         maxTokens: 900, temperature: 0.2,
         onDelta: (_, text) => ($("output").textContent = gesamt ? gesamt + "\n\n" + text : text),
@@ -534,6 +640,14 @@ $("riskBtn").addEventListener("click", risikoCheck);
 $("transBtn").addEventListener("click", uebersetzen);
 $("qBtn").addEventListener("click", frageStellen);
 $("qInput").addEventListener("keydown", (e) => e.key === "Enter" && frageStellen());
+
+$("presetRunBtn").addEventListener("click", async () => {
+  const name = $("presetSelUse").value;
+  if (!name) return;
+  const routinen = await procedural.listRoutinen();
+  const r = routinen.find((x) => x.name === name);
+  if (r) routineAusfuehren(r);
+});
 
 /* =========================================================
    Gedächtnis-Panel (Episodic / Semantic / Procedural)
@@ -583,6 +697,7 @@ async function renderAnalysen() {
         $("output").textContent = e.antwort;
         $("output").scrollIntoView({ behavior: "smooth", block: "nearest" });
       }),
+      miniBtn(t("mem.export"), () => exportAnalyse(e), "btn mini ghost"),
       miniBtn(t("mem.delete"), async () => { await episodic.deleteAnalyse(e.id); renderAnalysen(); }, "btn mini danger")
     );
     liste.append(li);
@@ -604,10 +719,41 @@ async function renderDokumente() {
           $("fileMeta").textContent += " · " + t("file.fromMemory");
         }
       }),
+      miniBtn(t("mem.export"), () => exportDokument(d), "btn mini ghost"),
       miniBtn(t("mem.delete"), async () => { await semantic.deleteDokument(d.id); renderDokumente(); }, "btn mini danger")
     );
     liste.append(li);
   }
+}
+
+/* ---------- Export-Funktionen (Markdown, HTML, JSON) ---------- */
+function downloadBlob(content, filename, mime) {
+  const blob = new Blob([content], { type: mime });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function exportAnalyse(e) {
+  const md = `# Analyse: ${e.aktion} — ${e.docName}\n\n**Datum:** ${datum(e.ts)}\n**Modell:** ${e.modell}\n\n${e.antwort}`;
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Analyse</title><style>body{font-family:sans-serif;max-width:800px;margin:2rem auto;padding:0 1rem;white-space:pre-wrap}</style></head><body><h1>Analyse: ${e.aktion} — ${e.docName}</h1><p><strong>Datum:</strong> ${datum(e.ts)}<br><strong>Modell:</strong> ${e.modell}</p><hr><div>${e.antwort.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div></body></html>`;
+  const json = JSON.stringify({ version: "0.3", typ: "analyse", id: e.id, docName: e.docName, aktion: e.aktion, datum: e.ts, modell: e.modell, antwort: e.antwort }, null, 2);
+  downloadBlob(md, `analyse-${e.id}.md`, "text/markdown");
+  downloadBlob(html, `analyse-${e.id}.html`, "text/html");
+  downloadBlob(json, `analyse-${e.id}.json`, "application/json");
+}
+
+async function exportDokument(d) {
+  const voll = await semantic.loadDokument(d.id);
+  if (!voll) return;
+  const md = `# Dokument: ${d.name}\n\n**Erstellt:** ${datum(d.ts)}\n**Zeichen:** ${d.zeichen}\n\n${voll.text}`;
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${d.name}</title><style>body{font-family:sans-serif;max-width:800px;margin:2rem auto;padding:0 1rem;white-space:pre-wrap}</style></head><body><h1>${d.name}</h1><p><strong>Erstellt:</strong> ${datum(d.ts)}<br><strong>Zeichen:</strong> ${d.zeichen}</p><hr><div>${voll.text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div></body></html>`;
+  const json = JSON.stringify({ version: "0.3", typ: "dokument", id: d.id, name: d.name, datum: d.ts, zeichen: d.zeichen, text: voll.text }, null, 2);
+  downloadBlob(md, `dokument-${d.id}.md`, "text/markdown");
+  downloadBlob(html, `dokument-${d.id}.html`, "text/html");
+  downloadBlob(json, `dokument-${d.id}.json`, "application/json");
 }
 
 async function renderRoutinen() {
@@ -650,7 +796,7 @@ $("routineExportBtn").addEventListener("click", async () => {
   const blob = new Blob([json], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "dokucheck-routinen.json";
+  a.download = "docucheck-routinen.json";
   a.click();
   URL.revokeObjectURL(a.href);
 });
@@ -676,7 +822,7 @@ document.querySelectorAll(".lang-btn").forEach((btn) => {
 });
 document.addEventListener("langchange", () => {
   zeigeGpuBadge();
-  statusFlow();
+  updateStepStatus();
   renderAnalysen();
   renderDokumente();
   renderRoutinen();
@@ -688,15 +834,28 @@ document.addEventListener("langchange", () => {
 (async function init() {
   await initLang(); // Sprache zuerst — alles danach rendert bereits übersetzt
 
-  // Tool Memory: gemerkte Modellwahl wiederherstellen
+  // Tool Memory: gemerkte Modellwahl und Preset wiederherstellen
   try {
     const gemerkt = await sessionGet("modell");
     if (gemerkt && [...$("modelSel").options].some((o) => o.value === gemerkt)) {
       $("modelSel").value = gemerkt;
     }
+    const preset = await sessionGet("preset");
+    if (preset && PRESETS[preset]) {
+      $("presetSel").value = preset;
+      wendePresetAn(preset);
+    }
   } catch { /* IndexedDB nicht verfügbar */ }
   zeigeGpuBadge();
   zeigeCacheStatus();
+
+  // Auto-Load wenn Modell bereits im Browser-Cache liegt
+  try {
+    const imCache = await webllm.hasModelInCache($("modelSel").value);
+    if (imCache && hatWebGPU) {
+      await ladeModell();
+    }
+  } catch { /* Cache-API nicht verfügbar */ }
 
   try {
     await procedural.ensureDefaults();

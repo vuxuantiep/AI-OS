@@ -1,12 +1,12 @@
-/* DokuCheck Lokal — IndexedDB-Wrapper (vanilla, ohne Bibliothek).
-   DB "dokucheck", Stores:
+/* DocuCheck Local — IndexedDB-Wrapper (vanilla, ohne Bibliothek).
+   DB "docucheck", Stores:
      dokumente : {id, name, zeichen, ts, text, chunks[]}   → Semantic Memory
      chunks    : reserviert für v0.3 (Embeddings je Chunk)  → RAG Memory
      analysen  : {id, ts, docName, aktion, frage, modell, antwort} → Episodic Memory
      routinen  : {id, name, prompt, ts}                     → Procedural/Skill Memory
      session   : {key, value}                               → Working/Tool Memory */
 
-const DB_NAME = "dokucheck";
+const DB_NAME = "docucheck";
 const DB_VERSION = 1;
 let dbPromise = null;
 

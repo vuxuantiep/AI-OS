@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DokuCheck Lokal — KI-Dokumentanalyse ohne Cloud</title>
+<title>DocuCheck Local — KI-Dokumentanalyse ohne Cloud</title>
 <meta name="description" content="Analysiere Verträge, Behördenbriefe und Fotos von Dokumenten direkt im Browser. Keine Cloud, keine Datenübertragung — die KI läuft auf deinem Gerät.">
 <meta name="theme-color" content="#17222C">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -28,11 +28,23 @@
 
 <header class="hero">
   <p class="eyebrow" data-i18n="hero.eyebrow">Souveräne KI · Läuft in deinem Browser</p>
-  <h1>DokuCheck Lokal</h1>
+  <h1>DocuCheck Local</h1>
   <p class="lede" data-i18n="hero.lede">Lade einen Vertrag, Behördenbrief oder ein Foto eines Dokuments hoch. Eine kleine KI liest, analysiert und übersetzt alles direkt auf deinem Gerät — ohne Server, ohne Cloud-Konto. Prüf es selbst: Öffne die Entwicklertools (F12 → Netzwerk) während der Analyse.</p>
 </header>
 
 <main>
+
+  <!-- Schrittbalken -->
+  <div class="stepper" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="stepBarWrap">
+    <div class="stepper-track">
+      <div class="stepper-fill" id="stepBar"></div>
+    </div>
+    <div class="stepper-labels">
+      <span class="stepper-label" data-step="1"><span data-i18n="s1.tag">Schritt 1</span> <span class="step-ok" id="step1Status"></span></span>
+      <span class="stepper-label" data-step="2"><span data-i18n="s2.tag">Schritt 2</span> <span class="step-ok" id="step2Status"></span></span>
+      <span class="stepper-label" data-step="3"><span data-i18n="s3.tag">Schritt 3</span> <span class="step-ok" id="step3Status"></span></span>
+    </div>
+  </div>
 
   <!-- WebGPU-Hinweis (nur sichtbar, wenn WebGPU fehlt) -->
   <div class="gpu-card" id="gpuCard" hidden>
@@ -48,14 +60,25 @@
 
   <!-- Schritt 1: Modell -->
   <section aria-labelledby="s1">
-    <p class="step-tag"><span data-i18n="s1.tag">Schritt 1</span> <span class="step-ok" id="step1Status"></span></p>
+    <p class="step-tag"><span data-i18n="s1.tag">Schritt 1</span></p>
     <h2 id="s1" data-i18n="s1.title">KI-Modell auf dein Gerät laden</h2>
+    <div class="row">
+      <label for="presetSel" class="row-label" data-i18n="s1.presetLabel">Profil:</label>
+      <select id="presetSel">
+        <option value="schnell" data-i18n="s1.p1">Schnell & leicht (1B)</option>
+        <option value="standard" data-i18n="s1.p2">Standard (1B)</option>
+        <option value="praezise" data-i18n="s1.p3">Präzise & gründlich (3B)</option>
+        <option value="experimental" data-i18n="s1.p4">Experimental (Phi-3.5-mini)</option>
+      </select>
+    </div>
     <div class="row">
       <label for="modelSel" class="row-label" data-i18n="s1.modelLabel">Modell:</label>
       <select id="modelSel">
+        <option value="Qwen2-0.5B-Instruct-q4f16_1-MLC" data-i18n="s1.m0">Qwen2 0.5B — sehr leicht, für schwache Geräte (~0,5 GB)</option>
         <option value="Llama-3.2-1B-Instruct-q4f16_1-MLC" data-i18n="s1.m1">Llama 3.2 1B — leicht, auch für Smartphones (~0,8 GB)</option>
         <option value="Qwen3-1.7B-q4f16_1-MLC" data-i18n="s1.m2">Qwen3 1.7B — schnell, gutes Deutsch (~1,2 GB)</option>
         <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC" data-i18n="s1.m3">Llama 3.2 3B — ausgewogen, braucht mehr Speicher (~2 GB)</option>
+        <option value="Phi-3.5-mini-instruct-q4f16_1-MLC" data-i18n="s1.m4">Phi 3.5 mini — experimentell, gründlich (~2,2 GB)</option>
       </select>
       <button type="button" class="btn" id="loadBtn" data-i18n="s1.loadBtn">Modell laden</button>
     </div>
@@ -66,7 +89,7 @@
 
   <!-- Schritt 2: Dokument -->
   <section aria-labelledby="s2">
-    <p class="step-tag"><span data-i18n="s2.tag">Schritt 2</span> <span class="step-ok" id="step2Status"></span></p>
+    <p class="step-tag"><span data-i18n="s2.tag">Schritt 2</span></p>
     <h2 id="s2" data-i18n="s2.title">Dokument auswählen</h2>
     <label class="drop" id="drop">
       <input type="file" id="fileInput" accept=".pdf,.txt,.md,image/*">
@@ -93,12 +116,24 @@
       <div class="ocr-text" id="ocrText" hidden></div>
     </div>
     <p class="next-hint" id="nextHint" hidden></p>
+    <p class="safety-hint" id="safetyHint"><span data-i18n="safety.localOnly">Alle Verarbeitung läuft lokal — keine Daten verlassen dein Gerät.</span> <span data-i18n="safety.devtools">Prüfe es selbst: Öffne die Entwicklertools (F12 → Netzwerk) während der Analyse.</span></p>
   </section>
 
   <!-- Schritt 3: Analyse (ausgegraut, bis Modell + Dokument bereit sind) -->
   <section aria-labelledby="s3" id="sec3" class="section-off">
-    <p class="step-tag"><span data-i18n="s3.tag">Schritt 3</span> <span class="step-ok" id="step3Status"></span></p>
+    <p class="step-tag"><span data-i18n="s3.tag">Schritt 3</span></p>
     <h2 id="s3" data-i18n="s3.title">Analysieren &amp; Übersetzen</h2>
+    <div class="row">
+      <label for="presetSelUse" class="row-label" data-i18n="s3.presetLabel">Prüfung:</label>
+      <select id="presetSelUse">
+        <option value="" data-i18n="s3.presetNone">-- auswählen --</option>
+        <option value="Vollprüfung (Vertrag)" data-i18n="s3.p1">Vollprüfung (Vertrag)</option>
+        <option value="Mietvertrag (privat)" data-i18n="s3.p2">Mietvertrag (privat)</option>
+        <option value="Mobilfunkvertrag" data-i18n="s3.p3">Mobilfunkvertrag</option>
+        <option value="Versicherungsbedingungen" data-i18n="s3.p4">Versicherungsbedingungen</option>
+      </select>
+      <button type="button" class="btn ghost" id="presetRunBtn" disabled data-i18n="s3.presetRun">Starten</button>
+    </div>
     <div class="actions">
       <button type="button" class="btn" id="sumBtn" disabled data-i18n="btn.sum">Zusammenfassen</button>
       <button type="button" class="btn" id="riskBtn" disabled data-i18n="btn.risk">Worauf muss ich achten?</button>
@@ -161,7 +196,7 @@
 </main>
 
 <footer data-i18n="footer">
-  DokuCheck Lokal v0.2 · Technik: WebLLM 0.2.79 (MLC AI, Apache 2.0) + WebGPU · Tesseract.js 5.1.1 (OCR) + pdf.js 4.4.168 — alle Bibliotheken lokal gebündelt, keine CDN-Zugriffe. Teil der Edge Cognitive AI Platform.
+  DocuCheck Local v0.2 · Technik: WebLLM 0.2.79 (MLC AI, Apache 2.0) + WebGPU · Tesseract.js 5.1.1 (OCR) + pdf.js 4.4.168 — alle Bibliotheken lokal gebündelt, keine CDN-Zugriffe. Teil der Edge Cognitive AI Platform.
 </footer>
 
 <script type="module" src="./app.js"></script>

@@ -1,4 +1,5 @@
-/* Procedural + Skill Memory — wiederverwendbare Prüfroutinen (Prompt-Vorlagen). */
+/* Procedural + Skill Memory — DocuCheck Local Prüfroutinen
+   (wiederverwendbare Prompt-Vorlagen, CRUD + JSON-Export/Import). */
 import { dbPut, dbGetAll, dbDelete } from "./db.js";
 
 export async function listRoutinen() {
@@ -33,8 +34,26 @@ export async function importRoutinenJSON(text) {
   return n;
 }
 
-/* Startpaket beim ersten Öffnen — zeigt sofort, was Routinen sind. */
+/* Startpaket beim ersten Öffnen — zeigt sofort, was Routinen sind.
+   Die ersten vier Namen müssen zu den Werten des "Prüfung:"-Dropdowns
+   in Schritt 3 (index.html, #presetSelUse) passen. */
 const DEFAULTS = [
+  {
+    name: "Vollprüfung (Vertrag)",
+    prompt: "Du bist ein Vertragsprüfer für deutsche Verbraucherverträge. Du ersetzt keine Rechtsberatung, sollst aber Risiken, Kosten, Fristen und Kündigungsbedingungen strukturiert markieren. Analysiere den folgenden Vertragstext und gib die Antwort in vier Sektionen:\n\nZusammenfassung (maximal 10 Sätze)\nFristen (Liste mit Datum und Ereignis)\nKosten & Gebühren (Liste mit Betrag und Bedingung)\nKündigung & Verlängerung (Beschreibung der Mindestlaufzeit, Kündigungsfrist und automatischer Verlängerung).\n\nWenn Textstellen unklar sind oder durch OCR Fehler enthalten, markiere sie mit „UNKLAR“ und erfinde nichts hinzu.",
+  },
+  {
+    name: "Mietvertrag (privat)",
+    prompt: "Prüfe diesen Mietvertrag auf folgende Punkte:\n1. Kautionshöhe und Verwendung\n2. Kündigungsfristen (Mieter/Vermieter)\n3. Betriebskosten und deren Aufschlüsselung\n4. Schönheitsreparaturen\n5. Haustier-Klausel\nZitiere die relevanten Stellen. Markiere ungewöhnliche oder nachteilige Klauseln mit „UNKLAR“.",
+  },
+  {
+    name: "Mobilfunkvertrag",
+    prompt: "Prüfe diesen Mobilfunkvertrag auf folgende Punkte:\n1. Grundgebühr und Laufzeit\n2. Datenvolumen und Drosselung\n3. Kündigungsfrist und automatische Verlängerung\n4. Kosten für Sonderrufnummern, Roaming, Service\n5. Widerrufsrecht\nZitiere die relevanten Stellen. Markiere versteckte Kosten mit „UNKLAR“.",
+  },
+  {
+    name: "Versicherungsbedingungen",
+    prompt: "Prüfe diese Versicherungsbedingungen auf folgende Punkte:\n1. Versicherte Risiken und Ausschlüsse\n2. Selbstbeteiligung\n3. Kündigungsfrist und automatische Verlängerung\n4. Leistungsausschlüsse (z. B. bei grober Fahrlässigkeit)\n5. Beitragsanpassungen\nZitiere die relevanten Stellen. Markiere unklare Ausschlüsse mit „UNKLAR“.",
+  },
   {
     name: "Fristen-Check",
     prompt: "Liste alle Fristen, Termine und Stichtage aus dem Dokument auf. Nenne zu jeder Frist die Textstelle und was passiert, wenn sie verpasst wird.",

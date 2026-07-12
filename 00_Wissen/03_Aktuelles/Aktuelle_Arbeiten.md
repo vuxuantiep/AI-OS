@@ -75,6 +75,29 @@ so antwortet die KI in der UI-Sprache. Die BM25-Suchbegriffe des Risiko-Checks
 bleiben dagegen mehrsprachig kombiniert, weil sie zum **Dokument** passen
 müssen, nicht zur UI.
 
+### Nachtrag 12.07. abends: DocuCheck-Reparatur nach Fremd-Edits
+
+Ein anderer Agent (Agile Agent Canvas) hatte die App erweitert (Presets, Stepper,
+Exporte, OCR-Vorverarbeitung, Umbenennung DokuCheck→DocuCheck) und dabei vier
+Fehler eingebaut, die **Schritt 2 komplett lahmlegten**:
+
+1. **`bm25Index` tokenisierte Chunk-Objekte statt `c.text`** → TypeError bei jedem
+   Dokument-Upload („s.toLowerCase is not a function"). Der Killer-Bug.
+2. **`procedural.js`: nicht geschlossener Blockkommentar in Zeile 1** verschluckte
+   Import + alle 5 CRUD-Exports bis zum nächsten `*/` (Zeile 36) — syntaktisch
+   gültig (!), daher von `node --check` unsichtbar. Routinen + „Prüfung:"-Preset tot.
+3. **`semantic.js`: `return doc`** — Variable existiert nicht → jede Speicherung
+   rejected nach dem Schreiben, Dokumentliste blieb leer.
+4. **Preset-Modelle (Qwen2 0.5B, Phi 3.5 mini) fehlten im Modell-Dropdown** →
+   Profilwahl lief ins Leere, falsches Modell wäre geladen worden.
+
+Dazu repariert: OCR-Vorverarbeitung warf bei Canvas-Quellen (Scan-PDF-Fallback)
+weg (`URL.createObjectURL(canvas)` ist illegal) + Object-URL-Leak + `\3`-Oktal-Regex.
+
+**Lehre:** Ein offener Blockkommentar ist der fieseste „Syntaxfehler", weil er
+keiner ist — Prüfung ab jetzt zusätzlich: erwartete Exports greppen, nicht nur
+`node --check`.
+
 ### Stolpersteine
 - `node --check` behandelt `.js` als CommonJS → für ES-Module-Check als `.mjs`-Kopie prüfen.
 - Der cp1252-Print-Bug schlug wieder zu (Häkchen-Zeichen im Python-Check) → `PYTHONUTF8=1`.

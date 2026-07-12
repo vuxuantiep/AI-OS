@@ -1,6 +1,6 @@
 {
-  "name": "DokuCheck Lokal — KI-Dokumentanalyse ohne Cloud",
-  "short_name": "DokuCheck",
+  "name": "DocuCheck Local — KI-Dokumentanalyse ohne Cloud",
+  "short_name": "DocuCheck",
   "description": "Verträge, Behördenbriefe und Fotos von Dokumenten lokal im Browser analysieren, per OCR auslesen und übersetzen — ohne Cloud.",
   "lang": "de",
   "start_url": "./",
