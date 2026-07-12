@@ -2,6 +2,8 @@
    DokuCheck Lokal v0.2 — Hauptmodul
    Architektur: UI (dieser Thread) + WebLLM-Engine im Web
    Worker (worker.js) + OCR im Tesseract-Worker (ocr.js).
+   Mehrsprachig (DE/EN/VI) über i18n.js — die Sprachwahl
+   steuert UI-Texte UND die Antwortsprache des Modells.
    Alle Bibliotheken lokal gevendort — die App-Shell macht
    keine externen Requests. Nur die Modellgewichte kommen
    beim ersten Laden von der HuggingFace-CDN und liegen
@@ -10,6 +12,7 @@
 import * as webllm from "./vendor/web-llm/web-llm.js";
 import * as pdfjs from "./vendor/pdfjs/pdf.min.mjs";
 import { erkenneText } from "./ocr.js";
+import { t, setLang, initLang } from "./i18n.js";
 import { sessionGet, sessionSet } from "./memory/db.js";
 import * as episodic from "./memory/episodic.js";
 import * as semantic from "./memory/semantic.js";
@@ -53,7 +56,9 @@ function meldeNetz(url) {
   } catch { /* unparsebare URL → sicherheitshalber zählen */ }
   watchNet++;
   $("netCount").textContent = watchNet;
-  $("netVerdict").innerHTML = '<span class="net-alert">Achtung: externe Netzwerkaktivität erkannt!</span>';
+  const v = $("netVerdict");
+  v.removeAttribute("data-i18n");
+  v.innerHTML = '<span class="net-alert">' + t("proof.alert") + "</span>";
 }
 
 new BroadcastChannel("dokucheck-net").onmessage = (e) => {
@@ -67,19 +72,21 @@ new PerformanceObserver((list) => {
 
 /* ---------- WebGPU-Erkennung ---------- */
 const hatWebGPU = "gpu" in navigator;
+function zeigeGpuBadge() {
+  $("gpuInfo").innerHTML = hatWebGPU
+    ? '<span class="badge-ok">' + t("gpu.okBadge") + "</span>"
+    : '<span class="badge-warn">' + t("gpu.missingBadge") + "</span>";
+}
 if (!hatWebGPU) {
   $("gpuCard").hidden = false;
-  $("gpuInfo").innerHTML = '<span class="badge-warn">Kein WebGPU — Analyse deaktiviert, OCR funktioniert.</span>';
   $("loadBtn").disabled = true;
-} else {
-  $("gpuInfo").innerHTML = '<span class="badge-ok">WebGPU verfügbar ✓</span>';
 }
 
 /* ---------- Schritt 1: Modell laden (im Web Worker) ---------- */
 async function zeigeCacheStatus() {
   try {
     const imCache = await webllm.hasModelInCache($("modelSel").value);
-    if (imCache) $("loadStatus").innerHTML = '<span class="badge-ok">Dieses Modell ist bereits auf dem Gerät — Laden geht ohne Download.</span>';
+    if (imCache) $("loadStatus").innerHTML = '<span class="badge-ok">' + t("s1.cached") + "</span>";
     else if (!engine) $("loadStatus").textContent = "";
   } catch { /* Cache-API nicht verfügbar (z. B. file://) */ }
 }
@@ -107,13 +114,15 @@ $("loadBtn").addEventListener("click", async () => {
     );
     aktivesModell = modell;
     netPhase = "watch";
-    $("loadStatus").innerHTML = '<span class="badge-ok">Modell bereit — ab jetzt zählt der Netzwerk-Beweis.</span>';
+    $("loadStatus").innerHTML = '<span class="badge-ok">' + t("s1.ready") + "</span>";
     $("loadBtn").disabled = false;
-    $("loadBtn").textContent = "Modell wechseln";
+    // data-i18n mit umstellen, damit ein Sprachwechsel den Text nicht zurücksetzt
+    $("loadBtn").setAttribute("data-i18n", "s1.switchBtn");
+    $("loadBtn").textContent = t("s1.switchBtn");
     updateReady();
   } catch (err) {
     netPhase = "boot";
-    $("loadStatus").innerHTML = '<span class="badge-warn">Fehler beim Laden: ' + err.message + "</span>";
+    $("loadStatus").innerHTML = '<span class="badge-warn">' + t("s1.error") + " " + err.message + "</span>";
     $("loadBtn").disabled = false;
   }
 });
@@ -132,7 +141,7 @@ fileInput.addEventListener("change", () => fileInput.files[0] && handleFile(file
 $("cameraInput").addEventListener("change", () => $("cameraInput").files[0] && handleFile($("cameraInput").files[0]));
 
 async function handleFile(file) {
-  $("fileMeta").textContent = "Lese: " + file.name + " …";
+  $("fileMeta").textContent = t("file.reading") + " " + file.name + " …";
   try {
     const name = file.name.toLowerCase();
     if (file.type.startsWith("image/") || /\.(png|jpe?g|webp|bmp|gif)$/.test(name)) {
@@ -153,7 +162,7 @@ async function handleFile(file) {
       setzeDokument(file.name, await file.text());
     }
   } catch (err) {
-    $("fileMeta").textContent = "Fehler beim Lesen: " + err.message;
+    $("fileMeta").textContent = t("file.error") + " " + err.message;
   }
 }
 
@@ -170,23 +179,23 @@ async function handleBild(file) {
     const text = await erkenneText(file, sprachen, (m) => {
       if (m.status === "recognizing text") {
         $("ocrProg").value = m.progress ?? 0;
-        $("ocrStatus").textContent = "Texterkennung läuft … " + Math.round((m.progress ?? 0) * 100) + " %";
+        $("ocrStatus").textContent = t("ocr.running") + " " + Math.round((m.progress ?? 0) * 100) + " %";
       } else {
         $("ocrStatus").textContent = m.status || "";
       }
     });
     $("ocrProg").hidden = true;
     if (!text) {
-      $("ocrStatus").innerHTML = '<span class="badge-warn">Kein Text erkannt — bitte schärferes/geraderes Foto versuchen.</span>';
+      $("ocrStatus").innerHTML = '<span class="badge-warn">' + t("ocr.none") + "</span>";
       return;
     }
-    $("ocrStatus").innerHTML = '<span class="badge-ok">Texterkennung fertig (lokal, WASM).</span>';
+    $("ocrStatus").innerHTML = '<span class="badge-ok">' + t("ocr.done") + "</span>";
     $("ocrText").hidden = false;
     $("ocrText").textContent = text;
     setzeDokument(file.name || "Foto", text);
   } catch (err) {
     $("ocrProg").hidden = true;
-    $("ocrStatus").innerHTML = '<span class="badge-warn">OCR-Fehler: ' + err.message + "</span>";
+    $("ocrStatus").innerHTML = '<span class="badge-warn">' + t("ocr.error") + " " + err.message + "</span>";
   }
 }
 
@@ -195,7 +204,7 @@ function setzeDokument(name, text, ausSpeicher = false) {
   docName = name;
   chunks = makeChunks(docText, 1400);
   bmIndex = bm25Index(chunks);
-  $("fileMeta").textContent = `✓ ${name} · ${docText.length.toLocaleString("de-DE")} Zeichen · ${chunks.length} Abschnitte (lokal verarbeitet)`;
+  $("fileMeta").textContent = `✓ ${name} · ${docText.length.toLocaleString("de-DE")} ${t("file.chars")} · ${chunks.length} ${t("file.sections")}`;
   updateReady();
   if (!ausSpeicher && docText.length > 0) {
     // Semantic Memory: Dokument + Chunks persistieren
@@ -275,9 +284,9 @@ function updateReady() {
 
 /* =========================================================
    Schritt 3: Generierung (Streaming aus dem Worker)
+   System- und Aufgaben-Prompts kommen aus i18n.js —
+   die gewählte Sprache bestimmt die Antwortsprache.
    ========================================================= */
-const SYS = "Du bist ein sorgfältiger Assistent, der Dokumente für Laien verständlich erklärt. Antworte auf Deutsch, klar und knapp. Erfinde nichts: Wenn eine Information nicht im Text steht, sage das ausdrücklich.";
-
 async function generate(messages, { onDelta, maxTokens = 700, temperature = 0.3 } = {}) {
   const stream = await engine.chat.completions.create({
     stream: true, messages, temperature, max_tokens: maxTokens,
@@ -301,6 +310,8 @@ async function runAktion(aktion, frage, arbeit) {
   generating = true;
   stopFlag = false;
   $("stopBtn").hidden = false;
+  // Ab jetzt zeigt #output Ergebnisse — Sprachwechsel darf sie nicht überschreiben
+  $("output").removeAttribute("data-i18n");
   $("output").textContent = "";
   updateReady();
   try {
@@ -310,7 +321,7 @@ async function runAktion(aktion, frage, arbeit) {
       renderAnalysen();
     }
   } catch (err) {
-    $("output").textContent = "Fehler: " + err.message;
+    $("output").textContent = t("err.prefix") + " " + err.message;
   } finally {
     generating = false;
     $("stopBtn").hidden = true;
@@ -338,48 +349,54 @@ function gruppiereChunks(maxZeichen = 4200) {
 }
 
 function zusammenfassen() {
-  runAktion("Zusammenfassung", null, async () => {
+  runAktion(t("action.sum"), null, async () => {
+    const sys = { role: "system", content: t("prompt.sys") };
     if (chunks.length <= 4) {
       return generate([
-        { role: "system", content: SYS },
-        { role: "user", content: `Fasse das folgende Dokument in einfachem Deutsch zusammen (max. 8 Sätze). Nenne zuerst in einem Satz, was für ein Dokument es ist.\n\nDOKUMENT:\n${chunks.join("\n---\n")}` },
+        sys,
+        { role: "user", content: t("prompt.sumShort", { doc: chunks.join("\n---\n") }) },
       ], { onDelta: (_, text) => ($("output").textContent = text) });
     }
     // Map: Stichpunkte je Abschnittsgruppe
     let gruppen = gruppiereChunks();
     let hinweis = "";
     if (gruppen.length > MAX_GRUPPEN) {
-      hinweis = `\n\n(Hinweis: Das Dokument ist sehr lang — es wurden die ersten ${MAX_GRUPPEN} von ${gruppen.length} Teilen berücksichtigt.)`;
+      hinweis = "\n\n" + t("note.sumLong", { max: MAX_GRUPPEN, n: gruppen.length });
       gruppen = gruppen.slice(0, MAX_GRUPPEN);
     }
     const stichpunkte = [];
     for (let i = 0; i < gruppen.length; i++) {
       if (stopFlag) return "";
-      $("output").textContent = `Fasse Teil ${i + 1}/${gruppen.length} zusammen …`;
+      $("output").textContent = t("status.sumPart", { i: i + 1, n: gruppen.length });
       const teil = await generate([
-        { role: "system", content: SYS },
-        { role: "user", content: `Fasse den folgenden Dokumentabschnitt in 3-5 Stichpunkten zusammen. Nur die Stichpunkte, keine Einleitung.\n\nABSCHNITT:\n${gruppen[i]}` },
+        sys,
+        { role: "user", content: t("prompt.sumMap", { teil: gruppen[i] }) },
       ], { maxTokens: 250, temperature: 0.2 });
       stichpunkte.push(teil);
     }
     if (stopFlag) return "";
     // Reduce: finale Synthese, gestreamt
     const final = await generate([
-      { role: "system", content: SYS },
-      { role: "user", content: `Hier sind Stichpunkt-Zusammenfassungen der Teile eines Dokuments. Erstelle daraus EINE zusammenhängende Gesamtzusammenfassung in einfachem Deutsch (max. 10 Sätze). Nenne zuerst, was für ein Dokument es ist.\n\nSTICHPUNKTE:\n${stichpunkte.join("\n\n")}` },
+      sys,
+      { role: "user", content: t("prompt.sumReduce", { punkte: stichpunkte.join("\n\n") }) },
     ], { onDelta: (_, text) => ($("output").textContent = text) });
     $("output").textContent = final + hinweis;
     return final + hinweis;
   });
 }
 
-/* --- Risiko-Check: BM25 mit festen Risiko-Suchbegriffen --- */
+/* --- Risiko-Check: BM25 mit festen Risiko-Suchbegriffen ---
+   Suchbegriffe mehrsprachig, damit sie zum DOKUMENT passen (nicht zur UI-Sprache). */
+const RISIKO_QUERY = "Frist Termin Kündigung Widerruf Kosten Gebühren Zahlung Vertragsstrafe Haftung Verlängerung " +
+  "deadline termination notice withdrawal cost fee payment penalty liability renewal " +
+  "thời hạn chấm dứt hủy chi phí thanh toán phạt trách nhiệm gia hạn";
+
 function risikoCheck() {
-  runAktion("Risiko-Check", null, async () => {
-    const ctx = kontextFuer("Frist Termin Kündigung Widerruf Kosten Gebühren Zahlung Vertragsstrafe Haftung Verlängerung", 5, true);
+  runAktion(t("action.risk"), null, async () => {
+    const ctx = kontextFuer(RISIKO_QUERY, 5, true);
     return generate([
-      { role: "system", content: SYS },
-      { role: "user", content: `Analysiere das folgende Dokument. Liste auf, worauf der Leser besonders achten muss:\n1. Fristen und Termine\n2. Kosten und Zahlungspflichten\n3. Kündigungs- oder Widerrufsregeln\n4. Ungewöhnliche oder nachteilige Klauseln\nZitiere kurz die relevante Stelle. Wenn zu einem Punkt nichts im Text steht, schreibe "Nichts gefunden".\n\nDOKUMENT:\n${ctx}` },
+      { role: "system", content: t("prompt.sys") },
+      { role: "user", content: t("prompt.risk", { doc: ctx }) },
     ], { onDelta: (_, text) => ($("output").textContent = text) });
   });
 }
@@ -387,19 +404,20 @@ function risikoCheck() {
 /* --- Übersetzen: Abschnitt für Abschnitt über das SLM --- */
 const MAX_UEBERSETZUNG = 6;
 function uebersetzen() {
-  const ziel = $("transLang").value;
-  runAktion("Übersetzung", ziel, async () => {
+  const zielCode = $("transLang").value;         // de | en | vi
+  const zielName = t("lang." + zielCode);        // Sprachname in der UI-Sprache
+  runAktion(t("action.trans"), zielName, async () => {
     let teile = chunks;
     let hinweis = "";
     if (teile.length > MAX_UEBERSETZUNG) {
-      hinweis = `\n\n(Hinweis: Sehr langes Dokument — die ersten ${MAX_UEBERSETZUNG} von ${teile.length} Abschnitten wurden übersetzt.)`;
+      hinweis = "\n\n" + t("note.transLong", { max: MAX_UEBERSETZUNG, n: teile.length });
       teile = teile.slice(0, MAX_UEBERSETZUNG);
     }
     let gesamt = "";
     for (let i = 0; i < teile.length; i++) {
       if (stopFlag) break;
       const teil = await generate([
-        { role: "system", content: `Du bist ein präziser Übersetzer. Übersetze den gegebenen Text vollständig nach ${ziel}. Gib NUR die Übersetzung aus, ohne Kommentare oder Erklärungen.` },
+        { role: "system", content: t("prompt.transSys", { ziel: zielName }) },
         { role: "user", content: teile[i] },
       ], {
         maxTokens: 900, temperature: 0.2,
@@ -417,22 +435,22 @@ function uebersetzen() {
 function frageStellen() {
   const q = $("qInput").value.trim();
   if (!q) return;
-  runAktion("Frage", q, async () => {
+  runAktion(t("action.q"), q, async () => {
     const ctx = kontextFuer(q, 3);
     return generate([
-      { role: "system", content: SYS },
-      { role: "user", content: `Beantworte die Frage NUR anhand der folgenden Dokument-Auszüge. Wenn die Antwort dort nicht steht, sage das.\n\nAUSZÜGE:\n${ctx}\n\nFRAGE: ${q}` },
+      { role: "system", content: t("prompt.sys") },
+      { role: "user", content: t("prompt.q", { ctx, frage: q }) },
     ], { onDelta: (_, text) => ($("output").textContent = text) });
   });
 }
 
 /* --- Prüfroutine ausführen (Procedural/Skill Memory) --- */
 function routineAusfuehren(routine) {
-  runAktion("Routine: " + routine.name, routine.prompt, async () => {
+  runAktion(t("action.routine") + " " + routine.name, routine.prompt, async () => {
     const ctx = kontextFuer(routine.prompt, 4, true);
     return generate([
-      { role: "system", content: SYS },
-      { role: "user", content: `${routine.prompt}\nZitiere kurz die relevanten Stellen. Wenn nichts im Text steht, schreibe "Nichts gefunden".\n\nDOKUMENT:\n${ctx}` },
+      { role: "system", content: t("prompt.sys") },
+      { role: "user", content: t("prompt.routine", { anweisung: routine.prompt, doc: ctx }) },
     ], { onDelta: (_, text) => ($("output").textContent = text) });
   });
 }
@@ -450,42 +468,48 @@ const datum = (ts) => new Date(ts).toLocaleString("de-DE", { dateStyle: "short",
 
 function liEintrag(titel, sub) {
   const li = document.createElement("li");
-  const t = document.createElement("div");
-  t.className = "mem-title";
-  t.textContent = titel;
+  const t2 = document.createElement("div");
+  t2.className = "mem-title";
+  t2.textContent = titel;
   const s = document.createElement("div");
   s.className = "mem-sub";
   s.textContent = sub;
   const a = document.createElement("div");
   a.className = "mem-actions";
-  li.append(t, s, a);
+  li.append(t2, s, a);
   return { li, actions: a };
 }
 
 function miniBtn(text, onClick, klasse = "btn mini") {
   const b = document.createElement("button");
+  b.type = "button";
   b.className = klasse;
   b.textContent = text;
   b.addEventListener("click", onClick);
   return b;
 }
 
+function leererEintrag(liste, key) {
+  const li = document.createElement("li");
+  li.className = "mem-empty";
+  li.textContent = t(key);
+  liste.append(li);
+}
+
 async function renderAnalysen() {
   const liste = $("memAnalysen");
   const eintraege = await episodic.listAnalysen();
   liste.innerHTML = "";
-  if (!eintraege.length) {
-    liste.innerHTML = '<li class="mem-empty">Noch keine Analysen.</li>';
-    return;
-  }
+  if (!eintraege.length) return leererEintrag(liste, "mem.emptyAnalysen");
   for (const e of eintraege) {
     const { li, actions } = liEintrag(`${e.aktion} — ${e.docName}`, `${datum(e.ts)} · ${e.modell}`);
     actions.append(
-      miniBtn("Anzeigen", () => {
+      miniBtn(t("mem.show"), () => {
+        $("output").removeAttribute("data-i18n");
         $("output").textContent = e.antwort;
         $("output").scrollIntoView({ behavior: "smooth", block: "nearest" });
       }),
-      miniBtn("Löschen", async () => { await episodic.deleteAnalyse(e.id); renderAnalysen(); }, "btn mini danger")
+      miniBtn(t("mem.delete"), async () => { await episodic.deleteAnalyse(e.id); renderAnalysen(); }, "btn mini danger")
     );
     liste.append(li);
   }
@@ -495,21 +519,18 @@ async function renderDokumente() {
   const liste = $("memDokumente");
   const docs = await semantic.listDokumente();
   liste.innerHTML = "";
-  if (!docs.length) {
-    liste.innerHTML = '<li class="mem-empty">Noch keine Dokumente.</li>';
-    return;
-  }
+  if (!docs.length) return leererEintrag(liste, "mem.emptyDokumente");
   for (const d of docs) {
-    const { li, actions } = liEintrag(d.name, `${datum(d.ts)} · ${d.zeichen.toLocaleString("de-DE")} Zeichen`);
+    const { li, actions } = liEintrag(d.name, `${datum(d.ts)} · ${d.zeichen.toLocaleString("de-DE")} ${t("file.chars")}`);
     actions.append(
-      miniBtn("Öffnen", async () => {
+      miniBtn(t("mem.open"), async () => {
         const voll = await semantic.loadDokument(d.id);
         if (voll) {
           setzeDokument(voll.name, voll.text, true);
-          $("fileMeta").textContent += " · aus dem Gedächtnis geladen";
+          $("fileMeta").textContent += " · " + t("file.fromMemory");
         }
       }),
-      miniBtn("Löschen", async () => { await semantic.deleteDokument(d.id); renderDokumente(); }, "btn mini danger")
+      miniBtn(t("mem.delete"), async () => { await semantic.deleteDokument(d.id); renderDokumente(); }, "btn mini danger")
     );
     liste.append(li);
   }
@@ -519,23 +540,20 @@ async function renderRoutinen() {
   const liste = $("memRoutinen");
   const routinen = await procedural.listRoutinen();
   liste.innerHTML = "";
-  if (!routinen.length) {
-    liste.innerHTML = '<li class="mem-empty">Noch keine Routinen.</li>';
-    return;
-  }
+  if (!routinen.length) return leererEintrag(liste, "mem.emptyRoutinen");
   for (const r of routinen) {
     const { li, actions } = liEintrag(r.name, r.prompt.slice(0, 70) + (r.prompt.length > 70 ? "…" : ""));
-    const runBtn = miniBtn("Ausführen", () => routineAusfuehren(r));
+    const runBtn = miniBtn(t("mem.run"), () => routineAusfuehren(r));
     runBtn.setAttribute("data-routine-run", "1");
     runBtn.disabled = !(engine && docText && !generating);
     actions.append(
       runBtn,
-      miniBtn("Bearbeiten", () => {
+      miniBtn(t("mem.edit"), () => {
         $("routineName").value = r.name;
         $("routinePrompt").value = r.prompt;
         $("routineName").dataset.editId = r.id;
       }, "btn mini ghost"),
-      miniBtn("Löschen", async () => { await procedural.deleteRoutine(r.id); renderRoutinen(); }, "btn mini danger")
+      miniBtn(t("mem.delete"), async () => { await procedural.deleteRoutine(r.id); renderRoutinen(); }, "btn mini danger")
     );
     liste.append(li);
   }
@@ -570,16 +588,31 @@ $("routineImportInput").addEventListener("change", async () => {
     const n = await procedural.importRoutinenJSON(await file.text());
     $("routineImportInput").value = "";
     renderRoutinen();
-    alert(n + " Routine(n) importiert.");
+    alert(n + " " + t("mem.imported"));
   } catch (err) {
-    alert("Import fehlgeschlagen: " + err.message);
+    alert(t("mem.importFailed") + " " + err.message);
   }
+});
+
+/* =========================================================
+   Sprachumschalter: UI-Texte live tauschen, Listen neu rendern
+   ========================================================= */
+document.querySelectorAll(".lang-btn").forEach((btn) => {
+  btn.addEventListener("click", () => setLang(btn.dataset.lang));
+});
+document.addEventListener("langchange", () => {
+  zeigeGpuBadge();
+  renderAnalysen();
+  renderDokumente();
+  renderRoutinen();
 });
 
 /* =========================================================
    Initialisierung
    ========================================================= */
 (async function init() {
+  await initLang(); // Sprache zuerst — alles danach rendert bereits übersetzt
+
   // Tool Memory: gemerkte Modellwahl wiederherstellen
   try {
     const gemerkt = await sessionGet("modell");
@@ -587,6 +620,7 @@ $("routineImportInput").addEventListener("change", async () => {
       $("modelSel").value = gemerkt;
     }
   } catch { /* IndexedDB nicht verfügbar */ }
+  zeigeGpuBadge();
   zeigeCacheStatus();
 
   try {

@@ -13,76 +13,81 @@
 </head>
 <body>
 
-<!-- Signatur: der lebende Datenschutz-Beweis -->
+<!-- Signatur: der lebende Datenschutz-Beweis + Sprachumschalter -->
 <div class="proofbar" role="status" aria-live="polite">
-  <span><span class="dot" aria-hidden="true"></span>LOKALER MODUS</span>
-  <span>Modell-Download (einmalig): <strong id="netModel">0</strong> Anfragen</span>
-  <span>Analyse-Anfragen: <strong id="netCount">0</strong></span>
-  <span id="netVerdict">Deine Dokumente verlassen dieses Gerät nicht.</span>
+  <span><span class="dot" aria-hidden="true"></span><span data-i18n="proof.mode">LOKALER MODUS</span></span>
+  <span><span data-i18n="proof.model">Modell-Download (einmalig):</span> <strong id="netModel">0</strong></span>
+  <span><span data-i18n="proof.analysis">Externe Anfragen bei Analyse:</span> <strong id="netCount">0</strong></span>
+  <span id="netVerdict" data-i18n="proof.ok">Deine Dokumente verlassen dieses Gerät nicht.</span>
+  <span class="lang-switch" role="group" aria-label="Sprache / Language / Ngôn ngữ">
+    <button type="button" class="lang-btn active" data-lang="de">DE</button>
+    <button type="button" class="lang-btn" data-lang="en">EN</button>
+    <button type="button" class="lang-btn" data-lang="vi">VI</button>
+  </span>
 </div>
 
 <header class="hero">
-  <p class="eyebrow">Souveräne KI · Läuft in deinem Browser</p>
+  <p class="eyebrow" data-i18n="hero.eyebrow">Souveräne KI · Läuft in deinem Browser</p>
   <h1>DokuCheck Lokal</h1>
-  <p class="lede">Lade einen Vertrag, Behördenbrief oder ein Foto eines Dokuments hoch. Ein kleines Sprachmodell analysiert und übersetzt direkt auf deinem Gerät — per WebGPU und WebAssembly, ohne Server, ohne Cloud-Konto. Prüfe es selbst: Öffne die Entwicklertools (F12 → Netzwerk) während der Analyse.</p>
+  <p class="lede" data-i18n="hero.lede">Lade einen Vertrag, Behördenbrief oder ein Foto eines Dokuments hoch. Eine kleine KI liest, analysiert und übersetzt alles direkt auf deinem Gerät — ohne Server, ohne Cloud-Konto. Prüf es selbst: Öffne die Entwicklertools (F12 → Netzwerk) während der Analyse.</p>
 </header>
 
 <main>
 
   <!-- WebGPU-Hinweis (nur sichtbar, wenn WebGPU fehlt) -->
   <div class="gpu-card" id="gpuCard" hidden>
-    <h2>WebGPU nicht verfügbar</h2>
-    <p>Die KI-Analyse braucht WebGPU. So bekommst du es:</p>
+    <h2 data-i18n="gpu.title">WebGPU nicht verfügbar</h2>
+    <p data-i18n="gpu.intro">Die KI-Analyse braucht WebGPU. So bekommst du es:</p>
     <ul>
-      <li><strong>Desktop:</strong> Chrome oder Edge ab Version 113 verwenden; Status unter <code>chrome://gpu</code> bzw. <code>edge://gpu</code> prüfen.</li>
-      <li><strong>Android:</strong> Chrome ab Version 121 (Android 12+).</li>
-      <li><strong>iPhone/iPad:</strong> Safari ab iOS 18 mit aktiviertem WebGPU-Feature.</li>
+      <li data-i18n="gpu.desktop">Desktop: Chrome oder Edge ab Version 113 verwenden; Status unter chrome://gpu bzw. edge://gpu prüfen.</li>
+      <li data-i18n="gpu.android">Android: Chrome ab Version 121 (Android 12+).</li>
+      <li data-i18n="gpu.ios">iPhone/iPad: Safari ab iOS 18 mit aktiviertem WebGPU.</li>
     </ul>
-    <p style="margin-top:.5rem"><strong>Texterkennung (OCR) aus Fotos funktioniert trotzdem</strong> — sie läuft über WebAssembly auf jedem Gerät.</p>
+    <p class="gpu-ocr-note"><strong data-i18n="gpu.ocrNote">Texterkennung (OCR) aus Fotos funktioniert trotzdem — sie läuft auf jedem Gerät.</strong></p>
   </div>
 
   <!-- Schritt 1: Modell -->
   <section aria-labelledby="s1">
-    <p class="step-tag">Schritt 1</p>
-    <h2 id="s1">KI-Modell auf dein Gerät laden</h2>
+    <p class="step-tag" data-i18n="s1.tag">Schritt 1</p>
+    <h2 id="s1" data-i18n="s1.title">KI-Modell auf dein Gerät laden</h2>
     <div class="row">
-      <label for="modelSel" style="font-weight:600">Modell:</label>
+      <label for="modelSel" class="row-label" data-i18n="s1.modelLabel">Modell:</label>
       <select id="modelSel">
-        <option value="Llama-3.2-1B-Instruct-q4f16_1-MLC">Llama 3.2 1B — leicht, auch für Smartphones (~0,8 GB)</option>
-        <option value="Qwen3-1.7B-q4f16_1-MLC">Qwen3 1.7B — schnell, gutes Deutsch (~1,2 GB)</option>
-        <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama 3.2 3B — ausgewogen, braucht mehr Speicher (~2 GB)</option>
+        <option value="Llama-3.2-1B-Instruct-q4f16_1-MLC" data-i18n="s1.m1">Llama 3.2 1B — leicht, auch für Smartphones (~0,8 GB)</option>
+        <option value="Qwen3-1.7B-q4f16_1-MLC" data-i18n="s1.m2">Qwen3 1.7B — schnell, gutes Deutsch (~1,2 GB)</option>
+        <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC" data-i18n="s1.m3">Llama 3.2 3B — ausgewogen, braucht mehr Speicher (~2 GB)</option>
       </select>
-      <button class="btn" id="loadBtn">Modell laden</button>
+      <button type="button" class="btn" id="loadBtn" data-i18n="s1.loadBtn">Modell laden</button>
     </div>
     <progress id="loadProg" max="1" value="0" hidden></progress>
     <p class="status" id="loadStatus"></p>
-    <p class="hint">Einmaliger Download — wird im Browser zwischengespeichert. Danach funktioniert die Analyse auch offline. <span id="gpuInfo"></span></p>
+    <p class="hint"><span data-i18n="s1.hint">Einmaliger Download — wird im Browser gespeichert. Danach klappt die Analyse auch offline.</span> <span id="gpuInfo"></span></p>
   </section>
 
   <!-- Schritt 2: Dokument -->
   <section aria-labelledby="s2">
-    <p class="step-tag">Schritt 2</p>
-    <h2 id="s2">Dokument auswählen</h2>
+    <p class="step-tag" data-i18n="s2.tag">Schritt 2</p>
+    <h2 id="s2" data-i18n="s2.title">Dokument auswählen</h2>
     <label class="drop" id="drop">
       <input type="file" id="fileInput" accept=".pdf,.txt,.md,image/*">
-      <strong>PDF, Textdatei oder Foto hierher ziehen</strong><br>oder tippen zum Auswählen.<br>
-      <span style="font-size:.8rem">Parsing und Texterkennung passieren lokal — die Datei wird nirgendwohin gesendet.</span>
+      <strong data-i18n="drop.title">PDF, Textdatei oder Foto hierher ziehen</strong><br><span data-i18n="drop.or">oder tippen zum Auswählen.</span><br>
+      <span class="drop-note" data-i18n="drop.note">Alles passiert lokal — die Datei wird nirgendwohin gesendet.</span>
       <div class="filemeta" id="fileMeta"></div>
     </label>
     <div class="upload-extra">
-      <label class="btn ghost" style="display:inline-flex;align-items:center">
-        📷 Foto aufnehmen (OCR)
+      <label class="btn ghost camera-label">
+        <span data-i18n="camera.btn">📷 Foto aufnehmen (OCR)</span>
         <input type="file" id="cameraInput" accept="image/*" capture="environment">
       </label>
-      <select id="ocrLang" aria-label="OCR-Sprache">
-        <option value="deu+eng">OCR: Deutsch + Englisch</option>
-        <option value="deu">OCR: nur Deutsch</option>
-        <option value="vie">OCR: Vietnamesisch</option>
-        <option value="deu+eng+vie">OCR: Deutsch + Englisch + Vietnamesisch</option>
+      <select id="ocrLang" aria-label="OCR">
+        <option value="deu+eng" data-i18n="ocr.l1">OCR: Deutsch + Englisch</option>
+        <option value="deu" data-i18n="ocr.l2">OCR: nur Deutsch</option>
+        <option value="vie" data-i18n="ocr.l3">OCR: Vietnamesisch</option>
+        <option value="deu+eng+vie" data-i18n="ocr.l4">OCR: Deutsch + Englisch + Vietnamesisch</option>
       </select>
     </div>
     <div class="ocr-preview" id="ocrPreview" hidden>
-      <img id="ocrImage" alt="Vorschau des fotografierten Dokuments">
+      <img id="ocrImage" alt="Dokument-Vorschau">
       <progress id="ocrProg" max="1" value="0" hidden></progress>
       <p class="status" id="ocrStatus"></p>
       <div class="ocr-text" id="ocrText" hidden></div>
@@ -91,71 +96,71 @@
 
   <!-- Schritt 3: Analyse -->
   <section aria-labelledby="s3">
-    <p class="step-tag">Schritt 3</p>
-    <h2 id="s3">Analysieren &amp; Übersetzen</h2>
+    <p class="step-tag" data-i18n="s3.tag">Schritt 3</p>
+    <h2 id="s3" data-i18n="s3.title">Analysieren &amp; Übersetzen</h2>
     <div class="actions">
-      <button class="btn" id="sumBtn" disabled>Zusammenfassen</button>
-      <button class="btn" id="riskBtn" disabled>Worauf muss ich achten?</button>
-      <button class="btn" id="transBtn" disabled>Übersetzen</button>
+      <button type="button" class="btn" id="sumBtn" disabled data-i18n="btn.sum">Zusammenfassen</button>
+      <button type="button" class="btn" id="riskBtn" disabled data-i18n="btn.risk">Worauf muss ich achten?</button>
+      <button type="button" class="btn" id="transBtn" disabled data-i18n="btn.trans">Übersetzen</button>
       <select id="transLang" aria-label="Zielsprache">
-        <option value="Deutsch">→ Deutsch</option>
-        <option value="Englisch">→ Englisch</option>
-        <option value="Vietnamesisch">→ Vietnamesisch</option>
+        <option value="de" data-i18n="lang.de">Deutsch</option>
+        <option value="en" data-i18n="lang.en">Englisch</option>
+        <option value="vi" data-i18n="lang.vi">Vietnamesisch</option>
       </select>
-      <button class="btn ghost" id="stopBtn" hidden>Stopp</button>
+      <button type="button" class="btn ghost" id="stopBtn" hidden data-i18n="btn.stop">Stopp</button>
     </div>
-    <div class="out" id="output" aria-live="polite">Die Analyse erscheint hier, sobald Modell und Dokument bereit sind.</div>
+    <div class="out" id="output" aria-live="polite" data-i18n="out.placeholder">Die Analyse erscheint hier, sobald Modell und Dokument bereit sind.</div>
 
     <div class="qa">
-      <input id="qInput" placeholder="Eigene Frage zum Dokument stellen …" disabled>
-      <button class="btn" id="qBtn" disabled>Fragen</button>
+      <input id="qInput" disabled data-i18n-ph="qa.placeholder" placeholder="Eigene Frage zum Dokument stellen …">
+      <button type="button" class="btn" id="qBtn" disabled data-i18n="btn.ask">Fragen</button>
     </div>
 
-    <p class="disclaimer"><strong>Hinweis:</strong> DokuCheck Lokal liefert eine automatisierte Ersteinschätzung durch ein kleines KI-Modell und ist <strong>keine Rechtsberatung</strong>. Bei wichtigen Verträgen und Fristen wende dich an eine Anwältin, einen Anwalt oder eine Beratungsstelle. Kleine Modelle können Fehler machen — prüfe zentrale Aussagen immer im Originaltext.</p>
+    <p class="disclaimer" data-i18n="disclaimer">Hinweis: DokuCheck Lokal gibt dir eine erste Einschätzung durch eine kleine KI — das ist keine Rechtsberatung. Bei wichtigen Verträgen und Fristen frag bitte eine Anwältin, einen Anwalt oder eine Beratungsstelle. Kleine Modelle können Fehler machen — prüfe wichtige Aussagen immer im Originaltext.</p>
   </section>
 
   <!-- Gedächtnis: Multi-Memory-Panel -->
   <section aria-labelledby="s4">
-    <p class="step-tag">🧠 Gedächtnis</p>
-    <h2 id="s4">Was sich DokuCheck merkt — lokal in deinem Browser</h2>
+    <p class="step-tag" data-i18n="mem.tag">🧠 Gedächtnis</p>
+    <h2 id="s4" data-i18n="mem.title">Was sich DokuCheck merkt — lokal in deinem Browser</h2>
     <div class="memory-grid">
 
       <div class="memory-block">
-        <h3>Analyse-Verlauf</h3>
+        <h3 data-i18n="mem.analysen">Analyse-Verlauf</h3>
         <span class="mem-type">Episodic Memory</span>
-        <ul class="mem-list" id="memAnalysen"><li class="mem-empty">Noch keine Analysen.</li></ul>
+        <ul class="mem-list" id="memAnalysen"></ul>
       </div>
 
       <div class="memory-block">
-        <h3>Gespeicherte Dokumente</h3>
+        <h3 data-i18n="mem.dokumente">Gespeicherte Dokumente</h3>
         <span class="mem-type">Semantic + RAG Memory</span>
-        <ul class="mem-list" id="memDokumente"><li class="mem-empty">Noch keine Dokumente.</li></ul>
+        <ul class="mem-list" id="memDokumente"></ul>
       </div>
 
       <div class="memory-block">
-        <h3>Prüfroutinen</h3>
+        <h3 data-i18n="mem.routinen">Prüfroutinen</h3>
         <span class="mem-type">Procedural + Skill Memory</span>
-        <ul class="mem-list" id="memRoutinen"><li class="mem-empty">Noch keine Routinen.</li></ul>
+        <ul class="mem-list" id="memRoutinen"></ul>
         <div class="routine-form">
-          <input id="routineName" placeholder="Name, z. B. „Miet-Check“">
-          <textarea id="routinePrompt" placeholder="Anweisung, z. B. „Prüfe Kündigungsfristen und Nebenkosten …“"></textarea>
-          <div class="mem-actions" style="display:flex;gap:.35rem;flex-wrap:wrap">
-            <button class="btn mini" id="routineSaveBtn">Speichern</button>
-            <button class="btn mini ghost" id="routineExportBtn">Export</button>
-            <label class="btn mini ghost" style="display:inline-flex;align-items:center">Import
-              <input type="file" id="routineImportInput" accept=".json" style="display:none">
+          <input id="routineName" data-i18n-ph="mem.namePh" placeholder="Name, z. B. „Miet-Check“">
+          <textarea id="routinePrompt" data-i18n-ph="mem.promptPh" placeholder="Anweisung, z. B. „Prüfe Kündigungsfristen und Nebenkosten …“"></textarea>
+          <div class="mem-actions routine-actions">
+            <button type="button" class="btn mini" id="routineSaveBtn" data-i18n="mem.save">Speichern</button>
+            <button type="button" class="btn mini ghost" id="routineExportBtn" data-i18n="mem.export">Export</button>
+            <label class="btn mini ghost import-label"><span data-i18n="mem.import">Import</span>
+              <input type="file" id="routineImportInput" accept=".json">
             </label>
           </div>
         </div>
       </div>
 
     </div>
-    <p class="mem-note">Working Memory = aktuelles Dokument &amp; Sitzung · Tool Memory = gemerkte Modellwahl. Alles liegt in der IndexedDB deines Browsers — nichts davon verlässt dein Gerät.</p>
+    <p class="mem-note" data-i18n="mem.note">Working Memory = aktuelles Dokument &amp; Sitzung · Tool Memory = gemerkte Modell- und Sprachwahl. Alles liegt in der IndexedDB deines Browsers — nichts davon verlässt dein Gerät.</p>
   </section>
 </main>
 
-<footer>
-  DokuCheck Lokal v0.2 · Technologie: WebLLM 0.2.79 (MLC AI, Apache 2.0) + WebGPU · Tesseract.js 5.1.1 (OCR, WASM) + pdf.js 4.4.168 — alle Bibliotheken lokal gebündelt, keine CDN-Zugriffe. Teil der Edge Cognitive AI Platform.
+<footer data-i18n="footer">
+  DokuCheck Lokal v0.2 · Technik: WebLLM 0.2.79 (MLC AI, Apache 2.0) + WebGPU · Tesseract.js 5.1.1 (OCR) + pdf.js 4.4.168 — alle Bibliotheken lokal gebündelt, keine CDN-Zugriffe. Teil der Edge Cognitive AI Platform.
 </footer>
 
 <script type="module" src="./app.js"></script>

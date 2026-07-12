@@ -22,6 +22,7 @@
 | 8 | **PWA**: installierbar, App-Shell offline (Service Worker), Manifest + Icon | `sw.js`, `manifest.webmanifest` |
 | 9 | **Dashboard-Integration**: Route `/produkte/<prod>/` + Nav-Button „🛡️ DokuCheck Lokal" | `ai_os_dashboard.py`, `templates/dashboard.html` |
 | 10 | Wiki-Kopie → Redirect-Stub (eine Quelle der Wahrheit) | `00_Wissen/04_Referenzen/Wiki/dokucheck-lokal.html` |
+| 11 | **Mehrsprachigkeit DE/EN/VI** — Umschalter in der Beweisleiste, komplette UI + KI-Prompts übersetzt (locker formuliert), Wahl wird in Tool Memory gemerkt | `i18n.js` (100 Schlüssel × 3 Sprachen), `index.html` (`data-i18n`), `app.js` |
 
 ### Lern-Highlights des Tages (mit Code)
 
@@ -59,6 +60,18 @@ Zähler: „Modell-Download (einmalig)" vs. „Analyse-Anfragen: 0".
 **4. Übersetzen ohne neue Abhängigkeit.** Statt einer Translation-Bibliothek
 übersetzt das bereits geladene SLM abschnittsweise (Chunk für Chunk, gestreamt) —
 ein System-Prompt genügt.
+
+**5. i18n ohne Framework.** Ein flaches Schlüssel-Objekt pro Sprache + zwei
+DOM-Attribute reichen: `data-i18n` (textContent) und `data-i18n-ph` (placeholder).
+Der Kniff bei dynamischen Elementen: Das Ausgabefeld trägt anfangs `data-i18n`
+für den Platzhalter — sobald eine echte Analyse drinsteht, wird das Attribut
+per `removeAttribute` entfernt, sonst würde ein Sprachwechsel das Ergebnis
+überschreiben. Gleiches Muster beim „Modell laden“→„Modell wechseln“-Button:
+statt nur den Text zu setzen, wird das `data-i18n`-Attribut mit umgestellt.
+Wichtig: Die Sprachwahl steuert auch die **Prompts** (`prompt.sys` etc.) —
+so antwortet die KI in der UI-Sprache. Die BM25-Suchbegriffe des Risiko-Checks
+bleiben dagegen mehrsprachig kombiniert, weil sie zum **Dokument** passen
+müssen, nicht zur UI.
 
 ### Stolpersteine
 - `node --check` behandelt `.js` als CommonJS → für ES-Module-Check als `.mjs`-Kopie prüfen.
