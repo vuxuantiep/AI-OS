@@ -106,6 +106,14 @@ const UEBERSETZUNGEN = {
     "note.sumLong": "(Hinweis: Das Dokument ist sehr lang — die ersten {max} von {n} Teilen wurden berücksichtigt.)",
     "note.transLong": "(Hinweis: Sehr langes Dokument — die ersten {max} von {n} Abschnitten wurden übersetzt.)",
 
+    "step.ready": "✓ bereit",
+    "hint.needModel": "Dokument ist bereit ✓ — lade jetzt noch das KI-Modell in Schritt 1, dann kann es losgehen.",
+    "hint.goStep3": "Alles bereit ✓ — weiter mit Schritt 3: Analysieren & Übersetzen.",
+    "pdf.scanned": "Gescanntes PDF erkannt (keine Textebene) — Texterkennung läuft …",
+    "pdf.ocrPage": "Seite {i}/{n} …",
+    "pdf.noText": "Kein Text erkennbar. Prüfe die OCR-Sprache oder versuch ein schärferes Foto/PDF.",
+    "pdf.limited": "(Hinweis: Nur die ersten {n} Seiten wurden per OCR gelesen.)",
+
     "footer": "DokuCheck Lokal v0.2 · Technik: WebLLM 0.2.79 (MLC AI, Apache 2.0) + WebGPU · Tesseract.js 5.1.1 (OCR) + pdf.js 4.4.168 — alle Bibliotheken lokal gebündelt, keine CDN-Zugriffe. Teil der Edge Cognitive AI Platform.",
 
     "prompt.sys": "Du bist ein sorgfältiger Assistent, der Dokumente für Laien verständlich erklärt. Antworte auf Deutsch, locker, klar und knapp. Erfinde nichts: Wenn eine Information nicht im Text steht, sage das ausdrücklich.",
@@ -219,6 +227,14 @@ const UEBERSETZUNGEN = {
     "note.sumLong": "(Note: this document is very long — the first {max} of {n} parts were used.)",
     "note.transLong": "(Note: very long document — the first {max} of {n} sections were translated.)",
 
+    "step.ready": "✓ ready",
+    "hint.needModel": "Your document is ready ✓ — now load the AI model in step 1 and you're good to go.",
+    "hint.goStep3": "All set ✓ — continue with step 3: analyze & translate.",
+    "pdf.scanned": "Scanned PDF detected (no text layer) — running text recognition …",
+    "pdf.ocrPage": "page {i}/{n} …",
+    "pdf.noText": "No readable text found. Check the OCR language or try a sharper photo/PDF.",
+    "pdf.limited": "(Note: only the first {n} pages were read via OCR.)",
+
     "footer": "DokuCheck Local v0.2 · Tech: WebLLM 0.2.79 (MLC AI, Apache 2.0) + WebGPU · Tesseract.js 5.1.1 (OCR) + pdf.js 4.4.168 — all libraries bundled locally, no CDN calls. Part of the Edge Cognitive AI Platform.",
 
     "prompt.sys": "You are a careful assistant who explains documents in plain, friendly language. Answer in English, clearly and briefly. Never make things up: if something is not in the text, say so explicitly.",
@@ -331,6 +347,14 @@ const UEBERSETZUNGEN = {
     "status.sumPart": "Đang tóm tắt phần {i}/{n} …",
     "note.sumLong": "(Lưu ý: tài liệu rất dài — chỉ dùng {max} phần đầu trong tổng số {n} phần.)",
     "note.transLong": "(Lưu ý: tài liệu rất dài — chỉ dịch {max} đoạn đầu trong tổng số {n} đoạn.)",
+
+    "step.ready": "✓ sẵn sàng",
+    "hint.needModel": "Tài liệu đã sẵn sàng ✓ — giờ hãy tải mô hình AI ở Bước 1 là bắt đầu được ngay.",
+    "hint.goStep3": "Xong hết rồi ✓ — tiếp tục với Bước 3: phân tích & dịch.",
+    "pdf.scanned": "Phát hiện PDF scan (không có lớp chữ) — đang nhận dạng chữ …",
+    "pdf.ocrPage": "trang {i}/{n} …",
+    "pdf.noText": "Không đọc được chữ nào. Hãy kiểm tra ngôn ngữ OCR hoặc thử ảnh/PDF rõ nét hơn.",
+    "pdf.limited": "(Lưu ý: chỉ đọc OCR {n} trang đầu.)",
 
     "footer": "DokuCheck Local v0.2 · Công nghệ: WebLLM 0.2.79 (MLC AI, Apache 2.0) + WebGPU · Tesseract.js 5.1.1 (OCR) + pdf.js 4.4.168 — mọi thư viện được đóng gói cục bộ, không gọi CDN. Thuộc Edge Cognitive AI Platform.",
 

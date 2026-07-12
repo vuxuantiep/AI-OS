@@ -3,7 +3,7 @@
    damit die App installierbar ist und offline startet.
    Die Modellgewichte verwaltet WebLLM selbst über die Cache API —
    Cross-Origin-Anfragen werden hier bewusst NICHT angefasst. */
-const CACHE = "dokucheck-v0.2.1";
+const CACHE = "dokucheck-v0.2.2";
 
 const APP_SHELL = [
   "./",

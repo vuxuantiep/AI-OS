@@ -11,7 +11,7 @@
    ========================================================= */
 import * as webllm from "./vendor/web-llm/web-llm.js";
 import * as pdfjs from "./vendor/pdfjs/pdf.min.mjs";
-import { erkenneText } from "./ocr.js";
+import { erkenneText, ocrWorker } from "./ocr.js";
 import { t, setLang, initLang } from "./i18n.js";
 import { sessionGet, sessionSet } from "./memory/db.js";
 import * as episodic from "./memory/episodic.js";
@@ -157,12 +157,42 @@ async function handleFile(file) {
         const tc = await page.getTextContent();
         text += tc.items.map((it) => it.str).join(" ") + "\n";
       }
+      // Gescanntes PDF (keine Textebene)? → Seiten rendern und per OCR lesen
+      if (text.replace(/\s+/g, "").length < 20) {
+        text = await ocrPdf(pdf);
+      }
       setzeDokument(file.name, text);
     } else {
       setzeDokument(file.name, await file.text());
     }
   } catch (err) {
     $("fileMeta").textContent = t("file.error") + " " + err.message;
+  }
+}
+
+/* OCR-Fallback für gescannte PDFs: Seiten als Canvas rendern und lesen.
+   EIN Tesseract-Worker für alle Seiten (Init ist teuer). */
+const MAX_OCR_SEITEN = 10;
+async function ocrPdf(pdf) {
+  const n = Math.min(pdf.numPages, MAX_OCR_SEITEN);
+  $("fileMeta").textContent = t("pdf.scanned");
+  const w = await ocrWorker($("ocrLang").value);
+  try {
+    let text = "";
+    for (let i = 1; i <= n; i++) {
+      $("fileMeta").textContent = t("pdf.scanned") + " " + t("pdf.ocrPage", { i, n });
+      const page = await pdf.getPage(i);
+      const vp = page.getViewport({ scale: 2 });
+      const canvas = document.createElement("canvas");
+      canvas.width = vp.width;
+      canvas.height = vp.height;
+      await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
+      text += (await w.erkennen(canvas)) + "\n";
+    }
+    if (pdf.numPages > n) text += "\n" + t("pdf.limited", { n });
+    return text;
+  } finally {
+    await w.beenden();
   }
 }
 
@@ -200,13 +230,24 @@ async function handleBild(file) {
 }
 
 function setzeDokument(name, text, ausSpeicher = false) {
-  docText = text.replace(/\s{3,}/g, " ").trim();
+  const bereinigt = text.replace(/\s{3,}/g, " ").trim();
+  // Leere/kaputte Extraktion NICHT als Erfolg verkaufen (z. B. Scan ohne OCR-Treffer)
+  if (bereinigt.length < 20) {
+    docText = "";
+    docName = "";
+    chunks = [];
+    bmIndex = null;
+    $("fileMeta").innerHTML = '<span class="badge-warn">' + t("pdf.noText") + "</span>";
+    updateReady();
+    return;
+  }
+  docText = bereinigt;
   docName = name;
   chunks = makeChunks(docText, 1400);
   bmIndex = bm25Index(chunks);
   $("fileMeta").textContent = `✓ ${name} · ${docText.length.toLocaleString("de-DE")} ${t("file.chars")} · ${chunks.length} ${t("file.sections")}`;
   updateReady();
-  if (!ausSpeicher && docText.length > 0) {
+  if (!ausSpeicher) {
     // Semantic Memory: Dokument + Chunks persistieren
     semantic.saveDokument(name, docText, chunks).then(renderDokumente).catch(() => {});
   }
@@ -280,6 +321,39 @@ function updateReady() {
   const ready = engine && docText.length > 0 && !generating;
   ["sumBtn", "riskBtn", "transBtn", "qBtn", "qInput"].forEach((id) => ($(id).disabled = !ready));
   document.querySelectorAll("[data-routine-run]").forEach((b) => (b.disabled = !ready));
+  statusFlow();
+}
+
+/* Schritt-Führung: Badges an Schritt 1/2/3, Schritt 3 erst aktiv, wenn
+   Modell UND Dokument bereit sind — mit Hinweis, was als Nächstes zu tun ist. */
+let warKomplett = false;
+function statusFlow() {
+  const modellOk = !!engine;
+  const docOk = docText.length > 0;
+  const komplett = modellOk && docOk;
+  $("step1Status").textContent = modellOk ? t("step.ready") : "";
+  $("step2Status").textContent = docOk ? t("step.ready") : "";
+  $("step3Status").textContent = komplett ? t("step.ready") : "";
+  $("sec3").classList.toggle("section-off", !komplett);
+  const hint = $("nextHint");
+  if (docOk && !modellOk) {
+    hint.hidden = false;
+    hint.textContent = t("hint.needModel");
+  } else if (komplett) {
+    hint.hidden = false;
+    hint.textContent = t("hint.goStep3");
+  } else {
+    hint.hidden = true;
+  }
+  // Beim ersten Komplett-Zustand: Schritt 3 anscrollen und kurz hervorheben
+  if (komplett && !warKomplett) {
+    warKomplett = true;
+    const sec = $("sec3");
+    sec.scrollIntoView({ behavior: "smooth", block: "center" });
+    sec.classList.add("section-pulse");
+    setTimeout(() => sec.classList.remove("section-pulse"), 2600);
+  }
+  if (!komplett) warKomplett = false;
 }
 
 /* =========================================================
@@ -602,6 +676,7 @@ document.querySelectorAll(".lang-btn").forEach((btn) => {
 });
 document.addEventListener("langchange", () => {
   zeigeGpuBadge();
+  statusFlow();
   renderAnalysen();
   renderDokumente();
   renderRoutinen();

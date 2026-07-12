@@ -12,18 +12,30 @@ const PFADE = {
   gzip: true,
 };
 
-/* imageSource: File/Blob/URL. sprachen z. B. "deu+eng" oder "vie".
-   onProgress bekommt {status, progress} von Tesseract. */
-export async function erkenneText(imageSource, sprachen = "deu+eng", onProgress) {
+/* Wiederverwendbarer OCR-Worker — für mehrere Erkennungen (z. B. alle
+   Seiten eines gescannten PDFs) lohnt sich EIN Worker statt je einer. */
+export async function ocrWorker(sprachen = "deu+eng", onProgress) {
   const worker = await Tesseract.createWorker(sprachen.split("+"), 1, {
     ...PFADE,
     logger: (m) => onProgress?.(m),
   });
+  return {
+    /* src: File/Blob/Canvas/URL */
+    erkennen: async (src) => {
+      const { data } = await worker.recognize(src);
+      return (data.text || "").trim();
+    },
+    beenden: () => worker.terminate(),
+  };
+}
+
+/* Bequem-Variante für ein einzelnes Bild. */
+export async function erkenneText(imageSource, sprachen = "deu+eng", onProgress) {
+  const w = await ocrWorker(sprachen, onProgress);
   try {
-    const { data } = await worker.recognize(imageSource);
-    return (data.text || "").trim();
+    return await w.erkennen(imageSource);
   } finally {
     // Speicher sofort freigeben — wichtig auf Smartphones
-    await worker.terminate();
+    await w.beenden();
   }
 }
