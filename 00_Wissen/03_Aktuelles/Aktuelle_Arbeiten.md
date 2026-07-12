@@ -26,6 +26,8 @@
 | 12 | **Schritt-Führung** — „✓ bereit“-Badges an Schritt 1/2/3, Schritt 3 ausgegraut bis alles bereit ist, dann Anscrollen + Puls-Highlight + grüner Nächster-Schritt-Hinweis | `app.js` (`statusFlow()`), `index.html`, `styles.css` |
 | 13 | **Scan-PDF-Rettung** — PDFs ohne Textebene (0 Zeichen extrahiert!) werden erkannt, Seiten als Canvas gerendert und automatisch per OCR gelesen; leere Extraktion wird nie mehr als „✓ fertig“ angezeigt | `app.js` (`ocrPdf()`), `ocr.js` (`ocrWorker` wiederverwendbar) |
 | 14 | **Bugfix Übersetzen** — Modell plauderte auf Deutsch („Ich verstehe, dass du möchtest …") statt nach Vietnamesisch zu übersetzen; Übersetzungs-Prompt aus i18n herausgelöst und sprachunabhängig auf Englisch fixiert, Anweisung zusätzlich in der User-Nachricht wiederholt | `app.js` (`uebersetzen()`, `TRANS_ZIEL`), `i18n.js` (`prompt.transSys` entfernt) |
+| 15 | **Bugfix falsche OCR-Warnung** — „Texterkennung war unvollständig" erschien auch bei sauberen Text-PDFs: Qualitätsheuristik lief auf JEDEM Dokument und `/(.)\1\1+/` schlug schon bei „…"/„---"/„www" an; jetzt nur noch für echten OCR-Text (`ausOcr`-Flag) + Regex nur Buchstaben 4x+ | `app.js` (`setzeDokument()`, `schaetzeOcrQualitaet()`) |
+| 16 | **Auto-Load des Modells** — nach Seiten-Reload blieb Schritt 3 grau, bis man Schritt 1 manuell neu klickte, obwohl die Gewichte im Cache lagen; jetzt lädt das Modell automatisch, sobald ein Dokument bereit ist und `hasModelInCache` zutrifft | `app.js` (`autoLadeModell()`), `i18n.js` (`s1.autoLoad` ×3) |
 
 ### Lern-Highlights des Tages (mit Code)
 

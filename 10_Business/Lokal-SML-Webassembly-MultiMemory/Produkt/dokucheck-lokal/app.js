@@ -170,6 +170,22 @@ async function ladeModell() {
 }
 $("loadBtn").addEventListener("click", ladeModell);
 
+/* Modell automatisch initialisieren, sobald ein Dokument bereit ist und die
+   Gewichte bereits im Browser-Cache liegen (kein Download nötig). Ohne das
+   bleibt Schritt 3 nach jedem Seiten-Reload grau, bis man Schritt 1 erneut
+   anklickt — aus Nutzersicht "startet Schritt 3 nicht". */
+let autoLadeVersucht = false;
+async function autoLadeModell() {
+  if (autoLadeVersucht || engine || !hatWebGPU || $("loadBtn").disabled) return;
+  autoLadeVersucht = true;
+  try {
+    if (await webllm.hasModelInCache($("modelSel").value)) {
+      $("loadStatus").textContent = t("s1.autoLoad");
+      ladeModell();
+    }
+  } catch { /* Cache-API nicht verfügbar (z. B. file://) — manuell laden */ }
+}
+
 /* ---------- Schritt 2: Dokument einlesen (lokal) ---------- */
 const drop = $("drop");
 const fileInput = $("fileInput");
@@ -203,10 +219,12 @@ async function handleFile(file) {
         const tc = await page.getTextContent();
         text += tc.items.map((it) => it.str).join(" ") + "\n";
       }
+      let ausOcr = false;
       if (text.replace(/\s+/g, "").length < 20) {
         text = await ocrPdf(pdf);
+        ausOcr = true;
       }
-      setzeDokument(file.name, text);
+      setzeDokument(file.name, text, false, ausOcr);
     } else {
       setzeDokument(file.name, await file.text());
     }
@@ -273,7 +291,7 @@ async function handleBild(file) {
     }
     $("ocrText").hidden = false;
     $("ocrText").textContent = text;
-    setzeDokument(file.name || "Foto", text);
+    setzeDokument(file.name || "Foto", text, false, true);
   } catch (err) {
     $("ocrProg").hidden = true;
     const msg = err && err.message ? err.message : String(err);
@@ -293,7 +311,9 @@ function schaetzeOcrQualitaet(text) {
   if (!woerter.length) return { schlecht: true, grund: "keine wörter" };
   const nurFragmente = woerter.filter((w) => w.length <= 2).length;
   const anteil = nurFragmente / woerter.length;
-  const kuerzel = /(.)\1\1+/;
+  // Nur Buchstaben 4x+ in Folge zählen als OCR-Artefakt — "..." , "---", "www"
+  // oder "Schifffahrt" (3x f) kommen in sauberen Dokumenten legitim vor
+  const kuerzel = /(\p{L})\1{3,}/u;
   const vieleSonderzeichen = (text.match(/[^a-zA-ZäöüÄÖÜß0-9\s.,!?;:'"()\[\]{}<>/\\@#$%^&*_+=~`|·\-–—\n\r\tàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŸšŠžŽřŘčČćĆżŻłŁőŐűŰ]/gu) || []).length;
   if (anteil > 0.6 || vieleSonderzeichen > text.length * 0.15 || kuerzel.test(text)) {
     return { schlecht: true, grund: "fragmente" };
@@ -301,7 +321,7 @@ function schaetzeOcrQualitaet(text) {
   return { schlecht: false };
 }
 
-function setzeDokument(name, text, ausSpeicher = false) {
+function setzeDokument(name, text, ausSpeicher = false, ausOcr = false) {
   const bereinigt = text.replace(/\s{3,}/g, " ").trim();
   if (bereinigt.length < 20) {
     docText = "";
@@ -312,13 +332,14 @@ function setzeDokument(name, text, ausSpeicher = false) {
     updateReady();
     return;
   }
-  const qualitaet = schaetzeOcrQualitaet(bereinigt);
   docText = bereinigt;
   docName = name;
   chunks = makeChunks(docText, 1400);
   bmIndex = bm25Index(chunks);
   const meta = `✓ ${name} · ${docText.length.toLocaleString("de-DE")} ${t("file.chars")} · ${chunks.length} ${t("file.sections")}`;
-  if (qualitaet.schlecht && !ausSpeicher) {
+  // Qualitätswarnung NUR für OCR-Text — Text aus einer PDF-Textebene oder
+  // Textdatei ist verlustfrei, die Heuristik würde dort falschen Alarm schlagen
+  if (ausOcr && !ausSpeicher && schaetzeOcrQualitaet(bereinigt).schlecht) {
     // Warnung ZUSÄTZLICH zur Meta-Zeile — nicht von ihr überschreiben lassen
     $("fileMeta").innerHTML = meta + '<br><span class="badge-warn">' + t("s2.ocrBad") + "</span>";
   } else {
@@ -432,6 +453,7 @@ function updateStepStatus() {
   if (docOk && !modellOk) {
     hint.hidden = false;
     hint.textContent = t("hint.needModel");
+    autoLadeModell();
   } else if (komplett) {
     hint.hidden = false;
     hint.textContent = t("hint.goStep3");
