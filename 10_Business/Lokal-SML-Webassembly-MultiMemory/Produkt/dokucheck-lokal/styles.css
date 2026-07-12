@@ -1,0 +1,133 @@
+/* DokuCheck Lokal v0.2 — Stylesheet
+   Schriften: bewusst nur System-Fonts (keine externen Requests). */
+:root{
+  --ink:#17222C;        /* Tinte / Text */
+  --paper:#EDF1F3;      /* Aktenpapier / Hintergrund */
+  --card:#FFFFFF;
+  --steel:#2E5E7E;      /* Steel-Blue Akzent */
+  --steel-dark:#1E4258;
+  --proof:#1F8A4C;      /* Beweis-Grün */
+  --warn:#B7791F;
+  --alert:#B3261E;
+  --line:#C9D3D9;
+  --sans:system-ui,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --serif:Georgia,'Times New Roman',serif;
+  --mono:Consolas,'Cascadia Mono',ui-monospace,'Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto} *{animation:none!important;transition:none!important}}
+body{
+  font-family:var(--sans);
+  background:var(--paper);
+  color:var(--ink);
+  line-height:1.55;
+  min-height:100vh;
+}
+a{color:var(--steel)}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--steel);outline-offset:2px}
+
+/* ---------- Kopf: Beweis-Leiste (Signatur-Element) ---------- */
+.proofbar{
+  background:var(--ink);
+  color:#DDE7ED;
+  font-family:var(--mono);
+  font-size:.8rem;
+  padding:.55rem 1rem;
+  display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;align-items:center;justify-content:center;
+  border-bottom:3px solid var(--proof);
+}
+.proofbar .dot{width:.55rem;height:.55rem;border-radius:50%;background:var(--proof);display:inline-block;margin-right:.4rem;animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.proofbar strong{color:#fff;font-weight:500}
+.proofbar .net-alert{color:#FFB4A2}
+
+header.hero{max-width:880px;margin:0 auto;padding:2.6rem 1.2rem 1.4rem}
+.eyebrow{font-family:var(--mono);font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--steel)}
+h1{font-family:var(--serif);font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.15;margin:.4rem 0 .7rem}
+.lede{max-width:60ch;color:#3C4A55}
+
+main{max-width:880px;margin:0 auto;padding:0 1.2rem 4rem}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1.3rem 1.4rem;margin-top:1.2rem}
+h2{font-family:var(--serif);font-size:1.15rem;margin-bottom:.6rem}
+.step-tag{font-family:var(--mono);font-size:.72rem;color:var(--steel);letter-spacing:.1em;text-transform:uppercase}
+
+/* WebGPU-Hinweiskarte */
+.gpu-card{border:1.5px solid var(--alert);background:#FBEDEC;border-radius:10px;padding:1rem 1.2rem;margin-top:1.2rem;font-size:.9rem}
+.gpu-card h2{color:var(--alert)}
+.gpu-card ul{margin:.5rem 0 0 1.2rem}
+.gpu-card[hidden]{display:none}
+
+/* Modell laden */
+.row{display:flex;flex-wrap:wrap;gap:.7rem;align-items:center}
+select{padding:.55rem .7rem;border:1px solid var(--line);border-radius:7px;background:#fff;font:inherit;max-width:100%}
+.btn{background:var(--steel);color:#fff;border:none;border-radius:7px;padding:.6rem 1.1rem;font-weight:600;transition:background .15s;min-height:44px}
+.btn:hover{background:var(--steel-dark)}
+.btn[disabled]{background:#9AA9B3;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--steel);border:1.5px solid var(--steel)}
+.btn.ghost:hover{background:#E7EEF3}
+.btn.mini{min-height:0;padding:.3rem .7rem;font-size:.8rem;font-weight:500}
+.btn.danger{background:transparent;color:var(--alert);border:1.5px solid var(--alert)}
+.btn.danger:hover{background:#FBEDEC}
+progress{width:100%;height:.7rem;margin-top:.8rem;accent-color:var(--steel)}
+.status{font-family:var(--mono);font-size:.78rem;color:#51616D;margin-top:.5rem;min-height:1.2em;overflow-wrap:anywhere}
+.hint{font-size:.85rem;color:#51616D;margin-top:.6rem}
+.badge-ok{color:var(--proof);font-weight:600}
+.badge-warn{color:var(--warn);font-weight:600}
+
+/* Upload */
+.drop{
+  display:block;
+  border:2px dashed var(--line);border-radius:10px;padding:1.6rem;text-align:center;
+  color:#51616D;transition:border-color .15s,background .15s;cursor:pointer;
+}
+.drop.over{border-color:var(--steel);background:#F2F7FA}
+.drop input{display:none}
+.filemeta{font-family:var(--mono);font-size:.78rem;margin-top:.6rem;color:var(--steel-dark);overflow-wrap:anywhere}
+.upload-extra{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+.upload-extra input{display:none}
+
+/* OCR-Vorschau */
+.ocr-preview{margin-top:.9rem}
+.ocr-preview img{max-width:100%;max-height:260px;border:1px solid var(--line);border-radius:8px}
+.ocr-text{background:#F7FAFB;border:1px solid var(--line);border-radius:8px;padding:.8rem 1rem;white-space:pre-wrap;font-size:.85rem;max-height:220px;overflow:auto;margin-top:.6rem}
+
+/* Aktionen + Ausgabe */
+.actions{display:flex;flex-wrap:wrap;gap:.6rem;margin:.4rem 0 .9rem;align-items:center}
+.out{
+  background:#F7FAFB;border:1px solid var(--line);border-radius:8px;
+  padding:1rem 1.1rem;white-space:pre-wrap;font-size:.93rem;min-height:3rem;overflow-wrap:anywhere;
+}
+.qa{display:flex;gap:.6rem;margin-top:.9rem;flex-wrap:wrap}
+.qa input{flex:1;min-width:200px;padding:.6rem .8rem;border:1px solid var(--line);border-radius:7px;font:inherit}
+
+/* ---------- Gedächtnis-Panel (Multi-Memory) ---------- */
+.memory-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem;margin-top:.8rem}
+.memory-block{border:1px solid var(--line);border-radius:8px;padding:.8rem .9rem;background:#FBFDFE}
+.memory-block h3{font-size:.92rem;margin-bottom:.15rem}
+.mem-type{display:inline-block;font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;
+  background:#E4EDF3;color:var(--steel-dark);border-radius:4px;padding:.12rem .45rem;margin-bottom:.55rem}
+.mem-list{list-style:none;font-size:.82rem;display:flex;flex-direction:column;gap:.45rem;max-height:260px;overflow:auto}
+.mem-list li{border:1px solid var(--line);border-radius:6px;padding:.45rem .55rem;background:#fff}
+.mem-list .mem-title{font-weight:600;overflow-wrap:anywhere}
+.mem-list .mem-sub{font-family:var(--mono);font-size:.68rem;color:#6A7883;margin:.15rem 0 .35rem}
+.mem-list .mem-actions{display:flex;flex-wrap:wrap;gap:.35rem}
+.mem-empty{color:#8795A0;font-size:.8rem;font-style:italic}
+.mem-note{font-size:.78rem;color:#6A7883;margin-top:.8rem}
+.routine-form{display:flex;flex-direction:column;gap:.45rem;margin-top:.6rem}
+.routine-form input,.routine-form textarea{padding:.45rem .6rem;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:.83rem}
+.routine-form textarea{min-height:70px;resize:vertical}
+
+.disclaimer{font-size:.78rem;color:#6A7883;margin-top:2rem;border-top:1px solid var(--line);padding-top:1rem}
+footer{max-width:880px;margin:0 auto;padding:0 1.2rem 2rem;font-size:.78rem;color:#6A7883}
+
+/* ---------- Mobil ---------- */
+@media (max-width:600px){
+  header.hero{padding:1.6rem 1rem 1rem}
+  main{padding:0 .8rem 3rem}
+  section{padding:1rem}
+  .proofbar{font-size:.7rem;gap:.3rem .9rem}
+  .actions .btn{flex:1 1 45%}
+  .qa input{min-width:0}
+}

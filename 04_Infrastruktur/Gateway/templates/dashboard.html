@@ -1014,71 +1014,6 @@
         .scroll-y::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
         .scroll-y::-webkit-scrollbar-track { background: transparent; }
 
-        /* ===== 🧱 Fabi — der Fabrik-Assistent (Duolingo-Philosophie) ===== */
-        #fabi-widget {
-            position: fixed; right: 1.4rem; bottom: 1.4rem; z-index: 60;
-            display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;
-            pointer-events: none;
-        }
-        #fabi-bubble {
-            pointer-events: auto;
-            max-width: 290px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-strong);
-            border-radius: 14px 14px 4px 14px;
-            padding: 0.7rem 0.95rem;
-            font-size: 0.82rem; line-height: 1.55; color: var(--text-primary);
-            box-shadow: 0 10px 28px rgba(0,0,0,0.5);
-            opacity: 0; transform: translateY(8px);
-            transition: opacity 0.25s ease, transform 0.25s ease;
-        }
-        #fabi-bubble.show { opacity: 1; transform: translateY(0); }
-        #fabi-avatar {
-            pointer-events: auto; position: relative;
-            width: 64px; height: 62px; cursor: pointer;
-            filter: drop-shadow(0 6px 12px rgba(0,0,0,0.45));
-            animation: fabi-bob 3.2s ease-in-out infinite;
-        }
-        #fabi-avatar:active { transform: scale(0.92); }
-        @keyframes fabi-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-        .fabi-stud {
-            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 24px; height: 13px;
-            background: linear-gradient(160deg, #ffd83d, #f0bf12);
-            border: 2px solid #caa312; border-bottom: none;
-            border-radius: 6px 6px 0 0;
-        }
-        .fabi-head {
-            position: absolute; top: 11px; left: 4px; right: 4px; bottom: 0;
-            background: linear-gradient(160deg, #ffd83d, #f5c518);
-            border: 2px solid #caa312; border-radius: 13px;
-        }
-        .fabi-eye {
-            position: absolute; top: 15px; width: 7px; height: 10px;
-            background: #23180a; border-radius: 50%;
-            animation: fabi-blink 4.6s infinite;
-        }
-        .fabi-eye.l { left: 15px; } .fabi-eye.r { right: 15px; }
-        @keyframes fabi-blink { 0%, 91%, 100% { transform: scaleY(1); } 94% { transform: scaleY(0.1); } }
-        .fabi-mouth {
-            position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
-            width: 22px; height: 11px;
-            border: 2.5px solid #23180a; border-top: none;
-            border-radius: 0 0 20px 20px;
-        }
-        /* Stimmungen: Mund passt sich der Botschaft an */
-        #fabi-avatar.mood-plead .fabi-mouth { width: 11px; height: 6px; border: 2.5px solid #23180a; border-radius: 999px; background: #3a2b12; }
-        #fabi-avatar.mood-party .fabi-mouth { height: 15px; background: #8a4b0f; }
-        #fabi-streak {
-            position: absolute; top: -7px; right: -9px;
-            background: var(--bg-card); border: 1px solid #f97316; color: #fdba74;
-            font-size: 0.62rem; font-weight: 700; border-radius: 999px; padding: 0.1rem 0.4rem;
-        }
-        @media (max-width: 900px) {
-            #fabi-widget { right: 0.8rem; bottom: 0.8rem; }
-            #fabi-bubble { max-width: 220px; font-size: 0.78rem; }
-            #fabi-avatar { width: 54px; height: 52px; }
-        }
 
         /* Chat + Ideen-Panel stapeln, sobald es eng wird */
         @media (max-width: 1150px) {
@@ -1151,6 +1086,7 @@
                 <button class="nav-item" data-tab="files" onclick="showTab('files')">📂 <span class="label">Dateien</span></button>
                 <button class="nav-item" data-tab="architecture" onclick="showTab('architecture')">🏛️ <span class="label">Architektur</span></button>
                 <button class="nav-item" data-tab="ideas" onclick="showTab('ideas')">💡 <span class="label">CEO-Ideen</span></button>
+                <button class="nav-item" onclick="window.open('/produkte/dokucheck/','_blank')">🛡️ <span class="label">DokuCheck Lokal</span></button>
             </nav>
             <div class="sidebar-footer">
                 <span class="status-dot" id="ollama-dot"></span>
@@ -1592,18 +1528,6 @@
                         </div>
                     </details>
 
-                    <!-- 🧱 Fabi — der Fabrik-Assistent (Duolingo-Stil: nett, witzig, hartnäckig) -->
-                    <div id="fabi-widget">
-                        <div id="fabi-bubble"></div>
-                        <div id="fabi-avatar" onclick="fabiNext()" title="Fabi — dein Fabrik-Assistent (Klick für einen Tipp)">
-                            <span class="fabi-stud"></span>
-                            <div class="fabi-head">
-                                <span class="fabi-eye l"></span><span class="fabi-eye r"></span>
-                                <span class="fabi-mouth"></span>
-                            </div>
-                            <span id="fabi-streak" style="display:none;">🔥0</span>
-                        </div>
-                    </div>
                 </section>
             </div>
         </div>
@@ -3460,96 +3384,6 @@
             return true;
         }
 
-        // === 🧱 Fabi — der Fabrik-Assistent ===
-        // Duolingo-Philosophie: immer freundlich, leicht albern, feiert jede Aktion,
-        // erinnert hartnäckig (aber charmant) an offene Abnahmen und pflegt eine Tages-Serie.
-        const FABI_IDLE = [
-            '🦉 Duolingo hat eine Eule, du hast mich. Ich finde, du hast das bessere Los. 🧱',
-            '💡 Fun Fact: Aus 6 LEGO-Steinen gibt es über 915 Millionen Kombinationen. Deine Ideen? Unendlich viele.',
-            '📈 CEOs, die täglich eine Idee bauen, sind wissenschaftlich belegt* deutlich erfolgreicher. (*Quelle: ich)',
-            '🚀 Die Rakete in der Auslieferung fliegt wirklich. Also… emotional auf jeden Fall.',
-            '🧑‍💼 Der CTO sagt, er hätte „noch Kapazitäten frei“. Das ist CTO-Sprech für: Bitte gib mir Arbeit!',
-            '☕ Ich habe den Minifiguren einen Espresso ausgegeben. Wir sind bereit, wenn du es bist.',
-            '🥇 Kleiner Schritt für dich: Idee speichern. Riesiger Schritt für die Fabrik: ALLES.',
-            '🔎 Tipp: Im Tab „KI-Gateway“ siehst du, welches Gehirn die Fabrik gerade antreibt.',
-            '🧱 Autsch — ich bin barfuß auf einen LEGO-Stein getreten. Egal! Was bauen wir heute?',
-            '⏰ Eine Idee am Tag hält die Konkurrenz fern. Das reimt sich nicht mal, so wahr ist es.',
-            '👑 Du bist der Product Owner, ich bin dein Fanclub. Einer von uns hat eindeutig den besseren Job.',
-            '🎯 Kein Druck, aber die QA-Station poliert schon seit Stunden ihre Prüf-Lupe…',
-        ];
-        const FABI_PRAISE = [
-            '🧱 <b>Klick!</b> Die Idee sitzt bombenfest. Genau so klingt Fortschritt!',
-            '🎉 Saubere Arbeit, CEO! Diese Idee hat Release-Potenzial, ich spüre es in den Noppen.',
-            '💪 Noch eine Idee im Regal! Das Regal biegt sich schon vor Genialität.',
-        ];
-        const FABI_KEY = 'aios-fabi';
-        let fabiLastKey = null, fabiHideTimer = null;
-
-        function fabiData() { try { return JSON.parse(localStorage.getItem(FABI_KEY)) || {}; } catch (e) { return {}; } }
-        function fabiPersist(d) { try { localStorage.setItem(FABI_KEY, JSON.stringify(d)); } catch (e) {} }
-
-        function fabiSay(text, mood = 'happy', key = null, sticky = false) {
-            if (key && key === fabiLastKey) return; // dieselbe Botschaft nicht wiederholen
-            if (key) fabiLastKey = key;
-            const bubble = document.getElementById('fabi-bubble');
-            const avatar = document.getElementById('fabi-avatar');
-            if (!bubble || !avatar) return;
-            bubble.innerHTML = text;
-            bubble.classList.add('show');
-            avatar.className = 'mood-' + mood;
-            clearTimeout(fabiHideTimer);
-            if (!sticky) fabiHideTimer = setTimeout(() => bubble.classList.remove('show'), 16000);
-        }
-
-        // Klick auf Fabi: zufälliger Tipp/Spruch
-        function fabiNext() {
-            fabiLastKey = null;
-            fabiSay(FABI_IDLE[Math.floor(Math.random() * FABI_IDLE.length)], 'happy');
-        }
-
-        // Tages-Serie wie bei Duolingo: an aufeinanderfolgenden Tagen aktiv sein
-        function fabiStreakTouch() {
-            const d = fabiData();
-            const today = new Date().toISOString().slice(0, 10);
-            if (d.last !== today) {
-                const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-                d.streak = (d.last === yesterday) ? (d.streak || 0) + 1 : 1;
-                d.last = today;
-                fabiPersist(d);
-                if (d.streak >= 2) {
-                    fabiSay(`🔥 <b>${d.streak}-Tage-Serie!</b> Du und ich — wir bauen hier ein Imperium. Stein für Stein!`, 'party', 'streak-' + d.streak);
-                }
-            }
-            fabiRenderStreak();
-        }
-        function fabiRenderStreak() {
-            const d = fabiData();
-            const el = document.getElementById('fabi-streak');
-            if (el && (d.streak || 0) >= 2) { el.style.display = 'inline-block'; el.textContent = '🔥' + d.streak; }
-        }
-
-        // Kontext-Botschaft je nach Fabrik-Lage (wird bei jedem Status-Poll aufgerufen)
-        function fabiUpdate(orders, ideasCount) {
-            const waiting = orders.find(o => o.status === 'awaiting_approval');
-            const processing = orders.find(o => o.status === 'processing' || o.status === 'queued');
-            const err = orders.find(o => o.status === 'error');
-            const done = orders.filter(o => o.status === 'completed').length;
-            if (waiting) {
-                fabiSay(`👀 Psst, CEO… der Prototyp von „<b>${escapeHtml(waiting.idea.name)}</b>“ wartet auf deine Abnahme. Er wird nicht jünger. Ich übrigens auch nicht. 🥺`, 'plead', 'wait-' + waiting.id, true);
-            } else if (processing) {
-                fabiSay(`🏗️ Die Fabrik schuftet gerade an „<b>${escapeHtml(processing.idea.name)}</b>“! Ich feuere die Minifiguren an. Du kannst hier live zuschauen. 📣`, 'party', 'proc-' + processing.id);
-            } else if (err) {
-                fabiSay(`💛 Ups — „<b>${escapeHtml(err.idea.name)}</b>“ ist gestolpert. Passiert den Besten! Ein Klick auf „Folge-Sprint“ und wir bauen es besser als vorher. 💪`, 'plead', 'err-' + err.id);
-            } else if (ideasCount === 0) {
-                fabiSay(`👋 Hi, ich bin <b>Fabi</b>, dein Fabrik-Assistent! Die Halle ist blitzblank, die Minifiguren langweilen sich… Bauen wir zusammen deine erste Idee? 🧱`, 'happy', 'noidea');
-            } else if (!orders.length) {
-                fabiSay(`💡 ${ideasCount} Idee${ideasCount > 1 ? 'n' : ''} im Regal — aber die Fabrik steht still! Schick doch eine an den CTO. Die Rakete ist schon betankt. 🚀`, 'happy', 'noorder');
-            } else if (done) {
-                fabiSay(`🏆 ${done} Release${done > 1 ? 's' : ''} ausgeliefert — du bist offiziell mein Lieblings-CEO. Bereit für den nächsten Streich?`, 'happy', 'done-' + done);
-            }
-            fabiRenderStreak();
-        }
-
         function initFactoryPanel() {
             if (!factory3D) factory3D = initFactory3D();
             loadFactoryData();
@@ -3597,9 +3431,6 @@
             const orders = data.orders || [];
             renderFactoryOrders(orders);
             updateFactoryScene(orders);
-            try {
-                fabiUpdate(orders, JSON.parse(localStorage.getItem('aios-ideas') || '[]').length);
-            } catch (e) {}
 
             // CTO-Bestätigung als Live-Meldung an den CEO (nur neue Bestätigungen)
             orders.forEach(o => {
@@ -3756,11 +3587,6 @@
                 toast(decision === 'approve'
                     ? '✅ Freigegeben — die Fabrik liefert jetzt aus.'
                     : '🚫 Abgelehnt — der Auftrag wurde gestoppt.', decision === 'approve' ? 'success' : 'info');
-                fabiStreakTouch();
-                fabiSay(decision === 'approve'
-                    ? '🎊 <b>Abnahme erteilt!</b> Konfetti! Applaus! Die Rakete zündet — und ich habe NUR ein bisschen geweint. 🚀'
-                    : '💛 Gutes Auge, CEO. Lieber ehrlich abgelehnt als halbherzig released. Der nächste Sprint wird besser — versprochen!',
-                    decision === 'approve' ? 'party' : 'plead', 'decide-' + orderId);
                 pollFactoryOrders(false);
             } catch (e) {
                 toast('Abnahme fehlgeschlagen: ' + e, 'error');
@@ -3832,8 +3658,6 @@
                     toast(data.error, 'error');
                 } else {
                     toast('📨 Auftrag an den CTO-Agenten übermittelt — Bestätigung folgt gleich hier live.', 'success');
-                    fabiStreakTouch();
-                    fabiSay(`🚦 Und looos! „<b>${escapeHtml(idea.name)}</b>“ rollt aufs Fließband. Ich sage den Minifiguren Bescheid — die lieben sowas! 🧱`, 'party', 'sent-' + Date.now());
                     document.getElementById('factory-note').value = '';
                     pollFactoryOrders(false);
                 }
@@ -3874,8 +3698,6 @@
             });
             localStorage.setItem('aios-ideas', JSON.stringify(ideas));
             toast('Idee erfolgreich gespeichert!', 'success');
-            fabiStreakTouch();
-            fabiSay(FABI_PRAISE[Math.floor(Math.random() * FABI_PRAISE.length)], 'party');
             document.getElementById('idea-name').value = '';
             document.getElementById('idea-target').value = '';
             document.getElementById('idea-problem').value = '';

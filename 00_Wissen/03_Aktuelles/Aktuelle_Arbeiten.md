@@ -6,6 +6,69 @@
 
 ---
 
+## 2026-07-12 (Tag 3) — DokuCheck Lokal v0.2: Browser-KI als erstes Produkt
+
+### Was heute entstanden ist
+
+| # | Arbeit | Ort |
+|---|--------|-----|
+| 1 | **DokuCheck Lokal v0.2** — Prototyp-Monolith zerlegt in saubere App (HTML/CSS/JS, kein Build-Toolchain) | `10_Business/Lokal-SML-Webassembly-MultiMemory/Produkt/dokucheck-lokal/` |
+| 2 | **Vendoring statt CDN**: WebLLM 0.2.79, pdf.js 4.4.168, Tesseract.js 5.1.1 + Sprachdaten (deu/eng/vie) lokal eingecheckt | `.../vendor/` |
+| 3 | **WebLLM in Web Worker** verschoben — UI bleibt während Inferenz responsiv | `worker.js` |
+| 4 | **OCR-Modul** (Bild → Text, WASM, läuft ohne WebGPU) + 📷 Kamera-Aufnahme mobil | `ocr.js` |
+| 5 | **Übersetzen** (Deutsch/Englisch/Vietnamesisch) über das geladene SLM — keine neue Bibliothek | `app.js` |
+| 6 | **BM25-Retrieval** statt Keyword-Zählen + Map-Reduce-Zusammenfassung für lange Dokumente | `app.js` |
+| 7 | **Multi-Memory-Panel** (IndexedDB): Episodic (Verlauf), Semantic (Dokumente), Procedural (Prüfroutinen), Tool (Modellwahl) | `memory/` |
+| 8 | **PWA**: installierbar, App-Shell offline (Service Worker), Manifest + Icon | `sw.js`, `manifest.webmanifest` |
+| 9 | **Dashboard-Integration**: Route `/produkte/<prod>/` + Nav-Button „🛡️ DokuCheck Lokal" | `ai_os_dashboard.py`, `templates/dashboard.html` |
+| 10 | Wiki-Kopie → Redirect-Stub (eine Quelle der Wahrheit) | `00_Wissen/04_Referenzen/Wiki/dokucheck-lokal.html` |
+
+### Lern-Highlights des Tages (mit Code)
+
+**1. Worker-Fetches sind für den Hauptthread unsichtbar.** Das Signatur-Feature
+(Netzwerk-Beweiszähler) wäre durch den Umzug der Engine in den Web Worker blind
+geworden: `PerformanceObserver` sieht nur Requests des eigenen Kontexts. Lösung —
+zweiter Observer **im Worker**, Meldung per `BroadcastChannel` (stört das
+WebLLM-Message-Protokoll nicht, anders als eigene `postMessage`-Typen):
+
+```js
+// worker.js
+const netChannel = new BroadcastChannel("dokucheck-net");
+new PerformanceObserver(list => {
+  for (const e of list.getEntries())
+    if (e.initiatorType === "fetch") netChannel.postMessage({ kind: "net", url: e.name });
+}).observe({ entryTypes: ["resource"] });
+```
+
+**2. Windows-Registry sabotiert ES-Module.** Flask/`mimetypes` liest Content-Types
+aus der Registry — `.js` kommt dort oft als `text/plain`, und Browser verweigern
+dann Module und Worker. Pflicht-Fix im Dashboard:
+
+```python
+import mimetypes
+mimetypes.add_type("text/javascript", ".js")
+mimetypes.add_type("application/wasm", ".wasm")
+```
+
+**3. „Offline" ehrlich definieren.** WebLLM hat keinen WASM/CPU-Fallback (Kernels
+sind WebGPU-only) und die Modellgewichte (0,8–2 GB) kommen zwingend einmalig von
+HuggingFace. Der ehrliche Claim: *App-Shell + OCR 100 % lokal; Analyse nach
+einmaligem Modell-Download offline.* Deshalb zeigt die Beweisleiste jetzt zwei
+Zähler: „Modell-Download (einmalig)" vs. „Analyse-Anfragen: 0".
+
+**4. Übersetzen ohne neue Abhängigkeit.** Statt einer Translation-Bibliothek
+übersetzt das bereits geladene SLM abschnittsweise (Chunk für Chunk, gestreamt) —
+ein System-Prompt genügt.
+
+### Stolpersteine
+- `node --check` behandelt `.js` als CommonJS → für ES-Module-Check als `.mjs`-Kopie prüfen.
+- Der cp1252-Print-Bug schlug wieder zu (Häkchen-Zeichen im Python-Check) → `PYTHONUTF8=1`.
+- Flask-Teststart braucht >6 s (LLM-Router-Init) — nicht zu früh curlen.
+- Auf dem Smartphone via LAN/Tailnet: Service Worker + WebGPU verlangen Secure Context —
+  über `http://` (nicht localhost) läuft nur OCR; für volle Funktion HTTPS/Tunnel nötig.
+
+---
+
 ## 2026-07-10 (Tag 2)
 
 ### Was heute entstanden ist

@@ -49,6 +49,14 @@ from llm_router import LLM_ROUTER, OLLAMA_URL
 
 app = Flask(__name__)
 
+# Windows-Registry liefert für .js/.mjs oft "text/plain" — dann verweigern
+# Browser ES-Module und Worker die Ausführung. Deshalb explizit registrieren.
+import mimetypes
+mimetypes.add_type("text/javascript", ".js")
+mimetypes.add_type("text/javascript", ".mjs")
+mimetypes.add_type("application/wasm", ".wasm")
+mimetypes.add_type("application/manifest+json", ".webmanifest")
+
 # ========== DIENSTE-REGISTRY (Ebenen-Struktur) ==========
 SERVICES = [
     {"key": "dashboard", "name": "Dashboard", "icon": "🖥️", "port": FLASK_PORT,
@@ -139,6 +147,11 @@ WIKI_DIRS = [
     {"key": "wiki", "name": "Wiki / Referenzen", "path": "00_Wissen/04_Referenzen/Wiki"},
     {"key": "architektur", "name": "Architektur-Dokumentation", "path": "04_Infrastruktur/Dokumentation/Architektur"},
 ]
+
+# Browser-Produkte (statische Web-Apps) aus 10_Business — whitelisted wie WIKI_DIRS.
+PRODUKT_DIRS = {
+    "dokucheck": "10_Business/Lokal-SML-Webassembly-MultiMemory/Produkt/dokucheck-lokal",
+}
 
 FILE_ICONS = {
     ".pdf": "📕", ".png": "🖼️", ".jpg": "🖼️", ".jpeg": "🖼️",
@@ -431,10 +444,11 @@ FACTORY_STEPS = [
     {"key": "prototyp",    "station": "lab",      "label": "Sprint-Inkrement: Klickbarer Prototyp als Testumgebung"},
     {"key": "qualitaet",   "station": "test",     "label": "QA-Review: bestanden / nicht bestanden (max. 1 Nachbesserungs-Schleife)"},
     {"key": "abnahme",     "station": "approval", "label": "Sprint Review: CEO-Abnahme als Product Owner (Human in the Loop)"},
-    {"key": "abschluss",   "station": "deploy",   "label": "Release: Auslieferung mit Versions-Kennzeichnung"},
+    {"key": "abschluss",   "station": "deploy",   "label": "Release: Produktion des finalen Produkts & Auslieferung"},
     {"key": "retro",       "station": "cto",      "label": "Retrospektive: Team-Erkenntnisse für den nächsten Sprint"},
 ]
 FACTORY_PROTO_DIR = FACTORY_RESULTS_DIR / "Prototypen"
+FACTORY_PRODUCT_DIR = FACTORY_RESULTS_DIR / "Produkte"
 
 
 def _load_factory_orders():
@@ -577,6 +591,72 @@ def _factory_build_prototype(order_id, briefing, concept):
     summary = (f"Sprint-Inkrement bereit: klickbarer Prototyp v{version} ({len(html)} Zeichen) unter "
                f"/factory/prototype/{order_id} — der Product Owner (CEO) kann das Produkt vor der Freigabe testen.")
     _factory_set_step(order_id, "prototyp", "done", output=summary, engine=engine)
+
+
+def _factory_build_product(order):
+    """Produktion: baut aus Konzept, Prototyp und CEO-Feedback das FINALE, benutzbare Produkt.
+
+    Kein Mockup — eine vollständige Ein-Datei-Web-App mit dauerhafter Datenspeicherung,
+    abgelegt unter 10_Business/KI-Fabrik-Auftraege/Produkte/. Gibt (Pfad, Engine) zurück.
+    """
+    order_id = order["id"]
+    version = order.get("version", 1)
+    idea_name = order.get("idea", {}).get("name", "Produkt")
+    briefing = _idea_briefing(order)
+    concept = _factory_step_output(order, "entwicklung")
+    qa = _factory_step_output(order, "qualitaet")
+    approval = order.get("ceo_approval") or {}
+    proto_path = FACTORY_PROTO_DIR / f"{order_id}.html"
+    proto_html = proto_path.read_text(encoding="utf-8") if proto_path.exists() else ""
+
+    task = (
+        "Baue jetzt das FINALE, AUSLIEFERBARE PRODUKT: eine vollständige, sofort produktiv "
+        "nutzbare Web-App in GENAU EINER HTML-Datei. Das ist KEIN Mockup, KEIN MVP und KEINE "
+        "Demo — der Nutzer arbeitet ab heute täglich damit und erwartet echten Mehrwert.\n\n"
+        "STRIKTE REGELN:\n"
+        "- GENAU EINE HTML-Datei: CSS und JavaScript inline, KEINE externen Ressourcen/CDNs.\n"
+        "- ALLE Kernfunktionen aus dem Konzept funktionieren wirklich (anlegen, bearbeiten, "
+        "löschen, suchen/filtern/sortieren — was das Produkt braucht).\n"
+        "- Daten werden mit localStorage DAUERHAFT gespeichert und beim Laden wiederhergestellt; "
+        "zusätzlich Export/Import als JSON-Datei, damit dem Nutzer nichts verloren geht.\n"
+        "- Start mit leerem Zustand + kurzem Onboarding-Hinweis. KEINE Fake-/Beispieldaten.\n"
+        "- Professionelles, modernes, responsives Design (Desktop & Handy), deutsche Oberfläche.\n"
+        "- KEIN 'Prototyp'-Banner, keine Platzhalter, kein Lorem Ipsum, keine toten Buttons.\n"
+        "- Antworte NUR mit dem vollständigen HTML-Code (beginnend mit <!DOCTYPE html>), "
+        "kein erklärender Text.\n\n"
+        f"BRIEFING:\n{briefing}\n\n"
+        f"TECHNISCHES KONZEPT:\n{concept[:2500]}\n\n"
+        f"QA-HINWEISE (beheben!):\n{qa[:1200]}\n\n"
+        + (f"CEO-FEEDBACK AUS DER ABNAHME (zwingend umsetzen!):\n{approval.get('comment')}\n\n"
+           if approval.get("comment") else "")
+        + (f"FREIGEGEBENER PROTOTYP ALS AUSGANGSBASIS (vervollständigen, nicht verschlechtern):\n{proto_html[:5000]}"
+           if proto_html else "")
+    )
+    text = _agent_system_execute("code", task, timeout=600)
+    engine = "Agent-System :5300 (code)"
+    if not text:
+        text, engine = _llm_generate(
+            "Du bist der CODE/DEV AGENT der KI-Fabrik und ein exzellenter Frontend-Entwickler. "
+            "Du lieferst ausschließlich vollständigen, produktionsreifen Code ohne Erklärtext.",
+            task, num_predict=6000, timeout=900)
+    html = _extract_html(text)
+    if not html and proto_html:
+        # Notfall-Fallback: der freigegebene Prototyp ist besser als gar keine Auslieferung
+        html, engine = proto_html, engine + " · Fallback: freigegebener Prototyp"
+    if not html:
+        return None, engine
+    badge = (f'<div style="position:fixed;bottom:8px;right:8px;z-index:99999;background:rgba(17,17,17,0.7);'
+             f'color:#fff;padding:3px 10px;border-radius:12px;font:600 11px sans-serif;opacity:0.85;">'
+             f'🏭 KI-Fabrik Release v{version}</div>')
+    html, n = re.subn(r"<body[^>]*>", lambda m: m.group(0) + badge, html, count=1, flags=re.I)
+    if not n:
+        html = badge + html
+    safe_name = re.sub(r"[^\w\-]+", "_", idea_name)[:40] or "Produkt"
+    FACTORY_PRODUCT_DIR.mkdir(parents=True, exist_ok=True)
+    product_path = FACTORY_PRODUCT_DIR / f"{order_id}_{safe_name}_v{version}.html"
+    product_path.write_text(html, encoding="utf-8")
+    _factory_update_order(order_id, lambda o: o.update(product_file=f"/factory/product/{order_id}"))
+    return product_path, engine
 
 
 def _idea_key(name):
@@ -1224,6 +1304,21 @@ def get_wiki_file(dir_key, filename):
         return jsonify({"error": "Unbekanntes Verzeichnis"}), 404
     try:
         return send_from_directory(str(AI_OS_ROOT / d["path"]), filename)
+    except Exception:
+        return jsonify({"error": "Datei nicht gefunden"}), 404
+
+@app.route("/produkte/<prod>/")
+@app.route("/produkte/<prod>/<path:filename>")
+def serve_produkt(prod, filename="index.html"):
+    """Liefert eine Browser-Produkt-App (z.B. DokuCheck Lokal) als statische Dateien.
+    Whitelisted über PRODUKT_DIRS, pfadsicher via send_from_directory.
+    Bewusst OHNE restriktive CSP: die Apps brauchen Worker, WASM und IndexedDB."""
+    from flask import send_from_directory
+    pfad = PRODUKT_DIRS.get(prod)
+    if not pfad:
+        return jsonify({"error": "Unbekanntes Produkt"}), 404
+    try:
+        return send_from_directory(str(AI_OS_ROOT / pfad), filename)
     except Exception:
         return jsonify({"error": "Datei nicht gefunden"}), 404
 
