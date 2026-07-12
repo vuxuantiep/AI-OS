@@ -25,6 +25,7 @@
 | 11 | **Mehrsprachigkeit DE/EN/VI** — Umschalter in der Beweisleiste, komplette UI + KI-Prompts übersetzt (locker formuliert), Wahl wird in Tool Memory gemerkt | `i18n.js` (107 Schlüssel × 3 Sprachen), `index.html` (`data-i18n`), `app.js` |
 | 12 | **Schritt-Führung** — „✓ bereit“-Badges an Schritt 1/2/3, Schritt 3 ausgegraut bis alles bereit ist, dann Anscrollen + Puls-Highlight + grüner Nächster-Schritt-Hinweis | `app.js` (`statusFlow()`), `index.html`, `styles.css` |
 | 13 | **Scan-PDF-Rettung** — PDFs ohne Textebene (0 Zeichen extrahiert!) werden erkannt, Seiten als Canvas gerendert und automatisch per OCR gelesen; leere Extraktion wird nie mehr als „✓ fertig“ angezeigt | `app.js` (`ocrPdf()`), `ocr.js` (`ocrWorker` wiederverwendbar) |
+| 14 | **Bugfix Übersetzen** — Modell plauderte auf Deutsch („Ich verstehe, dass du möchtest …") statt nach Vietnamesisch zu übersetzen; Übersetzungs-Prompt aus i18n herausgelöst und sprachunabhängig auf Englisch fixiert, Anweisung zusätzlich in der User-Nachricht wiederholt | `app.js` (`uebersetzen()`, `TRANS_ZIEL`), `i18n.js` (`prompt.transSys` entfernt) |
 
 ### Lern-Highlights des Tages (mit Code)
 
@@ -97,6 +98,29 @@ weg (`URL.createObjectURL(canvas)` ist illegal) + Object-URL-Leak + `\3`-Oktal-R
 **Lehre:** Ein offener Blockkommentar ist der fieseste „Syntaxfehler", weil er
 keiner ist — Prüfung ab jetzt zusätzlich: erwartete Exports greppen, nicht nur
 `node --check`.
+
+### Nachtrag 12.07.: Übersetzen nach Vietnamesisch war kaputt
+
+Symptom: Statt der Übersetzung kam deutsches Geplauder („Ich verstehe, dass du
+möchtest, dass ich den Text vollständig übersetze …"). Ursache: Der
+Übersetzungs-Prompt kam aus i18n und war damit in der **UI-Sprache** — ein
+deutscher System-Prompt plus roher Text ohne Anweisung in der User-Nachricht
+verleitet kleine Modelle dazu, auf Deutsch zu kommentieren statt zu übersetzen.
+
+Fix in `uebersetzen()`: Prompt aus i18n herausgelöst und fest auf Englisch
+(SLMs folgen englischen Instruktionen am zuverlässigsten), Zielsprache doppelt
+benannt und die Anweisung in der User-Nachricht wiederholt:
+
+```js
+const TRANS_ZIEL = { de: "German (Deutsch)", en: "English", vi: "Vietnamese (Tiếng Việt)" };
+// system: "You are a translation engine. Translate ... into Vietnamese (Tiếng Việt).
+//          Reply with ONLY the translated text ..."
+// user:   "Translate the following text into Vietnamese (Tiếng Việt). Output only the translation:\n\n" + chunk
+```
+
+**Lehre (korrigiert Highlight 5):** UI-Sprache darf die *Antwortsprache* steuern
+(Zusammenfassen, Fragen) — aber nie einen Prompt, dessen Zielsprache der Nutzer
+separat wählt. Task-Prompts für SLMs: englisch, Anweisung nah am Text wiederholen.
 
 ### Stolpersteine
 - `node --check` behandelt `.js` als CommonJS → für ES-Module-Check als `.mjs`-Kopie prüfen.

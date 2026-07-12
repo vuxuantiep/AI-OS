@@ -156,9 +156,7 @@ const UEBERSETZUNGEN = {
     "prompt.sumReduce": "Hier sind Stichpunkt-Zusammenfassungen der Teile eines Dokuments. Mach daraus EINE zusammenhängende Gesamtzusammenfassung in einfachem Deutsch (max. 10 Sätze). Sag zuerst, was für ein Dokument es ist.\n\nSTICHPUNKTE:\n{punkte}",
     "prompt.risk": "Hier ist der Vertragstext:\n\nDOKUMENT:\n{doc}",
     "prompt.q": "Beantworte die Frage NUR anhand der folgenden Dokument-Auszüge. Wenn die Antwort dort nicht steht, sage das.\n\nAUSZÜGE:\n{ctx}\n\nFRAGE: {frage}",
-    "prompt.routine": "{anweisung}\nZitiere kurz die relevanten Stellen. Wenn nichts im Text steht, schreibe \"Nichts gefunden\".\n\nDOKUMENT:\n{doc}",
-    "prompt.transSys": "Du bist ein präziser Übersetzer. Übersetze den gegebenen Text vollständig nach {ziel}. Gib NUR die Übersetzung aus, ohne Kommentare oder Erklärungen.",
-  },
+    "prompt.routine": "{anweisung}\nZitiere kurz die relevanten Stellen. Wenn nichts im Text steht, schreibe \"Nichts gefunden\".\n\nDOKUMENT:\n{doc}",  },
 
   /* ================= ENGLISH ================= */
   en: {
@@ -311,9 +309,7 @@ const UEBERSETZUNGEN = {
     "prompt.sumReduce": "Here are bullet-point summaries of the parts of a document. Turn them into ONE coherent overall summary in plain English (max 10 sentences). Start by saying what kind of document it is.\n\nBULLETS:\n{punkte}",
     "prompt.risk": "Here is the contract text:\n\nDOCUMENT:\n{doc}",
     "prompt.q": "Answer the question ONLY based on the following document excerpts. If the answer is not there, say so.\n\nEXCERPTS:\n{ctx}\n\nQUESTION: {frage}",
-    "prompt.routine": "{anweisung}\nBriefly quote the relevant passages. If nothing is in the text, write \"Nothing found\".\n\nDOKUMENT:\n{doc}",
-    "prompt.transSys": "You are a precise translator. Translate the given text completely into {ziel}. Output ONLY the translation, no comments or explanations.",
-  },
+    "prompt.routine": "{anweisung}\nBriefly quote the relevant passages. If nothing is in the text, write \"Nothing found\".\n\nDOKUMENT:\n{doc}",  },
 
   /* ================= TIẾNG VIỆT ================= */
   vi: {
@@ -466,9 +462,7 @@ const UEBERSETZUNGEN = {
     "prompt.sumReduce": "Đây là các tóm tắt gạch đầu dòng của từng phần một tài liệu. Hãy viết MỘT bản tóm tắt tổng hợp mạch lạc bằng tiếng Việt dễ hiểu (tối đa 10 câu). Câu đầu hãy nói đây là loại tài liệu gì.\n\nGẠCH ĐẦU DÒNG:\n{punkte}",
     "prompt.risk": "Đây là văn bản hợp đồng:\n\nTÀI LIỆU:\n{doc}",
     "prompt.q": "CHỈ dựa vào các trích đoạn tài liệu sau để trả lời câu hỏi. Nếu không có câu trả lời trong đó, hãy nói rõ.\n\nTRÍCH ĐOẠN:\n{ctx}\n\nCÂU HỎI: {frage}",
-    "prompt.routine": "{anweisung}\nTrích ngắn gọn các đoạn liên quan. Nếu không có gì trong văn bản, ghi \"Không tìm thấy\".\n\nTÀI LIỆU:\n{doc}",
-    "prompt.transSys": "Bạn là một dịch giả chính xác. Hãy dịch toàn bộ văn bản sang {ziel}. CHỈ xuất bản dịch, không bình luận hay giải thích.",
-  },
+    "prompt.routine": "{anweisung}\nTrích ngắn gọn các đoạn liên quan. Nếu không có gì trong văn bản, ghi \"Không tìm thấy\".\n\nTÀI LIỆU:\n{doc}",  },
 };
 
 let sprache = "de";

@@ -581,11 +581,22 @@ function risikoCheck() {
   });
 }
 
-/* --- Übersetzen: Abschnitt für Abschnitt über das SLM --- */
+/* --- Übersetzen: Abschnitt für Abschnitt über das SLM ---
+   Prompt bewusst NICHT aus i18n: Er muss unabhängig von der UI-Sprache sein.
+   Kleine Modelle folgen englischen Anweisungen am zuverlässigsten — mit
+   deutschem System-Prompt kommentieren sie auf Deutsch statt zu übersetzen.
+   Zielsprache doppelt benannt (englisch + nativ), Anweisung zusätzlich in
+   der User-Nachricht wiederholt. */
 const MAX_UEBERSETZUNG = 6;
+const TRANS_ZIEL = {
+  de: "German (Deutsch)",
+  en: "English",
+  vi: "Vietnamese (Tiếng Việt)",
+};
 function uebersetzen() {
   const zielCode = $("transLang").value;         // de | en | vi
-  const zielName = t("lang." + zielCode);        // Sprachname in der UI-Sprache
+  const zielName = t("lang." + zielCode);        // Sprachname in der UI-Sprache (nur Anzeige)
+  const ziel = TRANS_ZIEL[zielCode] || zielCode;
   runAktion(t("action.trans"), zielName, async () => {
     let teile = chunks;
     let hinweis = "";
@@ -597,8 +608,8 @@ function uebersetzen() {
     for (let i = 0; i < teile.length; i++) {
       if (stopFlag) break;
       const teil = await generate([
-        { role: "system", content: t("prompt.transSys", { ziel: zielName }) },
-        { role: "user", content: teile[i].text },
+        { role: "system", content: "You are a translation engine. Translate the user's text into " + ziel + ". Reply with ONLY the translated text in " + ziel + " — no comments, no explanations, no preamble." },
+        { role: "user", content: "Translate the following text into " + ziel + ". Output only the translation:\n\n" + teile[i].text },
       ], {
         maxTokens: 900, temperature: 0.2,
         onDelta: (_, text) => ($("output").textContent = gesamt ? gesamt + "\n\n" + text : text),
