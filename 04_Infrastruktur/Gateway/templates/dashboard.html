@@ -1086,7 +1086,7 @@
                 <button class="nav-item" data-tab="files" onclick="showTab('files')">📂 <span class="label">Dateien</span></button>
                 <button class="nav-item" data-tab="architecture" onclick="showTab('architecture')">🏛️ <span class="label">Architektur</span></button>
                 <button class="nav-item" data-tab="ideas" onclick="showTab('ideas')">💡 <span class="label">CEO-Ideen</span></button>
-                <button class="nav-item" onclick="window.open('/produkte/dokucheck/','_blank')">🛡️ <span class="label">DokuCheck Lokal</span></button>
+                <button class="nav-item" data-tab="products" onclick="showTab('products')">🛍️ <span class="label">Produkte</span></button>
             </nav>
             <div class="sidebar-footer">
                 <span class="status-dot" id="ollama-dot"></span>
@@ -1529,6 +1529,51 @@
                     </details>
 
                 </section>
+
+                <!-- === Produkte === -->
+                <section class="tab-panel" id="tab-products">
+                    <div class="section-title">🛍️ Produkte <span class="muted">— Browser-Apps und Tools aus 10_Business</span></div>
+                    <div class="services-grid">
+                        <div class="service-card">
+                            <div class="head" style="display:flex;align-items:center;gap:0.75rem;">
+                                <span style="font-size:1.6rem;">🛡️</span>
+                                <div>
+                                    <b>DocuCheck Local</b>
+                                    <div class="muted" style="font-size:0.75rem;">v0.3 · läuft komplett im Browser</div>
+                                </div>
+                            </div>
+                            <div class="desc" style="margin-top:0.6rem;">
+                                Dokumente 100&nbsp;% lokal prüfen, übersetzen (DE/EN/VI) und zusammenfassen —
+                                WebLLM/WASM, OCR für Scans, keine Cloud. Installierbar als PWA.
+                            </div>
+                            <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.8rem;flex-wrap:wrap;">
+                                <span class="pill" style="font-size:0.68rem;">🟢 statisch — immer verfügbar</span>
+                                <button class="btn btn-sm" onclick="window.open('/produkte/dokucheck/','_blank')">↗ Öffnen</button>
+                            </div>
+                        </div>
+                        <div class="service-card">
+                            <div class="head" style="display:flex;align-items:center;gap:0.75rem;">
+                                <span style="font-size:1.6rem;">🎬</span>
+                                <div>
+                                    <b>KI-Avatar Pipeline-Board</b>
+                                    <div class="muted" style="font-size:0.75rem;">Trello-Board · Port 5310</div>
+                                </div>
+                            </div>
+                            <div class="desc" style="margin-top:0.6rem;">
+                                Verwaltung der KI-Avatar-Video-Pipeline (YouTube-Automation &amp; TikTok-Shop):
+                                Videos wandern per Drag&nbsp;&amp;&nbsp;Drop durch 7 Stufen von Trend-Scan bis Posting,
+                                inkl. Compliance-Status je Karte.
+                            </div>
+                            <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.8rem;flex-wrap:wrap;">
+                                <span class="pill" style="font-size:0.68rem;" id="kiavatar-status">⏳ prüfe…</span>
+                                <button class="btn btn-sm" onclick="window.open('/produkte/ki-avatar/','_blank')">↗ Öffnen</button>
+                            </div>
+                            <div class="muted" id="kiavatar-hint" style="display:none;font-size:0.72rem;margin-top:0.5rem;">
+                                Board offline — im Dienste-Tab starten oder: <code>python 10_Business/KI-Avatar/board/app.py</code>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
@@ -1580,7 +1625,7 @@
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
             document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
-            const titles = {overview: '📊 Übersicht', news: '📰 KI-News', services: '🧩 Dienste', fleet: '🎯 Agenten', chat: '💬 Chat', models: '📦 Modelle', llm: '🔀 KI-Gateway', knowledge: '🧠 Gedächtnis', learning: '🎓 Lernen', files: '📂 Dateien', architecture: '🏛️ Architektur', ideas: '💡 CEO-Ideen'};
+            const titles = {overview: '📊 Übersicht', news: '📰 KI-News', services: '🧩 Dienste', fleet: '🎯 Agenten', chat: '💬 Chat', models: '📦 Modelle', llm: '🔀 KI-Gateway', knowledge: '🧠 Gedächtnis', learning: '🎓 Lernen', files: '📂 Dateien', architecture: '🏛️ Architektur', ideas: '💡 CEO-Ideen', products: '🛍️ Produkte'};
             document.getElementById('topbar-title').textContent = titles[tab] || tab;
             // Deep-Link: aktiven Tab in der URL halten (z.B. /#ideas für die KI-Fabrik)
             if (history.replaceState) history.replaceState(null, '', '#' + tab);
@@ -1592,6 +1637,25 @@
                     loadSavedIdeas();
                     initFactoryPanel();
                 }, 100);
+            }
+            if (tab === 'products') checkKiAvatarStatus();
+        }
+
+        // Live-Status des KI-Avatar-Boards (läuft als eigener Dienst auf :5310,
+        // erreichbar über den Proxy /produkte/ki-avatar/)
+        async function checkKiAvatarStatus() {
+            const pill = document.getElementById('kiavatar-status');
+            const hint = document.getElementById('kiavatar-hint');
+            if (!pill) return;
+            pill.textContent = '⏳ prüfe…';
+            try {
+                const res = await fetch('/produkte/ki-avatar/api/health');
+                if (!res.ok) throw new Error('offline');
+                pill.textContent = '🟢 läuft';
+                hint.style.display = 'none';
+            } catch (e) {
+                pill.textContent = '🔴 offline';
+                hint.style.display = 'block';
             }
         }
 

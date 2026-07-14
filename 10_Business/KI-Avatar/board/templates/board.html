@@ -207,7 +207,7 @@
   <button class="chip" data-filter="youtube">YouTube</button>
   <button class="chip" data-filter="tiktok_shop">TikTok-Shop</button>
   <button class="btn btn-primary" id="btn-new">+ Neues Video</button>
-  <a class="backlink" href="http://localhost:5000" title="Zurück zum AI-OS Dashboard">⌂ AI-OS</a>
+  <a class="backlink" href="http://localhost:5000" id="aios-link" title="Zurück zum AI-OS Dashboard">⌂ AI-OS</a>
 </header>
 
 <main>
@@ -302,8 +302,10 @@ function toast(msg) {
   setTimeout(() => el.classList.remove("show"), 2200);
 }
 
+// Relative Pfade: funktioniert standalone (:5310) UND hinter dem
+// AI-OS-Proxy (/produkte/ki-avatar/). "api/..." löst gegen die aktuelle URL auf.
 async function api(path, options) {
-  const res = await fetch(path, options);
+  const res = await fetch(path.replace(/^\//, ""), options);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     toast(data.error || ("Fehler " + res.status));
@@ -507,6 +509,12 @@ document.querySelectorAll(".chip").forEach(chip => {
     render();
   });
 });
+
+// Hinter dem AI-OS-Proxy (/produkte/ki-avatar/) führt "/" zum Dashboard —
+// funktioniert dann auch über Tunnel/Tailscale statt nur via localhost.
+if (window.location.pathname.indexOf("/produkte/") === 0) {
+  document.getElementById("aios-link").setAttribute("href", "/");
+}
 
 loadBoard();
 </script>

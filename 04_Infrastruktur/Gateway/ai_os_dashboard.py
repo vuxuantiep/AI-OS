@@ -100,6 +100,10 @@ SERVICES = [
      "desc": "Autonomer Coding-Agent (Docker) — nutzt LiteLLM als LLM-Backend",
      "layer": "05_Agenten", "script": "05_Agenten/openhands_launcher.py",
      "env_key": "OPENHANDS_PORT", "health_path": "/"},
+    {"key": "kiavatar_board", "name": "KI-Avatar Board", "icon": "🎬", "port": 5310,
+     "desc": "Pipeline-Board für KI-Avatar-Videos (YouTube-Automation & TikTok-Shop)",
+     "layer": "10_Business", "script": "10_Business/KI-Avatar/board/app.py",
+     "env_key": "KIAVATAR_BOARD_PORT", "health_path": "/api/health"},
 ]
 
 AGENTS_REGISTRY_PATH = AI_OS_ROOT / "05_Agenten" / "agents" / "agents.json"
@@ -1307,12 +1311,48 @@ def get_wiki_file(dir_key, filename):
     except Exception:
         return jsonify({"error": "Datei nicht gefunden"}), 404
 
-@app.route("/produkte/<prod>/")
-@app.route("/produkte/<prod>/<path:filename>")
+# KI-Avatar Pipeline-Board läuft als eigener Flask-Dienst auf Port 5310.
+# Proxy statt Redirect/Direktlink, damit das Board auch über Cloudflare-Tunnel
+# und Tailscale erreichbar ist (dort ist nur Port 5000 exponiert). Das Board
+# nutzt relative API-Pfade und funktioniert daher unter beiden URLs.
+# Achtung: KEINE eigene Route — Werkzeug würde /produkte/<prod>/ bevorzugen;
+# das Dispatching übernimmt serve_produkt unten.
+KIAVATAR_BOARD_PORT = int(os.environ.get("KIAVATAR_BOARD_PORT", "5310"))
+
+def _kiavatar_proxy(subpath):
+    from flask import Response
+    url = f"http://127.0.0.1:{KIAVATAR_BOARD_PORT}/{subpath}"
+    if request.query_string:
+        url += "?" + request.query_string.decode("utf-8", "ignore")
+    data = request.get_data() if request.method in ("POST", "PUT") else None
+    req = urllib.request.Request(url, data=data, method=request.method)
+    if request.content_type:
+        req.add_header("Content-Type", request.content_type)
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return Response(resp.read(), status=resp.status,
+                            content_type=resp.headers.get("Content-Type", "text/html"))
+    except urllib.error.HTTPError as e:
+        return Response(e.read(), status=e.code,
+                        content_type=e.headers.get("Content-Type", "application/json"))
+    except Exception:
+        return Response(
+            "<h1>🎬 KI-Avatar Board ist offline</h1>"
+            "<p>Starten mit: <code>python 10_Business/KI-Avatar/board/app.py</code> "
+            "oder über den Dienste-Tab im Dashboard.</p>",
+            status=503, content_type="text/html; charset=utf-8")
+
+@app.route("/produkte/<prod>/", methods=["GET", "POST", "PUT", "DELETE"])
+@app.route("/produkte/<prod>/<path:filename>", methods=["GET", "POST", "PUT", "DELETE"])
 def serve_produkt(prod, filename="index.html"):
     """Liefert eine Browser-Produkt-App (z.B. DokuCheck Lokal) als statische Dateien.
     Whitelisted über PRODUKT_DIRS, pfadsicher via send_from_directory.
-    Bewusst OHNE restriktive CSP: die Apps brauchen Worker, WASM und IndexedDB."""
+    Bewusst OHNE restriktive CSP: die Apps brauchen Worker, WASM und IndexedDB.
+    Sonderfall ki-avatar: Proxy zum eigenständigen Board-Dienst auf Port 5310."""
+    if prod == "ki-avatar":
+        return _kiavatar_proxy("" if filename == "index.html" else filename)
+    if request.method != "GET":
+        return jsonify({"error": "Nur GET erlaubt"}), 405
     from flask import send_from_directory
     pfad = PRODUKT_DIRS.get(prod)
     if not pfad:

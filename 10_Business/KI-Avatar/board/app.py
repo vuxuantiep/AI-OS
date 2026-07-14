@@ -26,7 +26,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 DATA_FILE = os.path.join(DATA_DIR, "board.json")
 
-PORT = 5310
+PORT = int(os.environ.get("KIAVATAR_BOARD_PORT", "5310"))
 
 STAGES = [
     {"id": "trend_scan",     "title": "Trend-Scan",     "subtitle": "SearXNG/Qdrant",   "color": "gray"},

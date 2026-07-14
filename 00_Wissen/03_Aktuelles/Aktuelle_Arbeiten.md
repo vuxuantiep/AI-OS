@@ -49,6 +49,51 @@ Server gestartet, komplette API durchgetestet: Health ✓, Board laden (8 Stufen
 Seed-Karten) ✓, Karte anlegen ✓, verschieben ✓, Compliance updaten ✓, ungültige
 Stufe → 400 ✓, löschen ✓, Startseite HTTP 200 ✓, JS/Python-Syntax ✓.
 
+### Nachtrag (gleicher Tag): Dashboard-Integration „Produkte"-Tab
+
+Beide Produkte ins AI-OS-Dashboard eingruppiert:
+
+1. **Neuer Nav-Tab „🛍️ Produkte“** (`templates/dashboard.html`) — ersetzt den
+   einzelnen DocuCheck-Button. Panel mit Produktkarten (service-card-Stil):
+   DocuCheck Local + KI-Avatar Pipeline-Board, je mit Beschreibung, Status-Pill
+   und Öffnen-Button. Deep-Link `/#products` funktioniert über den bestehenden
+   Hash-Mechanismus automatisch.
+2. **Proxy `/produkte/ki-avatar/` → 127.0.0.1:5310** (`ai_os_dashboard.py`) —
+   bewusst Proxy statt Direktlink auf `localhost:5310`: über Cloudflare-Tunnel
+   und Tailscale ist nur Port 5000 exponiert; so ist das Board auch remote
+   nutzbar. GET/POST/PUT/DELETE werden mit Body + Content-Type durchgereicht,
+   bei Offline-Board kommt eine 503-Seite mit Startbefehl.
+3. **Board auf relative API-Pfade umgestellt** (`board.html`: `api()` strippt
+   führenden Slash) — dieselbe Datei funktioniert standalone (`/api/board`)
+   und hinter dem Proxy (`/produkte/ki-avatar/api/board`). Der ⌂-AI-OS-Link
+   zeigt hinter dem Proxy auf `/` statt hart auf `localhost:5000`.
+4. **Dienst-Registrierung**: KI-Avatar Board als SERVICES-Eintrag (Port 5310,
+   `health_path: /api/health`, Layer 10_Business) — erscheint im Dienste-Tab
+   und ist von dort startbar; `app.py` liest jetzt `KIAVATAR_BOARD_PORT` aus.
+
+**Gelernt (durch Test widerlegte Annahme!):** Ich hatte erwartet, dass Werkzeug
+die spezifischere Route `/produkte/ki-avatar/<path>` vor `/produkte/<prod>/<path>`
+matcht — tut es NICHT: die generische Route gewann, der Proxy bekam nie Requests
+(Symptom: `{"error": "Unbekanntes Produkt"}` + 405 bei POST). Lösung: keine
+konkurrierende Route, sondern Dispatching **innerhalb** von `serve_produkt`
+(`if prod == "ki-avatar": return _kiavatar_proxy(...)`). Merksatz: Bei
+überlappenden Flask-Routen nie auf Prioritätsregeln verlassen — selbst dispatchen.
+
+**Zombie-Falle erneut bestätigt:** Auf Port 5000 lief noch ein `pythonw` von
+GESTERN (13.07., PID 65672) und servierte alten Code, während der neue Server
+scheinbar fehlerfrei startete (Windows erlaubt Doppel-Bind). Erst
+`Get-NetTCPConnection -LocalPort 5000` + `Stop-Process` machte den Weg frei —
+genau wie in der Memory-Notiz dokumentiert.
+
+Außerdem: Ein Sub-Dienst hinter einem Pfad-Proxy darf im Frontend keine
+absoluten Pfade (`/api/...`) verwenden, sonst landen die Requests am falschen
+Server — deshalb nutzt das Board jetzt relative Pfade.
+
+**End-to-End verifiziert:** Proxy-CRUD komplett (POST/MOVE/DELETE über
+`/produkte/ki-avatar/api/...`) ✓, Board-Seite via Proxy HTTP 200 ✓, DocuCheck
+weiterhin HTTP 200 ✓, Offline-Fall → 503-Hinweisseite mit Startbefehl ✓,
+Produkte-Tab im Dashboard-HTML vorhanden ✓.
+
 ---
 
 ## 2026-07-12 (Tag 3) — DokuCheck Lokal v0.2: Browser-KI als erstes Produkt
