@@ -6,6 +6,51 @@
 
 ---
 
+## 2026-07-14 (Tag 4) — KI-Avatar: Produktstart + Pipeline-Board (Port 5310)
+
+### Was heute entstanden ist
+
+Neues Business-Produkt **KI-Avatar** unter `10_Business/KI-Avatar/` gestartet
+(2 Usecases: YouTube-Automation, TikTok-Shop) — inkl. Trello-artigem
+**Pipeline-Board** als AI-OS-Erweiterung:
+
+1. **Compliance-Critic-Agent überarbeitet** (`Konzept-KI Avatar/compliance-critic-agent.md`):
+   - Batch-Schema um Felder ergänzt, die der Prüfkatalog referenzierte, aber nie bekam
+     (`transcript`, `duration_seconds`, `daily_shoppable_count`, `channel_metadata`, `native_ai_label_set`)
+   - Enum-Bug `youtube_short` vs. `youtube_shorts` gefixt
+   - Explizite Status-Ableitungsregel (fail→BLOCKED, warning→APPROVED_WITH_WARNING)
+   - Art. 50 EU-KI-VO plattformunabhängig gemacht (gilt ab 02.08.2026!)
+   - False-Positive-Schutz: "Geld-zurück-Garantie" ≠ Heilsversprechen
+
+2. **Pipeline-Board** (`board/app.py` + `templates/board.html`, Flask, Port 5310):
+   - 8 Spalten = Pipeline-Stufen (Trend-Scan → … → Posting → Veröffentlicht)
+   - Karten = Videos: Usecase, Plattform, Kanal, Compliance-Status, Notizen
+   - Drag & Drop (HTML5, optimistisches Update mit Rollback bei API-Fehler)
+   - Usecase-Filter-Chips, Farben wie im Architektur-Diagramm
+     (türkis = selbst gehostet, koralle = externe API, grau = Ein-/Ausgabe)
+   - REST-API: GET /api/board, POST/PUT/DELETE /api/cards, POST /api/cards/id/move
+   - Persistenz: `board/data/board.json` (atomares Schreiben via tmp + os.replace)
+
+### Was ich dabei gelernt/beachtet habe
+
+- **LLM-Agent-Prompts brauchen ein vollständiges Eingabe-Schema:** Jede Prüfung im
+  Prompt, für die kein Eingabefeld existiert, zwingt das Modell zum Raten. Regel:
+  erst Felder definieren, dann Prüfungen darauf aufbauen — und für fehlende
+  optionale Felder explizit `manual_review`/`n/a` vorschreiben statt Block.
+- **Bekannte Stolpersteine vorab entschärft:** JS aus dem Template extrahiert und
+  mit `node --check` geprüft (Dashboard-Lektion), `sys.stdout.reconfigure(utf-8)`
+  gegen den Windows-Print-Bug, eigener Port 5310 statt 5000 (keine Zombie-Kollision).
+- **Atomares JSON-Schreiben** (`tmp` + `os.replace`) verhindert kaputte board.json
+  bei Absturz mitten im Schreiben.
+
+### Verifikation
+
+Server gestartet, komplette API durchgetestet: Health ✓, Board laden (8 Stufen,
+Seed-Karten) ✓, Karte anlegen ✓, verschieben ✓, Compliance updaten ✓, ungültige
+Stufe → 400 ✓, löschen ✓, Startseite HTTP 200 ✓, JS/Python-Syntax ✓.
+
+---
+
 ## 2026-07-12 (Tag 3) — DokuCheck Lokal v0.2: Browser-KI als erstes Produkt
 
 ### Was heute entstanden ist
@@ -311,4 +356,4 @@ End-to-End mit echtem Ollama getestet: Dokument hochgeladen, gefragt
 ---
 
 *Regel: Dieses Journal wird am Ende jedes Arbeitstages von Claude aktualisiert.*
-*Zuletzt aktualisiert: 2026-07-10*
+*Zuletzt aktualisiert: 2026-07-14*

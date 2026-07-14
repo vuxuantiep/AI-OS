@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KI-Avatar Pipeline-Board · AI-OS</title>
+<style>
+  :root {
+    --bg: #f6f5f2;
+    --panel: #ffffff;
+    --ink: #2d2d2d;
+    --muted: #7d7a74;
+    --line: #e3e1dc;
+    --teal: #0e7c6b;
+    --teal-bg: #e6f4f1;
+    --coral: #b4372a;
+    --coral-bg: #fbeae7;
+    --gray: #6b6862;
+    --gray-bg: #eeedea;
+    --done: #4a6fa5;
+    --done-bg: #e9eff7;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 14px rgba(0,0,0,0.05);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  header h1 { font-size: 1.15rem; font-weight: 700; }
+  header h1 span { color: var(--teal); }
+  .subtitle { color: var(--muted); font-size: 0.85rem; }
+  .spacer { flex: 1; }
+  .chip {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--muted);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .chip.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .btn {
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--teal); color: #fff; }
+  .btn-danger { background: var(--coral); color: #fff; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  .backlink { font-size: 0.85rem; color: var(--muted); text-decoration: none; }
+  .backlink:hover { color: var(--teal); }
+
+  main { padding: 20px 24px 40px; }
+  .board {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    align-items: flex-start;
+    padding-bottom: 12px;
+  }
+  .column {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    min-width: 250px;
+    width: 250px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow);
+  }
+  .column-head {
+    padding: 12px 14px 10px;
+    border-bottom: 1px solid var(--line);
+    border-top: 4px solid var(--gray);
+    border-radius: 12px 12px 0 0;
+  }
+  .column[data-color="teal"] .column-head { border-top-color: var(--teal); }
+  .column[data-color="coral"] .column-head { border-top-color: var(--coral); }
+  .column[data-color="done"] .column-head { border-top-color: var(--done); }
+  .column-head h2 { font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; }
+  .count {
+    background: var(--gray-bg);
+    color: var(--muted);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    padding: 1px 8px;
+    font-weight: 600;
+  }
+  .column-head .tool { color: var(--muted); font-size: 0.75rem; margin-top: 2px; }
+  .cards { padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 60px; }
+  .column.drag-over .cards { background: var(--teal-bg); border-radius: 0 0 12px 12px; }
+
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    cursor: grab;
+    transition: box-shadow 0.15s;
+  }
+  .card:hover { box-shadow: var(--shadow); }
+  .card.dragging { opacity: 0.5; }
+  .card-title { font-size: 0.88rem; font-weight: 600; margin-bottom: 6px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 4px; }
+  .badge {
+    font-size: 0.68rem;
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-weight: 600;
+  }
+  .badge.uc-youtube { background: var(--coral-bg); color: var(--coral); }
+  .badge.uc-tiktok_shop { background: #1a1a1a; color: #7df0e3; }
+  .badge.platform { background: var(--gray-bg); color: var(--gray); }
+  .badge.comp-open { background: var(--gray-bg); color: var(--gray); }
+  .badge.comp-approved { background: var(--teal-bg); color: var(--teal); }
+  .badge.comp-warning { background: #fdf3d7; color: #8a6d1a; }
+  .badge.comp-blocked { background: var(--coral-bg); color: var(--coral); }
+  .card-meta { color: var(--muted); font-size: 0.72rem; margin-top: 6px; }
+
+  .legend {
+    margin-top: 18px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+  /* Modal */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(30,30,30,0.45);
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 60px 16px;
+    z-index: 50;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--panel);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 460px;
+    padding: 22px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  .modal h3 { font-size: 1.05rem; margin-bottom: 16px; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    background: var(--bg);
+  }
+  .field textarea { min-height: 70px; resize: vertical; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
+  .modal-actions .spacer { flex: 1; }
+  .toast {
+    position: fixed;
+    bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    background: #2d2d2d;
+    color: #fff;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 0.85rem;
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+    z-index: 99;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🎬 KI-Avatar <span>Pipeline-Board</span></h1>
+    <div class="subtitle">YouTube-Automation &amp; TikTok-Shop · AI-OS-Erweiterung</div>
+  </div>
+  <div class="spacer"></div>
+  <button class="chip active" data-filter="all">Alle</button>
+  <button class="chip" data-filter="youtube">YouTube</button>
+  <button class="chip" data-filter="tiktok_shop">TikTok-Shop</button>
+  <button class="btn btn-primary" id="btn-new">+ Neues Video</button>
+  <a class="backlink" href="http://localhost:5000" title="Zurück zum AI-OS Dashboard">⌂ AI-OS</a>
+</header>
+
+<main>
+  <div class="board" id="board"></div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--gray)"></span>Ein-/Ausgabe</span>
+    <span><span class="dot" style="background:var(--teal)"></span>Selbst gehostet (AI Factory)</span>
+    <span><span class="dot" style="background:var(--coral)"></span>Externe bezahlte API</span>
+    <span><span class="dot" style="background:var(--done)"></span>Live</span>
+  </div>
+</main>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="modal-title">Neues Video</h3>
+    <div class="field">
+      <label>Titel *</label>
+      <input id="f-title" type="text" placeholder="z. B. 3 Dinge, die du beim Perfekt nicht wusstest">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Usecase</label>
+        <select id="f-usecase"></select>
+      </div>
+      <div class="field">
+        <label>Plattform</label>
+        <select id="f-platform"></select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Kanal</label>
+        <input id="f-channel" type="text" placeholder="z. B. Deutsch Dễ Hiểu">
+      </div>
+      <div class="field">
+        <label>Compliance</label>
+        <select id="f-compliance">
+          <option value="open">offen</option>
+          <option value="approved">freigegeben</option>
+          <option value="warning">Warnung</option>
+          <option value="blocked">blockiert</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Stufe</label>
+      <select id="f-stage"></select>
+    </div>
+    <div class="field">
+      <label>Notizen</label>
+      <textarea id="f-notes" placeholder="Skript-Ideen, Produktlinks, To-dos …"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="btn-delete" style="display:none">Löschen</button>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" id="btn-cancel">Abbrechen</button>
+      <button class="btn btn-primary" id="btn-save">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+let STAGES = [];
+let USECASES = {};
+let PLATFORMS = [];
+let cards = [];
+let filter = "all";
+let editingId = null;
+
+const COMP_LABEL = { open: "offen", approved: "freigegeben", warning: "Warnung", blocked: "blockiert" };
+const PLATFORM_LABEL = {
+  tiktok: "TikTok",
+  youtube_shorts: "YT Shorts",
+  youtube_long: "YT Long",
+  instagram_reels: "IG Reels"
+};
+
+function esc(s) {
+  const d = document.createElement("div");
+  d.textContent = s == null ? "" : String(s);
+  return d.innerHTML;
+}
+
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+async function api(path, options) {
+  const res = await fetch(path, options);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    toast(data.error || ("Fehler " + res.status));
+    throw new Error(data.error || res.status);
+  }
+  return data;
+}
+
+async function loadBoard() {
+  const data = await api("/api/board");
+  STAGES = data.stages;
+  USECASES = data.usecases;
+  PLATFORMS = data.platforms;
+  cards = data.cards;
+  fillSelects();
+  render();
+}
+
+function fillSelects() {
+  const uc = document.getElementById("f-usecase");
+  uc.innerHTML = "";
+  Object.keys(USECASES).forEach(k => {
+    const o = document.createElement("option");
+    o.value = k;
+    o.textContent = USECASES[k];
+    uc.appendChild(o);
+  });
+  const pf = document.getElementById("f-platform");
+  pf.innerHTML = "";
+  PLATFORMS.forEach(p => {
+    const o = document.createElement("option");
+    o.value = p;
+    o.textContent = PLATFORM_LABEL[p] || p;
+    pf.appendChild(o);
+  });
+  const st = document.getElementById("f-stage");
+  st.innerHTML = "";
+  STAGES.forEach(s => {
+    const o = document.createElement("option");
+    o.value = s.id;
+    o.textContent = s.title;
+    st.appendChild(o);
+  });
+}
+
+function cardHtml(c) {
+  const ucClass = "uc-" + c.usecase;
+  const ucLabel = c.usecase === "tiktok_shop" ? "TikTok-Shop" : "YouTube";
+  return '<div class="card" draggable="true" data-id="' + c.id + '">' +
+    '<div class="card-title">' + esc(c.title) + '</div>' +
+    '<div class="badges">' +
+      '<span class="badge ' + ucClass + '">' + ucLabel + '</span>' +
+      '<span class="badge platform">' + esc(PLATFORM_LABEL[c.platform] || c.platform) + '</span>' +
+      '<span class="badge comp-' + c.compliance + '">' + (COMP_LABEL[c.compliance] || c.compliance) + '</span>' +
+    '</div>' +
+    (c.channel ? '<div class="card-meta">📺 ' + esc(c.channel) + '</div>' : '') +
+    '</div>';
+}
+
+function render() {
+  const board = document.getElementById("board");
+  board.innerHTML = "";
+  STAGES.forEach(stage => {
+    const visible = cards.filter(c => c.stage === stage.id && (filter === "all" || c.usecase === filter));
+    const col = document.createElement("div");
+    col.className = "column";
+    col.dataset.color = stage.color;
+    col.dataset.stage = stage.id;
+    col.innerHTML =
+      '<div class="column-head">' +
+        '<h2>' + esc(stage.title) + ' <span class="count">' + visible.length + '</span></h2>' +
+        '<div class="tool">' + esc(stage.subtitle) + '</div>' +
+      '</div>' +
+      '<div class="cards">' + visible.map(cardHtml).join("") + '</div>';
+    board.appendChild(col);
+  });
+  bindDnD();
+  bindCardClicks();
+}
+
+function bindCardClicks() {
+  document.querySelectorAll(".card").forEach(el => {
+    el.addEventListener("click", () => openModal(el.dataset.id));
+  });
+}
+
+function bindDnD() {
+  document.querySelectorAll(".card").forEach(el => {
+    el.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", el.dataset.id);
+      el.classList.add("dragging");
+    });
+    el.addEventListener("dragend", () => el.classList.remove("dragging"));
+  });
+  document.querySelectorAll(".column").forEach(col => {
+    col.addEventListener("dragover", e => {
+      e.preventDefault();
+      col.classList.add("drag-over");
+    });
+    col.addEventListener("dragleave", () => col.classList.remove("drag-over"));
+    col.addEventListener("drop", async e => {
+      e.preventDefault();
+      col.classList.remove("drag-over");
+      const id = e.dataTransfer.getData("text/plain");
+      const stage = col.dataset.stage;
+      const card = cards.find(c => c.id === id);
+      if (!card || card.stage === stage) return;
+      const prev = card.stage;
+      card.stage = stage;
+      render();
+      try {
+        await api("/api/cards/" + id + "/move", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stage: stage })
+        });
+      } catch (err) {
+        card.stage = prev;
+        render();
+      }
+    });
+  });
+}
+
+function openModal(id) {
+  editingId = id || null;
+  const card = id ? cards.find(c => c.id === id) : null;
+  document.getElementById("modal-title").textContent = card ? "Video bearbeiten" : "Neues Video";
+  document.getElementById("btn-delete").style.display = card ? "inline-block" : "none";
+  document.getElementById("f-title").value = card ? card.title : "";
+  document.getElementById("f-usecase").value = card ? card.usecase : "youtube";
+  document.getElementById("f-platform").value = card ? card.platform : "youtube_shorts";
+  document.getElementById("f-channel").value = card ? card.channel : "";
+  document.getElementById("f-compliance").value = card ? card.compliance : "open";
+  document.getElementById("f-stage").value = card ? card.stage : "trend_scan";
+  document.getElementById("f-notes").value = card ? card.notes : "";
+  document.getElementById("overlay").classList.add("open");
+  document.getElementById("f-title").focus();
+}
+
+function closeModal() {
+  document.getElementById("overlay").classList.remove("open");
+  editingId = null;
+}
+
+async function saveCard() {
+  const payload = {
+    title: document.getElementById("f-title").value.trim(),
+    usecase: document.getElementById("f-usecase").value,
+    platform: document.getElementById("f-platform").value,
+    channel: document.getElementById("f-channel").value.trim(),
+    compliance: document.getElementById("f-compliance").value,
+    stage: document.getElementById("f-stage").value,
+    notes: document.getElementById("f-notes").value
+  };
+  if (!payload.title) { toast("Titel fehlt"); return; }
+  if (editingId) {
+    await api("/api/cards/" + editingId, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    toast("Gespeichert");
+  } else {
+    await api("/api/cards", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    toast("Karte angelegt");
+  }
+  closeModal();
+  await loadBoard();
+}
+
+async function deleteCard() {
+  if (!editingId) return;
+  if (!confirm("Karte wirklich löschen?")) return;
+  await api("/api/cards/" + editingId, { method: "DELETE" });
+  toast("Gelöscht");
+  closeModal();
+  await loadBoard();
+}
+
+document.getElementById("btn-new").addEventListener("click", () => openModal(null));
+document.getElementById("btn-cancel").addEventListener("click", closeModal);
+document.getElementById("btn-save").addEventListener("click", saveCard);
+document.getElementById("btn-delete").addEventListener("click", deleteCard);
+document.getElementById("overlay").addEventListener("click", e => {
+  if (e.target.id === "overlay") closeModal();
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeModal();
+});
+
+document.querySelectorAll(".chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+    filter = chip.dataset.filter;
+    render();
+  });
+});
+
+loadBoard();
+</script>
+</body>
+</html>
