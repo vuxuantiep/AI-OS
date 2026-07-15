@@ -102,6 +102,7 @@ python 04_Infrastruktur/Runtime/start_ai_os.py
 | **Agent System** | **5300** | **http://localhost:5300** |
 | **Monitoring** | **5400** | **http://localhost:5400/status** |
 | **KI-Avatar Board** | **5310** | **http://localhost:5310** (Pipeline-Board YouTube/TikTok-Shop) |
+| **Research-Agent (Checker)** | **5320** | **http://localhost:5320** (Markt-Scan AI Business Checker) |
 | **LangGraph Engine** | **5500** | **http://localhost:5500** (Fabrik-Pipeline als Graph) |
 | Ollama API | 11434 | http://localhost:11434 |
 

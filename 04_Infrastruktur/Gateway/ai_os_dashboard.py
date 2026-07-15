@@ -104,6 +104,10 @@ SERVICES = [
      "desc": "Pipeline-Board für KI-Avatar-Videos (YouTube-Automation & TikTok-Shop)",
      "layer": "10_Business", "script": "10_Business/KI-Avatar/board/app.py",
      "env_key": "KIAVATAR_BOARD_PORT", "health_path": "/api/health"},
+    {"key": "research_agent", "name": "Research-Agent (Checker)", "icon": "🔎", "port": 5320,
+     "desc": "Market-Research für AI Business Checker: Reddit/RSS-Scan nach KI-Abzock-Angeboten",
+     "layer": "10_Business", "script": "10_Business/KI-Avatar/research-agent/app.py",
+     "env_key": "RESEARCH_AGENT_PORT", "health_path": "/api/health"},
 ]
 
 AGENTS_REGISTRY_PATH = AI_OS_ROOT / "05_Agenten" / "agents" / "agents.json"

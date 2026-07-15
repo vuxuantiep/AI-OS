@@ -58,6 +58,33 @@ einen **Wirtschaftlichkeits-Prüfer-Agenten**, und Umsetzung startet erst nach F
 3. **CLAUDE.md**: als Arbeitsregel 4 „Wirtschaftlichkeits-Gate" eingetragen
    (Secrets rückte auf 5), zusätzlich als Feedback-Memory gespeichert.
 
+### Nachtrag 2: CEO-Freigabe erteilt → Phase 0 umgesetzt
+
+**Freigabe 15.07.2026** (GO_MIT_AUFLAGEN dokumentiert), danach beide Phase-0-Bausteine gebaut:
+
+1. **Market-Research-Agent v1** (`research-agent/app.py`, Flask :5320, im Dashboard
+   als Dienst registriert): scannt Reddit + Verbraucherdienst-Blog + Watchlist
+   Internet (optional SearXNG via env), bewertet gegen Warnsignal-Katalog W1–W8
+   (Regex-Heuristik) + KI-Relevanz-Filter, dedupliziert, persistiert atomar.
+   API: `/api/scan` (POST), `/api/funde?empfehlung=video_kandidat`, CLI `--scan`.
+   **Erster Live-Scan: 104 Funde, 2 Video-Kandidaten** (Deepfake-Promi-Werbung),
+   „Peak Momentum Erfahrungen" auf der Beobachtungsliste — das Format trägt.
+2. **Remotion-Template-Set** (`animation/`): CheckerLong (16:9) + CheckerShort
+   (9:16) als EIN datengetriebenes Template — Dossier-JSON rein, Video raus.
+   Szenen: Intro → Warnsignal-Karten (Zitat + Quellenleiste) → animierter
+   Risiko-Score (Ampelfarben) → Checklisten-Outro. KI-Label ab Sekunde 1 fest
+   eingebaut (Art. 50). Dauer wächst via `calculateMetadata` automatisch mit
+   der Warnsignal-Anzahl. **Test-Render: 14-s-Short komplett (420 Frames, 1,8 MB)**
+   + 2 Preview-Frames visuell geprüft.
+
+**Stolpersteine des Tages:**
+- Reddits JSON-API liefert pauschal 403 (auch mit Browser-UA) — die **RSS-Endpunkte
+  (`old.reddit.com/.../search.rss`) funktionieren**. Merke: bei Reddit-Scraping
+  ohne OAuth immer RSS statt JSON. Zusätzlich ≥4 s Pause, sonst 429.
+- Watchlist Internet: Feed liegt unter `/rss/`, nicht `/rss.xml`.
+- Feed-Parser namespace-agnostisch bauen (`tag.split('}')[-1]`), damit RSS 2.0
+  UND Atom (Reddit) mit demselben Code funktionieren.
+
 ---
 
 ## 2026-07-14 (Tag 4) — KI-Avatar: Produktstart + Pipeline-Board (Port 5310)

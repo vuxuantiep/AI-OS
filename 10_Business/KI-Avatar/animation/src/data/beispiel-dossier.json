@@ -1,0 +1,29 @@
+{
+  "titel": "»500 € am Tag mit KI«? Wir haben QuantumProfit AI geprüft",
+  "anbieter": "QuantumProfit AI (fiktives Beispiel)",
+  "claim": "Verdiene 500 € täglich – vollautomatisch mit unserem KI-Trading-Bot",
+  "warnsignale": [
+    {
+      "code": "W1",
+      "name": "Einkommensversprechen",
+      "zitat": "»Garantierte 500 € pro Tag – ohne Vorkenntnisse«",
+      "quelle": "Landingpage quantumprofit-beispiel.com, abgerufen 15.07.2026"
+    },
+    {
+      "code": "W3",
+      "name": "Impressum fehlt",
+      "zitat": "Kein Impressum auffindbar, Domain-Inhaber verschleiert (WHOIS-Privacy)",
+      "quelle": "Eigene Prüfung, 15.07.2026"
+    },
+    {
+      "code": "W5",
+      "name": "Auszahlung nur gegen Gebühr",
+      "zitat": "»Zur Freischaltung Ihrer Gewinne ist eine Verifizierungsgebühr nötig«",
+      "quelle": "Nutzerbericht via Verbraucherportal, 12.07.2026"
+    }
+  ],
+  "score": 9,
+  "einschaetzung": "Aus unserer Sicht: Finger weg. Drei massive Warnsignale, keine überprüfbare Firma dahinter.",
+  "stellungnahme": "Der Anbieter hat auf unsere Anfrage vom 10.07.2026 nicht reagiert.",
+  "datum": "15.07.2026"
+}

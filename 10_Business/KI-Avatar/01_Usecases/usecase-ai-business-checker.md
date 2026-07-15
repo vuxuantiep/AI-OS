@@ -93,12 +93,12 @@ Ein Kanal, der Anbieter „Abzocker" nennt, bewegt sich im Äußerungsrecht (§�
 
 ## 7. Roadmap
 
-> ⚠️ **Wirtschaftlichkeits-Gate:** Umsetzung ab Phase 0 erst nach CEO-Freigabe der
-> [[wirtschaftlichkeit-ai-business-checker|Wirtschaftlichkeitsprüfung]] (Empfehlung: GO_MIT_AUFLAGEN, Status: WARTET_AUF_FREIGABE).
+> ✅ **Wirtschaftlichkeits-Gate passiert:** CEO-Freigabe erteilt am 15.07.2026 —
+> [[wirtschaftlichkeit-ai-business-checker|Wirtschaftlichkeitsprüfung]] (GO_MIT_AUFLAGEN, Auflagen A1–A4 gelten).
 
 | Phase | Dauer | Meilenstein |
 |---|---|---|
-| **0 — Setup** | 1–2 Wochen | Remotion-Template-Satz bauen, Market-Research-Agent (v1: SearXNG + Reddit-RSS), Kanal-Branding, Impressum |
+| **0 — Setup** | 1–2 Wochen | ✅ Remotion-Template-Satz (`animation/`, CheckerLong + CheckerShort, 15.07.) · ✅ Market-Research-Agent v1 (`research-agent/`, Port 5320, Reddit-RSS + Verbraucherportale, 15.07.) · ⬜ Kanal-Branding · ⬜ Impressum |
 | **1 — MVP** | 4 Wochen | 4 Long-Videos + 12 Shorts halbmanuell (Agent liefert Dossier, Skript reviewed CEO, Rendering automatisch). Ziel: Format validieren |
 | **2 — Automatisierung** | 4–8 Wochen | LangGraph-Pipeline Research→Dossier→Skript→Render, Board-Karten automatisch anlegen, Stellungnahme-Mails halbautomatisch |
 | **3 — Skalierung** | ab Monat 3 | 2 Longs + 6 Shorts/Woche, Follow-up-Format „Nachgeprüft", ggf. EN-Ableger |

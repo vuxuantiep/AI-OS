@@ -1,0 +1,18 @@
+{
+  "name": "ki-avatar-animation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Remotion-Template-Set fuer den AI Business Checker (Long 16:9 + Short 9:16, datengetrieben aus Dossier-JSON)",
+  "scripts": {
+    "studio": "remotion studio",
+    "render-long": "remotion render CheckerLong out/checker-long.mp4",
+    "render-short": "remotion render CheckerShort out/checker-short.mp4",
+    "preview-frame": "remotion still CheckerLong out/preview.png --frame=200"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.0"
+  }
+}

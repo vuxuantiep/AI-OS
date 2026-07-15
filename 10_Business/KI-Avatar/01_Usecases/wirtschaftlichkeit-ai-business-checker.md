@@ -1,7 +1,7 @@
 # Wirtschaftlichkeitsprüfung: AI Business Checker
 
 > Erstellt vom [[../../wirtschaftlichkeits-pruefer-agent|Wirtschaftlichkeits-Prüfer]] am 15.07.2026.
-> **Status: WARTET_AUF_FREIGABE** — Umsetzung (Phase 1+) erst nach CEO-Freigabe.
+> **Status: FREIGEGEBEN** — CEO-Freigabe erteilt am 15.07.2026 (GO_MIT_AUFLAGEN, Auflagen A1–A4 gelten).
 
 ## Management-Summary (5 Sätze)
 
@@ -76,6 +76,7 @@ und Zeitbudget-Deckel, damit kein Fass ohne Boden entsteht.
 {"empfehlung": "GO_MIT_AUFLAGEN", "status": "WARTET_AUF_FREIGABE"}
 ```
 
-> ✍️ **Freigabe CEO:** ☐ erteilt am: ________ · ☐ abgelehnt · ☐ Pivot angefordert
+> ✍️ **Freigabe CEO:** ☑ erteilt am: **15.07.2026** · ☐ abgelehnt · ☐ Pivot angefordert
+> Nächster Review-Termin (Auflage A4): 15.10.2026 — Prognose vs. Ist nach 3-Monats-Meilenstein A1.
 
 #wirtschaftlichkeit #ai-business-checker
