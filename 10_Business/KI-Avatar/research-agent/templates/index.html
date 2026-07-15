@@ -29,6 +29,16 @@
   .b-signal { background: rgba(245, 166, 35, 0.15); color: var(--amber); border: 1px solid var(--amber); }
   .leer { color: var(--muted); font-size: 0.9rem; padding: 12px 0; }
   #status { font-size: 0.85rem; color: var(--amber); min-height: 1.2em; margin-top: 10px; }
+  .quellen-box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .quellen-form { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .quellen-form input { flex: 1; min-width: 200px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; color: var(--ink); font-size: 0.9rem; }
+  .quellen-form input::placeholder { color: var(--muted); }
+  .q-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 0.85rem; border-bottom: 1px solid var(--line); }
+  .q-item:last-child { border-bottom: none; }
+  .q-markt { background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 1px 8px; font-size: 0.7rem; color: var(--teal); font-weight: 700; min-width: 44px; text-align: center; }
+  .q-typ { color: var(--muted); font-size: 0.72rem; }
+  .q-del { margin-left: auto; background: none; border: none; color: var(--coral); cursor: pointer; font-size: 1rem; }
+  .q-hint { color: var(--muted); font-size: 0.78rem; margin-top: 8px; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -42,6 +52,27 @@
 </header>
 <main>
   <div id="status"></div>
+
+  <h2>📡 Quellen (global: DE · US · VN + eigene)</h2>
+  <div class="quellen-box">
+    <div class="quellen-form">
+      <input id="q-url" type="url" placeholder="https:// … Forum, Website, Blog oder RSS-Feed (weltweit)">
+      <input id="q-name" type="text" placeholder="Name (optional)" style="max-width:220px;">
+      <button class="btn" id="btn-quelle">+ Quelle hinzufügen</button>
+    </div>
+    <div id="quellen-eigene"><div class="leer">Lade…</div></div>
+    <details style="margin-top:10px;">
+      <summary style="cursor:pointer;color:var(--muted);font-size:0.82rem;">Eingebaute Quellen anzeigen</summary>
+      <div id="quellen-eingebaut" style="margin-top:6px;"></div>
+    </details>
+    <div class="q-hint">
+      Feeds werden automatisch erkannt (RSS/Atom, auch verlinkte Feeds in HTML-Seiten).
+      Seiten ohne Feed werden bei jedem Scan als Ganzes auf Warnsignale geprüft —
+      Muster in Deutsch, Englisch und Tiếng Việt (z.&nbsp;B. „lừa đảo", „việc nhẹ lương cao").
+      Gute Kandidaten: Verbraucherzentralen-artige Portale, Scam-Foren, Bewertungsplattformen.
+    </div>
+  </div>
+
   <h2>🎬 Video-Kandidaten</h2>
   <div id="kandidaten"><div class="leer">Lade…</div></div>
   <h2>👁 Beobachtungsliste</h2>
@@ -86,6 +117,50 @@ async function lade() {
   fuelle("hinweise", funde.filter(f => f.empfehlung === "hinweis").slice(0, 30));
 }
 
+function quelleHtml(q, loeschbar) {
+  return '<div class="q-item">' +
+    '<span class="q-markt">' + esc(q.markt || "eigene") + '</span>' +
+    '<span>' + esc(q.name) + '</span>' +
+    '<span class="q-typ">' + (q.typ === "feed" ? "Feed" : "Seiten-Scan") + '</span>' +
+    (q.url ? '<a href="' + esc(q.url) + '" target="_blank" rel="noopener" class="q-typ">↗</a>' : '') +
+    (loeschbar ? '<button class="q-del" data-url="' + esc(q.url) + '" title="Quelle entfernen">✕</button>' : '') +
+    '</div>';
+}
+
+async function ladeQuellen() {
+  const d = await (await fetch("api/quellen")).json();
+  const eigene = document.getElementById("quellen-eigene");
+  eigene.innerHTML = d.eigene.length
+    ? d.eigene.map(q => quelleHtml(q, true)).join("")
+    : '<div class="leer">Noch keine eigenen Quellen — oben eine URL eintragen.</div>';
+  document.getElementById("quellen-eingebaut").innerHTML =
+    d.eingebaut.map(q => quelleHtml(q, false)).join("");
+  eigene.querySelectorAll(".q-del").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      await fetch("api/quellen?url=" + encodeURIComponent(btn.dataset.url), {method: "DELETE"});
+      await ladeQuellen();
+    });
+  });
+}
+
+document.getElementById("btn-quelle").addEventListener("click", async () => {
+  const urlFeld = document.getElementById("q-url");
+  const nameFeld = document.getElementById("q-name");
+  const status = document.getElementById("status");
+  if (!urlFeld.value.trim()) { status.textContent = "Bitte eine URL eingeben."; return; }
+  status.textContent = "⏳ Prüfe Quelle (Feed-Erkennung)…";
+  const res = await fetch("api/quellen", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({url: urlFeld.value.trim(), name: nameFeld.value.trim()})
+  });
+  const d = await res.json();
+  if (!res.ok) { status.textContent = "❌ " + (d.error || res.status); return; }
+  status.textContent = "✅ „" + d.quelle.name + "“ hinzugefügt — " + d.hinweis;
+  urlFeld.value = ""; nameFeld.value = "";
+  await ladeQuellen();
+});
+
 document.getElementById("btn-scan").addEventListener("click", async () => {
   const btn = document.getElementById("btn-scan");
   const status = document.getElementById("status");
@@ -109,6 +184,7 @@ if (window.location.pathname.indexOf("/produkte/") === 0) {
 }
 
 lade();
+ladeQuellen();
 </script>
 </body>
 </html>

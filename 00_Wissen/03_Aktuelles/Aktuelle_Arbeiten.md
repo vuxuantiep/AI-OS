@@ -85,6 +85,20 @@ einen **Wirtschaftlichkeits-Prüfer-Agenten**, und Umsetzung startet erst nach F
 - Feed-Parser namespace-agnostisch bauen (`tag.split('}')[-1]`), damit RSS 2.0
   UND Atom (Reddit) mit demselben Code funktionieren.
 
+### Nachtrag 3: Research-Agent global + eigene Quellen (CEO-Wunsch)
+
+1. **Globale Quellen eingebaut** (Kanal-Ziel: weltweite Sichtbarkeit, DE + US + VN):
+   FTC Consumer Alerts + FTC Consumer Protection News (USA), VnExpress Pháp
+   luật/Số hóa + Tuổi Trẻ Pháp luật (Vietnam). Warnsignal-Muster jetzt
+   dreisprachig DE/EN/VI („lừa đảo", „việc nhẹ lương cao", „đa cấp", „earn $X/day").
+   Scan-Verteilung nach Umbau: 81 AT, 22 VN, 13 US, 14 Reddit ✓
+2. **Eigene-Quellen-Feature**: Eingabe-Box auf der Startseite — URL rein,
+   `erkenne_quelle()` prüft automatisch: direkter RSS/Atom-Feed? In der HTML-Seite
+   verlinkter Feed (`<link type="application/rss+xml">`)? Sonst Seiten-Scan
+   (sichtbarer Text, Inhalts-Hash in der Dedup-URL → geänderte Seite = neuer Fund).
+   API: GET/POST/DELETE `/api/quellen`, Persistenz `data/custom_sources.json`.
+   Getestet: WordPress-Blog → Feed autodetected ✓, ScamAdviser → Seiten-Scan ✓.
+
 ---
 
 ## 2026-07-14 (Tag 4) — KI-Avatar: Produktstart + Pipeline-Board (Port 5310)

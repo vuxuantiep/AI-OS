@@ -14,6 +14,7 @@ Agent-Prompt/Spezifikation: ../Konzept-KI Avatar/market-research-agent.md
 Start:  python 10_Business/KI-Avatar/research-agent/app.py
 URL:    http://localhost:5320
 """
+import hashlib
 import json
 import os
 import re
@@ -48,10 +49,19 @@ REDDIT_QUERIES = [
     "AI money", "KI Geld verdienen", "AI trading bot", "AI side hustle scam",
     "chatgpt money", "passive income AI",
 ]
+# Eingebaute Feeds — global: DE/AT, USA, Vietnam (Kanal-Ziel: weltweite Sichtbarkeit).
+# Verbraucherschutz-Portale und seriöse News-Rubriken, die wie Verbraucherzentralen
+# dokumentieren. Eigene Quellen kommen zusätzlich aus data/custom_sources.json.
 RSS_FEEDS = [
-    {"name": "Verbraucherdienst-Blog", "url": "https://blog.verbraucherdienst.com/feed/"},
-    {"name": "Watchlist Internet", "url": "https://www.watchlist-internet.at/rss/"},
+    {"name": "Verbraucherdienst-Blog", "markt": "DE", "url": "https://blog.verbraucherdienst.com/feed/"},
+    {"name": "Watchlist Internet", "markt": "AT", "url": "https://www.watchlist-internet.at/rss/"},
+    {"name": "FTC Consumer Alerts", "markt": "US", "url": "https://consumer.ftc.gov/blog/rss"},
+    {"name": "FTC Consumer Protection News", "markt": "US", "url": "https://www.ftc.gov/feeds/press-release-consumer-protection.xml"},
+    {"name": "VnExpress Pháp luật", "markt": "VN", "url": "https://vnexpress.net/rss/phap-luat.rss"},
+    {"name": "VnExpress Số hóa", "markt": "VN", "url": "https://vnexpress.net/rss/so-hoa.rss"},
+    {"name": "Tuổi Trẻ Pháp luật", "markt": "VN", "url": "https://tuoitre.vn/rss/phap-luat.rss"},
 ]
+CUSTOM_SOURCES_FILE = os.path.join(DATA_DIR, "custom_sources.json")
 SEARX_QUERIES = [
     "KI Geld verdienen Erfahrungen seriös", "AI Trading Bot Abzocke",
     "mit ChatGPT Geld verdienen Kurs Erfahrungen",
@@ -63,7 +73,9 @@ WARNSIGNALE = {
     "W1": {"name": "Einkommensversprechen",
            "muster": [r"\d+\s*(€|\$|euro|dollar)\s*(am tag|pro tag|täglich|/tag|a day|per day|daily)",
                       r"passiv(es)?\s*einkommen", r"passive income", r"schnell\s*(reich|geld)",
-                      r"get rich", r"guaranteed (income|profit|returns)", r"garantiert\w*\s*(gewinn|einkommen|rendite)"]},
+                      r"get rich", r"guaranteed (income|profit|returns)", r"garantiert\w*\s*(gewinn|einkommen|rendite)",
+                      r"(earn|make)\s*\$?\d+", r"việc nhẹ lương cao", r"kiếm\s*(tiền|\d+\s*(triệu|tr)\b)",
+                      r"lợi nhuận\s*(cao|khủng|cam kết)", r"thu nhập thụ động"]},
     "W2": {"name": "Künstlicher Zeitdruck",
            "muster": [r"nur noch \d+ (plätze|plätzen|spots)", r"limited (spots|time)", r"countdown",
                       r"nur (heute|diese woche)", r"last chance"]},
@@ -79,7 +91,7 @@ WARNSIGNALE = {
                       r"kann nicht auszahlen", r"can'?t withdraw"]},
     "W6": {"name": "Unklares Geschäftsmodell",
            "muster": [r"(kurs|course|mentoring|coaching).{0,50}(verkauf|sell|teuer|\d{3,}\s*€)",
-                      r"mlm", r"pyramid", r"schneeball", r"ponzi"]},
+                      r"mlm", r"pyramid", r"schneeball", r"ponzi", r"đa cấp", r"mô hình kim tự tháp"]},
     "W7": {"name": "Fake-Autorität",
            "muster": [r"bekannt aus", r"as seen on", r"(forbes|höhle der löwen|galileo).{0,30}(fake|lüge|nie)",
                       r"fake (celebrity|promi)", r"deepfake.{0,30}(werbung|ad)"]},
@@ -88,11 +100,14 @@ WARNSIGNALE = {
                       r"kündigung.{0,40}(unmöglich|schwer|nicht)", r"subscription trap"]},
 }
 SCAM_HINWEIS = [r"scam", r"abzock\w*", r"betrug", r"betrüger", r"fraud", r"warnung", r"warning",
-                r"seriös\??", r"legit\??", r"erfahrung(en)?", r"rip[- ]?off", r"finger weg"]
+                r"seriös\??", r"legit\??", r"erfahrung(en)?", r"rip[- ]?off", r"finger weg",
+                # Vietnamesisch: Betrug / Warnung / Geld verloren / erschlichen
+                r"lừa đảo", r"cảnh báo", r"mất tiền", r"chiếm đoạt", r"sập bẫy"]
 # Der Kanal prüft speziell KI-Angebote — ohne KI-Bezug kein Video-Kandidat
 KI_RELEVANZ = [r"\bki\b", r"\ba\.?i\.?\b", r"künstliche intelligenz", r"artificial intelligence",
                r"chatgpt", r"gpt", r"deepfake", r"trading[- ]?bot", r"ai[- ]?bot",
-               r"algorithm\w*", r"machine learning", r"neural", r"midjourney", r"claude"]
+               r"algorithm\w*", r"machine learning", r"neural", r"midjourney", r"claude",
+               r"trí tuệ nhân tạo", r"công nghệ ai"]
 
 app = Flask(__name__)
 
@@ -120,6 +135,79 @@ def http_get(url, timeout=12):
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return resp.read().decode("utf-8", "ignore")
+
+
+# --- Eigene Quellen (vom User über die UI hinzugefügte Foren/Websites/Feeds) ---
+
+def load_custom_sources():
+    if not os.path.exists(CUSTOM_SOURCES_FILE):
+        return []
+    with open(CUSTOM_SOURCES_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_custom_sources(quellen):
+    os.makedirs(DATA_DIR, exist_ok=True)
+    tmp = CUSTOM_SOURCES_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(quellen, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, CUSTOM_SOURCES_FILE)
+
+
+def erkenne_quelle(url):
+    """Prüft eine URL: RSS/Atom-Feed, HTML-Seite mit Feed-Link, oder reine HTML-Seite.
+    Gibt (typ, feed_url, seitentitel) zurück. Wirft Exception bei Nichterreichbarkeit."""
+    inhalt = http_get(url)
+    kopf = inhalt[:3000].lower()
+    if "<rss" in kopf or "<feed" in kopf or kopf.strip().startswith("<?xml"):
+        return "feed", url, ""
+    # HTML: nach verlinktem RSS/Atom-Feed suchen (<link type="application/rss+xml" href=...>)
+    m = re.search(r'<link[^>]+type=["\']application/(?:rss|atom)\+xml["\'][^>]*href=["\']([^"\']+)["\']',
+                  inhalt, re.I) or \
+        re.search(r'<link[^>]+href=["\']([^"\']+)["\'][^>]*type=["\']application/(?:rss|atom)\+xml["\']',
+                  inhalt, re.I)
+    titel_m = re.search(r"<title[^>]*>([^<]+)</title>", inhalt, re.I)
+    titel = (titel_m.group(1).strip() if titel_m else "")[:120]
+    if m:
+        feed_url = urllib.parse.urljoin(url, m.group(1))
+        return "feed", feed_url, titel
+    return "html", url, titel
+
+
+def scan_custom(fehler):
+    """Eigene Quellen scannen: Feeds wie eingebaute Feeds, HTML-Seiten als Volltext."""
+    funde = []
+    for q in load_custom_sources():
+        try:
+            if q["typ"] == "feed":
+                for item in parse_feed(http_get(q["feed_url"])):
+                    funde.append({
+                        "quelle": f"eigene: {q['name']}",
+                        "titel": item["titel"],
+                        "url": item["url"],
+                        "datum": item["datum"],
+                        "text_auszug": item["beschreibung"][:500],
+                        "_volltext": item["titel"] + " " + item["beschreibung"],
+                    })
+            else:  # HTML-Seite: sichtbaren Text extrahieren, als ein Fund scannen
+                html = http_get(q["url"])
+                text = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", html, flags=re.S | re.I)
+                text = re.sub(r"<[^>]+>", " ", text)
+                text = re.sub(r"\s+", " ", text)[:6000]
+                # Inhalts-Hash in der Dedup-URL: geänderte Seite = neuer Fund,
+                # unveränderte Seite wird nicht doppelt gemeldet
+                h = hashlib.md5(text.encode("utf-8")).hexdigest()[:10]
+                funde.append({
+                    "quelle": f"eigene: {q['name']}",
+                    "titel": q.get("seitentitel") or q["name"],
+                    "url": q["url"] + "#v-" + h,
+                    "datum": "",
+                    "text_auszug": text[:500],
+                    "_volltext": text,
+                })
+        except Exception as e:
+            fehler.append(f"eigene {q['name']}: {type(e).__name__}")
+    return funde
 
 
 def bewerte_text(text, quelle=""):
@@ -251,7 +339,7 @@ def scan_alle():
     store = load_store()
     seen = set(store["seen_urls"])
     fehler = []
-    roh = scan_reddit(fehler) + scan_rss(fehler) + scan_searxng(fehler)
+    roh = scan_reddit(fehler) + scan_rss(fehler) + scan_searxng(fehler) + scan_custom(fehler)
 
     neue_funde = []
     for f in roh:
@@ -304,6 +392,49 @@ def health():
 @app.route("/api/scan", methods=["POST"])
 def api_scan():
     return jsonify(scan_alle())
+
+
+@app.route("/api/quellen")
+def api_quellen():
+    eingebaut = ([{"name": f"reddit/r/{s}", "markt": "global", "typ": "feed"} for s in REDDIT_SUBS]
+                 + [{"name": f["name"], "markt": f["markt"], "typ": "feed"} for f in RSS_FEEDS])
+    return jsonify({"eingebaut": eingebaut, "eigene": load_custom_sources()})
+
+
+@app.route("/api/quellen", methods=["POST"])
+def api_quelle_hinzufuegen():
+    data = request.get_json(silent=True) or {}
+    url = (data.get("url") or "").strip()
+    if not url.startswith(("http://", "https://")):
+        return jsonify({"error": "Bitte eine vollständige URL angeben (https://...)"}), 400
+    quellen = load_custom_sources()
+    if any(q["url"] == url for q in quellen):
+        return jsonify({"error": "Diese Quelle ist schon eingetragen"}), 400
+    try:
+        typ, feed_url, seitentitel = erkenne_quelle(url)
+    except Exception as e:
+        return jsonify({"error": f"Quelle nicht erreichbar: {type(e).__name__}"}), 400
+    name = (data.get("name") or "").strip() or seitentitel or urllib.parse.urlparse(url).netloc
+    quelle = {"name": name[:80], "url": url, "typ": typ, "feed_url": feed_url,
+              "seitentitel": seitentitel, "hinzugefuegt": _now()}
+    quellen.append(quelle)
+    save_custom_sources(quellen)
+    return jsonify({"ok": True, "quelle": quelle,
+                    "hinweis": ("Als RSS/Atom-Feed erkannt — Einträge werden wie ein Portal gescannt."
+                                if typ == "feed" else
+                                "Kein Feed gefunden — die Seite wird als Ganzes auf Warnsignale gescannt "
+                                "(bei Änderung der Seite entsteht ein neuer Fund).")}), 201
+
+
+@app.route("/api/quellen", methods=["DELETE"])
+def api_quelle_loeschen():
+    url = (request.args.get("url") or "").strip()
+    quellen = load_custom_sources()
+    neu = [q for q in quellen if q["url"] != url]
+    if len(neu) == len(quellen):
+        return jsonify({"error": "Quelle nicht gefunden"}), 404
+    save_custom_sources(neu)
+    return jsonify({"ok": True, "geloescht": url})
 
 
 @app.route("/api/funde")
