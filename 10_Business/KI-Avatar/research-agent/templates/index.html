@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Research-Agent · AI Business Checker</title>
+<style>
+  :root {
+    --bg: #0e1726; --card: #16233a; --ink: #f3f6fb; --muted: #8fa3bf;
+    --teal: #19b8a6; --coral: #ef5350; --amber: #f5a623; --line: #26364f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+  header { padding: 18px 28px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  header h1 { font-size: 1.15rem; } header h1 span { color: var(--teal); }
+  .pill { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; font-size: 0.8rem; color: var(--muted); }
+  .spacer { flex: 1; }
+  .btn { border: none; border-radius: 8px; padding: 9px 18px; font-size: 0.9rem; font-weight: 600; cursor: pointer; background: var(--teal); color: #04211d; }
+  .btn:disabled { opacity: 0.55; cursor: wait; }
+  .backlink { color: var(--muted); text-decoration: none; font-size: 0.85rem; }
+  main { padding: 24px 28px 50px; max-width: 1100px; margin: 0 auto; }
+  h2 { font-size: 1rem; margin: 26px 0 12px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .fund { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; }
+  .fund .titel { font-weight: 600; margin-bottom: 6px; }
+  .fund a { color: var(--teal); text-decoration: none; word-break: break-all; }
+  .meta { font-size: 0.78rem; color: var(--muted); margin-top: 6px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .badge { display: inline-block; border-radius: 6px; padding: 2px 9px; font-size: 0.72rem; font-weight: 700; margin-right: 6px; }
+  .b-score { background: var(--coral); color: #fff; }
+  .b-signal { background: rgba(245, 166, 35, 0.15); color: var(--amber); border: 1px solid var(--amber); }
+  .leer { color: var(--muted); font-size: 0.9rem; padding: 12px 0; }
+  #status { font-size: 0.85rem; color: var(--amber); min-height: 1.2em; margin-top: 10px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔎 Research-Agent <span>AI Business Checker</span></h1>
+  <span class="pill" id="pill-scan">letzter Scan: –</span>
+  <span class="pill" id="pill-funde">Funde: –</span>
+  <div class="spacer"></div>
+  <button class="btn" id="btn-scan">▶ Jetzt scannen</button>
+  <a class="backlink" href="http://localhost:5000" id="aios-link">⌂ AI-OS</a>
+</header>
+<main>
+  <div id="status"></div>
+  <h2>🎬 Video-Kandidaten</h2>
+  <div id="kandidaten"><div class="leer">Lade…</div></div>
+  <h2>👁 Beobachtungsliste</h2>
+  <div id="beobachtung"><div class="leer">Lade…</div></div>
+  <h2>Hinweise (schwaches Signal)</h2>
+  <div id="hinweise"><div class="leer">Lade…</div></div>
+</main>
+<script>
+"use strict";
+
+function esc(s) {
+  const d = document.createElement("div");
+  d.textContent = s == null ? "" : String(s);
+  return d.innerHTML;
+}
+
+function fundHtml(f) {
+  const signale = (f.warnsignale || []).map(w =>
+    '<span class="badge b-signal">' + esc(w.code) + ' ' + esc(w.name) + '</span>').join('');
+  return '<div class="fund">' +
+    '<div class="titel"><span class="badge b-score">' + esc(f.score) + '</span>' + esc(f.titel) + '</div>' +
+    signale +
+    '<div class="meta"><span>' + esc(f.quelle) + '</span><span>' + esc(f.datum) + '</span>' +
+    '<a href="' + esc(f.url) + '" target="_blank" rel="noopener">Quelle öffnen ↗</a></div>' +
+    '</div>';
+}
+
+function fuelle(id, funde) {
+  const el = document.getElementById(id);
+  el.innerHTML = funde.length ? funde.map(fundHtml).join("")
+    : '<div class="leer">Keine Einträge — Scan starten oder auf den nächsten Lauf warten.</div>';
+}
+
+async function lade() {
+  const health = await (await fetch("api/health")).json();
+  document.getElementById("pill-scan").textContent = "letzter Scan: " + (health.letzter_scan || "nie");
+  document.getElementById("pill-funde").textContent = "Funde: " + health.funde_gesamt;
+  const daten = await (await fetch("api/funde?limit=200")).json();
+  const funde = daten.funde || [];
+  fuelle("kandidaten", funde.filter(f => f.empfehlung === "video_kandidat"));
+  fuelle("beobachtung", funde.filter(f => f.empfehlung === "beobachtungsliste"));
+  fuelle("hinweise", funde.filter(f => f.empfehlung === "hinweis").slice(0, 30));
+}
+
+document.getElementById("btn-scan").addEventListener("click", async () => {
+  const btn = document.getElementById("btn-scan");
+  const status = document.getElementById("status");
+  btn.disabled = true;
+  status.textContent = "⏳ Scan läuft (Reddit drosselt — dauert 1–2 Minuten)…";
+  try {
+    const res = await fetch("api/scan", {method: "POST"});
+    const d = await res.json();
+    status.textContent = "✅ Scan fertig: " + d.neue_funde + " neue Funde, " +
+      d.video_kandidaten.length + " Video-Kandidaten" +
+      (d.quellen_fehler.length ? " · " + d.quellen_fehler.length + " Quellen-Fehler (Rate-Limit)" : "");
+    await lade();
+  } catch (e) {
+    status.textContent = "❌ Scan fehlgeschlagen: " + e;
+  }
+  btn.disabled = false;
+});
+
+if (window.location.pathname.indexOf("/produkte/") === 0) {
+  document.getElementById("aios-link").setAttribute("href", "/");
+}
+
+lade();
+</script>
+</body>
+</html>

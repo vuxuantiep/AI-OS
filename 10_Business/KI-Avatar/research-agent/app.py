@@ -24,7 +24,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, render_template, request
 
 if sys.stdout and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -287,6 +287,11 @@ def scan_alle():
 
 
 # --- API ----------------------------------------------------------------------
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
 
 @app.route("/api/health")
 def health():
