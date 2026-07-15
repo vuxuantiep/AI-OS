@@ -99,6 +99,16 @@ einen **Wirtschaftlichkeits-Prüfer-Agenten**, und Umsetzung startet erst nach F
    API: GET/POST/DELETE `/api/quellen`, Persistenz `data/custom_sources.json`.
    Getestet: WordPress-Blog → Feed autodetected ✓, ScamAdviser → Seiten-Scan ✓.
 
+### Nachtrag 4: AI Business Checker im Dashboard sichtbar
+
+Dritte Produktkarte im Produkte-Tab (🔎 AI Business Checker, Status-Pill +
+Öffnen-Button). Dafür den ki-avatar-Proxy zu `PRODUKT_PROXIES` verallgemeinert
+(Dict prod→Port, Dispatching weiter in `serve_produkt`): `/produkte/ai-checker/`
+→ :5320. Status-Check im Frontend als Schleife über `PRODUCT_SERVICES` statt
+Einzelfunktion. Proxy-Timeout 15→300 s, weil der Scan-Button über den Proxy
+einen 1–2-Minuten-POST macht. Getestet: alle 3 Produkte via :5000 erreichbar,
+Checker-Health über Proxy 200 ✓.
+
 ---
 
 ## 2026-07-14 (Tag 4) — KI-Avatar: Produktstart + Pipeline-Board (Port 5310)

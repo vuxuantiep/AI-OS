@@ -1315,17 +1315,25 @@ def get_wiki_file(dir_key, filename):
     except Exception:
         return jsonify({"error": "Datei nicht gefunden"}), 404
 
-# KI-Avatar Pipeline-Board läuft als eigener Flask-Dienst auf Port 5310.
-# Proxy statt Redirect/Direktlink, damit das Board auch über Cloudflare-Tunnel
-# und Tailscale erreichbar ist (dort ist nur Port 5000 exponiert). Das Board
-# nutzt relative API-Pfade und funktioniert daher unter beiden URLs.
-# Achtung: KEINE eigene Route — Werkzeug würde /produkte/<prod>/ bevorzugen;
-# das Dispatching übernimmt serve_produkt unten.
+# Eigenständige Produkt-Dienste (eigene Flask-Server) hinter /produkte/<name>/.
+# Proxy statt Redirect/Direktlink, damit sie auch über Cloudflare-Tunnel und
+# Tailscale erreichbar sind (dort ist nur Port 5000 exponiert). Die Dienste
+# nutzen relative API-Pfade und funktionieren daher unter beiden URLs.
+# Achtung: KEINE eigene Route pro Dienst — Werkzeug würde /produkte/<prod>/
+# bevorzugen; das Dispatching übernimmt serve_produkt unten.
 KIAVATAR_BOARD_PORT = int(os.environ.get("KIAVATAR_BOARD_PORT", "5310"))
+RESEARCH_AGENT_PORT = int(os.environ.get("RESEARCH_AGENT_PORT", "5320"))
 
-def _kiavatar_proxy(subpath):
+PRODUKT_PROXIES = {
+    "ki-avatar": {"port": KIAVATAR_BOARD_PORT, "name": "KI-Avatar Board",
+                  "start": "python 10_Business/KI-Avatar/board/app.py"},
+    "ai-checker": {"port": RESEARCH_AGENT_PORT, "name": "AI Business Checker (Research-Agent)",
+                   "start": "python 10_Business/KI-Avatar/research-agent/app.py"},
+}
+
+def _produkt_proxy(cfg, subpath):
     from flask import Response
-    url = f"http://127.0.0.1:{KIAVATAR_BOARD_PORT}/{subpath}"
+    url = f"http://127.0.0.1:{cfg['port']}/{subpath}"
     if request.query_string:
         url += "?" + request.query_string.decode("utf-8", "ignore")
     data = request.get_data() if request.method in ("POST", "PUT") else None
@@ -1333,7 +1341,8 @@ def _kiavatar_proxy(subpath):
     if request.content_type:
         req.add_header("Content-Type", request.content_type)
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        # Großzügig: der Scan des Research-Agenten dauert 1-2 Minuten (Reddit-Drosselung)
+        with urllib.request.urlopen(req, timeout=300) as resp:
             return Response(resp.read(), status=resp.status,
                             content_type=resp.headers.get("Content-Type", "text/html"))
     except urllib.error.HTTPError as e:
@@ -1341,8 +1350,8 @@ def _kiavatar_proxy(subpath):
                         content_type=e.headers.get("Content-Type", "application/json"))
     except Exception:
         return Response(
-            "<h1>🎬 KI-Avatar Board ist offline</h1>"
-            "<p>Starten mit: <code>python 10_Business/KI-Avatar/board/app.py</code> "
+            f"<h1>{cfg['name']} ist offline</h1>"
+            f"<p>Starten mit: <code>{cfg['start']}</code> "
             "oder über den Dienste-Tab im Dashboard.</p>",
             status=503, content_type="text/html; charset=utf-8")
 
@@ -1352,9 +1361,9 @@ def serve_produkt(prod, filename="index.html"):
     """Liefert eine Browser-Produkt-App (z.B. DokuCheck Lokal) als statische Dateien.
     Whitelisted über PRODUKT_DIRS, pfadsicher via send_from_directory.
     Bewusst OHNE restriktive CSP: die Apps brauchen Worker, WASM und IndexedDB.
-    Sonderfall ki-avatar: Proxy zum eigenständigen Board-Dienst auf Port 5310."""
-    if prod == "ki-avatar":
-        return _kiavatar_proxy("" if filename == "index.html" else filename)
+    Sonderfall PRODUKT_PROXIES: Proxy zu eigenständigen Diensten (Board :5310, Research-Agent :5320)."""
+    if prod in PRODUKT_PROXIES:
+        return _produkt_proxy(PRODUKT_PROXIES[prod], "" if filename == "index.html" else filename)
     if request.method != "GET":
         return jsonify({"error": "Nur GET erlaubt"}), 405
     from flask import send_from_directory

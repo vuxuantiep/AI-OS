@@ -1572,6 +1572,28 @@
                                 Board offline — im Dienste-Tab starten oder: <code>python 10_Business/KI-Avatar/board/app.py</code>
                             </div>
                         </div>
+                        <div class="service-card">
+                            <div class="head" style="display:flex;align-items:center;gap:0.75rem;">
+                                <span style="font-size:1.6rem;">🔎</span>
+                                <div>
+                                    <b>AI Business Checker</b>
+                                    <div class="muted" style="font-size:0.75rem;">Research-Agent · Port 5320 · global (DE/US/VN)</div>
+                                </div>
+                            </div>
+                            <div class="desc" style="margin-top:0.6rem;">
+                                Markt-Scanner für "Geld verdienen mit KI"-Angebote: durchsucht Reddit,
+                                Verbraucherportale (DE/AT), FTC (USA) und VN-Medien nach Abzock-Warnsignalen
+                                (3-sprachig), liefert Video-Kandidaten für den Prüf-Kanal. Eigene Quellen
+                                per Eingabe-Box ergänzbar.
+                            </div>
+                            <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.8rem;flex-wrap:wrap;">
+                                <span class="pill" style="font-size:0.68rem;" id="aichecker-status">⏳ prüfe…</span>
+                                <button class="btn btn-sm" onclick="window.open('/produkte/ai-checker/','_blank')">↗ Öffnen</button>
+                            </div>
+                            <div class="muted" id="aichecker-hint" style="display:none;font-size:0.72rem;margin-top:0.5rem;">
+                                Agent offline — im Dienste-Tab starten oder: <code>python 10_Business/KI-Avatar/research-agent/app.py</code>
+                            </div>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -1638,24 +1660,30 @@
                     initFactoryPanel();
                 }, 100);
             }
-            if (tab === 'products') checkKiAvatarStatus();
+            if (tab === 'products') checkProductStatus();
         }
 
-        // Live-Status des KI-Avatar-Boards (läuft als eigener Dienst auf :5310,
-        // erreichbar über den Proxy /produkte/ki-avatar/)
-        async function checkKiAvatarStatus() {
-            const pill = document.getElementById('kiavatar-status');
-            const hint = document.getElementById('kiavatar-hint');
-            if (!pill) return;
-            pill.textContent = '⏳ prüfe…';
-            try {
-                const res = await fetch('/produkte/ki-avatar/api/health');
-                if (!res.ok) throw new Error('offline');
-                pill.textContent = '🟢 läuft';
-                hint.style.display = 'none';
-            } catch (e) {
-                pill.textContent = '🔴 offline';
-                hint.style.display = 'block';
+        // Live-Status der eigenständigen Produkt-Dienste (Board :5310,
+        // Research-Agent :5320), erreichbar über die Proxys /produkte/<name>/
+        const PRODUCT_SERVICES = [
+            {prefix: 'kiavatar', health: '/produkte/ki-avatar/api/health'},
+            {prefix: 'aichecker', health: '/produkte/ai-checker/api/health'}
+        ];
+        async function checkProductStatus() {
+            for (const svc of PRODUCT_SERVICES) {
+                const pill = document.getElementById(svc.prefix + '-status');
+                const hint = document.getElementById(svc.prefix + '-hint');
+                if (!pill) continue;
+                pill.textContent = '⏳ prüfe…';
+                try {
+                    const res = await fetch(svc.health);
+                    if (!res.ok) throw new Error('offline');
+                    pill.textContent = '🟢 läuft';
+                    hint.style.display = 'none';
+                } catch (e) {
+                    pill.textContent = '🔴 offline';
+                    hint.style.display = 'block';
+                }
             }
         }
 
