@@ -93,6 +93,9 @@ Ein Kanal, der Anbieter „Abzocker" nennt, bewegt sich im Äußerungsrecht (§�
 
 ## 7. Roadmap
 
+> ⚠️ **Wirtschaftlichkeits-Gate:** Umsetzung ab Phase 0 erst nach CEO-Freigabe der
+> [[wirtschaftlichkeit-ai-business-checker|Wirtschaftlichkeitsprüfung]] (Empfehlung: GO_MIT_AUFLAGEN, Status: WARTET_AUF_FREIGABE).
+
 | Phase | Dauer | Meilenstein |
 |---|---|---|
 | **0 — Setup** | 1–2 Wochen | Remotion-Template-Satz bauen, Market-Research-Agent (v1: SearXNG + Reddit-RSS), Kanal-Branding, Impressum |

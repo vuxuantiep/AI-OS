@@ -38,6 +38,26 @@ Plattform-Compliance: Eine falsche Tatsachenbehauptung über einen benannten
 Anbieter = Abmahnung. Deshalb Dossier-Stufe als Pflicht-Input VOR dem Skript
 (keine Behauptung ohne Beleg-Datensatz) statt Legal-Check erst am Ende.
 
+### Nachtrag: Wirtschaftlichkeits-Gate als neue Pflicht-Regel
+
+Neue CEO-Anweisung dauerhaft verankert: Jede neue Produktplanung enthält ab jetzt
+einen **Wirtschaftlichkeits-Prüfer-Agenten**, und Umsetzung startet erst nach Freigabe.
+
+1. **Agent-Prompt** (`10_Business/wirtschaftlichkeits-pruefer-agent.md`, wiederverwendbar
+   für alle Produkte): Marktbedarf → Einnahmequellen-Inventar (mit Voraussetzungen +
+   „fließt ab Monat X") → 3-Szenarien-Rechnung (P70/P50/P20 mit Anlaufkurve) →
+   Kosten inkl. Arbeitszeit → Break-even → GO/GO_MIT_AUFLAGEN/PIVOT/NO_GO.
+   Wichtigste Regeln: keine Zahl ohne Herkunft, €/Arbeitsstunde immer ausweisen
+   (versteckte Selbstausbeutung!), Monat 1–6 bei Content ≈ 0 € ehrlich einplanen.
+2. **Erste Anwendung** (`wirtschaftlichkeit-ai-business-checker.md`): Marktbedarf 7/10,
+   5 Einnahmequellen (Affiliate bewusst ausgeschlossen), Basis-Szenario ~250–450 €/Mon.
+   in Monat 12, Break-even Cash Monat ~9–10, ABER nur ~8–10 €/h — der echte Hebel ist
+   die Pipeline-Wiederverwendung über alle 3 Usecases + Digitalprodukt in Jahr 2.
+   → **GO_MIT_AUFLAGEN** (3-Monats-Meilenstein, 15h/Woche- und 500-€-Deckel),
+   Status WARTET_AUF_FREIGABE.
+3. **CLAUDE.md**: als Arbeitsregel 4 „Wirtschaftlichkeits-Gate" eingetragen
+   (Secrets rückte auf 5), zusätzlich als Feedback-Memory gespeichert.
+
 ---
 
 ## 2026-07-14 (Tag 4) — KI-Avatar: Produktstart + Pipeline-Board (Port 5310)

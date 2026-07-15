@@ -151,7 +151,18 @@ git push
 - Nutze Obsidian-Links `[[Dateiname]]` für interne Verbindungen
 - Tagge wichtige Dateien mit #wichtig #urgent #idee
 
-### 4. Secrets & Sicherheit
+### 4. Wirtschaftlichkeits-Gate für neue Produkte (PFLICHT)
+Bei JEDER Planung eines neuen Produkts/Projekts in `10_Business/`:
+- Der **Wirtschaftlichkeits-Prüfer-Agent** (`10_Business/wirtschaftlichkeits-pruefer-agent.md`)
+  wird als fester Bestandteil der Planung mit eingebunden.
+- Er prüft VOR der Umsetzung: Marktbedarf, alle Einnahmequellen, realistische
+  Erwartung je Quelle (3 Szenarien mit Anlaufkurve), Kosten inkl. Arbeitszeit,
+  Break-even, Risiken → Empfehlung GO / GO_MIT_AUFLAGEN / PIVOT / NO_GO.
+- Ergebnis-Dokument liegt neben dem Produktplan (`wirtschaftlichkeit-<produkt>.md`).
+- **Umsetzung startet erst nach expliziter CEO-Freigabe** (Status im Dokument).
+  Konzept-/Planungsarbeit ist vom Gate ausgenommen.
+
+### 5. Secrets & Sicherheit
 - API-Keys und Passwörter NIE direkt in Dateien speichern
 - Stattdessen in `01_Verbindungen/APIs/Geheimnisse/` (wird nicht versioniert)
 - Oder Umgebungsvariablen verwenden
