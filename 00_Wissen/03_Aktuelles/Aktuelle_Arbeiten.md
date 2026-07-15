@@ -6,6 +6,40 @@
 
 ---
 
+## 2026-07-15 (Tag 5) — Usecase 3: „AI Business Checker" geplant
+
+### Was heute entstanden ist
+
+Dritter Usecase fürs KI-Avatar-Produkt: **AI Business Checker** — YouTube-Kanal +
+TikTok-Shorts, der „Geld verdienen mit KI"-Anbieter auf Seriosität prüft
+(Warnung/Aufklärung, Animation statt Avatar).
+
+1. **Plan** (`01_Usecases/usecase-ai-business-checker.md`): Kanal-Konzept mit
+   4 wiederkehrenden Formaten, angepasste Pipeline (Research-Scan → Scoring →
+   **Dossier** → Skript → Stimme → **Animation** → Edit → QA/Legal → Posting),
+   Monetarisierung (bewusst KEINE Affiliates → Unabhängigkeit), 4-Phasen-Roadmap.
+   Animation via Remotion-Templates = einzige bezahlte API (HeyGen) entfällt hier.
+2. **Market-Research-Agent** (`Konzept-KI Avatar/market-research-agent.md`):
+   Quellen-Prioritäten (amtlich > dokumentierend > Community), Warnsignal-Katalog
+   W1–W8, JSON-Dossier-Format mit Beleg-Pflicht (URL + Zitat + Datum),
+   Scoring-Rubrik, harte Verhaltensregeln (2-Quellen-Minimum, neutrale Sprache,
+   Positivbefunde melden — Agent ist Rechercheur, kein Richter).
+3. **Compliance-Critic-Agent → Check 7 „Äußerungsrecht"**: verbotene Begriffe
+   ohne Urteil („Betrug") = Block, jede Tatsachenbehauptung muss dem Dossier
+   zuordenbar sein, 2-Quellen-Minimum, Stellungnahme-Pflicht bei Deep-Dives
+   (Verdachtsberichterstattung!). Neues Schema-Feld `aeusserungsrecht`.
+4. **Board erweitert**: dritter Usecase mit eigenem Filter-Chip + Badge-Farbe,
+   Label-Mapping von hartkodiertem Ternary auf `UC_LABEL`-Map umgestellt.
+
+### Wichtigste Design-Entscheidung (gelernt)
+
+Bei einem Prüf-/Warn-Kanal ist **Äußerungsrecht der härteste Blocker**, nicht
+Plattform-Compliance: Eine falsche Tatsachenbehauptung über einen benannten
+Anbieter = Abmahnung. Deshalb Dossier-Stufe als Pflicht-Input VOR dem Skript
+(keine Behauptung ohne Beleg-Datensatz) statt Legal-Check erst am Ende.
+
+---
+
 ## 2026-07-14 (Tag 4) — KI-Avatar: Produktstart + Pipeline-Board (Port 5310)
 
 ### Was heute entstanden ist
@@ -401,4 +435,4 @@ End-to-End mit echtem Ollama getestet: Dokument hochgeladen, gefragt
 ---
 
 *Regel: Dieses Journal wird am Ende jedes Arbeitstages von Claude aktualisiert.*
-*Zuletzt aktualisiert: 2026-07-14*
+*Zuletzt aktualisiert: 2026-07-15*

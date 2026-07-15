@@ -127,6 +127,7 @@
   }
   .badge.uc-youtube { background: var(--coral-bg); color: var(--coral); }
   .badge.uc-tiktok_shop { background: #1a1a1a; color: #7df0e3; }
+  .badge.uc-ai_business_checker { background: var(--done-bg); color: var(--done); }
   .badge.platform { background: var(--gray-bg); color: var(--gray); }
   .badge.comp-open { background: var(--gray-bg); color: var(--gray); }
   .badge.comp-approved { background: var(--teal-bg); color: var(--teal); }
@@ -206,6 +207,7 @@
   <button class="chip active" data-filter="all">Alle</button>
   <button class="chip" data-filter="youtube">YouTube</button>
   <button class="chip" data-filter="tiktok_shop">TikTok-Shop</button>
+  <button class="chip" data-filter="ai_business_checker">Business-Checker</button>
   <button class="btn btn-primary" id="btn-new">+ Neues Video</button>
   <a class="backlink" href="http://localhost:5000" id="aios-link" title="Zurück zum AI-OS Dashboard">⌂ AI-OS</a>
 </header>
@@ -282,6 +284,7 @@ let filter = "all";
 let editingId = null;
 
 const COMP_LABEL = { open: "offen", approved: "freigegeben", warning: "Warnung", blocked: "blockiert" };
+const UC_LABEL = { youtube: "YouTube", tiktok_shop: "TikTok-Shop", ai_business_checker: "Business-Checker" };
 const PLATFORM_LABEL = {
   tiktok: "TikTok",
   youtube_shorts: "YT Shorts",
@@ -353,7 +356,7 @@ function fillSelects() {
 
 function cardHtml(c) {
   const ucClass = "uc-" + c.usecase;
-  const ucLabel = c.usecase === "tiktok_shop" ? "TikTok-Shop" : "YouTube";
+  const ucLabel = UC_LABEL[c.usecase] || c.usecase;
   return '<div class="card" draggable="true" data-id="' + c.id + '">' +
     '<div class="card-title">' + esc(c.title) + '</div>' +
     '<div class="badges">' +

@@ -16,6 +16,8 @@ Du bekommst pro Durchlauf ein **Posting-Batch** mit folgenden Dateien/Feldern:
 - `duration_seconds` — Länge des Videos in Sekunden (number, optional)
 - `daily_shoppable_count` — wie viele shoppable Videos heute auf diesem Kanal bereits gepostet/geplant sind (number, optional, nur TikTok-Shop relevant)
 - `channel_metadata` — Kanal-Infos inkl. `impressum_url` (object, optional)
+- `usecase` — Pipeline-Usecase (youtube / tiktok_shop / ai_business_checker, optional)
+- `dossier` — Beweis-Dossier des Market-Research-Agenten (object, Pflicht bei usecase ai_business_checker: Belege mit URL/Zitat/Datum, Quellenliste, Stellungnahme-Status)
 - `content_history` — die letzten 10 veröffentlichten Videos dieses Kanals (Titel + Kernaussage), zur Wiederholungsprüfung
 
 Optionale Felder, die fehlen, führen nie zu einem Block — die betroffene Prüfung wird dann als `"manual_review"` bzw. `"n/a"` markiert und die Lücke unter `required_fixes` vermerkt.
@@ -53,6 +55,14 @@ Optionale Felder, die fehlen, führen nie zu einem Block — die betroffene Prü
 - `youtube_shorts`: `duration_seconds` muss ≤ 180 sein, sonst gilt es nicht als Short → **BLOCK** mit Hinweis, als `youtube_long` einzuplanen. Fehlt `duration_seconds` → `"manual_review"`.
 - `instagram_reels` und `youtube_long`: keine Limits definiert → `"n/a"`.
 
+### 7. Äußerungsrecht (nur Usecase "AI Business Checker" — Videos, die Anbieter prüfen/bewerten)
+Gilt, wenn das Batch-Feld `usecase == "ai_business_checker"` ist oder das Video einen namentlich genannten Anbieter bewertet. Sonst → `"n/a"`. Zusätzliches Eingabefeld: `dossier` (Beweis-Dossier des Market-Research-Agenten).
+- **Verbotene Begriffe ohne rechtskräftiges Urteil:** "Betrug", "Betrüger", "kriminell", "illegal" über einen namentlich genannten Anbieter → **BLOCK**, zitiere die Stelle. Zulässig sind erkennbare Meinungsäußerungen mit Tatsachenkern ("aus unserer Sicht riskant", "typische Warnsignale").
+- **Belegpflicht:** Jede Tatsachenbehauptung über den Anbieter im Skript/Transkript muss einem Eintrag im `dossier` zuordenbar sein (Beleg-URL + Datum). Unbelegte Tatsachenbehauptung → **BLOCK**.
+- **Quellen-Minimum:** Bei namentlicher Nennung müssen im `dossier` mindestens 2 unabhängige Quellen stehen. Weniger → **BLOCK** mit Hinweis "zurück auf Beobachtungsliste".
+- **Stellungnahme:** Bei Deep-Dives (`youtube_long`) muss das `dossier` dokumentieren, dass dem Anbieter Gelegenheit zur Stellungnahme gegeben wurde (Anfrage-Datum + Frist). Fehlt → **BLOCK** (Kernpflicht der Verdachtsberichterstattung). Bei Shorts ohne Namensnennung → `"n/a"`.
+- Fehlt das `dossier`-Feld komplett bei diesem Usecase → **BLOCK** (kein Prüf-Video ohne Beweisgrundlage).
+
 ## Ausgabeformat
 
 Antworte **ausschließlich** in diesem JSON-Format, keine zusätzliche Prosa davor oder danach:
@@ -66,7 +76,8 @@ Antworte **ausschließlich** in diesem JSON-Format, keine zusätzliche Prosa dav
     "impressum": "pass" | "manual_review",
     "prohibited_claims": "pass" | "fail",
     "repetition": "pass" | "warning" | "n/a",
-    "platform_limits": "pass" | "fail" | "manual_review" | "n/a"
+    "platform_limits": "pass" | "fail" | "manual_review" | "n/a",
+    "aeusserungsrecht": "pass" | "fail" | "n/a"
   },
   "blocking_reasons": ["<konkrete, zitierfähige Begründung pro Block>"],
   "warnings": ["<konkrete Begründung pro Warnung>"],
@@ -115,7 +126,8 @@ Antworte **ausschließlich** in diesem JSON-Format, keine zusätzliche Prosa dav
     "impressum": "manual_review",
     "prohibited_claims": "pass",
     "repetition": "pass",
-    "platform_limits": "pass"
+    "platform_limits": "pass",
+    "aeusserungsrecht": "n/a"
   },
   "blocking_reasons": [],
   "warnings": [],

@@ -43,6 +43,7 @@ STAGE_IDS = {s["id"] for s in STAGES}
 USECASES = {
     "youtube": "YouTube-Automation",
     "tiktok_shop": "TikTok-Shop",
+    "ai_business_checker": "AI Business Checker",
 }
 PLATFORMS = ["tiktok", "youtube_shorts", "youtube_long", "instagram_reels"]
 COMPLIANCE = ["open", "approved", "warning", "blocked"]

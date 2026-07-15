@@ -6,6 +6,7 @@ Automatisierte KI-Avatar-Video-Pipeline mit zwei Usecases:
 |---|---|---|---|
 | **YouTube-Automation** | "Deutsch Dễ Hiểu", "KI-News Redakteur", "KI für Business" | AdSense, Affiliate | [[01_Usecases/usecase-youtube-automation]] |
 | **TikTok-Shop** | Shoppable Videos mit Produktlinks | Shop-Provision, Affiliate | [[01_Usecases/usecase-tiktok-shop]] |
+| **AI Business Checker** | Prüf-Kanal: "Geld verdienen mit KI"-Anbieter auf Seriosität testen (Animation statt Avatar) | AdSense, Memberships (bewusst KEINE Affiliates) | [[01_Usecases/usecase-ai-business-checker]] |
 
 ## Pipeline (7 Stufen)
 
@@ -52,6 +53,9 @@ KI-Avatar/
 
 Kein Video geht raus ohne Freigabe durch den [[Konzept-KI Avatar/compliance-critic-agent|Compliance-Critic-Agent]]:
 KI-Kennzeichnung (Art. 50 EU-KI-VO, gilt ab 02.08.2026), Werbekennzeichnung (§5a UWG),
-Impressum, verbotene Claims, Wiederholungsrate, Plattform-Limits.
+Impressum, verbotene Claims, Wiederholungsrate, Plattform-Limits — und für den
+AI Business Checker zusätzlich Äußerungsrecht (Belegpflicht, 2-Quellen-Minimum,
+Stellungnahme-Pflicht bei Deep-Dives). Themen-Recherche für den Checker:
+[[Konzept-KI Avatar/market-research-agent|Market-Research-Agent]].
 
 #wichtig #ki-avatar #business
