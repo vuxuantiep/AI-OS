@@ -109,6 +109,48 @@ DEFAULT_CONFIG = {
                    "Viele Grüße\n{absender}"),
 }
 
+# Rollen-/Aufgabenprofile für den Radar-Filter (Reihenfolge = Priorität,
+# spezifisch vor generisch — ein Treffer bekommt das erste passende Profil)
+ROLLEN_PROFILE = [
+    {"key": "ki_automation", "name": "KI-Automation", "muster":
+        [r"ai (automation|engineer)", r"ki[- ]automatisierung", r"llm", r"\brag\b", r"agent(en)?[- ]?(system|entwickl)",
+         r"prompt", r"machine learning engineer", r"chatbot", r"n8n", r"workflow[- ]automation", r"automation engineer"]},
+    {"key": "ki_berater", "name": "KI-Berater", "muster":
+        [r"ai (consultant|strategy|advisor)", r"ki[- ]berat", r"ai adoption", r"digital(isierungs)?[- ]berat",
+         r"ai transformation"]},
+    {"key": "cloud_admin", "name": "Cloud-Admin / DevOps", "muster":
+        [r"cloud (admin|engineer|architect)", r"\baws\b", r"\bazure\b", r"\bgcp\b", r"devops", r"kubernetes",
+         r"\bk8s\b", r"terraform", r"docker", r"site reliability", r"\bsre\b", r"infrastructure engineer"]},
+    {"key": "sysadmin", "name": "IT-Systemadministrator", "muster":
+        [r"system[- ]?administrator", r"sysadmin", r"windows server", r"active directory", r"linux admin",
+         r"netzwerk[- ]?admin", r"network administrator", r"it[- ]administrator"]},
+    {"key": "it_support", "name": "IT-Support", "muster":
+        [r"it[- ]support", r"help[- ]?desk", r"service[- ]?desk", r"technical support", r"support engineer",
+         r"support specialist", r"1st[- ]level", r"2nd[- ]level", r"first level"]},
+    {"key": "app_manager", "name": "Application Manager", "muster":
+        [r"application[- ]manager", r"anwendungsbetreu", r"application (support|specialist|engineer)",
+         r"\bsap\b", r"\berp\b", r"\bcrm[- ](admin|manager|consultant)", r"salesforce", r"product owner"]},
+    {"key": "it_techniker", "name": "IT-Techniker", "muster":
+        [r"it[- ]techniker", r"field (service|technician)", r"hardware", r"rollout", r"onsite",
+         r"technician", r"pc[- ]techniker"]},
+    {"key": "entwickler", "name": "Software-Entwickler", "muster":
+        [r"developer", r"entwickler", r"software engineer", r"full[- ]?stack", r"front[- ]?end", r"back[- ]?end",
+         r"python", r"react", r"javascript", r"typescript", r"\bjava\b", r"\bphp\b", r"\.net\b", r"engineer"]},
+    {"key": "daten", "name": "Daten / Analytics", "muster":
+        [r"data (engineer|analyst|scientist)", r"datenanalyst", r"business intelligence", r"\bbi\b",
+         r"\bsql\b", r"analytics", r"\betl\b"]},
+]
+
+
+def klassifiziere_rolle(text):
+    t = text.lower()
+    for profil in ROLLEN_PROFILE:
+        for muster in profil["muster"]:
+            if re.search(muster, t):
+                return profil["key"]
+    return "sonstiges"
+
+
 RADAR_QUELLEN = [
     {"name": "RemoteOK Dev", "typ": "feed", "url": "https://remoteok.com/remote-dev-jobs.rss"},
     {"name": "WeWorkRemotely Programming", "typ": "feed",
@@ -501,6 +543,7 @@ def radar_scan():
                 it["quelle"] = q["name"]
                 it["keywords"] = treffer_kw
                 it["score"] = len(treffer_kw)
+                it["rolle"] = klassifiziere_rolle(text)
                 it["gefunden_am"] = _now()
                 it["id"] = str(uuid.uuid4())
                 neue.append(it)
@@ -911,7 +954,26 @@ def webhook_calcom():
 @app.route("/api/radar")
 def api_radar():
     radar = lade("radar.json", {"treffer": [], "letzter_scan": None})
-    return jsonify({"treffer": radar["treffer"][:150], "letzter_scan": radar["letzter_scan"],
+    treffer = radar["treffer"]
+    # Alt-Treffer ohne Rolle nachklassifizieren (Titel + Textauszug)
+    geaendert = False
+    for t in treffer:
+        if "rolle" not in t:
+            t["rolle"] = klassifiziere_rolle(t.get("titel", "") + " " + t.get("text", ""))
+            geaendert = True
+    if geaendert:
+        speichere("radar.json", radar)
+    rollen_zaehler = {}
+    for t in treffer:
+        rollen_zaehler[t["rolle"]] = rollen_zaehler.get(t["rolle"], 0) + 1
+    rolle_filter = request.args.get("rolle")
+    if rolle_filter:
+        treffer = [t for t in treffer if t["rolle"] == rolle_filter]
+    rollen = ([{"key": p["key"], "name": p["name"], "anzahl": rollen_zaehler.get(p["key"], 0)}
+               for p in ROLLEN_PROFILE]
+              + [{"key": "sonstiges", "name": "Sonstiges", "anzahl": rollen_zaehler.get("sonstiges", 0)}])
+    return jsonify({"treffer": treffer[:150], "letzter_scan": radar["letzter_scan"],
+                    "rollen": [r for r in rollen if r["anzahl"] > 0],
                     "quellen": [q["name"] for q in RADAR_QUELLEN]
                                + [q.get("name", "eigene") for q in lade_config().get("radar_quellen_eigene", [])]})
 

@@ -237,10 +237,11 @@
 
   <!-- Radar -->
   <section class="view" id="view-radar">
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
       <button class="btn primary" id="btn-radar-scan">📡 Jetzt scannen</button>
       <span class="hint" id="radar-info"></span>
     </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="radar-rollen"></div>
     <div id="radar-liste"><div class="leer">Lade…</div></div>
   </section>
 
@@ -701,18 +702,32 @@ async function dsgvoAufraeumen() {
 }
 
 /* Radar */
+let radarRolle = "";
+const ROLLEN_NAMEN = {};
 async function ladeRadar() {
-  const d = await api("api/radar");
+  const d = await api("api/radar" + (radarRolle ? "?rolle=" + encodeURIComponent(radarRolle) : ""));
   document.getElementById("radar-info").textContent =
-    "Quellen: " + d.quellen.join(", ") + (d.letzter_scan ? " · letzter Scan: " + d.letzter_scan.slice(0, 16) : "");
+    "Quellen: " + d.quellen.join(", ") + (d.letzter_scan ? " · letzter Scan: " + d.letzter_scan.slice(0, 16) : "") +
+    " · Auto-Scan täglich 7 Uhr";
+  (d.rollen || []).forEach(r => ROLLEN_NAMEN[r.key] = r.name);
+  const gesamt = (d.rollen || []).reduce((s, r) => s + r.anzahl, 0);
+  document.getElementById("radar-rollen").innerHTML =
+    '<button class="btn small' + (radarRolle === "" ? " primary" : "") + '" data-rolle="">Alle (' + gesamt + ')</button>' +
+    (d.rollen || []).map(r =>
+      '<button class="btn small' + (radarRolle === r.key ? " primary" : "") + '" data-rolle="' + r.key + '">' +
+      esc(r.name) + ' (' + r.anzahl + ')</button>').join("");
+  document.querySelectorAll("#radar-rollen button").forEach(b => b.addEventListener("click", () => {
+    radarRolle = b.dataset.rolle; ladeRadar();
+  }));
   const ziel = document.getElementById("radar-liste");
   ziel.innerHTML = d.treffer.length ? d.treffer.map(t =>
     '<div class="rtreffer"><div class="score">' + t.score + '</div><div style="min-width:0;">' +
     '<div class="titel">' + esc(t.titel) + '</div>' +
-    '<div class="rmeta">' + esc(t.quelle) + ' · ' + esc(t.datum) + ' · Keywords: ' + esc(t.keywords.join(", ")) +
+    '<div class="rmeta"><span class="tag">' + esc(ROLLEN_NAMEN[t.rolle] || t.rolle || "—") + '</span> ' +
+    esc(t.quelle) + ' · ' + esc(t.datum) + ' · Keywords: ' + esc(t.keywords.join(", ")) +
     ' · <a href="' + esc(t.url) + '" target="_blank" rel="noopener">öffnen ↗</a></div></div>' +
     '<button class="btn small primary" data-id="' + t.id + '">→ Als Lead übernehmen</button></div>').join("")
-    : '<div class="leer">Keine Treffer — „Jetzt scannen“ klicken oder Keywords in den Einstellungen anpassen.</div>';
+    : '<div class="leer">Keine Treffer' + (radarRolle ? ' in diesem Profil' : '') + ' — „Jetzt scannen“ klicken oder Keywords in den Einstellungen anpassen.</div>';
   ziel.querySelectorAll("button[data-id]").forEach(b => b.addEventListener("click", async () => {
     await api("api/radar/" + b.dataset.id + "/uebernehmen", { method: "POST" });
     toast("In Pipeline übernommen (Stufe: Neu)"); ladeRadar();

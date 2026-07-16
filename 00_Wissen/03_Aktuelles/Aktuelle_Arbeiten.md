@@ -108,6 +108,12 @@ Rechnung 2026-001 → Mahnung M-2026-001 → Vertrag + Druck → Prüfung erkenn
 Weisungsbindung/feste Arbeitszeiten → Lead→Kunde) + Rechnungs-Screenshot
 gegen Vorlage abgeglichen. SMTP-Daten (IONOS) trägt CEO nach.
 
+**Nachschlag: Radar-Rollenfilter** — 9 Aufgabenprofile (IT-Support, Sysadmin,
+Application Manager, KI-Automation, KI-Berater, Cloud-Admin/DevOps, IT-Techniker,
+Entwickler, Daten) als Regex-Klassifizierung mit Prioritätsreihenfolge,
+Filter-Chips mit Trefferzahl im Radar, Alt-Treffer lazy nachklassifiziert.
+Test: 66 Treffer → 32 Entwickler, 6 KI-Automation, 6 Cloud, 2 Support …
+
 ### Nachtrag: Konzept-Prüfung „IT Pipeline System inkl. CRM" (neues Produkt)
 
 CEO hat neues Produkt eingebracht (`10_Business/IT Pipeline System inkl CRM/`):
