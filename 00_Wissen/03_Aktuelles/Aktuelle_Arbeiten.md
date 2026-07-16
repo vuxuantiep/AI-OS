@@ -24,6 +24,24 @@
    Kartentext um Themen-Gruppen/Gewinnchancen ergänzt.
    Verifiziert per Struktur-Assertions (Reihenfolge, keine Dublette) + node --check.
 
+### Nachtrag: Positiv-Liste „Gelobte KI-Business" (CEO-Wunsch)
+
+Separater grüner Bereich unten auf der Checker-Seite: KI-Business, die in den
+Quellen **gelobt / als funktionierend** erwähnt werden — inkl. „Mehrfach erwähnt"-
+Chips (Namen, die über ≥2 positive Funde auftauchen = Kandidaten für
+„überraschend okay"-Videos).
+
+- Erkennung bewusst konservativ: Lob-Muster DE/EN/VI („hat bei mir funktioniert",
+  „got paid", „uy tín" …), **Fragen disqualifizieren** („Is X legit?" ist Suche,
+  kein Lob), Warnsignal-Treffer schließen Positiv-Einstufung aus.
+- Neue Reddit-Suchläufe für Erfolgsberichte (r/sidehustle, r/Entrepreneur),
+  eigene Empfehlungsklasse `positiv` (umgeht den Scam-Score-Filter),
+  API `/api/positiv` mit Namens-Aggregation (`extrahiere_namen` + Stopwörter).
+- **Getestet per Integrationstest mit synthetischen Funden** (Reddit war nach
+  4 Scans in 30 min komplett rate-limited): 2 Positive korrekt erkannt, Frage
+  korrekt abgelehnt, „Jasper ×2" aggregiert, Store danach wiederhergestellt.
+  Hinweis im UI: Positiv-Liste ist kein Gütesiegel — Dossier-Pflicht bleibt.
+
 ---
 
 ## 2026-07-15 (Tag 5) — Usecase 3: „AI Business Checker" geplant

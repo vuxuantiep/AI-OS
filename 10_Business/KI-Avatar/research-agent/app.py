@@ -49,6 +49,13 @@ REDDIT_QUERIES = [
     "AI money", "KI Geld verdienen", "AI trading bot", "AI side hustle scam",
     "chatgpt money", "passive income AI",
 ]
+# Gezielte Suche nach ERFOLGS-Berichten (füttert die Positiv-Liste) —
+# eigene Subreddit/Query-Paare, weil die Warn-Queries kaum Lob liefern
+REDDIT_POSITIV_LAEUFE = [
+    ("sidehustle", "AI worked for me"),
+    ("passive_income", "AI success actually works"),
+    ("Entrepreneur", "AI tool recommend income"),
+]
 # Eingebaute Feeds — global: DE/AT, USA, Vietnam (Kanal-Ziel: weltweite Sichtbarkeit).
 # Verbraucherschutz-Portale und seriöse News-Rubriken, die wie Verbraucherzentralen
 # dokumentieren. Eigene Quellen kommen zusätzlich aus data/custom_sources.json.
@@ -108,6 +115,46 @@ KI_RELEVANZ = [r"\bki\b", r"\ba\.?i\.?\b", r"künstliche intelligenz", r"artific
                r"chatgpt", r"gpt", r"deepfake", r"trading[- ]?bot", r"ai[- ]?bot",
                r"algorithm\w*", r"machine learning", r"neural", r"midjourney", r"claude",
                r"trí tuệ nhân tạo", r"công nghệ ai"]
+
+# Positive Signale: gelobte / als funktionierend bestätigte KI-Business.
+# Bewusst konservativ — Fragen ("Ist X seriös?") und Werbesprache zählen NICHT.
+POSITIV_MUSTER = [
+    r"funktioniert (wirklich|tatsächlich|bei mir)", r"hat (bei mir )?funktioniert",
+    r"kann ich empfehlen", r"empfehlenswert", r"gute erfahrung(en)? gemacht",
+    r"seriöser anbieter", r"zahlt (wirklich|tatsächlich|zuverlässig) aus",
+    r"auszahlung (kam|erhalten|funktioniert)",
+    r"actually works", r"worked for me", r"can recommend", r"is legit(?!\?)",
+    r"got paid", r"payout (arrived|received|works)", r"success story", r"verified payout",
+    r"uy tín", r"hiệu quả thật", r"đáng tin cậy", r"kiếm được thật", r"đã nhận được tiền",
+]
+
+NAMEN_STOPWOERTER = {
+    "the", "this", "that", "how", "what", "why", "with", "and", "for", "from", "best",
+    "new", "der", "die", "das", "ist", "mit", "und", "für", "wie", "was", "warum",
+    "ich", "mein", "meine", "nach", "von", "beim", "reddit", "youtube", "tiktok",
+    "google", "update", "warnung", "warning", "scam", "review", "erfahrung", "erfahrungen",
+    "test", "vergleich", "vorsicht", "achtung", "abzocke", "betrug", "video", "kanal",
+}
+
+
+def positiv_bewerte(text, titel):
+    """Zählt Lob-Signale. Fragen im Titel disqualifizieren (das ist Suche, kein Lob)."""
+    if "?" in titel:
+        return 0, []
+    t = text.lower()
+    zitate = []
+    for muster in POSITIV_MUSTER:
+        m = re.search(muster, t)
+        if m:
+            zitate.append(m.group(0)[:100])
+    return len(zitate), zitate
+
+
+def extrahiere_namen(titel):
+    """Zieht mögliche Anbieter-/Tool-Namen aus einem Titel (großgeschriebene Folgen)."""
+    kandidaten = re.findall(r"\b[A-Z][A-Za-z0-9]{2,}(?:\s+[A-Z][A-Za-z0-9]{2,}){0,2}\b", titel)
+    return [k for k in kandidaten if k.lower() not in NAMEN_STOPWOERTER]
+
 
 # --- Themen-Kategorien: Gruppierung der Funde + Gewinnchancen-Bewertung -------
 # `potenzial` (0-10) = Kanal-Eignung nach Wirtschaftlichkeits-Prüfer-Logik:
@@ -333,26 +380,27 @@ def parse_feed(xml_text):
 
 def scan_reddit(fehler):
     """Reddit-Suche über die RSS-Endpunkte (JSON-API liefert 403, RSS nicht)."""
+    laeufe = ([(sub, q) for sub in REDDIT_SUBS for q in REDDIT_QUERIES[:2]]  # Rate-Limit-freundlich
+              + REDDIT_POSITIV_LAEUFE)
     funde = []
-    for sub in REDDIT_SUBS:
-        for query in REDDIT_QUERIES[:2]:  # Rate-Limit-freundlich
-            url = (f"https://old.reddit.com/r/{sub}/search.rss?"
-                   + urllib.parse.urlencode({"q": query, "sort": "new", "t": "month",
-                                             "restrict_sr": "on", "limit": 15}))
-            try:
-                for item in parse_feed(http_get(url)):
-                    text = item["titel"] + " " + item["beschreibung"]
-                    funde.append({
-                        "quelle": f"reddit/r/{sub}",
-                        "titel": item["titel"],
-                        "url": item["url"],
-                        "datum": item["datum"],
-                        "text_auszug": item["beschreibung"][:500],
-                        "_volltext": text,
-                    })
-                time.sleep(4)  # Reddit drosselt RSS bei <2s Abstand (429)
-            except Exception as e:
-                fehler.append(f"reddit/r/{sub} '{query}': {type(e).__name__}")
+    for sub, query in laeufe:
+        url = (f"https://old.reddit.com/r/{sub}/search.rss?"
+               + urllib.parse.urlencode({"q": query, "sort": "new", "t": "month",
+                                         "restrict_sr": "on", "limit": 15}))
+        try:
+            for item in parse_feed(http_get(url)):
+                text = item["titel"] + " " + item["beschreibung"]
+                funde.append({
+                    "quelle": f"reddit/r/{sub}",
+                    "titel": item["titel"],
+                    "url": item["url"],
+                    "datum": item["datum"],
+                    "text_auszug": item["beschreibung"][:500],
+                    "_volltext": text,
+                })
+            time.sleep(4)  # Reddit drosselt RSS bei <2s Abstand (429)
+        except Exception as e:
+            fehler.append(f"reddit/r/{sub} '{query}': {type(e).__name__}")
     return funde
 
 
@@ -412,6 +460,19 @@ def scan_alle():
         seen.add(f["url"])
         volltext = f.pop("_volltext")
         treffer, score, ki_relevanz = bewerte_text(volltext, f["quelle"])
+        pos_anzahl, pos_zitate = positiv_bewerte(volltext, f["titel"])
+        # Positiv-Fund: Lob ohne Warnsignale + KI-Bezug -> eigene Liste,
+        # unabhängig vom Scam-Score (der ist hier naturgemäß niedrig)
+        if pos_anzahl >= 1 and not treffer and ki_relevanz:
+            f["kategorie"] = kategorisiere(volltext)
+            f["warnsignale"] = []
+            f["positiv_signale"] = pos_zitate
+            f["score"] = pos_anzahl
+            f["ki_relevanz"] = True
+            f["empfehlung"] = "positiv"
+            f["gefunden_am"] = _now()
+            neue_funde.append(f)
+            continue
         if score < 2:  # gar kein Signal -> Rauschen, verwerfen
             continue
         f["kategorie"] = kategorisiere(volltext)
@@ -434,6 +495,7 @@ def scan_alle():
         "neue_funde": len(neue_funde),
         "video_kandidaten": [f for f in neue_funde if f["empfehlung"] == "video_kandidat"],
         "beobachtungsliste": [f for f in neue_funde if f["empfehlung"] == "beobachtungsliste"],
+        "positive": [f for f in neue_funde if f["empfehlung"] == "positiv"],
         "quellen_fehler": fehler,
         "hinweis": "v1-Heuristik: Kandidaten sind VOR-gefiltert, kein Ersatz für das Dossier "
                    "(2-Quellen-Minimum + Belege) laut market-research-agent.md",
@@ -523,6 +585,30 @@ def api_funde():
     if kategorie:
         funde = [f for f in funde if f.get("kategorie") == kategorie]
     return jsonify({"letzter_scan": store["letzter_scan"], "funde": funde[:limit]})
+
+
+@app.route("/api/positiv")
+def api_positiv():
+    """Gelobte / als funktionierend erwähnte KI-Business — separat von den Warnungen.
+    `mehrfach`: Namen, die über mehrere positive Funde hinweg auftauchen."""
+    store = load_store()
+    funde = [f for f in _mit_kategorie(store["funde"]) if f.get("empfehlung") == "positiv"]
+    kategorie = request.args.get("kategorie")
+    if kategorie:
+        funde = [f for f in funde if f.get("kategorie") == kategorie]
+    zaehler = {}
+    for f in funde:
+        for name in set(extrahiere_namen(f.get("titel", ""))):
+            zaehler[name] = zaehler.get(name, 0) + 1
+    mehrfach = sorted([{"name": n, "anzahl": z} for n, z in zaehler.items() if z >= 2],
+                      key=lambda x: -x["anzahl"])
+    return jsonify({
+        "funde": funde[:100],
+        "mehrfach": mehrfach,
+        "hinweis": "Lob-Signale ohne Warnsignale (Fragen zählen nicht). Kein Gütesiegel — "
+                   "vor einem 'überraschend okay'-Video gilt trotzdem das volle Dossier "
+                   "mit 2-Quellen-Minimum.",
+    })
 
 
 @app.route("/api/themen")

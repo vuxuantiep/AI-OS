@@ -51,6 +51,13 @@
   .pot-label { font-size: 0.72rem; color: var(--muted); display: flex; justify-content: space-between; }
   .thema .chance { font-size: 0.76rem; color: var(--muted); line-height: 1.45; margin-top: 7px; }
   .filter-hinweis { font-size: 0.82rem; color: var(--teal); margin: 10px 0 0; cursor: pointer; display: none; }
+  .positiv-bereich { margin-top: 34px; border: 1px solid var(--teal); border-radius: 14px; padding: 4px 18px 16px; background: rgba(25, 184, 166, 0.05); }
+  .positiv-bereich h2 { color: var(--teal); }
+  .badge.b-pos { background: rgba(25, 184, 166, 0.15); color: var(--teal); border: 1px solid var(--teal); }
+  .fund.pos { border-color: rgba(25, 184, 166, 0.5); }
+  .mehrfach-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 14px; }
+  .m-chip { background: var(--teal); color: #04211d; border-radius: 999px; padding: 5px 14px; font-size: 0.82rem; font-weight: 700; }
+  .m-chip span { opacity: 0.75; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -96,6 +103,13 @@
   <div id="beobachtung"><div class="leer">Lade…</div></div>
   <h2>Hinweise (schwaches Signal)</h2>
   <div id="hinweise"><div class="leer">Lade…</div></div>
+
+  <div class="positiv-bereich">
+    <h2>✅ Gelobte KI-Business (positive Signale)</h2>
+    <div class="q-hint" id="positiv-hinweis"></div>
+    <div class="mehrfach-chips" id="mehrfach"></div>
+    <div id="positive"><div class="leer">Lade…</div></div>
+  </div>
 </main>
 <script>
 "use strict";
@@ -115,11 +129,15 @@ function themaName(key) {
 }
 
 function fundHtml(f) {
-  const signale = (f.warnsignale || []).map(w =>
-    '<span class="badge b-signal">' + esc(w.code) + ' ' + esc(w.name) + '</span>').join('');
+  const istPositiv = f.empfehlung === "positiv";
+  const signale = istPositiv
+    ? (f.positiv_signale || []).map(z =>
+        '<span class="badge b-pos">✓ „' + esc(z) + '“</span>').join('')
+    : (f.warnsignale || []).map(w =>
+        '<span class="badge b-signal">' + esc(w.code) + ' ' + esc(w.name) + '</span>').join('');
   const kat = f.kategorie ? '<span>' + esc(themaName(f.kategorie)) + '</span>' : '';
-  return '<div class="fund">' +
-    '<div class="titel"><span class="badge b-score">' + esc(f.score) + '</span>' + esc(f.titel) + '</div>' +
+  return '<div class="fund' + (istPositiv ? ' pos' : '') + '">' +
+    '<div class="titel"><span class="badge ' + (istPositiv ? 'b-pos' : 'b-score') + '">' + esc(f.score) + '</span>' + esc(f.titel) + '</div>' +
     signale +
     '<div class="meta">' + kat + '<span>' + esc(f.quelle) + '</span><span>' + esc(f.datum) + '</span>' +
     '<a href="' + esc(f.url) + '" target="_blank" rel="noopener">Quelle öffnen ↗</a></div>' +
@@ -179,6 +197,13 @@ async function lade() {
   fuelle("kandidaten", funde.filter(f => f.empfehlung === "video_kandidat"));
   fuelle("beobachtung", funde.filter(f => f.empfehlung === "beobachtungsliste"));
   fuelle("hinweise", funde.filter(f => f.empfehlung === "hinweis").slice(0, 30));
+
+  const pos = await (await fetch("api/positiv?limit=100" + filter)).json();
+  document.getElementById("positiv-hinweis").textContent = pos.hinweis;
+  document.getElementById("mehrfach").innerHTML = pos.mehrfach.length
+    ? pos.mehrfach.map(m => '<span class="m-chip">' + esc(m.name) + ' <span>×' + m.anzahl + '</span></span>').join("")
+    : '<span class="leer">Noch kein Name mehrfach gelobt — füllt sich mit weiteren Scans.</span>';
+  fuelle("positive", pos.funde);
 }
 
 function quelleHtml(q, loeschbar) {
