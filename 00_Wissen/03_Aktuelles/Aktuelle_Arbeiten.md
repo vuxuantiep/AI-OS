@@ -24,6 +24,30 @@
    Kartentext um Themen-Gruppen/Gewinnchancen ergänzt.
    Verifiziert per Struktur-Assertions (Reihenfolge, keine Dublette) + node --check.
 
+### Nachtrag: Konzept-Prüfung „IT Pipeline System inkl. CRM" (neues Produkt)
+
+CEO hat neues Produkt eingebracht (`10_Business/IT Pipeline System inkl CRM/`):
+Lead-Pipeline + CRM für IT-Freelancer, doppelt verwertbar (Eigennutzung +
+Done-for-you-Verkauf à 2.000–5.000 €, siehe Recherche-Screenshots).
+
+**Konzept-Prüfung** (`Plannung/Konzept-Pruefung.md`) — 3 harte Findings:
+- **F1: HubSpot Free hat KEINE Workflow-Automatisierung** — Stufe 3 des Konzepts
+  (Trigger-Mails „im CRM eingebaut, kein Zusatztool") stimmt im Free-Tier nicht.
+  Empfehlung: self-hosted CRM + n8n (passt zur AI-OS-Philosophie, macht es erst
+  zum echten Modul).
+- **F2: DSGVO/UWG fehlt** (AV-Vertrag, §7 UWG bei Follow-up-Mails: keine Drip-Serien
+  ohne Einwilligung, Löschkonzept).
+- **F3: Linker Pfad verschenkt die sofortige Eingangsbestätigung** — die
+  konversionsstärkste Automatisierung gehört in BEIDE Pfade.
+
+**Wirtschaftlichkeitsprüfung** (Gate-Regel 4, `wirtschaftlichkeit-it-pipeline-crm.md`):
+Anders als beim Checker ist der konservative Fall hier nicht negativ (eigenes
+System bleibt immer übrig). Basis-Szenario ~6.000–12.000 €/Jahr (2–3 verkaufte
+Setups + 1 Zusatzauftrag durch schnellere Reaktion), ~80–150 €/h.
+→ **GO_MIT_AUFLAGEN**: Phase A (Eigenbau, max. 3 Tage, self-hosted, 0 € Cash)
+sofort; Phase B (Produktisierung) erst nach 4 Wochen Echtbetrieb + Nutzen-Nachweis.
+**Status: WARTET_AUF_FREIGABE.**
+
 ### Nachtrag: Positiv-Liste „Gelobte KI-Business" (CEO-Wunsch)
 
 Separater grüner Bereich unten auf der Checker-Seite: KI-Business, die in den
