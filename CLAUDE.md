@@ -103,6 +103,7 @@ python 04_Infrastruktur/Runtime/start_ai_os.py
 | **Monitoring** | **5400** | **http://localhost:5400/status** |
 | **KI-Avatar Board** | **5310** | **http://localhost:5310** (Pipeline-Board YouTube/TikTok-Shop) |
 | **Research-Agent (Checker)** | **5320** | **http://localhost:5320** (Markt-Scan AI Business Checker) |
+| **LeadPilot CRM** | **5330** | **http://localhost:5330** (IT Pipeline System: Lead-CRM + Radar) |
 | **LangGraph Engine** | **5500** | **http://localhost:5500** (Fabrik-Pipeline als Graph) |
 | Ollama API | 11434 | http://localhost:11434 |
 

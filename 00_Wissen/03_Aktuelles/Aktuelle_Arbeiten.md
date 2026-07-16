@@ -24,6 +24,38 @@
    Kartentext um Themen-Gruppen/Gewinnchancen ergänzt.
    Verifiziert per Struktur-Assertions (Reihenfolge, keine Dublette) + node --check.
 
+### Nachtrag: LeadPilot CRM gebaut — Phase A des IT Pipeline Systems ✅
+
+Nach CEO-Freigabe (16.07., GO_MIT_AUFLAGEN + Zusatz: portabel für AI-OS UND
+Trace-AI OS, SaaS-UX, eigenes CRM, Lead-Radar) komplette Phase A umgesetzt:
+
+**LeadPilot** (`IT Pipeline System inkl CRM/app/`, Flask :5330, self-contained):
+1. **CRM-Kern:** Leads mit 6-Stufen-Pipeline (Kanban Drag&Drop), Verlaufs-Protokoll,
+   Volltextsuche, Pipeline-Wert; Webhooks für Kontaktformular + Cal.com
+   (BOOKING_CREATED) mit **Dedup per E-Mail** (gleiche Person → Verlaufs-Eintrag
+   statt Dublette, Termin wird nachgetragen).
+2. **F3 umgesetzt:** Mail 1 (Eingangsbestätigung) sofort bei JEDEM Lead;
+   Mail 2 (Buchungs-Erinnerung) systemseitig auf **genau 1× pro Lead** begrenzt
+   (Flag, kein Drip → §7 UWG). Ohne SMTP-Env landen Mails sichtbar im Postausgang.
+3. **F2 umgesetzt:** Export je Lead (Art. 15), Hard-Delete inkl. Mails (Art. 17),
+   Anonymisieren, Löschkonzept (verlorene Leads nach X Monaten, Dashboard-Banner
+   + Aufräum-Button).
+4. **Lead-Radar:** RemoteOK/WWR/Remotive + eigene Feeds, Keyword-Scoring mit
+   **Wortgrenzen** (Bugfix: "ai" matchte in "maintain" — 156 Treffer vorher,
+   64 saubere nachher), 1 Klick → Lead. Bewusst Projektbörsen statt
+   Personendaten-Scraping (DSGVO/UWG, in README dokumentiert).
+5. **SaaS-UI:** Sidebar-App (Dashboard-KPIs, Pipeline, Leads-Tabelle, Radar,
+   Postausgang, Einstellungen mit Mail-Templates/Keywords/DSGVO-Frist).
+6. **Portabilität:** keine Host-Imports, relative API-Pfade, `INSTALL.md` mit
+   3 Varianten (standalone / AI-OS / Trace-AI OS inkl. Proxy-Snippet + Warnung
+   vor der Werkzeug-Routen-Falle). EspoCRM bewusst NICHT genutzt (PHP+MySQL-
+   Overhead), bleibt als Referenz liegen.
+
+End-to-End verifiziert: Webhook→Lead→Mail1 ✓, Cal.com-Dedup+Termin ✓, Move ✓,
+Export ✓, Anonymisieren ✓, Radar-Scan (64 Treffer, 0 Fehler) ✓, Übernahme ✓,
+Config ✓, alles auch durch den Dashboard-Proxy `/produkte/it-pipeline/` ✓,
+Regression der 3 anderen Produkte ✓.
+
 ### Nachtrag: Konzept-Prüfung „IT Pipeline System inkl. CRM" (neues Produkt)
 
 CEO hat neues Produkt eingebracht (`10_Business/IT Pipeline System inkl CRM/`):

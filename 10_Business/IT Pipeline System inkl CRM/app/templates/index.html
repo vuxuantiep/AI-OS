@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeadPilot · IT Pipeline CRM</title>
+<style>
+  :root {
+    --bg: #0b1220; --panel: #111a2c; --panel2: #17223a; --line: #22304c;
+    --ink: #eef3fb; --muted: #8294b5; --acc: #4f8cff; --acc2: #7c5cff;
+    --gruen: #2dd4a7; --rot: #f0616d; --gelb: #f5b83d;
+    --shadow: 0 8px 30px rgba(0,0,0,0.35);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", Inter, system-ui, sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; display: flex; }
+
+  /* Sidebar */
+  aside { width: 220px; min-height: 100vh; background: var(--panel); border-right: 1px solid var(--line); padding: 18px 12px; position: sticky; top: 0; flex-shrink: 0; display: flex; flex-direction: column; }
+  .logo { font-weight: 800; font-size: 1.05rem; padding: 4px 10px 18px; letter-spacing: 0.3px; }
+  .logo b { background: linear-gradient(90deg, var(--acc), var(--acc2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; margin-bottom: 3px; border: none; background: none; color: var(--muted); font-size: 0.92rem; border-radius: 9px; cursor: pointer; text-align: left; }
+  .nav-btn:hover { background: var(--panel2); color: var(--ink); }
+  .nav-btn.active { background: linear-gradient(90deg, rgba(79,140,255,0.18), rgba(124,92,255,0.12)); color: var(--ink); font-weight: 600; }
+  .nav-badge { margin-left: auto; background: var(--acc); color: #fff; border-radius: 999px; font-size: 0.68rem; padding: 1px 8px; }
+  .side-foot { margin-top: auto; font-size: 0.72rem; color: var(--muted); padding: 10px; line-height: 1.6; }
+
+  main { flex: 1; padding: 22px 28px 60px; min-width: 0; }
+  .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .topbar h1 { font-size: 1.25rem; }
+  .spacer { flex: 1; }
+  input, select, textarea { background: var(--panel2); border: 1px solid var(--line); border-radius: 9px; color: var(--ink); padding: 9px 12px; font-size: 0.9rem; font-family: inherit; }
+  input::placeholder, textarea::placeholder { color: var(--muted); }
+  .btn { border: none; border-radius: 9px; padding: 9px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; background: var(--panel2); color: var(--ink); border: 1px solid var(--line); }
+  .btn:hover { border-color: var(--acc); }
+  .btn.primary { background: linear-gradient(90deg, var(--acc), var(--acc2)); border: none; color: #fff; }
+  .btn.danger { background: none; border-color: var(--rot); color: var(--rot); }
+  .btn.small { padding: 5px 11px; font-size: 0.8rem; }
+  .btn:disabled { opacity: 0.5; cursor: wait; }
+
+  .view { display: none; }
+  .view.active { display: block; animation: fade 0.15s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } }
+
+  /* Dashboard */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .kpi .wert { font-size: 1.7rem; font-weight: 800; margin-top: 4px; }
+  .kpi .label { color: var(--muted); font-size: 0.8rem; }
+  .kpi .sub { color: var(--muted); font-size: 0.72rem; margin-top: 4px; }
+  .banner { border: 1px solid var(--gelb); background: rgba(245,184,61,0.08); color: var(--gelb); border-radius: 12px; padding: 12px 16px; font-size: 0.86rem; margin-bottom: 16px; display: none; }
+  .banner .btn { margin-left: 10px; }
+
+  /* Kanban */
+  .kanban { display: flex; gap: 12px; overflow-x: auto; align-items: flex-start; padding-bottom: 10px; }
+  .spalte { background: var(--panel); border: 1px solid var(--line); border-radius: 13px; min-width: 230px; width: 230px; flex-shrink: 0; }
+  .spalte h3 { font-size: 0.85rem; padding: 12px 14px 8px; color: var(--muted); display: flex; justify-content: space-between; }
+  .spalte.drag-over { border-color: var(--acc); }
+  .karten { padding: 8px; min-height: 50px; display: flex; flex-direction: column; gap: 7px; }
+  .karte { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: grab; font-size: 0.85rem; }
+  .karte:hover { border-color: var(--acc); }
+  .karte .kname { font-weight: 600; }
+  .karte .kmeta { color: var(--muted); font-size: 0.73rem; margin-top: 4px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .tag { border-radius: 5px; padding: 1px 7px; font-size: 0.68rem; font-weight: 600; background: rgba(79,140,255,0.15); color: var(--acc); }
+  .tag.radar { background: rgba(124,92,255,0.15); color: var(--acc2); }
+  .tag.calcom { background: rgba(45,212,167,0.13); color: var(--gruen); }
+
+  /* Tabellen */
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 13px; overflow: hidden; }
+  th, td { text-align: left; padding: 11px 14px; font-size: 0.86rem; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.6px; }
+  tr:hover td { background: var(--panel2); }
+  tr { cursor: pointer; }
+  .leer { color: var(--muted); padding: 18px; font-size: 0.9rem; }
+
+  /* Radar */
+  .rtreffer { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 13px 16px; margin-bottom: 9px; display: flex; gap: 12px; align-items: flex-start; }
+  .rtreffer .score { background: linear-gradient(135deg, var(--acc), var(--acc2)); color: #fff; border-radius: 9px; min-width: 38px; text-align: center; padding: 7px 0; font-weight: 800; }
+  .rtreffer .titel { font-weight: 600; font-size: 0.92rem; }
+  .rtreffer .rmeta { color: var(--muted); font-size: 0.76rem; margin-top: 4px; }
+  .rtreffer a { color: var(--acc); text-decoration: none; }
+  .rtreffer .btn { margin-left: auto; flex-shrink: 0; }
+
+  /* Modal */
+  .overlay { position: fixed; inset: 0; background: rgba(5,10,20,0.6); display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; z-index: 60; overflow-y: auto; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; width: 100%; max-width: 560px; padding: 24px; box-shadow: var(--shadow); }
+  .modal h3 { margin-bottom: 16px; font-size: 1.05rem; }
+  .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .frow.single { grid-template-columns: 1fr; }
+  .frow label { display: block; font-size: 0.74rem; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  .frow input, .frow select, .frow textarea { width: 100%; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .verlauf { max-height: 180px; overflow-y: auto; background: var(--panel2); border-radius: 10px; padding: 10px 14px; font-size: 0.78rem; margin-top: 12px; }
+  .verlauf div { padding: 3px 0; border-bottom: 1px dashed var(--line); color: var(--muted); }
+  .verlauf b { color: var(--ink); font-weight: 600; }
+
+  /* Postausgang / Settings */
+  .mailrow { background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 11px 15px; margin-bottom: 8px; font-size: 0.85rem; }
+  .status-pill { border-radius: 999px; padding: 2px 10px; font-size: 0.7rem; font-weight: 700; }
+  .st-gesendet { background: rgba(45,212,167,0.15); color: var(--gruen); }
+  .st-wartet_smtp { background: rgba(245,184,61,0.15); color: var(--gelb); }
+  .st-fehler { background: rgba(240,97,109,0.15); color: var(--rot); }
+  .settings-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; max-width: 760px; }
+  .settings-card h3 { font-size: 0.95rem; margin-bottom: 12px; }
+  .hint { color: var(--muted); font-size: 0.78rem; line-height: 1.55; margin-top: 8px; }
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--panel2); border: 1px solid var(--acc); color: var(--ink); border-radius: 10px; padding: 10px 20px; font-size: 0.86rem; opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 99; }
+  .toast.show { opacity: 1; }
+  @media (max-width: 860px) { aside { width: 64px; } .logo span, .nav-btn .lbl, .side-foot { display: none; } }
+</style>
+</head>
+<body>
+<aside>
+  <div class="logo">🚀 <span><b>LeadPilot</b> CRM</span></div>
+  <button class="nav-btn active" data-view="dashboard">📊 <span class="lbl">Dashboard</span></button>
+  <button class="nav-btn" data-view="pipeline">📋 <span class="lbl">Pipeline</span></button>
+  <button class="nav-btn" data-view="leads">👥 <span class="lbl">Leads</span></button>
+  <button class="nav-btn" data-view="radar">📡 <span class="lbl">Lead-Radar</span><span class="nav-badge" id="radar-badge" style="display:none;">0</span></button>
+  <button class="nav-btn" data-view="postausgang">✉️ <span class="lbl">Postausgang</span><span class="nav-badge" id="mail-badge" style="display:none;">0</span></button>
+  <button class="nav-btn" data-view="einstellungen">⚙️ <span class="lbl">Einstellungen</span></button>
+  <div class="side-foot">IT Pipeline System<br>Modul für AI-OS &amp; Trace-AI OS<br>Port 5330</div>
+</aside>
+
+<main>
+  <div class="topbar">
+    <h1 id="titel">📊 Dashboard</h1>
+    <div class="spacer"></div>
+    <input id="suche" type="search" placeholder="Leads durchsuchen…" style="width:220px;">
+    <button class="btn primary" id="btn-neu">+ Neuer Lead</button>
+  </div>
+
+  <div class="banner" id="dsgvo-banner"></div>
+  <div class="banner" id="smtp-banner" style="border-color:var(--acc);color:var(--acc);"></div>
+
+  <!-- Dashboard -->
+  <section class="view active" id="view-dashboard">
+    <div class="kpi-grid" id="kpis"></div>
+    <div class="kanban" id="mini-pipeline"></div>
+  </section>
+
+  <!-- Pipeline -->
+  <section class="view" id="view-pipeline">
+    <div class="kanban" id="kanban"></div>
+  </section>
+
+  <!-- Leads -->
+  <section class="view" id="view-leads">
+    <table>
+      <thead><tr><th>Name</th><th>Projekt</th><th>Stufe</th><th>Quelle</th><th>Wert €</th><th>Erstellt</th></tr></thead>
+      <tbody id="lead-tabelle"></tbody>
+    </table>
+  </section>
+
+  <!-- Radar -->
+  <section class="view" id="view-radar">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+      <button class="btn primary" id="btn-radar-scan">📡 Jetzt scannen</button>
+      <span class="hint" id="radar-info"></span>
+    </div>
+    <div id="radar-liste"><div class="leer">Lade…</div></div>
+  </section>
+
+  <!-- Postausgang -->
+  <section class="view" id="view-postausgang">
+    <div class="hint" id="smtp-status" style="margin-bottom:12px;"></div>
+    <div id="mail-liste"><div class="leer">Lade…</div></div>
+  </section>
+
+  <!-- Einstellungen -->
+  <section class="view" id="view-einstellungen">
+    <div class="settings-card">
+      <h3>Absender &amp; Buchung</h3>
+      <div class="frow">
+        <div><label>Absender-Name (Mails)</label><input id="cfg-absender"></div>
+        <div><label>Cal.com Buchungslink</label><input id="cfg-booking"></div>
+      </div>
+    </div>
+    <div class="settings-card">
+      <h3>Automatische Mails (F3 · UWG-konform)</h3>
+      <div class="frow">
+        <div><label>Erinnerung aktiv (max. 1 pro Lead)</label>
+          <select id="cfg-erinnerung"><option value="true">Ja</option><option value="false">Nein</option></select></div>
+        <div><label>Erinnerung nach … Tagen</label><input id="cfg-tage" type="number" min="1" max="14"></div>
+      </div>
+      <div class="frow single"><div><label>Mail 1 — Betreff (Eingangsbestätigung, sofort)</label><input id="cfg-m1b"></div></div>
+      <div class="frow single"><div><label>Mail 1 — Text (Platzhalter: {name} {projektart} {booking_link} {absender})</label><textarea id="cfg-m1t" rows="4"></textarea></div></div>
+      <div class="frow single"><div><label>Mail 2 — Betreff (einmalige Erinnerung)</label><input id="cfg-m2b"></div></div>
+      <div class="frow single"><div><label>Mail 2 — Text</label><textarea id="cfg-m2t" rows="4"></textarea></div></div>
+      <div class="hint">Rechtlicher Rahmen: Mail 1 + Dankes-/Follow-up-Mails zur konkreten Anfrage sind
+        Vertragsanbahnung. Mail 2 wird systemseitig auf <b>genau eine</b> Erinnerung pro Lead begrenzt —
+        Drip-Serien ohne Einwilligung wären §7 UWG. SMTP-Zugang per Umgebungsvariablen:
+        SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM.</div>
+    </div>
+    <div class="settings-card">
+      <h3>Lead-Radar</h3>
+      <div class="frow single"><div><label>Relevanz-Keywords (Komma-getrennt)</label><input id="cfg-keywords"></div></div>
+      <div class="frow single"><div><label>Eigene Quellen (eine Feed-URL pro Zeile, optional "Name | URL")</label><textarea id="cfg-quellen" rows="3" placeholder="freelancermap | https://…/rss"></textarea></div></div>
+    </div>
+    <div class="settings-card">
+      <h3>DSGVO (F2)</h3>
+      <div class="frow">
+        <div><label>Verlorene Leads anonymisieren nach … Monaten</label><input id="cfg-frist" type="number" min="1" max="36"></div>
+        <div style="display:flex;align-items:flex-end;"><button class="btn" id="btn-dsgvo">🧹 Jetzt fällige anonymisieren</button></div>
+      </div>
+      <div class="hint">Pro Lead verfügbar: Export (Art. 15 — Button im Lead), Löschen (Art. 17),
+        Anonymisieren. Webhook-Endpunkte für die Website: POST /api/webhooks/kontaktformular ·
+        POST /api/webhooks/calcom (Cal.com → Settings → Webhooks → BOOKING_CREATED).</div>
+    </div>
+    <button class="btn primary" id="btn-cfg-speichern">💾 Einstellungen speichern</button>
+  </section>
+</main>
+
+<!-- Lead-Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="modal-titel">Neuer Lead</h3>
+    <div class="frow">
+      <div><label>Name *</label><input id="f-name"></div>
+      <div><label>E-Mail</label><input id="f-email" type="email"></div>
+    </div>
+    <div class="frow">
+      <div><label>Telefon</label><input id="f-telefon"></div>
+      <div><label>Firma</label><input id="f-firma"></div>
+    </div>
+    <div class="frow">
+      <div><label>Projektart</label><input id="f-projektart"></div>
+      <div><label>Geschätzter Wert (€)</label><input id="f-wert" type="number" min="0"></div>
+    </div>
+    <div class="frow single"><div><label>Nachricht / Kontext</label><textarea id="f-nachricht" rows="3"></textarea></div></div>
+    <div class="frow" id="stufe-row">
+      <div><label>Stufe</label><select id="f-stufe"></select></div>
+      <div><label>Notiz hinzufügen</label><input id="f-notiz" placeholder="wird dem Verlauf angefügt"></div>
+    </div>
+    <div class="verlauf" id="f-verlauf" style="display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn danger" id="btn-loeschen" style="display:none;">Löschen (Art. 17)</button>
+      <button class="btn small" id="btn-export" style="display:none;">Export (Art. 15)</button>
+      <button class="btn small" id="btn-anon" style="display:none;">Anonymisieren</button>
+      <div class="spacer"></div>
+      <button class="btn" id="btn-abbrechen">Abbrechen</button>
+      <button class="btn primary" id="btn-speichern">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+let STUFEN = [];
+let leadsCache = [];
+let editId = null;
+let aktViewName = "dashboard";
+
+const QUELLE_TAG = { formular: "Formular", calcom: "Cal.com", radar: "Radar", manuell: "Manuell" };
+
+function esc(s) { const d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
+function toast(m) { const t = document.getElementById("toast"); t.textContent = m; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2400); }
+async function api(pfad, opt) {
+  const res = await fetch(pfad.replace(/^\//, ""), opt);
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) { toast("❌ " + (d.error || res.status)); throw new Error(d.error || res.status); }
+  return d;
+}
+
+/* Navigation */
+document.querySelectorAll(".nav-btn").forEach(b => b.addEventListener("click", () => zeige(b.dataset.view)));
+const TITEL = { dashboard: "📊 Dashboard", pipeline: "📋 Pipeline", leads: "👥 Leads",
+  radar: "📡 Lead-Radar", postausgang: "✉️ Postausgang", einstellungen: "⚙️ Einstellungen" };
+function zeige(name) {
+  aktViewName = name;
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.view === name));
+  document.getElementById("view-" + name).classList.add("active");
+  document.getElementById("titel").textContent = TITEL[name];
+  if (name === "dashboard") ladeDashboard();
+  if (name === "pipeline") ladeLeads();
+  if (name === "leads") ladeLeads();
+  if (name === "radar") ladeRadar();
+  if (name === "postausgang") ladeOutbox();
+  if (name === "einstellungen") ladeConfig();
+}
+
+/* Dashboard */
+async function ladeDashboard() {
+  const s = await api("api/stats");
+  STUFEN = s.stufen;
+  const kpis = [
+    ["Offene Leads", s.leads_offen, "von " + s.leads_gesamt + " gesamt"],
+    ["Neu (7 Tage)", s.leads_neu_7_tage, ""],
+    ["Pipeline-Wert", Math.round(s.pipeline_wert).toLocaleString("de-DE") + " €", "geschätzt, offene Leads"],
+    ["Gewonnen", s.gewonnen, ""],
+    ["Mails gesendet", s.mails_gesendet, s.mails_wartend + " wartend"],
+    ["Radar-Treffer", s.radar_treffer, s.radar_letzter_scan ? "Scan: " + s.radar_letzter_scan.slice(0, 16) : "noch kein Scan"],
+  ];
+  document.getElementById("kpis").innerHTML = kpis.map(k =>
+    '<div class="kpi"><div class="label">' + k[0] + '</div><div class="wert">' + k[1] + '</div><div class="sub">' + esc(k[2]) + '</div></div>').join("");
+  const db = document.getElementById("dsgvo-banner");
+  if (s.dsgvo_faellig > 0) {
+    db.style.display = "block";
+    db.innerHTML = "🧹 DSGVO: " + s.dsgvo_faellig + " verlorene Leads sind zur Anonymisierung fällig. " +
+      '<button class="btn small" onclick="dsgvoAufraeumen()">Jetzt anonymisieren</button>';
+  } else db.style.display = "none";
+  const sb = document.getElementById("smtp-banner");
+  if (!s.smtp_konfiguriert) {
+    sb.style.display = "block";
+    sb.textContent = "ℹ️ SMTP nicht konfiguriert — automatische Mails werden im Postausgang gesammelt statt versendet (Umgebungsvariablen SMTP_HOST/SMTP_FROM setzen).";
+  } else sb.style.display = "none";
+  if (s.soeben_erinnert > 0) toast("✉️ " + s.soeben_erinnert + " Buchungs-Erinnerung(en) ausgelöst");
+  await ladeLeads(true);
+  renderKanban("mini-pipeline", true);
+  ladeBadges(s);
+}
+function ladeBadges(s) {
+  const rb = document.getElementById("radar-badge");
+  rb.style.display = s.radar_treffer > 0 ? "inline-block" : "none";
+  rb.textContent = s.radar_treffer;
+  const mb = document.getElementById("mail-badge");
+  mb.style.display = s.mails_wartend > 0 ? "inline-block" : "none";
+  mb.textContent = s.mails_wartend;
+}
+
+/* Leads + Kanban */
+async function ladeLeads(still) {
+  const q = document.getElementById("suche").value.trim();
+  const d = await api("api/leads" + (q ? "?q=" + encodeURIComponent(q) : ""));
+  STUFEN = d.stufen;
+  leadsCache = d.leads;
+  if (!still) { renderKanban("kanban", false); renderTabelle(); }
+}
+function karteHtml(l) {
+  return '<div class="karte" draggable="true" data-id="' + l.id + '">' +
+    '<div class="kname">' + esc(l.name || l.email || "(ohne Name)") + '</div>' +
+    '<div class="kmeta"><span class="tag ' + esc(l.quelle) + '">' + (QUELLE_TAG[l.quelle] || l.quelle) + '</span>' +
+    (l.projektart ? '<span>' + esc(l.projektart.slice(0, 30)) + '</span>' : '') +
+    (Number(l.wert_eur) > 0 ? '<span>' + Number(l.wert_eur).toLocaleString("de-DE") + ' €</span>' : '') +
+    '</div></div>';
+}
+function renderKanban(zielId, kompakt) {
+  const ziel = document.getElementById(zielId);
+  ziel.innerHTML = STUFEN.map(s => {
+    const eigene = leadsCache.filter(l => l.stufe === s.id);
+    return '<div class="spalte" data-stufe="' + s.id + '"><h3>' + s.titel +
+      ' <span>' + eigene.length + '</span></h3><div class="karten">' +
+      eigene.slice(0, kompakt ? 3 : 200).map(karteHtml).join("") + '</div></div>';
+  }).join("");
+  ziel.querySelectorAll(".karte").forEach(el => {
+    el.addEventListener("click", () => oeffneLead(el.dataset.id));
+    el.addEventListener("dragstart", e => e.dataTransfer.setData("text/plain", el.dataset.id));
+  });
+  ziel.querySelectorAll(".spalte").forEach(sp => {
+    sp.addEventListener("dragover", e => { e.preventDefault(); sp.classList.add("drag-over"); });
+    sp.addEventListener("dragleave", () => sp.classList.remove("drag-over"));
+    sp.addEventListener("drop", async e => {
+      e.preventDefault(); sp.classList.remove("drag-over");
+      const id = e.dataTransfer.getData("text/plain");
+      await api("api/leads/" + id + "/move", { method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stufe: sp.dataset.stufe }) });
+      await ladeLeads();
+      if (aktViewName === "dashboard") renderKanban("mini-pipeline", true);
+    });
+  });
+}
+function renderTabelle() {
+  const tb = document.getElementById("lead-tabelle");
+  if (!leadsCache.length) { tb.innerHTML = '<tr><td colspan="6" class="leer">Noch keine Leads — Webhooks anbinden oder „+ Neuer Lead“.</td></tr>'; return; }
+  tb.innerHTML = leadsCache.map(l =>
+    '<tr data-id="' + l.id + '"><td>' + esc(l.name || "—") + (l.anonymisiert ? " 🔒" : "") + '</td>' +
+    '<td>' + esc((l.projektart || "").slice(0, 40)) + '</td>' +
+    '<td>' + esc((STUFEN.find(s => s.id === l.stufe) || {}).titel || l.stufe) + '</td>' +
+    '<td><span class="tag ' + esc(l.quelle) + '">' + (QUELLE_TAG[l.quelle] || l.quelle) + '</span></td>' +
+    '<td>' + (Number(l.wert_eur) > 0 ? Number(l.wert_eur).toLocaleString("de-DE") : "—") + '</td>' +
+    '<td>' + esc(l.erstellt.slice(0, 10)) + '</td></tr>').join("");
+  tb.querySelectorAll("tr").forEach(tr => tr.addEventListener("click", () => oeffneLead(tr.dataset.id)));
+}
+document.getElementById("suche").addEventListener("input", () => { ladeLeads(); });
+
+/* Lead-Modal */
+function fuelleStufen() {
+  document.getElementById("f-stufe").innerHTML =
+    STUFEN.map(s => '<option value="' + s.id + '">' + s.titel + '</option>').join("");
+}
+function oeffneLead(id) {
+  editId = id || null;
+  const l = id ? leadsCache.find(x => x.id === id) : null;
+  fuelleStufen();
+  document.getElementById("modal-titel").textContent = l ? "Lead bearbeiten" : "Neuer Lead";
+  ["name", "email", "telefon", "firma", "projektart", "nachricht"].forEach(f =>
+    document.getElementById("f-" + f).value = l ? (l[f] || "") : "");
+  document.getElementById("f-wert").value = l ? (l.wert_eur || "") : "";
+  document.getElementById("f-stufe").value = l ? l.stufe : "neu";
+  document.getElementById("f-notiz").value = "";
+  const v = document.getElementById("f-verlauf");
+  if (l && l.verlauf) {
+    v.style.display = "block";
+    v.innerHTML = l.verlauf.slice().reverse().map(e =>
+      "<div><b>" + esc(e.zeit.slice(0, 16).replace("T", " ")) + "</b> · " + esc(e.text) + "</div>").join("");
+  } else v.style.display = "none";
+  ["btn-loeschen", "btn-export", "btn-anon"].forEach(b =>
+    document.getElementById(b).style.display = l ? "inline-block" : "none");
+  document.getElementById("overlay").classList.add("open");
+}
+function schliesseModal() { document.getElementById("overlay").classList.remove("open"); editId = null; }
+async function speichereLead() {
+  const daten = {
+    name: document.getElementById("f-name").value.trim(),
+    email: document.getElementById("f-email").value.trim(),
+    telefon: document.getElementById("f-telefon").value.trim(),
+    firma: document.getElementById("f-firma").value.trim(),
+    projektart: document.getElementById("f-projektart").value.trim(),
+    nachricht: document.getElementById("f-nachricht").value.trim(),
+    wert_eur: Number(document.getElementById("f-wert").value || 0),
+  };
+  if (!daten.name && !daten.email) { toast("Name oder E-Mail angeben"); return; }
+  if (editId) {
+    await api("api/leads/" + editId, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(daten) });
+    const stufe = document.getElementById("f-stufe").value;
+    const alt = leadsCache.find(x => x.id === editId);
+    if (alt && alt.stufe !== stufe)
+      await api("api/leads/" + editId + "/move", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ stufe }) });
+    const notiz = document.getElementById("f-notiz").value.trim();
+    if (notiz)
+      await api("api/leads/" + editId + "/notiz", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: notiz }) });
+    toast("Gespeichert");
+  } else {
+    await api("api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(daten) });
+    toast("Lead angelegt — Eingangsbestätigung ausgelöst");
+  }
+  schliesseModal(); await ladeLeads(); if (aktViewName === "dashboard") ladeDashboard();
+}
+async function loescheLead() {
+  if (!editId || !confirm("Lead endgültig löschen (DSGVO Art. 17)? Auch zugehörige Mails werden entfernt.")) return;
+  await api("api/leads/" + editId, { method: "DELETE" });
+  toast("Gelöscht"); schliesseModal(); await ladeLeads();
+}
+async function exportiereLead() {
+  if (!editId) return;
+  const d = await api("api/leads/" + editId + "/export");
+  const blob = new Blob([JSON.stringify(d, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "lead-export-" + editId.slice(0, 8) + ".json";
+  a.click();
+  toast("Export heruntergeladen (Art. 15)");
+}
+async function anonymisiereLead() {
+  if (!editId || !confirm("Personenbezogene Daten dieses Leads unwiderruflich anonymisieren?")) return;
+  await api("api/leads/" + editId + "/anonymisieren", { method: "POST" });
+  toast("Anonymisiert"); schliesseModal(); await ladeLeads();
+}
+async function dsgvoAufraeumen() {
+  const d = await api("api/dsgvo/aufraeumen", { method: "POST" });
+  toast("🧹 " + d.anonymisiert + " Leads anonymisiert");
+  ladeDashboard();
+}
+
+/* Radar */
+async function ladeRadar() {
+  const d = await api("api/radar");
+  document.getElementById("radar-info").textContent =
+    "Quellen: " + d.quellen.join(", ") + (d.letzter_scan ? " · letzter Scan: " + d.letzter_scan.slice(0, 16) : "");
+  const ziel = document.getElementById("radar-liste");
+  ziel.innerHTML = d.treffer.length ? d.treffer.map(t =>
+    '<div class="rtreffer"><div class="score">' + t.score + '</div><div style="min-width:0;">' +
+    '<div class="titel">' + esc(t.titel) + '</div>' +
+    '<div class="rmeta">' + esc(t.quelle) + ' · ' + esc(t.datum) + ' · Keywords: ' + esc(t.keywords.join(", ")) +
+    ' · <a href="' + esc(t.url) + '" target="_blank" rel="noopener">öffnen ↗</a></div></div>' +
+    '<button class="btn small primary" data-id="' + t.id + '">→ Als Lead übernehmen</button></div>').join("")
+    : '<div class="leer">Keine Treffer — „Jetzt scannen“ klicken oder Keywords in den Einstellungen anpassen.</div>';
+  ziel.querySelectorAll("button[data-id]").forEach(b => b.addEventListener("click", async () => {
+    await api("api/radar/" + b.dataset.id + "/uebernehmen", { method: "POST" });
+    toast("In Pipeline übernommen (Stufe: Neu)"); ladeRadar();
+  }));
+}
+document.getElementById("btn-radar-scan").addEventListener("click", async () => {
+  const b = document.getElementById("btn-radar-scan");
+  b.disabled = true; b.textContent = "⏳ scanne…";
+  try {
+    const d = await api("api/radar/scan", { method: "POST" });
+    toast("📡 " + d.neue_treffer + " neue Treffer" + (d.fehler.length ? " · Fehler: " + d.fehler.join(", ") : ""));
+    await ladeRadar();
+  } finally { b.disabled = false; b.textContent = "📡 Jetzt scannen"; }
+});
+
+/* Postausgang */
+async function ladeOutbox() {
+  const d = await api("api/outbox");
+  document.getElementById("smtp-status").textContent = d.smtp_konfiguriert
+    ? "SMTP konfiguriert — Mails werden direkt versendet."
+    : "SMTP nicht konfiguriert — Mails werden hier gesammelt (Env: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM).";
+  document.getElementById("mail-liste").innerHTML = d.mails.length ? d.mails.map(m =>
+    '<div class="mailrow"><span class="status-pill st-' + m.status + '">' + m.status + '</span> ' +
+    '<b>' + esc(m.betreff) + '</b> → ' + esc(m.an) +
+    '<div class="hint">' + esc(m.zeit.replace("T", " ")) + ' · Typ: ' + esc(m.typ) +
+    (m.fehler ? ' · ' + esc(m.fehler) : '') + '</div></div>').join("")
+    : '<div class="leer">Noch keine Mails.</div>';
+}
+
+/* Einstellungen */
+async function ladeConfig() {
+  const c = await api("api/config");
+  document.getElementById("cfg-absender").value = c.absender_name;
+  document.getElementById("cfg-booking").value = c.booking_link;
+  document.getElementById("cfg-erinnerung").value = String(c.erinnerung_aktiv);
+  document.getElementById("cfg-tage").value = c.erinnerung_nach_tagen;
+  document.getElementById("cfg-m1b").value = c.mail1_betreff;
+  document.getElementById("cfg-m1t").value = c.mail1_text;
+  document.getElementById("cfg-m2b").value = c.mail2_betreff;
+  document.getElementById("cfg-m2t").value = c.mail2_text;
+  document.getElementById("cfg-keywords").value = c.radar_keywords.join(", ");
+  document.getElementById("cfg-quellen").value = (c.radar_quellen_eigene || [])
+    .map(q => (q.name ? q.name + " | " : "") + q.url).join("\n");
+  document.getElementById("cfg-frist").value = c.dsgvo_loeschfrist_monate;
+}
+document.getElementById("btn-cfg-speichern").addEventListener("click", async () => {
+  const quellen = document.getElementById("cfg-quellen").value.split("\n")
+    .map(z => z.trim()).filter(Boolean).map(z => {
+      const teile = z.split("|").map(t => t.trim());
+      return teile.length > 1 ? { name: teile[0], url: teile[1] } : { name: "", url: teile[0] };
+    });
+  await api("api/config", { method: "PUT", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      absender_name: document.getElementById("cfg-absender").value,
+      booking_link: document.getElementById("cfg-booking").value,
+      erinnerung_aktiv: document.getElementById("cfg-erinnerung").value === "true",
+      erinnerung_nach_tagen: Number(document.getElementById("cfg-tage").value || 3),
+      mail1_betreff: document.getElementById("cfg-m1b").value,
+      mail1_text: document.getElementById("cfg-m1t").value,
+      mail2_betreff: document.getElementById("cfg-m2b").value,
+      mail2_text: document.getElementById("cfg-m2t").value,
+      radar_keywords: document.getElementById("cfg-keywords").value.split(",").map(k => k.trim()).filter(Boolean),
+      radar_quellen_eigene: quellen,
+      dsgvo_loeschfrist_monate: Number(document.getElementById("cfg-frist").value || 6),
+    }) });
+  toast("Einstellungen gespeichert");
+});
+document.getElementById("btn-dsgvo").addEventListener("click", dsgvoAufraeumen);
+
+/* Modal-Events */
+document.getElementById("btn-neu").addEventListener("click", () => oeffneLead(null));
+document.getElementById("btn-abbrechen").addEventListener("click", schliesseModal);
+document.getElementById("btn-speichern").addEventListener("click", speichereLead);
+document.getElementById("btn-loeschen").addEventListener("click", loescheLead);
+document.getElementById("btn-export").addEventListener("click", exportiereLead);
+document.getElementById("btn-anon").addEventListener("click", anonymisiereLead);
+document.getElementById("overlay").addEventListener("click", e => { if (e.target.id === "overlay") schliesseModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") schliesseModal(); });
+
+ladeDashboard();
+</script>
+</body>
+</html>

@@ -1,7 +1,10 @@
 # Wirtschaftlichkeitsprüfung: IT Pipeline System inkl. CRM
 
 > Erstellt vom [[../wirtschaftlichkeits-pruefer-agent|Wirtschaftlichkeits-Prüfer]] am 16.07.2026.
-> **Status: WARTET_AUF_FREIGABE** — Umsetzung erst nach CEO-Freigabe.
+> **Status: FREIGEGEBEN** — CEO-Freigabe erteilt am 16.07.2026 (GO_MIT_AUFLAGEN, A1–A3 + B1 gelten).
+> CEO-Zusatz bei Freigabe: Modul muss in AI-OS UND Trace-AI OS (getrennte Repos)
+> installierbar sein → als self-contained Modul gebaut; Ziel-UX „professionelles SaaS";
+> eigenes schlankes CRM statt EspoCRM; Lead-Radar für relevante Kundenprojekte.
 > Konzept-Review: [[Plannung/Konzept-Pruefung|Konzept-Prüfung]] (3 Pflicht-Korrekturen F1–F3).
 
 ## Management-Summary (5 Sätze)
@@ -95,7 +98,7 @@ System zurück.
 {"empfehlung": "GO_MIT_AUFLAGEN", "status": "WARTET_AUF_FREIGABE"}
 ```
 
-> ✍️ **Freigabe CEO:** ☐ erteilt am: ________ · ☐ abgelehnt · ☐ Pivot angefordert
+> ✍️ **Freigabe CEO:** ☑ erteilt am: **16.07.2026** · ☐ abgelehnt · ☐ Pivot angefordert
 > Review-Termin (Prognose vs. Ist): 3 Monate nach Phase-A-Golive.
 
 #wirtschaftlichkeit #it-pipeline #crm

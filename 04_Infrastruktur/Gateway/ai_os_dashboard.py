@@ -108,6 +108,10 @@ SERVICES = [
      "desc": "Market-Research für AI Business Checker: Reddit/RSS-Scan nach KI-Abzock-Angeboten",
      "layer": "10_Business", "script": "10_Business/KI-Avatar/research-agent/app.py",
      "env_key": "RESEARCH_AGENT_PORT", "health_path": "/api/health"},
+    {"key": "leadpilot", "name": "LeadPilot CRM", "icon": "🚀", "port": 5330,
+     "desc": "IT Pipeline System: eigenes Lead-CRM + Lead-Radar (Webhooks, Trigger-Mails, DSGVO)",
+     "layer": "10_Business", "script": "10_Business/IT Pipeline System inkl CRM/app/app.py",
+     "env_key": "LEADPILOT_PORT", "health_path": "/api/health"},
 ]
 
 AGENTS_REGISTRY_PATH = AI_OS_ROOT / "05_Agenten" / "agents" / "agents.json"
@@ -1323,12 +1327,15 @@ def get_wiki_file(dir_key, filename):
 # bevorzugen; das Dispatching übernimmt serve_produkt unten.
 KIAVATAR_BOARD_PORT = int(os.environ.get("KIAVATAR_BOARD_PORT", "5310"))
 RESEARCH_AGENT_PORT = int(os.environ.get("RESEARCH_AGENT_PORT", "5320"))
+LEADPILOT_PORT = int(os.environ.get("LEADPILOT_PORT", "5330"))
 
 PRODUKT_PROXIES = {
     "ki-avatar": {"port": KIAVATAR_BOARD_PORT, "name": "KI-Avatar Board",
                   "start": "python 10_Business/KI-Avatar/board/app.py"},
     "ai-checker": {"port": RESEARCH_AGENT_PORT, "name": "AI Business Checker (Research-Agent)",
                    "start": "python 10_Business/KI-Avatar/research-agent/app.py"},
+    "it-pipeline": {"port": LEADPILOT_PORT, "name": "LeadPilot CRM (IT Pipeline System)",
+                    "start": 'python "10_Business/IT Pipeline System inkl CRM/app/app.py"'},
 }
 
 def _produkt_proxy(cfg, subpath):

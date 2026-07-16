@@ -1558,6 +1558,28 @@
                         </div>
                         <div class="service-card">
                             <div class="head" style="display:flex;align-items:center;gap:0.75rem;">
+                                <span style="font-size:1.6rem;">🚀</span>
+                                <div>
+                                    <b>LeadPilot CRM</b>
+                                    <div class="muted" style="font-size:0.75rem;">IT Pipeline System · Port 5330 · auch für Trace-AI OS</div>
+                                </div>
+                            </div>
+                            <div class="desc" style="margin-top:0.6rem;">
+                                Eigenes Lead-CRM für das IT-Freelancer-Business: Pipeline-Kanban,
+                                Webhooks (Kontaktformular + Cal.com), sofortige Eingangsbestätigung +
+                                einmalige Erinnerung (UWG-konform), DSGVO-Werkzeuge und Lead-Radar,
+                                der relevante Projekte aus öffentlichen Börsen zieht.
+                            </div>
+                            <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.8rem;flex-wrap:wrap;">
+                                <span class="pill" style="font-size:0.68rem;" id="leadpilot-status">⏳ prüfe…</span>
+                                <button class="btn btn-sm" onclick="window.open('/produkte/it-pipeline/','_blank')">↗ Öffnen</button>
+                            </div>
+                            <div class="muted" id="leadpilot-hint" style="display:none;font-size:0.72rem;margin-top:0.5rem;">
+                                CRM offline — im Dienste-Tab starten oder: <code>python "10_Business/IT Pipeline System inkl CRM/app/app.py"</code>
+                            </div>
+                        </div>
+                        <div class="service-card">
+                            <div class="head" style="display:flex;align-items:center;gap:0.75rem;">
                                 <span style="font-size:1.6rem;">🛡️</span>
                                 <div>
                                     <b>DocuCheck Local</b>
@@ -1667,7 +1689,8 @@
         // Research-Agent :5320), erreichbar über die Proxys /produkte/<name>/
         const PRODUCT_SERVICES = [
             {prefix: 'kiavatar', health: '/produkte/ki-avatar/api/health'},
-            {prefix: 'aichecker', health: '/produkte/ai-checker/api/health'}
+            {prefix: 'aichecker', health: '/produkte/ai-checker/api/health'},
+            {prefix: 'leadpilot', health: '/produkte/it-pipeline/api/health'}
         ];
         async function checkProductStatus() {
             for (const svc of PRODUCT_SERVICES) {
