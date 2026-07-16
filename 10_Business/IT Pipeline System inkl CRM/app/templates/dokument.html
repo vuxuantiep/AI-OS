@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>{{ titel }} {{ dok.nummer }}</title>
+<style>
+  /* A4-Druckansicht — Aufbau nach eigener Rechnungsvorlage (Plannung/Rechnungsvorlagen) */
+  :root { --ink: #1c2433; --muted: #64748b; --line: #d9dee8; --acc: #2563eb; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", Calibri, sans-serif; color: var(--ink); background: #eef1f6; font-size: 11pt; }
+  .blatt { background: #fff; width: 210mm; min-height: 297mm; margin: 18px auto; padding: 22mm 20mm 16mm; position: relative; box-shadow: 0 4px 24px rgba(0,0,0,0.12); display: flex; flex-direction: column; }
+  .toolbar { text-align: center; padding: 12px; }
+  .toolbar button { border: none; background: var(--acc); color: #fff; border-radius: 8px; padding: 10px 22px; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+  .absender-klein { font-size: 8pt; color: var(--muted); border-bottom: 1px solid var(--line); display: inline-block; padding-bottom: 2px; margin-bottom: 8mm; }
+  .kopf { display: flex; justify-content: space-between; gap: 20px; }
+  .empfaenger { line-height: 1.5; }
+  .metadaten { font-size: 10pt; min-width: 62mm; }
+  .metadaten td { padding: 1px 0; }
+  .metadaten td:first-child { color: var(--muted); padding-right: 10px; }
+  h1 { font-size: 16pt; margin: 14mm 0 4mm; }
+  .anrede { margin: 5mm 0 4mm; line-height: 1.5; white-space: pre-wrap; }
+  table.positionen { width: 100%; border-collapse: collapse; margin-top: 3mm; }
+  table.positionen th { text-align: left; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); border-bottom: 2px solid var(--ink); padding: 2mm 2mm; }
+  table.positionen td { padding: 2.5mm 2mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .r { text-align: right; white-space: nowrap; }
+  table.summen { margin-left: auto; margin-top: 4mm; font-size: 11pt; }
+  table.summen td { padding: 1mm 2mm; }
+  table.summen td:first-child { color: var(--muted); padding-right: 14mm; }
+  table.summen tr.gesamt td { font-weight: 700; border-top: 2px solid var(--ink); font-size: 12pt; }
+  .outro { margin-top: 8mm; line-height: 1.55; white-space: pre-wrap; }
+  .vertragstext { white-space: pre-wrap; line-height: 1.55; font-size: 10.5pt; margin-top: 4mm; }
+  .fuss { margin-top: auto; padding-top: 5mm; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10mm; font-size: 8pt; color: var(--muted); line-height: 1.6; }
+  @media print {
+    body { background: #fff; }
+    .blatt { box-shadow: none; margin: 0; width: auto; min-height: auto; }
+    .toolbar { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="toolbar"><button onclick="window.print()">🖨 Drucken / als PDF speichern</button></div>
+<div class="blatt">
+  <div class="absender-klein">{{ cfg.firma_name }} · {{ cfg.firma_adresse.replace('\n', ' · ') }}</div>
+  <div class="kopf">
+    <div class="empfaenger">
+      {% if kunde.firma %}<b>{{ kunde.firma }}</b><br>{% endif %}
+      {{ kunde.name }}<br>
+      {% for zeile in (kunde.adresse or 'Adresse bitte im Kunden ergänzen').splitlines() %}{{ zeile }}<br>{% endfor %}
+      {% if kunde.ansprechpartner %}<span style="color:#64748b;">Ansprechpartner: {{ kunde.ansprechpartner }}</span>{% endif %}
+    </div>
+    <table class="metadaten">
+      <tr><td>{{ titel }} Nr.:</td><td><b>{{ dok.nummer }}</b></td></tr>
+      <tr><td>Datum:</td><td>{{ dok.datum }}</td></tr>
+      {% if dok.leistungszeitraum %}<tr><td>Leistungszeitraum:</td><td>{{ dok.leistungszeitraum }}</td></tr>{% endif %}
+      {% if dok.typ in ('rechnung', 'mahnung') %}<tr><td>Zahlbar bis:</td><td>{{ dok.faellig_bis }}</td></tr>{% endif %}
+      {% if dok.typ == 'angebot' %}<tr><td>Gültig bis:</td><td>{{ dok.faellig_bis }}</td></tr>{% endif %}
+      {% if cfg.ust_id %}<tr><td>USt-ID:</td><td>{{ cfg.ust_id }}</td></tr>
+      {% elif cfg.steuernummer %}<tr><td>Steuernummer:</td><td>{{ cfg.steuernummer }}</td></tr>{% endif %}
+    </table>
+  </div>
+
+  <h1>{{ titel|upper }} {{ dok.nummer }}</h1>
+  <div class="anrede">Sehr geehrte Damen und Herren,{% if dok.intro %}
+
+{{ dok.intro }}{% endif %}</div>
+
+  {% if dok.typ == 'vertrag' %}
+    <div class="vertragstext">{{ dok.vertragstext }}</div>
+  {% else %}
+  <table class="positionen">
+    <thead><tr><th>Pos.</th><th>Beschreibung</th><th class="r">Menge</th><th class="r">Einzelpreis</th><th class="r">Gesamtpreis</th></tr></thead>
+    <tbody>
+      {% for p in dok.positionen %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ p.beschreibung }}</td>
+        <td class="r">{{ '%g'|format(p.menge|float) }} {{ p.einheit }}</td>
+        <td class="r">{{ '%.2f'|format(p.preis|float) }} €</td>
+        <td class="r">{{ '%.2f'|format(p.menge|float * p.preis|float) }} €</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <table class="summen">
+    <tr><td>Summe Netto</td><td class="r">{{ '%.2f'|format(dok.summe_netto) }} €</td></tr>
+    {% if dok.kleinunternehmer %}
+    <tr><td colspan="2" style="font-size:9pt;">Gemäß §19 UStG wird keine Umsatzsteuer berechnet.</td></tr>
+    {% else %}
+    <tr><td>zzgl. {{ dok.ust_prozent }} % USt.</td><td class="r">{{ '%.2f'|format(dok.summe_ust) }} €</td></tr>
+    {% endif %}
+    <tr class="gesamt"><td>Gesamtsumme</td><td class="r">{{ '%.2f'|format(dok.summe_brutto) }} €</td></tr>
+  </table>
+  {% endif %}
+
+  <div class="outro">{% if dok.outro %}{{ dok.outro }}
+
+{% endif %}{% if dok.typ == 'rechnung' %}Bitte überweisen Sie den Betrag bis zum {{ dok.faellig_bis }} auf das unten genannte Konto.
+
+{% endif %}Bei Rückfragen stehen wir selbstverständlich jederzeit gerne zur Verfügung.
+
+Mit freundlichen Grüßen
+{{ cfg.firma_inhaber or cfg.firma_name }}</div>
+
+  <div class="fuss">
+    <div><b>{{ cfg.firma_name }}</b><br>{% for zeile in cfg.firma_adresse.splitlines() %}{{ zeile }}<br>{% endfor %}Inhaber/in: {{ cfg.firma_inhaber }}</div>
+    <div>{% if cfg.firma_telefon %}{{ cfg.firma_telefon }}<br>{% endif %}{% if cfg.firma_website %}{{ cfg.firma_website }}<br>{% endif %}{{ cfg.firma_email }}</div>
+    <div>{% if cfg.bank %}{{ cfg.bank }}<br>{% endif %}{% if cfg.iban %}{{ cfg.iban }}<br>{% endif %}{% if cfg.bic %}BIC: {{ cfg.bic }}<br>{% endif %}{% if cfg.ust_id %}USt-ID: {{ cfg.ust_id }}{% endif %}</div>
+  </div>
+</div>
+</body>
+</html>

@@ -22,6 +22,8 @@ import os
 import re
 import smtplib
 import sys
+import threading
+import time
 import urllib.parse
 import urllib.request
 import uuid
@@ -70,6 +72,24 @@ DEFAULT_CONFIG = {
                    "  📅 {termin_text} (30 Minuten)\n\n"
                    "Falls der Termin nicht passt, antworten Sie einfach auf diese "
                    "E-Mail.\n\nViele Grüße\n{absender}"),
+    # Firmendaten für Angebote/Rechnungen (§14 UStG Pflichtangaben!)
+    # Aufbau nach eigener Vorlage (Plannung/Rechnungsvorlagen)
+    "firma_name": "Tiep Vu Xuan — IT Services",
+    "firma_adresse": "Musterstraße X\n12345 Musterstadt",
+    "firma_inhaber": "Tiep Vu Xuan",
+    "firma_telefon": "",
+    "firma_email": "",
+    "firma_website": "https://vuxuantiep.de",
+    "steuernummer": "",
+    "ust_id": "",
+    "iban": "",
+    "bic": "",
+    "bank": "",
+    "kleinunternehmer": False,  # Vorlage weist USt aus; True = §19 UStG Hinweis
+    "ust_prozent": 19,
+    "zahlungsziel_tage": 14,
+    "stundensatz_standard": 85,
+    "radar_autoscan_stunde": 7,  # täglicher Auto-Scan (zusätzlich zum Button)
     "erinnerung_aktiv": True,
     "erinnerung_nach_tagen": 3,
     "dsgvo_loeschfrist_monate": 6,
@@ -494,6 +514,208 @@ def radar_scan():
     return {"neue_treffer": len(neue), "fehler": fehler}
 
 
+# --- Kunden & Leistungskatalog -------------------------------------------------------
+
+def lade_kunden():
+    return lade("kunden.json", [])
+
+
+KATALOG_SEED = [
+    # Dienstleistungen (Marktspannen = Orientierung dt. IT-Freelancer-Markt 2026,
+    # in den Einstellungen/im Katalog anpassbar — KEINE Live-Daten)
+    {"name": "Softwareentwicklung (Web/Python/React)", "typ": "dienstleistung",
+     "einheit": "Std", "preis_eur": 85, "marktpreis": "80–120 €/Std", "plattform": "—", "aktiv": True},
+    {"name": "KI-Integration & LLM-Anwendungen (RAG, Agenten)", "typ": "dienstleistung",
+     "einheit": "Std", "preis_eur": 100, "marktpreis": "95–150 €/Std", "plattform": "—", "aktiv": True},
+    {"name": "Prozess-Automatisierung (n8n, Workflows)", "typ": "dienstleistung",
+     "einheit": "Std", "preis_eur": 85, "marktpreis": "75–110 €/Std", "plattform": "—", "aktiv": True},
+    {"name": "CRM-/Lead-System-Setup (Done-for-you, Paket)", "typ": "dienstleistung",
+     "einheit": "Pauschale", "preis_eur": 2500, "marktpreis": "1.500–5.000 €", "plattform": "AI-OS + Trace-AI OS", "aktiv": True},
+    {"name": "IT-Beratung / Analyse", "typ": "dienstleistung",
+     "einheit": "Std", "preis_eur": 90, "marktpreis": "85–130 €/Std", "plattform": "—", "aktiv": True},
+    # Produkte aktuell in Produktion (beide Plattformen)
+    {"name": "DocuCheck Local (Browser-KI Dokumentprüfung)", "typ": "produkt",
+     "einheit": "Lizenz/Setup", "preis_eur": 0, "marktpreis": "n. a.", "plattform": "AI-OS", "aktiv": True},
+    {"name": "KI-Avatar Video-Pipeline (YouTube/TikTok-Automation)", "typ": "produkt",
+     "einheit": "Projekt", "preis_eur": 0, "marktpreis": "n. a.", "plattform": "AI-OS", "aktiv": True},
+    {"name": "LeadPilot CRM (IT Pipeline System)", "typ": "produkt",
+     "einheit": "Setup", "preis_eur": 0, "marktpreis": "n. a.", "plattform": "AI-OS + Trace-AI OS", "aktiv": True},
+]
+
+
+def lade_katalog():
+    kat = lade("katalog.json", None)
+    if kat is None:
+        kat = [dict(k, id=str(uuid.uuid4())) for k in KATALOG_SEED]
+        speichere("katalog.json", kat)
+    return kat
+
+
+# --- Dokumente: Angebot / Rechnung / Mahnung / Vertrag --------------------------------
+
+DOK_TYPEN = {"angebot": "Angebot", "rechnung": "Rechnung",
+             "mahnung": "Zahlungserinnerung", "vertrag": "Dienstvertrag"}
+DOK_PREFIX = {"angebot": "A-", "rechnung": "", "mahnung": "M-", "vertrag": "V-"}
+
+
+def lade_dokumente():
+    return lade("dokumente.json", [])
+
+
+def naechste_nummer(dokumente, typ):
+    """Fortlaufende Nummer je Typ und Jahr — Rechnungen im Vorlagen-Format '2026-001'."""
+    jahr = datetime.now().year
+    praefix = DOK_PREFIX[typ]
+    muster = f"{praefix}{jahr}-"
+    laufend = [int(d["nummer"].split("-")[-1]) for d in dokumente
+               if d["typ"] == typ and d["nummer"].startswith(muster)]
+    return f"{muster}{(max(laufend) + 1 if laufend else 1):03d}"
+
+
+def berechne_summen(dok, cfg):
+    netto = sum(round(float(p.get("menge") or 0) * float(p.get("preis") or 0), 2)
+                for p in dok.get("positionen", []))
+    kleinunternehmer = dok.get("kleinunternehmer", cfg["kleinunternehmer"])
+    ust_prozent = 0 if kleinunternehmer else int(dok.get("ust_prozent", cfg["ust_prozent"]))
+    ust = round(netto * ust_prozent / 100, 2)
+    dok.update({"summe_netto": round(netto, 2), "ust_prozent": ust_prozent,
+                "summe_ust": ust, "summe_brutto": round(netto + ust, 2),
+                "kleinunternehmer": kleinunternehmer})
+
+
+VERTRAG_VORLAGE = """DIENSTVERTRAG über freiberufliche IT-Leistungen
+
+zwischen
+{firma_name}, {firma_adresse_zeile} („Auftragnehmer")
+und
+{kunde_name}, {kunde_adresse_zeile} („Auftraggeber")
+
+§1 Vertragsgegenstand
+Der Auftragnehmer erbringt für den Auftraggeber folgende Leistungen: {leistung}.
+Der Auftragnehmer erbringt die Leistungen selbstständig und eigenverantwortlich.
+Ein Arbeitsverhältnis wird nicht begründet; der Auftragnehmer unterliegt keinen
+Weisungen zu Arbeitszeit und Arbeitsort und ist berechtigt, für weitere
+Auftraggeber tätig zu sein.
+
+§2 Vergütung
+Die Vergütung beträgt {verguetung}. Rechnungen sind innerhalb von
+{zahlungsziel} Tagen nach Zugang ohne Abzug zahlbar.
+{ust_klausel}
+
+§3 Laufzeit und Kündigung
+Der Vertrag beginnt am {beginn} und läuft {laufzeit}.
+Er kann von beiden Seiten mit einer Frist von {kuendigungsfrist} in Textform
+gekündigt werden. Das Recht zur außerordentlichen Kündigung bleibt unberührt.
+
+§4 Nutzungsrechte
+Der Auftragnehmer räumt dem Auftraggeber mit vollständiger Bezahlung die
+ausschließlichen, zeitlich und räumlich unbeschränkten Nutzungsrechte an den
+vertragsgegenständlichen Arbeitsergebnissen ein. Vorbestehende Werkzeuge,
+Bibliotheken und Know-how des Auftragnehmers bleiben davon ausgenommen; hieran
+erhält der Auftraggeber ein einfaches Nutzungsrecht, soweit für die Nutzung der
+Arbeitsergebnisse erforderlich.
+
+§5 Vertraulichkeit und Datenschutz
+Beide Parteien behandeln vertrauliche Informationen der jeweils anderen Partei
+geheim. Verarbeitet der Auftragnehmer personenbezogene Daten im Auftrag, wird
+ergänzend ein Auftragsverarbeitungsvertrag nach Art. 28 DSGVO geschlossen.
+
+§6 Haftung
+Der Auftragnehmer haftet unbeschränkt für Vorsatz und grobe Fahrlässigkeit sowie
+bei Verletzung von Leben, Körper und Gesundheit. Bei einfacher Fahrlässigkeit
+haftet er nur für die Verletzung wesentlicher Vertragspflichten, begrenzt auf
+den vertragstypischen, vorhersehbaren Schaden, höchstens jedoch auf die Höhe
+der in den letzten 12 Monaten gezahlten Vergütung.
+
+§7 Schlussbestimmungen
+Änderungen bedürfen der Textform. Es gilt deutsches Recht. Gerichtsstand ist,
+soweit zulässig, der Sitz des Auftragnehmers. Sollten einzelne Bestimmungen
+unwirksam sein, bleibt der Vertrag im Übrigen wirksam.
+
+{ort_datum}
+
+_______________________          _______________________
+Auftragnehmer                    Auftraggeber
+
+Hinweis: Dieses Muster wurde automatisch erstellt und ersetzt keine
+Rechtsberatung — vor Verwendung bei wichtigen Aufträgen anwaltlich prüfen lassen."""
+
+# Vertragsprüfung: Pflicht-Klauseln + Risikosignale (Heuristik, keine Rechtsberatung)
+VERTRAG_PFLICHT = [
+    ("Leistungsbeschreibung", r"leistung|vertragsgegenstand|aufgaben"),
+    ("Vergütung", r"vergütung|honorar|stundensatz|pauschal"),
+    ("Zahlungsziel", r"zahlungsziel|zahlbar|fällig"),
+    ("Laufzeit/Beginn", r"laufzeit|beginn|vertragsbeginn"),
+    ("Kündigung", r"kündig"),
+    ("Nutzungsrechte/IP", r"nutzungsrecht|urheber|arbeitsergebnis"),
+    ("Vertraulichkeit", r"vertraulich|geheim"),
+    ("Datenschutz/AVV", r"datenschutz|dsgvo|auftragsverarbeitung"),
+    ("Haftungsregelung", r"haftung|haftet"),
+    ("Anwendbares Recht/Gerichtsstand", r"gerichtsstand|deutsches recht|anwendbares recht"),
+]
+VERTRAG_RISIKEN = [
+    ("Scheinselbstständigkeit: Weisungsbindung", r"weisungsgebunden|weisungen des auftraggebers (unterliegt|folgt)"),
+    ("Scheinselbstständigkeit: feste Arbeitszeiten", r"feste[n]? arbeitszeiten|arbeitszeit von \d|kernarbeitszeit"),
+    ("Scheinselbstständigkeit: Urlaubsregelung wie Arbeitnehmer", r"urlaubsanspruch|urlaubstage"),
+    ("Unbeschränkte Haftung", r"haftet unbeschränkt|unbegrenzte haftung"),
+    ("Vertragsstrafe", r"vertragsstrafe|pönale"),
+    ("Weites Wettbewerbsverbot", r"wettbewerbsverbot"),
+    ("Exklusivbindung", r"ausschließlich für den auftraggeber|exklusiv"),
+    ("Unklare/kostenlose Nacharbeit", r"unentgeltlich nachzubessern|kostenlose änderungen"),
+]
+
+
+def pruefe_vertrag(text):
+    t = text.lower()
+    gefunden = [{"punkt": name, "ok": bool(re.search(muster, t))} for name, muster in VERTRAG_PFLICHT]
+    risiken = [name for name, muster in VERTRAG_RISIKEN if re.search(muster, t)]
+    fehlend = [g["punkt"] for g in gefunden if not g["ok"]]
+    score = round(10 * sum(1 for g in gefunden if g["ok"]) / len(gefunden) - len(risiken), 1)
+    return {"checkliste": gefunden, "fehlend": fehlend, "risiken": risiken,
+            "score": max(0, score),
+            "hinweis": "Heuristische Prüfung (Muster-Erkennung) — ersetzt keine Rechtsberatung. "
+                       "Bei fehlenden Punkten oder Risiken vor Unterschrift anwaltlich klären."}
+
+
+# --- Arbeitszeit-Erfassung -------------------------------------------------------------
+
+def lade_zeiten():
+    return lade("zeiten.json", [])
+
+
+# --- Täglicher Radar-Auto-Scan (7 Uhr) — zusätzlich zum "Jetzt scannen"-Button ---------
+
+def autoscan_pruefen():
+    """Wird bei jedem Stats-Aufruf geprüft UND von einem Hintergrund-Thread:
+    einmal pro Tag ab konfigurierter Stunde automatisch scannen."""
+    cfg = lade_config()
+    radar = lade("radar.json", {"seen": [], "treffer": [], "letzter_scan": None})
+    heute = datetime.now().date().isoformat()
+    if radar.get("letzter_autoscan") == heute:
+        return False
+    if datetime.now().hour < int(cfg.get("radar_autoscan_stunde", 7)):
+        return False
+    radar["letzter_autoscan"] = heute
+    speichere("radar.json", radar)  # Marker zuerst (verhindert Doppel-Scan)
+    try:
+        radar_scan()
+        radar = lade("radar.json", {})
+        radar["letzter_autoscan"] = heute
+        speichere("radar.json", radar)
+    except Exception as e:
+        print(f"Auto-Scan fehlgeschlagen: {type(e).__name__}: {e}")
+    return True
+
+
+def autoscan_thread():
+    while True:
+        try:
+            autoscan_pruefen()
+        except Exception:
+            pass
+        time.sleep(600)  # alle 10 Minuten prüfen (scannt trotzdem max. 1x/Tag)
+
+
 # --- API: UI & Health ---------------------------------------------------------------
 
 @app.route("/")
@@ -733,7 +955,341 @@ def api_config():
     return jsonify(lade_config())
 
 
+# --- API: Kunden ------------------------------------------------------------------------
+
+@app.route("/api/kunden")
+def api_kunden():
+    return jsonify({"kunden": lade_kunden()})
+
+
+@app.route("/api/kunden", methods=["POST"])
+def api_kunde_neu():
+    d = request.get_json(silent=True) or {}
+    if not d.get("name"):
+        return jsonify({"error": "Name ist Pflicht"}), 400
+    kunden = lade_kunden()
+    kunde = {"id": str(uuid.uuid4()), "status": d.get("status", "neu"),
+             "erstellt": _now(), "lead_id": d.get("lead_id", "")}
+    for f in ("name", "firma", "email", "telefon", "adresse", "ansprechpartner",
+              "ust_id", "notizen", "stundensatz"):
+        kunde[f] = d.get(f, "")
+    kunden.insert(0, kunde)
+    speichere("kunden.json", kunden)
+    return jsonify(kunde), 201
+
+
+@app.route("/api/kunden/<kid>", methods=["PUT"])
+def api_kunde_update(kid):
+    d = request.get_json(silent=True) or {}
+    kunden = lade_kunden()
+    kunde = next((k for k in kunden if k["id"] == kid), None)
+    if not kunde:
+        return jsonify({"error": "Kunde nicht gefunden"}), 404
+    for f in ("name", "firma", "email", "telefon", "adresse", "ansprechpartner",
+              "ust_id", "notizen", "status", "stundensatz"):
+        if f in d:
+            kunde[f] = d[f]
+    speichere("kunden.json", kunden)
+    return jsonify(kunde)
+
+
+@app.route("/api/kunden/<kid>", methods=["DELETE"])
+def api_kunde_loeschen(kid):
+    kunden = [k for k in lade_kunden() if k["id"] != kid]
+    speichere("kunden.json", kunden)
+    return jsonify({"geloescht": kid})
+
+
+@app.route("/api/leads/<lead_id>/zum-kunden", methods=["POST"])
+def api_lead_zum_kunden(lead_id):
+    lead = finde_lead(lade_leads(), lead_id)
+    if not lead:
+        return jsonify({"error": "Lead nicht gefunden"}), 404
+    kunden = lade_kunden()
+    vorhanden = next((k for k in kunden if k.get("email") and
+                      k["email"].lower() == (lead.get("email") or "").lower()), None)
+    if vorhanden:
+        return jsonify({"kunde": vorhanden, "neu": False})
+    kunde = {"id": str(uuid.uuid4()), "name": lead.get("name", ""),
+             "firma": lead.get("firma", ""), "email": lead.get("email", ""),
+             "telefon": lead.get("telefon", ""), "adresse": "", "ansprechpartner": "",
+             "ust_id": "", "notizen": f"Aus Lead übernommen ({lead.get('projektart', '')})",
+             "status": "neu", "stundensatz": "", "erstellt": _now(), "lead_id": lead_id}
+    kunden.insert(0, kunde)
+    speichere("kunden.json", kunden)
+    return jsonify({"kunde": kunde, "neu": True}), 201
+
+
+# --- API: Leistungskatalog ----------------------------------------------------------------
+
+@app.route("/api/katalog")
+def api_katalog():
+    return jsonify({"katalog": lade_katalog()})
+
+
+@app.route("/api/katalog", methods=["POST"])
+def api_katalog_neu():
+    d = request.get_json(silent=True) or {}
+    if not d.get("name"):
+        return jsonify({"error": "Name ist Pflicht"}), 400
+    kat = lade_katalog()
+    eintrag = {"id": str(uuid.uuid4()), "name": d["name"][:200],
+               "typ": d.get("typ", "dienstleistung"), "einheit": d.get("einheit", "Std"),
+               "preis_eur": float(d.get("preis_eur") or 0),
+               "marktpreis": d.get("marktpreis", ""), "plattform": d.get("plattform", "—"),
+               "aktiv": bool(d.get("aktiv", True))}
+    kat.insert(0, eintrag)
+    speichere("katalog.json", kat)
+    return jsonify(eintrag), 201
+
+
+@app.route("/api/katalog/<eid>", methods=["PUT", "DELETE"])
+def api_katalog_bearbeiten(eid):
+    kat = lade_katalog()
+    eintrag = next((k for k in kat if k["id"] == eid), None)
+    if not eintrag:
+        return jsonify({"error": "Eintrag nicht gefunden"}), 404
+    if request.method == "DELETE":
+        kat.remove(eintrag)
+        speichere("katalog.json", kat)
+        return jsonify({"geloescht": eid})
+    d = request.get_json(silent=True) or {}
+    for f in ("name", "typ", "einheit", "preis_eur", "marktpreis", "plattform", "aktiv"):
+        if f in d:
+            eintrag[f] = d[f]
+    speichere("katalog.json", kat)
+    return jsonify(eintrag)
+
+
+# --- API: Dokumente (Angebot/Rechnung/Mahnung/Vertrag) --------------------------------------
+
+@app.route("/api/dokumente")
+def api_dokumente():
+    doks = lade_dokumente()
+    typ = request.args.get("typ")
+    if typ:
+        doks = [d for d in doks if d["typ"] == typ]
+    # Überfällige Rechnungen markieren
+    heute = datetime.now().date().isoformat()
+    for d in doks:
+        if (d["typ"] == "rechnung" and d["status"] == "gesendet"
+                and d.get("faellig_bis") and d["faellig_bis"] < heute):
+            d["status"] = "ueberfaellig"
+    return jsonify({"dokumente": doks, "typen": DOK_TYPEN})
+
+
+@app.route("/api/dokumente", methods=["POST"])
+def api_dokument_neu():
+    d = request.get_json(silent=True) or {}
+    typ = d.get("typ")
+    if typ not in DOK_TYPEN:
+        return jsonify({"error": "Unbekannter Dokumenttyp"}), 400
+    kunde = next((k for k in lade_kunden() if k["id"] == d.get("kunde_id")), None)
+    if not kunde:
+        return jsonify({"error": "Kunde wählen (zuerst unter Kunden anlegen)"}), 400
+    cfg = lade_config()
+    doks = lade_dokumente()
+    dok = {
+        "id": str(uuid.uuid4()), "typ": typ, "nummer": naechste_nummer(doks, typ),
+        "kunde_id": kunde["id"], "kunde_name": kunde["name"],
+        "datum": datetime.now().date().isoformat(),
+        "leistungszeitraum": d.get("leistungszeitraum", ""),
+        "positionen": d.get("positionen", []),
+        "intro": d.get("intro", ""), "outro": d.get("outro", ""),
+        "status": "entwurf", "bezug_id": d.get("bezug_id", ""),
+        "faellig_bis": (datetime.now().date()
+                        + timedelta(days=int(cfg["zahlungsziel_tage"]))).isoformat(),
+        "erstellt": _now(),
+    }
+    if typ == "vertrag":
+        adresse_kunde = ", ".join((kunde.get("adresse") or "Adresse").splitlines())
+        ust_klausel = ("Als Kleinunternehmer i. S. d. §19 UStG wird keine Umsatzsteuer berechnet."
+                       if cfg["kleinunternehmer"] else
+                       "Alle Beträge verstehen sich zuzüglich der gesetzlichen Umsatzsteuer.")
+        dok["vertragstext"] = VERTRAG_VORLAGE.format(
+            firma_name=cfg["firma_name"],
+            firma_adresse_zeile=", ".join(cfg["firma_adresse"].splitlines()),
+            kunde_name=(kunde.get("firma") or kunde["name"]),
+            kunde_adresse_zeile=adresse_kunde,
+            leistung=d.get("leistung", "IT-Dienstleistungen gemäß Angebot"),
+            verguetung=d.get("verguetung", f"{cfg['stundensatz_standard']} € pro Stunde"),
+            zahlungsziel=cfg["zahlungsziel_tage"],
+            ust_klausel=ust_klausel,
+            beginn=d.get("beginn", datetime.now().strftime("%d.%m.%Y")),
+            laufzeit=d.get("laufzeit", "auf unbestimmte Zeit"),
+            kuendigungsfrist=d.get("kuendigungsfrist", "14 Tagen zum Monatsende"),
+            ort_datum=datetime.now().strftime("Ort, %d.%m.%Y"))
+    berechne_summen(dok, cfg)
+    doks.insert(0, dok)
+    speichere("dokumente.json", doks)
+    return jsonify(dok), 201
+
+
+@app.route("/api/dokumente/<did>", methods=["PUT", "DELETE"])
+def api_dokument_bearbeiten(did):
+    doks = lade_dokumente()
+    dok = next((x for x in doks if x["id"] == did), None)
+    if not dok:
+        return jsonify({"error": "Dokument nicht gefunden"}), 404
+    if request.method == "DELETE":
+        doks.remove(dok)
+        speichere("dokumente.json", doks)
+        return jsonify({"geloescht": did})
+    d = request.get_json(silent=True) or {}
+    for f in ("positionen", "intro", "outro", "status", "leistungszeitraum",
+              "faellig_bis", "vertragstext"):
+        if f in d:
+            dok[f] = d[f]
+    berechne_summen(dok, lade_config())
+    speichere("dokumente.json", doks)
+    return jsonify(dok)
+
+
+@app.route("/api/dokumente/<did>/mahnung", methods=["POST"])
+def api_mahnung_erstellen(did):
+    """Erzeugt Zahlungserinnerung/Mahnung zu einer (überfälligen) Rechnung."""
+    doks = lade_dokumente()
+    rechnung = next((x for x in doks if x["id"] == did and x["typ"] == "rechnung"), None)
+    if not rechnung:
+        return jsonify({"error": "Rechnung nicht gefunden"}), 404
+    stufe = int((request.get_json(silent=True) or {}).get("stufe", 1))
+    cfg = lade_config()
+    texte = {
+        1: ("Zahlungserinnerung",
+            f"sicher ist es Ihrer Aufmerksamkeit entgangen: Unsere Rechnung {rechnung['nummer']} "
+            f"vom {rechnung['datum']} über {rechnung['summe_brutto']:.2f} € war am "
+            f"{rechnung['faellig_bis']} fällig. Wir bitten um Ausgleich innerhalb von 7 Tagen. "
+            "Sollte sich die Zahlung mit diesem Schreiben überschnitten haben, betrachten Sie es bitte als gegenstandslos."),
+        2: ("1. Mahnung",
+            f"trotz unserer Zahlungserinnerung ist die Rechnung {rechnung['nummer']} vom "
+            f"{rechnung['datum']} über {rechnung['summe_brutto']:.2f} € weiterhin offen. "
+            "Wir bitten um Zahlung innerhalb von 7 Tagen."),
+        3: ("2. Mahnung",
+            f"die Rechnung {rechnung['nummer']} über {rechnung['summe_brutto']:.2f} € ist trotz "
+            "Erinnerung und Mahnung offen. Wir fordern Sie letztmalig zur Zahlung innerhalb von "
+            "7 Tagen auf. Danach behalten wir uns vor, Verzugszinsen gemäß §288 BGB zu berechnen "
+            "und das gerichtliche Mahnverfahren einzuleiten."),
+    }
+    titel, text = texte.get(stufe, texte[1])
+    dok = {"id": str(uuid.uuid4()), "typ": "mahnung",
+           "nummer": naechste_nummer(doks, "mahnung"),
+           "kunde_id": rechnung["kunde_id"], "kunde_name": rechnung["kunde_name"],
+           "datum": datetime.now().date().isoformat(), "leistungszeitraum": "",
+           "positionen": [{"beschreibung": f"Offener Betrag aus Rechnung {rechnung['nummer']}",
+                           "menge": 1, "einheit": "Pauschale", "preis": rechnung["summe_brutto"]}],
+           "intro": text, "outro": "", "titel_zusatz": titel,
+           "status": "entwurf", "bezug_id": rechnung["id"],
+           "faellig_bis": (datetime.now().date() + timedelta(days=7)).isoformat(),
+           "erstellt": _now(), "mahnstufe": stufe}
+    berechne_summen(dok, cfg)
+    dok["ust_prozent"] = 0
+    dok["summe_ust"] = 0
+    dok["summe_brutto"] = dok["summe_netto"]  # Mahnbetrag ist bereits brutto
+    doks.insert(0, dok)
+    speichere("dokumente.json", doks)
+    return jsonify(dok), 201
+
+
+@app.route("/dokument/<did>")
+def dokument_drucken(did):
+    dok = next((x for x in lade_dokumente() if x["id"] == did), None)
+    if not dok:
+        return "Dokument nicht gefunden", 404
+    kunde = next((k for k in lade_kunden() if k["id"] == dok["kunde_id"]), {})
+    return render_template("dokument.html", dok=dok, kunde=kunde, cfg=lade_config(),
+                           titel=dok.get("titel_zusatz") or DOK_TYPEN[dok["typ"]])
+
+
+@app.route("/api/vertrag/pruefen", methods=["POST"])
+def api_vertrag_pruefen():
+    text = (request.get_json(silent=True) or {}).get("text", "")
+    if len(text) < 100:
+        return jsonify({"error": "Bitte den vollständigen Vertragstext einfügen (min. 100 Zeichen)"}), 400
+    return jsonify(pruefe_vertrag(text))
+
+
+# --- API: Arbeitszeiten ----------------------------------------------------------------------
+
+@app.route("/api/zeiten")
+def api_zeiten():
+    zeiten = lade_zeiten()
+    kid = request.args.get("kunde_id")
+    if kid:
+        zeiten = [z for z in zeiten if z["kunde_id"] == kid]
+    offen = [z for z in zeiten if not z.get("abgerechnet")]
+    return jsonify({"zeiten": zeiten[:300],
+                    "offen_stunden": round(sum(float(z["stunden"]) for z in offen), 2),
+                    "offen_betrag": round(sum(float(z["stunden"]) * float(z["stundensatz"]) for z in offen), 2)})
+
+
+@app.route("/api/zeiten", methods=["POST"])
+def api_zeit_neu():
+    d = request.get_json(silent=True) or {}
+    if not (d.get("kunde_id") and d.get("stunden")):
+        return jsonify({"error": "Kunde und Stunden sind Pflicht"}), 400
+    cfg = lade_config()
+    kunde = next((k for k in lade_kunden() if k["id"] == d["kunde_id"]), None)
+    if not kunde:
+        return jsonify({"error": "Kunde nicht gefunden"}), 404
+    zeiten = lade_zeiten()
+    z = {"id": str(uuid.uuid4()), "kunde_id": kunde["id"], "kunde_name": kunde["name"],
+         "datum": d.get("datum") or datetime.now().date().isoformat(),
+         "stunden": round(float(d["stunden"]), 2),
+         "beschreibung": (d.get("beschreibung") or "")[:300],
+         "stundensatz": float(d.get("stundensatz") or kunde.get("stundensatz")
+                              or cfg["stundensatz_standard"]),
+         "abgerechnet": False, "erstellt": _now()}
+    zeiten.insert(0, z)
+    speichere("zeiten.json", zeiten)
+    return jsonify(z), 201
+
+
+@app.route("/api/zeiten/<zid>", methods=["DELETE"])
+def api_zeit_loeschen(zid):
+    zeiten = [z for z in lade_zeiten() if z["id"] != zid]
+    speichere("zeiten.json", zeiten)
+    return jsonify({"geloescht": zid})
+
+
+@app.route("/api/zeiten/abrechnen", methods=["POST"])
+def api_zeiten_abrechnen():
+    """Alle offenen Zeiten eines Kunden -> Rechnungs-Entwurf (Positionen je Tag)."""
+    kid = (request.get_json(silent=True) or {}).get("kunde_id")
+    kunde = next((k for k in lade_kunden() if k["id"] == kid), None)
+    if not kunde:
+        return jsonify({"error": "Kunde nicht gefunden"}), 404
+    zeiten = lade_zeiten()
+    offene = [z for z in zeiten if z["kunde_id"] == kid and not z.get("abgerechnet")]
+    if not offene:
+        return jsonify({"error": "Keine offenen Zeiten für diesen Kunden"}), 400
+    cfg = lade_config()
+    doks = lade_dokumente()
+    positionen = [{"beschreibung": f"{z['datum']}: {z['beschreibung'] or 'IT-Dienstleistung'}",
+                   "menge": z["stunden"], "einheit": "Std", "preis": z["stundensatz"]}
+                  for z in sorted(offene, key=lambda x: x["datum"])]
+    dok = {"id": str(uuid.uuid4()), "typ": "rechnung",
+           "nummer": naechste_nummer(doks, "rechnung"),
+           "kunde_id": kid, "kunde_name": kunde["name"],
+           "datum": datetime.now().date().isoformat(),
+           "leistungszeitraum": f"{offene[-1]['datum']} – {offene[0]['datum']}",
+           "positionen": positionen, "intro": "", "outro": "",
+           "status": "entwurf", "bezug_id": "",
+           "faellig_bis": (datetime.now().date()
+                           + timedelta(days=int(cfg["zahlungsziel_tage"]))).isoformat(),
+           "erstellt": _now()}
+    berechne_summen(dok, cfg)
+    doks.insert(0, dok)
+    speichere("dokumente.json", doks)
+    for z in zeiten:
+        if z["kunde_id"] == kid and not z.get("abgerechnet"):
+            z["abgerechnet"] = True
+            z["rechnung_id"] = dok["id"]
+    speichere("zeiten.json", zeiten)
+    return jsonify({"rechnung": dok, "abgerechnete_zeiten": len(offene)}), 201
+
+
 if __name__ == "__main__":
+    threading.Thread(target=autoscan_thread, daemon=True).start()
     print(f"LeadPilot CRM läuft auf http://localhost:{PORT}"
           + ("" if smtp_konfiguriert() else "  (SMTP nicht konfiguriert — Mails landen im Postausgang)"))
     app.run(host="127.0.0.1", port=PORT, debug=False)

@@ -79,6 +79,35 @@ End-to-End: /buchen 200 ✓, Tage/Slots ✓, Buchung ✓ (Mail 3 im Postausgang)
 Doppelbuchung 409 ✓, ICS 1 VEVENT ✓, naechste_termine ✓, via Proxy ✓,
 Screenshots (hell + Buchungsseite) visuell geprüft ✓.
 
+### Nachtrag: LeadPilot → komplettes Freelancer-Betriebssystem (CEO-Ausbau)
+
+Auf CEO-Wunsch massiv erweitert — LeadPilot ist jetzt CRM + Faktura + Zeiterfassung:
+
+1. **Kundenverwaltung** (Neu/Bestand, Adresse für Rechnungen, individueller
+   Stundensatz), „Als Kunde übernehmen"-Button im Lead-Modal (Dedup per E-Mail).
+2. **Leistungskatalog** mit Seed aus echten Produkten beider Plattformen
+   (DocuCheck, KI-Avatar-Pipeline, LeadPilot) + Dienstleistungen mit
+   **Marktpreis-Spannen** (Orientierung, manuell gepflegt — beim Angebot-Erstellen
+   wird die Spanne neben dem eigenen Preis angezeigt = „Marktpreise-Blick").
+3. **Dokumente**: Angebot/Rechnung/Mahnung/Dienstvertrag mit Nummernkreisen je
+   Typ+Jahr — Rechnungen im Format der eigenen Vorlage („2026-001", Aufbau aus
+   `Plannung/Rechnungsvorlagen` per xlsx-Analyse extrahiert). A4-Druckansicht
+   (`/dokument/<id>`, Browser-Druck → PDF) mit §14-UStG-Pflichtangaben,
+   USt./Kleinunternehmer umschaltbar. Mahnwesen 3-stufig (Erinnerung → 1. → 2.
+   Mahnung mit §288-BGB-Hinweis), Überfällig-Erkennung automatisch.
+4. **Zeiterfassung** mit „Offene Zeiten → Rechnung" (Positionen je Tag,
+   Leistungszeitraum automatisch, Zeiten werden als abgerechnet markiert).
+5. **Dienstvertrag**: Generator (Muster mit Selbstständigkeits-Klauseln, AVV-
+   Hinweis, Haftungsbegrenzung + Disclaimer) und **Prüfer** (Checklisten-Heuristik:
+   10 Pflichtklauseln + 8 Risikosignale inkl. Scheinselbstständigkeit).
+6. **Radar-Autoscan täglich 7 Uhr** (Hintergrund-Thread + Marker in radar.json,
+   „Jetzt scannen" bleibt), Stunde konfigurierbar.
+
+Verifiziert: 8-Schritte-E2E (Kunde → Katalog → Angebot A-2026-001 → Zeiten →
+Rechnung 2026-001 → Mahnung M-2026-001 → Vertrag + Druck → Prüfung erkennt
+Weisungsbindung/feste Arbeitszeiten → Lead→Kunde) + Rechnungs-Screenshot
+gegen Vorlage abgeglichen. SMTP-Daten (IONOS) trägt CEO nach.
+
 ### Nachtrag: Konzept-Prüfung „IT Pipeline System inkl. CRM" (neues Produkt)
 
 CEO hat neues Produkt eingebracht (`10_Business/IT Pipeline System inkl CRM/`):
