@@ -79,8 +79,11 @@ Ohne SMTP-Konfiguration laufen alle automatischen Mails in den **Postausgang**
 
 - **Kontaktformular** → `POST /api/webhooks/kontaktformular`
   mit JSON `{name, email, projektart, nachricht}` (oder Form-Daten)
-- **Cal.com** → Settings → Developer → Webhooks → Subscriber-URL
-  `https://<deine-domain>/produkte/it-pipeline/api/webhooks/calcom`,
-  Event **BOOKING_CREATED**
+- **Terminbuchung (eingebaut, Cal.com-Ersatz):** Buchungsseite `/buchen` per iframe
+  neben das Kontaktformular auf vuxuantiep.de setzen — fertiges Embed-Snippet steht
+  in den Einstellungen. Konfiguration (Wochentage, Zeiten, Slot-Dauer, Vorlauf,
+  Horizont) ebenfalls dort. Gebuchte Termine als Kalender-Abo: `/api/termine.ics`.
+- **Cal.com (optional, nicht mehr nötig)** → Settings → Developer → Webhooks →
+  Subscriber-URL `…/api/webhooks/calcom`, Event **BOOKING_CREATED**
 
 Dedup: gleiche E-Mail + offener Lead → wird als Verlaufs-Eintrag angehängt statt doppelt angelegt.

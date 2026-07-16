@@ -56,6 +56,29 @@ Export ✓, Anonymisieren ✓, Radar-Scan (64 Treffer, 0 Fehler) ✓, Übernahme
 Config ✓, alles auch durch den Dashboard-Proxy `/produkte/it-pipeline/` ✓,
 Regression der 3 anderen Produkte ✓.
 
+### Nachtrag: Eigene Terminbuchung (Cal.com-Ersatz) + helles Corporate-Theme
+
+CEO wollte weg von der Cal.com-Abhängigkeit → statt Fremdlösung (Cal.com
+self-hosted = Node+DB, Easy!Appointments = PHP+MySQL) **Terminbuchung direkt in
+LeadPilot eingebaut**:
+
+1. **Slot-Engine:** konfigurierbar (Wochentage, von/bis, Slot-Dauer, Vorlauf-
+   Stunden, Horizont-Tage), Kollisionsprüfung gegen gebuchte Lead-Termine,
+   Doppelbuchung → 409. Deutsche Wochentags-Labels (strftime %a wäre englisch).
+2. **Öffentliche Buchungsseite `/buchen`** (3 Schritte: Tag → Uhrzeit → Daten),
+   hell/professionell, per iframe auf vuxuantiep.de einbettbar — Embed-Snippet
+   wird in den Einstellungen generiert. Buchung → Lead (Quelle „buchung") +
+   **Mail 3 Terminbestätigung** (neues Template mit {termin_text}).
+3. **ICS-Kalender-Feed `/api/termine.ics`** — Kalender-Abo in Thunderbird/
+   Outlook/Google statt externem Kalenderdienst. Dashboard zeigt „Nächste Termine".
+4. **Helles Corporate-Theme** als Standard (CSS-Variablen, angelehnt an
+   Trace-AI OS/CorporateLLM), Dunkel-Modus per Sidebar-Toggle (localStorage).
+   Buchungsseite im gleichen Look.
+
+End-to-End: /buchen 200 ✓, Tage/Slots ✓, Buchung ✓ (Mail 3 im Postausgang),
+Doppelbuchung 409 ✓, ICS 1 VEVENT ✓, naechste_termine ✓, via Proxy ✓,
+Screenshots (hell + Buchungsseite) visuell geprüft ✓.
+
 ### Nachtrag: Konzept-Prüfung „IT Pipeline System inkl. CRM" (neues Produkt)
 
 CEO hat neues Produkt eingebracht (`10_Business/IT Pipeline System inkl CRM/`):

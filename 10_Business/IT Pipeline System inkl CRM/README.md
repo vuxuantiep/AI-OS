@@ -9,12 +9,14 @@
 
 | Bereich | Funktion |
 |---|---|
-| **Lead-Erfassung** | Webhooks für Website-Kontaktformular + Cal.com (BOOKING_CREATED), manuell, Radar-Übernahme — Dedup per E-Mail |
+| **Lead-Erfassung** | Webhooks für Website-Kontaktformular, eingebaute Terminbuchung, manuell, Radar-Übernahme — Dedup per E-Mail (Cal.com-Webhook wird weiter unterstützt, ist aber nicht mehr nötig) |
+| **📅 Eigene Terminbuchung** | Cal.com-Ersatz ohne Fremdabhängigkeit: öffentliche Buchungsseite `/buchen` (per iframe auf vuxuantiep.de einbettbar, Snippet in den Einstellungen), konfigurierbare Slots (Wochentage/Zeiten/Vorlauf), Kollisionsprüfung, Terminbestätigungs-Mail, **ICS-Kalender-Feed** `/api/termine.ics` zum Abonnieren in Thunderbird/Outlook/Google |
 | **Pipeline** | Kanban: Neu → Qualifiziert → Erstgespräch → Angebot → Gewonnen/Verloren (Drag & Drop), Pipeline-Wert |
 | **F3: Trigger-Mails** | Mail 1 = sofortige Eingangsbestätigung bei JEDEM Lead · Mail 2 = genau EINE Buchungs-Erinnerung (systemseitig begrenzt — kein Drip, §7 UWG) · Postausgang-Ansicht, funktioniert auch ohne SMTP |
 | **F2: DSGVO** | Export je Lead (Art. 15), Löschen (Art. 17), Anonymisieren, automatisches Löschkonzept für verlorene Leads (Frist konfigurierbar), Verlaufs-Protokoll |
 | **Lead-Radar** | Scannt öffentliche Projektbörsen (RemoteOK, WeWorkRemotely, Remotive-API + eigene Feeds) nach Keyword-Relevanz, 1 Klick → Lead in Pipeline |
-| **Einstellungen** | Mail-Templates, Keywords, eigene Radar-Quellen, DSGVO-Frist — alles in der UI |
+| **Einstellungen** | Mail-Templates, Buchungs-Regeln, Keywords, eigene Radar-Quellen, DSGVO-Frist — alles in der UI |
+| **Design** | Helles Corporate-Theme (Standard, angelehnt an Trace-AI OS/CorporateLLM) + Dunkel-Umschalter in der Sidebar |
 
 Start: `python app/app.py` → http://localhost:5330 · im AI-OS: Produktion-Tab oder `/produkte/it-pipeline/`
 

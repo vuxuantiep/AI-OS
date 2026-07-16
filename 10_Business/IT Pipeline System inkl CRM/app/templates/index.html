@@ -5,7 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LeadPilot · IT Pipeline CRM</title>
 <style>
+  /* Helles Corporate-Theme (Standard) — angelehnt an Trace-AI OS / CorporateLLM */
   :root {
+    --bg: #f0f3f9; --panel: #ffffff; --panel2: #f6f8fc; --line: #e3e8f0;
+    --ink: #1c2433; --muted: #64748b; --acc: #2563eb; --acc2: #7c3aed;
+    --gruen: #059669; --rot: #dc2626; --gelb: #d97706;
+    --shadow: 0 1px 3px rgba(16,24,40,0.06), 0 6px 20px rgba(16,24,40,0.05);
+  }
+  [data-theme="dark"] {
     --bg: #0b1220; --panel: #111a2c; --panel2: #17223a; --line: #22304c;
     --ink: #eef3fb; --muted: #8294b5; --acc: #4f8cff; --acc2: #7c5cff;
     --gruen: #2dd4a7; --rot: #f0616d; --gelb: #f5b83d;
@@ -117,6 +124,7 @@
   <button class="nav-btn" data-view="radar">📡 <span class="lbl">Lead-Radar</span><span class="nav-badge" id="radar-badge" style="display:none;">0</span></button>
   <button class="nav-btn" data-view="postausgang">✉️ <span class="lbl">Postausgang</span><span class="nav-badge" id="mail-badge" style="display:none;">0</span></button>
   <button class="nav-btn" data-view="einstellungen">⚙️ <span class="lbl">Einstellungen</span></button>
+  <button class="nav-btn" id="theme-toggle" title="Hell/Dunkel umschalten">🌓 <span class="lbl">Theme</span></button>
   <div class="side-foot">IT Pipeline System<br>Modul für AI-OS &amp; Trace-AI OS<br>Port 5330</div>
 </aside>
 
@@ -134,6 +142,10 @@
   <!-- Dashboard -->
   <section class="view active" id="view-dashboard">
     <div class="kpi-grid" id="kpis"></div>
+    <div class="settings-card" id="termine-card" style="display:none;max-width:none;">
+      <h3>📅 Nächste Termine <a href="api/termine.ics" class="hint" style="font-weight:400;">(ICS-Kalender-Feed abonnieren)</a></h3>
+      <div id="termine-liste"></div>
+    </div>
     <div class="kanban" id="mini-pipeline"></div>
   </section>
 
@@ -168,10 +180,35 @@
   <!-- Einstellungen -->
   <section class="view" id="view-einstellungen">
     <div class="settings-card">
-      <h3>Absender &amp; Buchung</h3>
+      <h3>Absender &amp; Buchungslink</h3>
       <div class="frow">
         <div><label>Absender-Name (Mails)</label><input id="cfg-absender"></div>
-        <div><label>Cal.com Buchungslink</label><input id="cfg-booking"></div>
+        <div><label>Buchungslink in Mails (eigene Seite /buchen oder externe)</label><input id="cfg-booking"></div>
+      </div>
+    </div>
+    <div class="settings-card">
+      <h3>📅 Eingebaute Terminbuchung (Cal.com-Ersatz)</h3>
+      <div class="frow">
+        <div><label>Online-Buchung aktiv</label>
+          <select id="cfg-b-aktiv"><option value="true">Ja</option><option value="false">Nein</option></select></div>
+        <div><label>Wochentage (0=Mo … 6=So, Komma-getrennt)</label><input id="cfg-b-tage" placeholder="0,1,2,3,4"></div>
+      </div>
+      <div class="frow">
+        <div><label>Von (HH:MM)</label><input id="cfg-b-von"></div>
+        <div><label>Bis (HH:MM)</label><input id="cfg-b-bis"></div>
+      </div>
+      <div class="frow">
+        <div><label>Slot-Dauer (Minuten)</label><input id="cfg-b-slot" type="number" min="15" max="120" step="15"></div>
+        <div><label>Vorlauf (Stunden) / Horizont (Tage)</label>
+          <div style="display:flex;gap:6px;"><input id="cfg-b-vorlauf" type="number" min="0" max="168" style="width:50%;"><input id="cfg-b-horizont" type="number" min="1" max="60" style="width:50%;"></div></div>
+      </div>
+      <div class="frow single"><div><label>Mail 3 — Betreff (Terminbestätigung, Platzhalter zusätzlich: {termin_text})</label><input id="cfg-m3b"></div></div>
+      <div class="frow single"><div><label>Mail 3 — Text</label><textarea id="cfg-m3t" rows="4"></textarea></div></div>
+      <div class="hint" id="embed-hint">
+        <b>Auf vuxuantiep.de einbetten</b> (neben dem Kontaktformular):<br>
+        <code id="embed-code" style="user-select:all;display:block;margin-top:6px;word-break:break-all;"></code>
+        <span>Direktlink: <a id="buchen-link" href="buchen" target="_blank" rel="noopener">Buchungsseite öffnen ↗</a> ·
+        Kalender-Abo für Thunderbird/Outlook/Google: <a href="api/termine.ics">termine.ics</a></span>
       </div>
     </div>
     <div class="settings-card">
@@ -246,6 +283,17 @@
 
 <script>
 "use strict";
+/* Theme: hell (Standard) / dunkel, gemerkt in localStorage */
+(function () {
+  const t = localStorage.getItem("leadpilot-theme");
+  if (t === "dark") document.documentElement.setAttribute("data-theme", "dark");
+})();
+document.getElementById("theme-toggle").addEventListener("click", () => {
+  const dunkel = document.documentElement.getAttribute("data-theme") === "dark";
+  if (dunkel) { document.documentElement.removeAttribute("data-theme"); localStorage.setItem("leadpilot-theme", "light"); }
+  else { document.documentElement.setAttribute("data-theme", "dark"); localStorage.setItem("leadpilot-theme", "dark"); }
+});
+
 let STUFEN = [];
 let leadsCache = [];
 let editId = null;
@@ -306,6 +354,13 @@ async function ladeDashboard() {
     sb.textContent = "ℹ️ SMTP nicht konfiguriert — automatische Mails werden im Postausgang gesammelt statt versendet (Umgebungsvariablen SMTP_HOST/SMTP_FROM setzen).";
   } else sb.style.display = "none";
   if (s.soeben_erinnert > 0) toast("✉️ " + s.soeben_erinnert + " Buchungs-Erinnerung(en) ausgelöst");
+  const tc = document.getElementById("termine-card");
+  if (s.naechste_termine && s.naechste_termine.length) {
+    tc.style.display = "block";
+    document.getElementById("termine-liste").innerHTML = s.naechste_termine.map(t =>
+      '<div class="mailrow">📅 <b>' + esc(t.termin_text) + '</b> — ' + esc(t.name) +
+      (t.projektart ? ' <span class="hint">(' + esc(t.projektart) + ')</span>' : '') + '</div>').join("");
+  } else tc.style.display = "none";
   await ladeLeads(true);
   renderKanban("mini-pipeline", true);
   ladeBadges(s);
@@ -507,6 +562,18 @@ async function ladeConfig() {
   document.getElementById("cfg-m1t").value = c.mail1_text;
   document.getElementById("cfg-m2b").value = c.mail2_betreff;
   document.getElementById("cfg-m2t").value = c.mail2_text;
+  document.getElementById("cfg-b-aktiv").value = String(c.buchung_aktiv);
+  document.getElementById("cfg-b-tage").value = (c.buchung_wochentage || []).join(",");
+  document.getElementById("cfg-b-von").value = c.buchung_von;
+  document.getElementById("cfg-b-bis").value = c.buchung_bis;
+  document.getElementById("cfg-b-slot").value = c.buchung_slot_minuten;
+  document.getElementById("cfg-b-vorlauf").value = c.buchung_vorlauf_stunden;
+  document.getElementById("cfg-b-horizont").value = c.buchung_horizont_tage;
+  document.getElementById("cfg-m3b").value = c.mail3_betreff;
+  document.getElementById("cfg-m3t").value = c.mail3_text;
+  const basis = window.location.origin + window.location.pathname.replace(/\/$/, "");
+  document.getElementById("embed-code").textContent =
+    '<iframe src="' + basis + '/buchen" style="width:100%;max-width:600px;height:780px;border:none;border-radius:16px;" title="Termin buchen"></iframe>';
   document.getElementById("cfg-keywords").value = c.radar_keywords.join(", ");
   document.getElementById("cfg-quellen").value = (c.radar_quellen_eigene || [])
     .map(q => (q.name ? q.name + " | " : "") + q.url).join("\n");
@@ -528,6 +595,16 @@ document.getElementById("btn-cfg-speichern").addEventListener("click", async () 
       mail1_text: document.getElementById("cfg-m1t").value,
       mail2_betreff: document.getElementById("cfg-m2b").value,
       mail2_text: document.getElementById("cfg-m2t").value,
+      buchung_aktiv: document.getElementById("cfg-b-aktiv").value === "true",
+      buchung_wochentage: document.getElementById("cfg-b-tage").value.split(",")
+        .map(x => parseInt(x.trim(), 10)).filter(x => x >= 0 && x <= 6),
+      buchung_von: document.getElementById("cfg-b-von").value.trim() || "09:00",
+      buchung_bis: document.getElementById("cfg-b-bis").value.trim() || "17:00",
+      buchung_slot_minuten: Number(document.getElementById("cfg-b-slot").value || 30),
+      buchung_vorlauf_stunden: Number(document.getElementById("cfg-b-vorlauf").value || 24),
+      buchung_horizont_tage: Number(document.getElementById("cfg-b-horizont").value || 14),
+      mail3_betreff: document.getElementById("cfg-m3b").value,
+      mail3_text: document.getElementById("cfg-m3t").value,
       radar_keywords: document.getElementById("cfg-keywords").value.split(",").map(k => k.trim()).filter(Boolean),
       radar_quellen_eigene: quellen,
       dsgvo_loeschfrist_monate: Number(document.getElementById("cfg-frist").value || 6),

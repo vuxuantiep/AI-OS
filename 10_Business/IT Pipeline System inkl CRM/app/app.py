@@ -54,7 +54,22 @@ STUFEN_IDS = {s["id"] for s in STUFEN}
 
 DEFAULT_CONFIG = {
     "absender_name": "Tiep Vu Xuan — IT Services",
-    "booking_link": "https://cal.com/",
+    # Eigener Buchungslink (die eingebaute Terminbuchung unter /buchen) —
+    # kann auf die öffentliche URL der Website zeigen, sobald eingebettet
+    "booking_link": "http://localhost:5330/buchen",
+    # Eingebaute Terminbuchung (Cal.com-Ersatz, keine Fremdabhängigkeit)
+    "buchung_aktiv": True,
+    "buchung_wochentage": [0, 1, 2, 3, 4],   # Mo–Fr (0 = Montag)
+    "buchung_von": "09:00",
+    "buchung_bis": "17:00",
+    "buchung_slot_minuten": 30,
+    "buchung_vorlauf_stunden": 24,
+    "buchung_horizont_tage": 14,
+    "mail3_betreff": "Terminbestätigung: {termin_text}",
+    "mail3_text": ("Hallo {name},\n\nIhr Gesprächstermin ist bestätigt:\n\n"
+                   "  📅 {termin_text} (30 Minuten)\n\n"
+                   "Falls der Termin nicht passt, antworten Sie einfach auf diese "
+                   "E-Mail.\n\nViele Grüße\n{absender}"),
     "erinnerung_aktiv": True,
     "erinnerung_nach_tagen": 3,
     "dsgvo_loeschfrist_monate": 6,
@@ -180,6 +195,25 @@ def sende_bestaetigung(cfg, lead):
     protokoll(lead, f"Mail 1 (Eingangsbestätigung): {status}")
 
 
+def termin_text(iso):
+    """'2026-07-20T10:00' -> '20.07.2026, 10:00 Uhr'"""
+    try:
+        dt = datetime.fromisoformat(iso.replace("Z", ""))
+        return dt.strftime("%d.%m.%Y, %H:%M Uhr")
+    except ValueError:
+        return iso
+
+
+def sende_terminbestaetigung(cfg, lead):
+    if not lead.get("email"):
+        return
+    v = _mail_vars(cfg, lead)
+    v["termin_text"] = termin_text(lead.get("termin", ""))
+    status = sende_mail(lead["email"], cfg["mail3_betreff"].format(**v),
+                        cfg["mail3_text"].format(**v), lead["id"], "terminbestaetigung")
+    protokoll(lead, f"Mail 3 (Terminbestätigung): {status}")
+
+
 def pruefe_erinnerungen():
     """Mail 2: genau EINE automatische Buchungs-Erinnerung pro Lead (UWG!).
     Nur für Formular-Leads ohne Termin, die noch in 'neu' stehen."""
@@ -208,9 +242,10 @@ def pruefe_erinnerungen():
 
 # --- Lead-Kern ------------------------------------------------------------------
 
-def neuer_lead(daten, quelle):
+def neuer_lead(daten, quelle, mail_typ="bestaetigung"):
     """Legt Lead an ODER hängt an bestehenden offenen Lead an (Dedup per E-Mail)."""
     leads = lade_leads()
+    cfg = lade_config()
     email = (daten.get("email") or "").strip().lower()
     if email:
         offen = next((l for l in leads if l.get("email", "").lower() == email
@@ -222,6 +257,8 @@ def neuer_lead(daten, quelle):
             if daten.get("termin"):
                 offen["termin"] = daten["termin"]
                 protokoll(offen, f"Termin gebucht: {daten['termin']}")
+                if mail_typ == "termin":
+                    sende_terminbestaetigung(cfg, offen)
             speichere("leads.json", leads)
             return offen, False
     lead = {
@@ -243,8 +280,10 @@ def neuer_lead(daten, quelle):
         "verlauf": [{"zeit": _now(), "text": f"Lead angelegt (Quelle: {quelle})"}],
     }
     leads.insert(0, lead)
-    cfg = lade_config()
-    sende_bestaetigung(cfg, lead)  # F3: in JEDEM Pfad, sofort
+    if mail_typ == "termin":
+        sende_terminbestaetigung(cfg, lead)
+    else:
+        sende_bestaetigung(cfg, lead)  # F3: in JEDEM Pfad, sofort
     speichere("leads.json", leads)
     return lead, True
 
@@ -262,6 +301,127 @@ def anonymisiere(lead):
                  "firma": "", "nachricht": "", "anonymisiert": True})
     lead["verlauf"] = [{"zeit": _now(), "text": "Personenbezogene Daten gemäß Löschkonzept entfernt"}]
     lead["aktualisiert"] = _now()
+
+
+# --- Eingebaute Terminbuchung (Cal.com-Ersatz, keine Fremdabhängigkeit) -------------
+
+def belegte_slots():
+    """Alle künftig gebuchten Termine (ISO 'YYYY-MM-DDTHH:MM') aus den Leads."""
+    belegt = set()
+    for l in lade_leads():
+        t = (l.get("termin") or "").replace("Z", "")[:16]
+        if t and l["stufe"] != "verloren" and not l.get("anonymisiert"):
+            belegt.add(t)
+    return belegt
+
+
+def slots_fuer_tag(cfg, tag):
+    """Freie Slots für ein Datum (date-Objekt) nach Konfiguration."""
+    if tag.weekday() not in cfg["buchung_wochentage"]:
+        return []
+    von_h, von_m = map(int, cfg["buchung_von"].split(":"))
+    bis_h, bis_m = map(int, cfg["buchung_bis"].split(":"))
+    schritt = int(cfg["buchung_slot_minuten"])
+    fruehestens = datetime.now() + timedelta(hours=int(cfg["buchung_vorlauf_stunden"]))
+    belegt = belegte_slots()
+    slots = []
+    t = datetime(tag.year, tag.month, tag.day, von_h, von_m)
+    ende = datetime(tag.year, tag.month, tag.day, bis_h, bis_m)
+    while t + timedelta(minutes=schritt) <= ende:
+        iso = t.strftime("%Y-%m-%dT%H:%M")
+        if t >= fruehestens and iso not in belegt:
+            slots.append(iso)
+        t += timedelta(minutes=schritt)
+    return slots
+
+
+@app.route("/buchen")
+def buchen_seite():
+    return render_template("buchen.html")
+
+
+@app.route("/api/buchungen/tage")
+def api_buchung_tage():
+    cfg = lade_config()
+    if not cfg["buchung_aktiv"]:
+        return jsonify({"aktiv": False, "tage": []})
+    tage = []
+    heute = datetime.now().date()
+    for i in range(int(cfg["buchung_horizont_tage"]) + 1):
+        tag = heute + timedelta(days=i)
+        anzahl = len(slots_fuer_tag(cfg, tag))
+        if anzahl:
+            wt = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"][tag.weekday()]
+            tage.append({"datum": tag.isoformat(), "frei": anzahl,
+                         "label": wt + tag.strftime(" %d.%m.")})
+    return jsonify({"aktiv": True, "tage": tage,
+                    "slot_minuten": cfg["buchung_slot_minuten"]})
+
+
+@app.route("/api/buchungen/slots")
+def api_buchung_slots():
+    cfg = lade_config()
+    try:
+        tag = datetime.fromisoformat(request.args.get("tag", "")).date()
+    except ValueError:
+        return jsonify({"error": "Ungültiges Datum"}), 400
+    return jsonify({"slots": slots_fuer_tag(cfg, tag)})
+
+
+@app.route("/api/buchungen", methods=["POST"])
+def api_buchung_anlegen():
+    cfg = lade_config()
+    if not cfg["buchung_aktiv"]:
+        return jsonify({"error": "Buchung derzeit deaktiviert"}), 403
+    d = request.get_json(silent=True) or {}
+    slot = (d.get("slot") or "")[:16]
+    email = (d.get("email") or "").strip()
+    if not (slot and email and d.get("name")):
+        return jsonify({"error": "Name, E-Mail und Termin sind Pflicht"}), 400
+    try:
+        slot_dt = datetime.fromisoformat(slot)
+    except ValueError:
+        return jsonify({"error": "Ungültiger Termin"}), 400
+    # Slot muss zu den Regeln passen UND noch frei sein (Kollisionsprüfung)
+    if slot not in slots_fuer_tag(cfg, slot_dt.date()):
+        return jsonify({"error": "Dieser Termin ist nicht (mehr) verfügbar — bitte anderen wählen"}), 409
+    lead, neu = neuer_lead({
+        "name": d.get("name"), "email": email,
+        "projektart": (d.get("thema") or "Erstgespräch (30 min)"),
+        "nachricht": (d.get("nachricht") or "")[:2000],
+        "termin": slot,
+    }, "buchung", mail_typ="termin")
+    return jsonify({"ok": True, "lead_id": lead["id"], "termin": slot,
+                    "termin_text": termin_text(slot)}), 201
+
+
+@app.route("/api/termine.ics")
+def api_termine_ics():
+    """ICS-Feed aller gebuchten Termine — in Thunderbird/Outlook/Google Kalender
+    als Kalender-Abo einbinden (kein externer Kalenderdienst nötig)."""
+    cfg = lade_config()
+    dauer = int(cfg["buchung_slot_minuten"])
+    zeilen = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//LeadPilot//Termine//DE",
+              "X-WR-CALNAME:LeadPilot Termine"]
+    for l in lade_leads():
+        t = (l.get("termin") or "").replace("Z", "")[:16]
+        if not t or l.get("anonymisiert"):
+            continue
+        try:
+            start = datetime.fromisoformat(t)
+        except ValueError:
+            continue
+        ende = start + timedelta(minutes=dauer)
+        zeilen += ["BEGIN:VEVENT",
+                   f"UID:{l['id']}@leadpilot",
+                   f"DTSTART:{start.strftime('%Y%m%dT%H%M%S')}",
+                   f"DTEND:{ende.strftime('%Y%m%dT%H%M%S')}",
+                   f"SUMMARY:Erstgespräch: {l.get('name', '')}",
+                   f"DESCRIPTION:{(l.get('projektart') or '')} — {(l.get('email') or '')}",
+                   "END:VEVENT"]
+    zeilen.append("END:VCALENDAR")
+    from flask import Response
+    return Response("\r\n".join(zeilen), content_type="text/calendar; charset=utf-8")
 
 
 # --- Lead-Radar --------------------------------------------------------------------
@@ -372,6 +532,12 @@ def stats():
         "smtp_konfiguriert": smtp_konfiguriert(),
         "soeben_erinnert": erinnert,
         "stufen": STUFEN,
+        "naechste_termine": sorted(
+            [{"termin": l["termin"], "termin_text": termin_text(l["termin"]),
+              "name": l.get("name", ""), "projektart": l.get("projektart", ""), "id": l["id"]}
+             for l in leads if l.get("termin") and not l.get("anonymisiert")
+             and l["termin"][:16] >= datetime.now().strftime("%Y-%m-%dT%H:%M")],
+            key=lambda x: x["termin"])[:5],
     })
 
 
