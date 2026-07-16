@@ -1086,7 +1086,7 @@
                 <button class="nav-item" data-tab="files" onclick="showTab('files')">📂 <span class="label">Dateien</span></button>
                 <button class="nav-item" data-tab="architecture" onclick="showTab('architecture')">🏛️ <span class="label">Architektur</span></button>
                 <button class="nav-item" data-tab="ideas" onclick="showTab('ideas')">💡 <span class="label">CEO-Ideen</span></button>
-                <button class="nav-item" data-tab="products" onclick="showTab('products')">🛍️ <span class="label">Produkte</span></button>
+                <button class="nav-item" data-tab="products" onclick="showTab('products')">🏭 <span class="label">Produktion</span></button>
             </nav>
             <div class="sidebar-footer">
                 <span class="status-dot" id="ollama-dot"></span>
@@ -1530,10 +1530,32 @@
 
                 </section>
 
-                <!-- === Produkte === -->
+                <!-- === Produktion === -->
                 <section class="tab-panel" id="tab-products">
-                    <div class="section-title">🛍️ Produkte <span class="muted">— Browser-Apps und Tools aus 10_Business</span></div>
+                    <div class="section-title">🏭 Produktion <span class="muted">— Browser-Apps und Tools aus 10_Business</span></div>
                     <div class="services-grid">
+                        <div class="service-card">
+                            <div class="head" style="display:flex;align-items:center;gap:0.75rem;">
+                                <span style="font-size:1.6rem;">🔎</span>
+                                <div>
+                                    <b>AI Business Checker</b>
+                                    <div class="muted" style="font-size:0.75rem;">Research-Agent · Port 5320 · global (DE/US/VN)</div>
+                                </div>
+                            </div>
+                            <div class="desc" style="margin-top:0.6rem;">
+                                Markt-Scanner für "Geld verdienen mit KI"-Angebote: durchsucht Reddit,
+                                Verbraucherportale (DE/AT), FTC (USA) und VN-Medien nach Abzock-Warnsignalen
+                                (3-sprachig), gruppiert Funde nach Themen (Finanz, Krypto, KI …) inkl.
+                                Gewinnchancen-Bewertung und liefert Video-Kandidaten für den Prüf-Kanal.
+                            </div>
+                            <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.8rem;flex-wrap:wrap;">
+                                <span class="pill" style="font-size:0.68rem;" id="aichecker-status">⏳ prüfe…</span>
+                                <button class="btn btn-sm" onclick="window.open('/produkte/ai-checker/','_blank')">↗ Öffnen</button>
+                            </div>
+                            <div class="muted" id="aichecker-hint" style="display:none;font-size:0.72rem;margin-top:0.5rem;">
+                                Agent offline — im Dienste-Tab starten oder: <code>python 10_Business/KI-Avatar/research-agent/app.py</code>
+                            </div>
+                        </div>
                         <div class="service-card">
                             <div class="head" style="display:flex;align-items:center;gap:0.75rem;">
                                 <span style="font-size:1.6rem;">🛡️</span>
@@ -1570,28 +1592,6 @@
                             </div>
                             <div class="muted" id="kiavatar-hint" style="display:none;font-size:0.72rem;margin-top:0.5rem;">
                                 Board offline — im Dienste-Tab starten oder: <code>python 10_Business/KI-Avatar/board/app.py</code>
-                            </div>
-                        </div>
-                        <div class="service-card">
-                            <div class="head" style="display:flex;align-items:center;gap:0.75rem;">
-                                <span style="font-size:1.6rem;">🔎</span>
-                                <div>
-                                    <b>AI Business Checker</b>
-                                    <div class="muted" style="font-size:0.75rem;">Research-Agent · Port 5320 · global (DE/US/VN)</div>
-                                </div>
-                            </div>
-                            <div class="desc" style="margin-top:0.6rem;">
-                                Markt-Scanner für "Geld verdienen mit KI"-Angebote: durchsucht Reddit,
-                                Verbraucherportale (DE/AT), FTC (USA) und VN-Medien nach Abzock-Warnsignalen
-                                (3-sprachig), liefert Video-Kandidaten für den Prüf-Kanal. Eigene Quellen
-                                per Eingabe-Box ergänzbar.
-                            </div>
-                            <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.8rem;flex-wrap:wrap;">
-                                <span class="pill" style="font-size:0.68rem;" id="aichecker-status">⏳ prüfe…</span>
-                                <button class="btn btn-sm" onclick="window.open('/produkte/ai-checker/','_blank')">↗ Öffnen</button>
-                            </div>
-                            <div class="muted" id="aichecker-hint" style="display:none;font-size:0.72rem;margin-top:0.5rem;">
-                                Agent offline — im Dienste-Tab starten oder: <code>python 10_Business/KI-Avatar/research-agent/app.py</code>
                             </div>
                         </div>
                     </div>
@@ -1647,7 +1647,7 @@
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
             document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
-            const titles = {overview: '📊 Übersicht', news: '📰 KI-News', services: '🧩 Dienste', fleet: '🎯 Agenten', chat: '💬 Chat', models: '📦 Modelle', llm: '🔀 KI-Gateway', knowledge: '🧠 Gedächtnis', learning: '🎓 Lernen', files: '📂 Dateien', architecture: '🏛️ Architektur', ideas: '💡 CEO-Ideen', products: '🛍️ Produkte'};
+            const titles = {overview: '📊 Übersicht', news: '📰 KI-News', services: '🧩 Dienste', fleet: '🎯 Agenten', chat: '💬 Chat', models: '📦 Modelle', llm: '🔀 KI-Gateway', knowledge: '🧠 Gedächtnis', learning: '🎓 Lernen', files: '📂 Dateien', architecture: '🏛️ Architektur', ideas: '💡 CEO-Ideen', products: '🏭 Produktion'};
             document.getElementById('topbar-title').textContent = titles[tab] || tab;
             // Deep-Link: aktiven Tab in der URL halten (z.B. /#ideas für die KI-Fabrik)
             if (history.replaceState) history.replaceState(null, '', '#' + tab);

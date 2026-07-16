@@ -111,6 +111,26 @@ Checker-Health über Proxy 200 ✓.
 
 ---
 
+## 2026-07-16 (Tag 6) — Research-Agent: Themen-Gruppen + Gewinnchancen · Dashboard-Feinschliff
+
+1. **Themen-Gruppierung im Research-Agent** (CEO-Wunsch): 8 Kategorien
+   (KI-Tools/Deepfakes, Finanz/Trading, Business/Coaching, Krypto, IT/Apps,
+   Immobilien, Gesundheit, Sonstiges) mit Regex-Klassifizierung pro Fund
+   (dreisprachig). Alt-Funde werden lazy nachklassifiziert (`_mit_kategorie`).
+2. **Gewinnchancen pro Thema** nach Wirtschaftlichkeits-Prüfer-Logik: statisches
+   `potenzial` 0–10 (RPM × Material × Konkurrenzlücke ÷ Rechtsrisiko) + RPM-Spanne
+   + Klartext-Einschätzung, kombiniert mit der GEMESSENEN Nachfrage (Funde-Zahl
+   aus den Scans). API `/api/themen`, UI: Themen-Karten mit Potenzialbalken
+   (Ampelfarbe), Klick = Filter auf alle Funde-Listen.
+   Erste echte Zahlen: KI-Tools 9/10 (28 Funde!), IT/Apps 6/10 (41), Finanz 8/10 (4).
+   Interessant: „Sonstiges“ hat 50 Funde → Muster-Katalog später nachschärfen.
+3. **Dashboard**: Tab „🛍️ Produkte“ → „🏭 Produktion“ umbenannt (Nav, Titel-Map,
+   Überschrift), AI-Business-Checker-Karte an Position 1 (CEO-Priorität),
+   Kartentext um Themen-Gruppen/Gewinnchancen ergänzt.
+   Verifiziert per Struktur-Assertions (Reihenfolge, keine Dublette) + node --check.
+
+---
+
 ## 2026-07-14 (Tag 4) — KI-Avatar: Produktstart + Pipeline-Board (Port 5310)
 
 ### Was heute entstanden ist
@@ -506,4 +526,4 @@ End-to-End mit echtem Ollama getestet: Dokument hochgeladen, gefragt
 ---
 
 *Regel: Dieses Journal wird am Ende jedes Arbeitstages von Claude aktualisiert.*
-*Zuletzt aktualisiert: 2026-07-15*
+*Zuletzt aktualisiert: 2026-07-16*

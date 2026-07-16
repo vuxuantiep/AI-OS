@@ -109,6 +109,70 @@ KI_RELEVANZ = [r"\bki\b", r"\ba\.?i\.?\b", r"künstliche intelligenz", r"artific
                r"algorithm\w*", r"machine learning", r"neural", r"midjourney", r"claude",
                r"trí tuệ nhân tạo", r"công nghệ ai"]
 
+# --- Themen-Kategorien: Gruppierung der Funde + Gewinnchancen-Bewertung -------
+# `potenzial` (0-10) = Kanal-Eignung nach Wirtschaftlichkeits-Prüfer-Logik:
+# RPM-Niveau der Nische × Materialmenge × Konkurrenzlücke ÷ Rechts-/Plattformrisiko.
+# Reihenfolge = Klassifizierungs-Priorität (spezifisch vor generisch).
+KATEGORIEN = [
+    {"key": "krypto", "name": "Krypto", "icon": "🪙", "potenzial": 7,
+     "rpm": "RPM hoch (8–20 €)", "gewinnchance":
+         "Viel Scam-Material + zahlungskräftiges Publikum, aber starke Konkurrenz und "
+         "Demonetarisierungs-Risiko bei Krypto-Inhalten. Gut als Zweitthema.",
+     "muster": [r"krypto", r"crypto", r"bitcoin", r"btc\b", r"ethereum", r"altcoin",
+                r"blockchain", r"token", r"tiền ảo", r"tiền điện tử", r"nft"]},
+    {"key": "gesundheit", "name": "Gesundheit", "icon": "💊", "potenzial": 4,
+     "rpm": "RPM mittel, Ads eingeschränkt", "gewinnchance":
+         "YMYL-Minenfeld: Heilversprechen-Claims sind rechtlich am gefährlichsten, "
+         "Werbekategorien eingeschränkt. Nur mit amtlichen Quellen anfassen.",
+     "muster": [r"gesundheit", r"health", r"abnehm\w*", r"diät", r"supplement", r"heilt?\b",
+                r"medizin", r"pille", r"giảm cân", r"thuốc", r"sức khỏe"]},
+    {"key": "immobilien", "name": "Immobilien", "icon": "🏠", "potenzial": 5,
+     "rpm": "RPM hoch (10–25 €)", "gewinnchance":
+         "Hohe RPM, aber wenig KI-Scam-Material und schwacher Kanal-Fit — nur bei "
+         "konkreten Fällen (KI-Immobilien-Coaches) lohnenswert.",
+     "muster": [r"immobilie", r"real estate", r"mietkauf", r"wohnung\w*\s*(kauf|invest)",
+                r"bất động sản"]},
+    {"key": "finanz", "name": "Finanz / Trading", "icon": "📈", "potenzial": 8,
+     "rpm": "RPM sehr hoch (10–25 €)", "gewinnchance":
+         "Kernnische: KI-Trading-Bots sind DIE aktuelle Abzock-Welle, höchste RPM, "
+         "BaFin-Quellen verfügbar. Achtung: sauberes Äußerungsrecht nötig (YMYL).",
+     "muster": [r"trading", r"aktie", r"broker", r"invest\w*", r"rendite", r"forex",
+                r"anlage", r"anleger", r"depot", r"đầu tư", r"chứng khoán", r"sàn giao dịch"]},
+    {"key": "business", "name": "Business / Coaching", "icon": "💼", "potenzial": 7,
+     "rpm": "RPM hoch (8–15 €)", "gewinnchance":
+         "Dauerbrenner: KI-Kurse, Dropshipping- und „Agentur aufbauen“-Coachings mit "
+         "Einkommensversprechen. Viel Material, gutes Story-Potenzial (MLM-Strukturen).",
+     "muster": [r"coaching", r"mentoring", r"kurs\b", r"course", r"dropshipping", r"agentur",
+                r"seminar", r"masterclass", r"mlm", r"đa cấp", r"khóa học", r"side hustle",
+                r"nebeneinkommen", r"passive income", r"passiv"]},
+    {"key": "it", "name": "IT / Apps", "icon": "💻", "potenzial": 6,
+     "rpm": "RPM mittel (4–10 €)", "gewinnchance":
+         "Fake-Apps, Phishing, Abo-Fallen: großes Publikum und stetiger Nachschub, "
+         "mittlere RPM. Gut für Shorts-Reichweite, weniger für Long-Form-Umsatz.",
+     "muster": [r"\bapp\b", r"phishing", r"software", r"malware", r"account", r"konto\w*\s*(leer|gehackt)",
+                r"fake[- ]?shop", r"abo[- ]?falle", r"subscription", r"ứng dụng", r"lừa.{0,20}(qua mạng|online)"]},
+    {"key": "ki", "name": "KI-Tools & Deepfakes", "icon": "🤖", "potenzial": 9,
+     "rpm": "RPM hoch (8–15 €)", "gewinnchance":
+         "DAS Kanal-Kernthema: Deepfake-Promi-Werbung, Fake-KI-Tools, „KI macht dich "
+         "reich“-Apps. Wachsende Nische, kaum deutsche Konkurrenz — höchste Priorität.",
+     "muster": [r"deepfake", r"chatgpt", r"\bki[- ]", r"\bai[- ]", r"künstliche intelligenz",
+                r"artificial intelligence", r"trí tuệ nhân tạo", r"voice clon\w*", r"midjourney"]},
+    {"key": "sonstiges", "name": "Sonstiges", "icon": "📦", "potenzial": 3,
+     "rpm": "RPM niedrig-mittel", "gewinnchance":
+         "Gemischte Einzelfälle ohne klare Nische — nur aufgreifen, wenn viral-fähig.",
+     "muster": []},
+]
+
+
+def kategorisiere(text):
+    """Ordnet einen Fund der ersten passenden Themen-Kategorie zu."""
+    t = text.lower()
+    for kat in KATEGORIEN:
+        for muster in kat["muster"]:
+            if re.search(muster, t):
+                return kat["key"]
+    return "sonstiges"
+
 app = Flask(__name__)
 
 
@@ -346,9 +410,11 @@ def scan_alle():
         if not f["url"] or f["url"] in seen:
             continue
         seen.add(f["url"])
-        treffer, score, ki_relevanz = bewerte_text(f.pop("_volltext"), f["quelle"])
+        volltext = f.pop("_volltext")
+        treffer, score, ki_relevanz = bewerte_text(volltext, f["quelle"])
         if score < 2:  # gar kein Signal -> Rauschen, verwerfen
             continue
+        f["kategorie"] = kategorisiere(volltext)
         f["warnsignale"] = treffer
         f["score"] = score
         f["ki_relevanz"] = ki_relevanz
@@ -437,15 +503,49 @@ def api_quelle_loeschen():
     return jsonify({"ok": True, "geloescht": url})
 
 
+def _mit_kategorie(funde):
+    """Alt-Funde ohne Kategorie nachträglich klassifizieren (Titel + Auszug)."""
+    for f in funde:
+        if "kategorie" not in f:
+            f["kategorie"] = kategorisiere(f.get("titel", "") + " " + f.get("text_auszug", ""))
+    return funde
+
+
 @app.route("/api/funde")
 def api_funde():
     store = load_store()
     limit = int(request.args.get("limit", 50))
     nur = request.args.get("empfehlung")
-    funde = store["funde"]
+    kategorie = request.args.get("kategorie")
+    funde = _mit_kategorie(store["funde"])
     if nur:
         funde = [f for f in funde if f.get("empfehlung") == nur]
+    if kategorie:
+        funde = [f for f in funde if f.get("kategorie") == kategorie]
     return jsonify({"letzter_scan": store["letzter_scan"], "funde": funde[:limit]})
+
+
+@app.route("/api/themen")
+def api_themen():
+    """Themen-Gruppen mit Fund-Zahlen (= Marktnachfrage aus den Scans)
+    und Gewinnchancen-Bewertung nach Wirtschaftlichkeits-Prüfer-Logik."""
+    store = load_store()
+    funde = _mit_kategorie(store["funde"])
+    gruppen = []
+    for kat in KATEGORIEN:
+        eigene = [f for f in funde if f.get("kategorie") == kat["key"]]
+        kandidaten = [f for f in eigene if f.get("empfehlung") == "video_kandidat"]
+        gruppen.append({
+            "key": kat["key"], "name": kat["name"], "icon": kat["icon"],
+            "potenzial": kat["potenzial"], "rpm": kat["rpm"],
+            "gewinnchance": kat["gewinnchance"],
+            "funde": len(eigene), "video_kandidaten": len(kandidaten),
+        })
+    gruppen.sort(key=lambda g: (-g["potenzial"], -g["funde"]))
+    return jsonify({"themen": gruppen,
+                    "hinweis": "Potenzial 0-10 = Kanal-Eignung (RPM x Material x Konkurrenzlücke "
+                               "÷ Rechtsrisiko), statische Einschätzung des Wirtschaftlichkeits-Prüfers. "
+                               "Funde-Zahl = gemessene Marktnachfrage aus den Scans."})
 
 
 if __name__ == "__main__":

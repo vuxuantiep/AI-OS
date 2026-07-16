@@ -39,6 +39,18 @@
   .q-typ { color: var(--muted); font-size: 0.72rem; }
   .q-del { margin-left: auto; background: none; border: none; color: var(--coral); cursor: pointer; font-size: 1rem; }
   .q-hint { color: var(--muted); font-size: 0.78rem; margin-top: 8px; line-height: 1.5; }
+  .themen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+  .thema { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 13px 15px; cursor: pointer; transition: border-color 0.15s; }
+  .thema:hover { border-color: var(--teal); }
+  .thema.aktiv { border-color: var(--teal); box-shadow: 0 0 0 1px var(--teal); }
+  .thema .kopf { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem; }
+  .thema .zahlen { color: var(--muted); font-size: 0.76rem; margin: 6px 0; }
+  .thema .zahlen b { color: var(--ink); }
+  .pot-balken { height: 7px; background: var(--bg); border-radius: 4px; overflow: hidden; border: 1px solid var(--line); margin: 4px 0 2px; }
+  .pot-balken div { height: 100%; }
+  .pot-label { font-size: 0.72rem; color: var(--muted); display: flex; justify-content: space-between; }
+  .thema .chance { font-size: 0.76rem; color: var(--muted); line-height: 1.45; margin-top: 7px; }
+  .filter-hinweis { font-size: 0.82rem; color: var(--teal); margin: 10px 0 0; cursor: pointer; display: none; }
 </style>
 </head>
 <body>
@@ -73,6 +85,11 @@
     </div>
   </div>
 
+  <h2>🗂 Themen-Gruppen &amp; Gewinnchancen</h2>
+  <div class="themen-grid" id="themen-grid"><div class="leer">Lade…</div></div>
+  <div class="q-hint" id="themen-hinweis"></div>
+  <div class="filter-hinweis" id="filter-hinweis"></div>
+
   <h2>🎬 Video-Kandidaten</h2>
   <div id="kandidaten"><div class="leer">Lade…</div></div>
   <h2>👁 Beobachtungsliste</h2>
@@ -89,15 +106,61 @@ function esc(s) {
   return d.innerHTML;
 }
 
+let THEMEN = [];
+let aktiveKategorie = null;
+
+function themaName(key) {
+  const t = THEMEN.find(x => x.key === key);
+  return t ? t.icon + " " + t.name : (key || "");
+}
+
 function fundHtml(f) {
   const signale = (f.warnsignale || []).map(w =>
     '<span class="badge b-signal">' + esc(w.code) + ' ' + esc(w.name) + '</span>').join('');
+  const kat = f.kategorie ? '<span>' + esc(themaName(f.kategorie)) + '</span>' : '';
   return '<div class="fund">' +
     '<div class="titel"><span class="badge b-score">' + esc(f.score) + '</span>' + esc(f.titel) + '</div>' +
     signale +
-    '<div class="meta"><span>' + esc(f.quelle) + '</span><span>' + esc(f.datum) + '</span>' +
+    '<div class="meta">' + kat + '<span>' + esc(f.quelle) + '</span><span>' + esc(f.datum) + '</span>' +
     '<a href="' + esc(f.url) + '" target="_blank" rel="noopener">Quelle öffnen ↗</a></div>' +
     '</div>';
+}
+
+function potFarbe(p) {
+  return p >= 7 ? "var(--teal)" : p >= 5 ? "var(--amber)" : "var(--coral)";
+}
+
+function themaHtml(t) {
+  return '<div class="thema' + (aktiveKategorie === t.key ? ' aktiv' : '') + '" data-key="' + esc(t.key) + '">' +
+    '<div class="kopf">' + t.icon + ' ' + esc(t.name) + '</div>' +
+    '<div class="zahlen"><b>' + t.funde + '</b> Funde · <b>' + t.video_kandidaten + '</b> Video-Kandidaten</div>' +
+    '<div class="pot-balken"><div style="width:' + (t.potenzial * 10) + '%;background:' + potFarbe(t.potenzial) + ';"></div></div>' +
+    '<div class="pot-label"><span>Kanal-Potenzial ' + t.potenzial + '/10</span><span>' + esc(t.rpm) + '</span></div>' +
+    '<div class="chance">' + esc(t.gewinnchance) + '</div>' +
+    '</div>';
+}
+
+async function ladeThemen() {
+  const d = await (await fetch("api/themen")).json();
+  THEMEN = d.themen;
+  document.getElementById("themen-grid").innerHTML = THEMEN.map(themaHtml).join("");
+  document.getElementById("themen-hinweis").textContent = d.hinweis;
+  document.querySelectorAll(".thema").forEach(el => {
+    el.addEventListener("click", async () => {
+      aktiveKategorie = (aktiveKategorie === el.dataset.key) ? null : el.dataset.key;
+      document.querySelectorAll(".thema").forEach(x =>
+        x.classList.toggle("aktiv", x.dataset.key === aktiveKategorie));
+      const hinweis = document.getElementById("filter-hinweis");
+      if (aktiveKategorie) {
+        hinweis.style.display = "block";
+        hinweis.textContent = "Gefiltert nach " + themaName(aktiveKategorie) + " — Klick auf die Karte oder hier zum Zurücksetzen";
+        hinweis.onclick = () => el.click();
+      } else {
+        hinweis.style.display = "none";
+      }
+      await lade();
+    });
+  });
 }
 
 function fuelle(id, funde) {
@@ -110,7 +173,8 @@ async function lade() {
   const health = await (await fetch("api/health")).json();
   document.getElementById("pill-scan").textContent = "letzter Scan: " + (health.letzter_scan || "nie");
   document.getElementById("pill-funde").textContent = "Funde: " + health.funde_gesamt;
-  const daten = await (await fetch("api/funde?limit=200")).json();
+  const filter = aktiveKategorie ? "&kategorie=" + encodeURIComponent(aktiveKategorie) : "";
+  const daten = await (await fetch("api/funde?limit=200" + filter)).json();
   const funde = daten.funde || [];
   fuelle("kandidaten", funde.filter(f => f.empfehlung === "video_kandidat"));
   fuelle("beobachtung", funde.filter(f => f.empfehlung === "beobachtungsliste"));
@@ -172,6 +236,7 @@ document.getElementById("btn-scan").addEventListener("click", async () => {
     status.textContent = "✅ Scan fertig: " + d.neue_funde + " neue Funde, " +
       d.video_kandidaten.length + " Video-Kandidaten" +
       (d.quellen_fehler.length ? " · " + d.quellen_fehler.length + " Quellen-Fehler (Rate-Limit)" : "");
+    await ladeThemen();
     await lade();
   } catch (e) {
     status.textContent = "❌ Scan fehlgeschlagen: " + e;
@@ -183,7 +248,7 @@ if (window.location.pathname.indexOf("/produkte/") === 0) {
   document.getElementById("aios-link").setAttribute("href", "/");
 }
 
-lade();
+ladeThemen().then(lade);
 ladeQuellen();
 </script>
 </body>
