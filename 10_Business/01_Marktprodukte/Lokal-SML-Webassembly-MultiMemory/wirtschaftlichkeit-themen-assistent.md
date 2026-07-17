@@ -124,8 +124,9 @@ Auflagen:
   "usecase_prioritaet": ["1. Kanzleien/Steuerberater (Beachhead)", "2. Industrie/KMU-Wartung (M6+)", "3. Endverbraucher (Demo-Vehikel)", "Fernziel-Narrativ: Medizin, Banken"],
   "empfehlung": "GO_MIT_AUFLAGEN",
   "auflagen": ["max 4 Arbeitstage Phasen 1-4", "Monetarisierung erst ab Trigger", "B2B-Demo ab Phase 4 (Zielbranche: Kanzleien/Steuerberater)", "Nachpruefung M3"],
-  "status": "WARTET_AUF_FREIGABE"
+  "status": "FREIGEGEBEN_2026-07-17"
 }
 ```
 
-**Status: WARTET_AUF_FREIGABE** — Umsetzung Phase 1 startet erst nach expliziter CEO-Freigabe.
+**Status: ✅ FREIGEGEBEN durch CEO am 17.07.2026** (mit den 4 Auflagen).
+Umsetzung Phase 1 gestartet. Nachprüfung: 3 Monate nach Launch (Auflage 4).
