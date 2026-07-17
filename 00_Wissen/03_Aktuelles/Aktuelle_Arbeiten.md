@@ -54,6 +54,31 @@ Verifiziert per semantischer Suche: „Wie viel kann das IT Pipeline CRM
 einbringen?" → 0.85 auf README + Konzept-Prüfung ✓, „SLM im Browser" → WebLLM-
 Doku + neuer Lernpfad ✓, „Compliance KI-Avatar" → compliance-critic-agent ✓.
 
+### Nachtrag: 10_Business komplett auf Standard-Struktur umgeräumt
+
+CEO-Auftrag: alle Produktordner auf das Schema README / Plannung/ /
+wirtschaftlichkeit-*.md / app/ bringen. Vorgehen: ERST Referenzen greppen,
+DANN verschieben — `board/`, `research-agent/`, `Produkt/dokucheck-lokal`,
+`content/videos`, `KI-Fabrik-Auftraege` werden von Dashboard/Agenten
+referenziert und blieben deshalb unangetastet.
+
+- **KI-Avatar:** „Konzept-KI Avatar" + 01_Usecases → `Plannung/` (Usecases als
+  Unterordner), Gate-Doku auf Produktebene; leere Ordner TikTok/Youtube weg.
+- **CEO-Dashboard:** Frontend/ceo-dashboard → `app/`, .glb + Chat-Export →
+  `Plannung/`, README neu (Prototyp, internes Tool).
+- **Client-Side Self-Evolving AI + Lokal-Private-LLM-App:** Plannung/ + README
+  mit ⚠️ „Gate ausstehend" (beide haben noch keine Wirtschaftlichkeitsprüfung!).
+- **Lokal-SML:** „Idee und Plannung" → `Plannung/`, PRD aus docs/ dazu.
+- **Neu:** `10_Business/README.md` = Struktur-Konvention + Produkttabelle +
+  Liste der NICHT verschiebbaren (referenzierten) Pfade.
+
+Stolpersteine: Windows-Ordnersperren (Move-Item statt mv half; 1 leerer
+Ordner „Konzept und Plannung" bleibt gesperrt zurück — bei Gelegenheit löschen).
+`git add` bricht bei EINEM ungültigen Pfad KOMPLETT ab (fatal pathspec →
+nichts gestaged, obwohl es so aussah). Vendor-Check vor Commit: kein
+node_modules/EspoCRM/web-llm-chat im Staging ✓. Services nachher: LeadPilot
+200 ✓, DokuCheck-Proxy 200 ✓.
+
 ---
 
 ## 2026-07-16 (Tag 6) — Research-Agent: Themen-Gruppen + Gewinnchancen · Dashboard-Feinschliff
