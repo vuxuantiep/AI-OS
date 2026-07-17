@@ -11,7 +11,7 @@ v1 = Heuristik ohne LLM-Pflicht: Wenn LiteLLM (:4000) erreichbar ist, wird
 optional eine Zusammenfassung erzeugt; sonst funktioniert alles trotzdem.
 Agent-Prompt/Spezifikation: ../Konzept-KI Avatar/market-research-agent.md
 
-Start:  python 10_Business/KI-Avatar/research-agent/app.py
+Start:  python "10_Business/01_Marktprodukte/KI-Avatar/research-agent/app.py"
 URL:    http://localhost:5320
 """
 import hashlib

@@ -102,15 +102,15 @@ SERVICES = [
      "env_key": "OPENHANDS_PORT", "health_path": "/"},
     {"key": "kiavatar_board", "name": "KI-Avatar Board", "icon": "🎬", "port": 5310,
      "desc": "Pipeline-Board für KI-Avatar-Videos (YouTube-Automation & TikTok-Shop)",
-     "layer": "10_Business", "script": "10_Business/KI-Avatar/board/app.py",
+     "layer": "10_Business", "script": "10_Business/01_Marktprodukte/KI-Avatar/board/app.py",
      "env_key": "KIAVATAR_BOARD_PORT", "health_path": "/api/health"},
     {"key": "research_agent", "name": "Research-Agent (Checker)", "icon": "🔎", "port": 5320,
      "desc": "Market-Research für AI Business Checker: Reddit/RSS-Scan nach KI-Abzock-Angeboten",
-     "layer": "10_Business", "script": "10_Business/KI-Avatar/research-agent/app.py",
+     "layer": "10_Business", "script": "10_Business/01_Marktprodukte/KI-Avatar/research-agent/app.py",
      "env_key": "RESEARCH_AGENT_PORT", "health_path": "/api/health"},
     {"key": "leadpilot", "name": "LeadPilot CRM", "icon": "🚀", "port": 5330,
      "desc": "IT Pipeline System: eigenes Lead-CRM + Lead-Radar (Webhooks, Trigger-Mails, DSGVO)",
-     "layer": "10_Business", "script": "10_Business/IT Pipeline System inkl CRM/app/app.py",
+     "layer": "10_Business", "script": "10_Business/01_Marktprodukte/IT Pipeline System inkl CRM/app/app.py",
      "env_key": "LEADPILOT_PORT", "health_path": "/api/health"},
 ]
 
@@ -162,7 +162,7 @@ WIKI_DIRS = [
 
 # Browser-Produkte (statische Web-Apps) aus 10_Business — whitelisted wie WIKI_DIRS.
 PRODUKT_DIRS = {
-    "dokucheck": "10_Business/Lokal-SML-Webassembly-MultiMemory/Produkt/dokucheck-lokal",
+    "dokucheck": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Produkt/dokucheck-lokal",
 }
 
 FILE_ICONS = {
@@ -1331,11 +1331,11 @@ LEADPILOT_PORT = int(os.environ.get("LEADPILOT_PORT", "5330"))
 
 PRODUKT_PROXIES = {
     "ki-avatar": {"port": KIAVATAR_BOARD_PORT, "name": "KI-Avatar Board",
-                  "start": "python 10_Business/KI-Avatar/board/app.py"},
+                  "start": "python \"10_Business/01_Marktprodukte/KI-Avatar/board/app.py\""},
     "ai-checker": {"port": RESEARCH_AGENT_PORT, "name": "AI Business Checker (Research-Agent)",
-                   "start": "python 10_Business/KI-Avatar/research-agent/app.py"},
+                   "start": "python \"10_Business/01_Marktprodukte/KI-Avatar/research-agent/app.py\""},
     "it-pipeline": {"port": LEADPILOT_PORT, "name": "LeadPilot CRM (IT Pipeline System)",
-                    "start": 'python "10_Business/IT Pipeline System inkl CRM/app/app.py"'},
+                    "start": 'python "10_Business/01_Marktprodukte/IT Pipeline System inkl CRM/app/app.py"'},
 }
 
 def _produkt_proxy(cfg, subpath):

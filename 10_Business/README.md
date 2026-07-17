@@ -1,9 +1,11 @@
 # 💼 10_Business — Produkte & Geschäftsprojekte
 
-Jedes Produkt folgt derselben Struktur (Stand 17.07.2026):
+Aufteilung (Stand 17.07.2026): **`01_Marktprodukte/`** = verkaufbare Produkte,
+**`02_Interne-Tools/`** = eigene Werkzeuge (kein Wirtschaftlichkeits-Gate nötig).
+Jedes Produkt folgt derselben Struktur:
 
 ```
-10_Business/<Produktname>/
+10_Business/01_Marktprodukte/<Produktname>/
 ├── README.md                      ← Idee, Elevator-Pitch, Status
 ├── Plannung/                      ← Konzept.md + Material (PDFs, Screenshots, Recherche)
 ├── wirtschaftlichkeit-<name>.md   ← PFLICHT vor Umsetzung (Gate-Regel 4, CLAUDE.md)
@@ -13,19 +15,27 @@ Jedes Produkt folgt derselben Struktur (Stand 17.07.2026):
 Nur `.md`-Dateien wandern ins KI-Gedächtnis (RAG-Index) — Konzepte deshalb
 immer als Markdown schreiben, PDFs/Screenshots sind nur Beilage.
 
-## Produkte
+## 01_Marktprodukte (verkaufbar)
 
 | Ordner | Was | Status |
 |---|---|---|
 | `IT Pipeline System inkl CRM/` | LeadPilot CRM + Lead-Radar (Port 5330) | In Betrieb (Phase A) |
 | `KI-Avatar/` | Video-Pipeline YouTube/TikTok + AI-Business-Checker | In Betrieb (Board :5310, Checker :5320) |
 | `Lokal-SML-Webassembly-MultiMemory/` | DokuCheck Lokal (Browser-KI) + Ausblick Self-Evolving Agent | v0.2, unter `/produkte/dokucheck/` |
-| `CEO-Dashboard/` | Next.js-Dashboard mit 3D-Bots + AI-OS-Chat | Prototyp |
 | `Lokal-Private-LLM-App/` | Mobile Gateway-App (Expo, On-Device-LLM + Tailscale-Routing) | Konzept — Gate ausstehend |
 
 Hinweis: „Client-Side Self-Evolving AI" wurde am 17.07.2026 in
 `Lokal-SML-Webassembly-MultiMemory/Plannung/Konzept-Self-Evolving-Agent.md`
 eingegliedert (gleiche Nische, gleicher Stack — Stufe 2 der Plattform).
+
+## 02_Interne-Tools (Eigenbedarf)
+
+| Ordner | Was | Status |
+|---|---|---|
+| `CEO-Dashboard/` | Next.js-Dashboard mit 3D-Bots + AI-OS-Chat | Prototyp |
+
+Das AI-OS-Dashboard selbst (Port 5000) ist Infrastruktur und liegt in
+`04_Infrastruktur/Gateway/` — nicht hier.
 
 ## Keine Produkte (Infrastruktur/Output — Pfade werden von Code referenziert, NICHT verschieben)
 

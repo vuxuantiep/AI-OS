@@ -6,7 +6,7 @@ Jedes Video ist eine Karte, die per Drag & Drop durch die 7 Pipeline-Stufen
 wandert (Trend-Scan -> Skript -> Stimme -> Avatar -> Edit -> QA-Check ->
 Posting -> Veroeffentlicht). Persistenz: data/board.json.
 
-Start:  python 10_Business/KI-Avatar/board/app.py
+Start:  python "10_Business/01_Marktprodukte/KI-Avatar/board/app.py"
 URL:    http://localhost:5310
 """
 import json

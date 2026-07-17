@@ -89,6 +89,29 @@ Gedächtnis) = **Stufe 2 der Plattform, kein neues Produkt.**
   B2B-Argument, Roadmap-Synergie mit v0.3-Embeddings) → geht ins RAG-Gedächtnis.
 - docx daneben gelegt, Produktordner „Client-Side Self-Evolving AI" aufgelöst
   (nur gesperrte leere Hülle bleibt), beide READMEs angepasst.
+
+### Nachtrag: 10_Business zweigeteilt — 01_Marktprodukte / 02_Interne-Tools
+
+CEO-Wunsch: interne Tools von Marktprodukten trennen, mit Nummerierung.
+Diesmal eine echte Migration, weil referenzierte Service-Pfade umzogen:
+
+1. `01_Marktprodukte/` = IT Pipeline System, KI-Avatar, Lokal-SML, LLM-App;
+   `02_Interne-Tools/` = CEO-Dashboard. `KI-Fabrik-Auftraege/` + `content/`
+   bewusst auf Root belassen (werden von Fabrik/Higgsfield-Agent beschrieben).
+2. **Vorher LeadPilot-Prozess gekillt** (CWD sperrt sonst den Ordner) — trotzdem
+   sperrten IT-Pipeline + KI-Avatar für `git mv`; PowerShell Move-Item schaffte
+   es (KI-Avatar fiel auf Copy zurück, >2 min bei node_modules).
+3. `ai_os_dashboard.py`: 7 Pfade angepasst (Service-Registry, PRODUCTS/dokucheck,
+   Start-Hinweise). Wichtig gelernt: die `start`-Strings dort sind nur ANZEIGE —
+   echte Starts laufen über `Popen([sys.executable, script_path])`.
+4. Git-Renames für die PowerShell-Moves manuell: `git add -u` (Löschungen) +
+   Loop über `--diff-filter=D` → neue Pfade einzeln adden. 94 Renames, 0 Waisen,
+   Vendor-Check sauber (kein EspoCRM/node_modules gestaged).
+5. Dashboard per Scheduled Task neu gestartet, LeadPilot vom neuen Pfad.
+
+E2E verifiziert: Dashboard 200, LeadPilot direkt + via Proxy 200, DokuCheck-Proxy
+200, **Board-Start über die Dashboard-API vom neuen Pfad** → :5310 health 200 ✓.
+Memories (dokucheck/ki-avatar/leadpilot/wissens-einordnung) auf neue Pfade gesetzt.
 `git add` bricht bei EINEM ungültigen Pfad KOMPLETT ab (fatal pathspec →
 nichts gestaged, obwohl es so aussah). Vendor-Check vor Commit: kein
 node_modules/EspoCRM/web-llm-chat im Staging ✓. Services nachher: LeadPilot
