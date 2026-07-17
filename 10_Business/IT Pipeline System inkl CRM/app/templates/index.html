@@ -241,7 +241,8 @@
       <button class="btn primary" id="btn-radar-scan">📡 Jetzt scannen</button>
       <span class="hint" id="radar-info"></span>
     </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="radar-rollen"></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;" id="radar-rollen"></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="radar-orte"></div>
     <div id="radar-liste"><div class="leer">Lade…</div></div>
   </section>
 
@@ -702,10 +703,13 @@ async function dsgvoAufraeumen() {
 }
 
 /* Radar */
-let radarRolle = "";
-const ROLLEN_NAMEN = {};
+let radarRolle = "", radarOrt = "";
+const ROLLEN_NAMEN = {}, ORT_NAMEN = {};
 async function ladeRadar() {
-  const d = await api("api/radar" + (radarRolle ? "?rolle=" + encodeURIComponent(radarRolle) : ""));
+  const filter = [];
+  if (radarRolle) filter.push("rolle=" + encodeURIComponent(radarRolle));
+  if (radarOrt) filter.push("arbeitsort=" + encodeURIComponent(radarOrt));
+  const d = await api("api/radar" + (filter.length ? "?" + filter.join("&") : ""));
   document.getElementById("radar-info").textContent =
     "Quellen: " + d.quellen.join(", ") + (d.letzter_scan ? " · letzter Scan: " + d.letzter_scan.slice(0, 16) : "") +
     " · Auto-Scan täglich 7 Uhr";
@@ -719,11 +723,22 @@ async function ladeRadar() {
   document.querySelectorAll("#radar-rollen button").forEach(b => b.addEventListener("click", () => {
     radarRolle = b.dataset.rolle; ladeRadar();
   }));
+  (d.arbeitsorte || []).forEach(o => ORT_NAMEN[o.key] = o.name);
+  document.getElementById("radar-orte").innerHTML =
+    '<button class="btn small' + (radarOrt === "" ? " primary" : "") + '" data-ort="">Alle Arbeitsorte</button>' +
+    (d.arbeitsorte || []).map(o =>
+      '<button class="btn small' + (radarOrt === o.key ? " primary" : "") + '" data-ort="' + o.key + '">' +
+      esc(o.name) + ' (' + o.anzahl + ')</button>').join("");
+  document.querySelectorAll("#radar-orte button").forEach(b => b.addEventListener("click", () => {
+    radarOrt = b.dataset.ort; ladeRadar();
+  }));
   const ziel = document.getElementById("radar-liste");
   ziel.innerHTML = d.treffer.length ? d.treffer.map(t =>
     '<div class="rtreffer"><div class="score">' + t.score + '</div><div style="min-width:0;">' +
     '<div class="titel">' + esc(t.titel) + '</div>' +
     '<div class="rmeta"><span class="tag">' + esc(ROLLEN_NAMEN[t.rolle] || t.rolle || "—") + '</span> ' +
+    '<span class="tag">' + esc(ORT_NAMEN[t.arbeitsort] || t.arbeitsort || "❔") + '</span> ' +
+    (t.standort ? '📍 ' + esc(t.standort) + ' · ' : '') +
     esc(t.quelle) + ' · ' + esc(t.datum) + ' · Keywords: ' + esc(t.keywords.join(", ")) +
     ' · <a href="' + esc(t.url) + '" target="_blank" rel="noopener">öffnen ↗</a></div></div>' +
     '<button class="btn small primary" data-id="' + t.id + '">→ Als Lead übernehmen</button></div>').join("")

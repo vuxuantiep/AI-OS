@@ -6,6 +6,36 @@
 
 ---
 
+## 2026-07-17 (Tag 7) — Lead-Radar: Arbeitsort-Filter + Standort-Erkennung
+
+Angefangenes Feature aus der Vortagssitzung fertiggebaut (lag uncommittet in
+`app.py`: Funktionen existierten, waren aber nirgends angeschlossen; dazu ein
+Tippfehler-Funktionsname `KEIN_STANDort_check` → sauber `ist_kein_standort`).
+
+1. **Arbeitsort-Klassifizierung** je Radar-Treffer: 🏠 Remote / 🔀 Hybrid /
+   🏢 Vor Ort / ❔ Unklar (Regex-Heuristik, Hybrid gewinnt vor Remote, weil
+   „hybrid + remote möglich" sonst als Remote durchginge).
+2. **Standort-Extraktion**: Klammer-Inhalt im Titel oder explizite Marker
+   (`Location:`, `Standort`, `based in`). Gelernt: `in <Wort>` im Fließtext ist
+   zu mehrdeutig („experience in Claude" → Standort „Claude" 🤦) — deshalb
+   `in <Stadt>` nur noch im Titel + Ausschlussliste (Gender-Kürzel, Tech-Begriffe,
+   Sprachen, Rollen). Iterativ verfeinert: 33 → 24 → 19 → 18 Standorte,
+   am Ende alle 18 echte Städte (São Paulo, Mexico City, Los Angeles …).
+3. **Einbau nach Rollenfilter-Muster**: Scan setzt `arbeitsort`/`standort`,
+   `/api/radar` klassifiziert Alt-Treffer lazy nach + liefert `arbeitsorte`-Zähler,
+   Filter kombinierbar (`?rolle=…&arbeitsort=…`). UI: zweite Chip-Reihe
+   „Arbeitsorte", Treffer zeigen Ort-Badge + 📍 Stadt.
+4. **Stolperstein Zombie-Prozess (wieder!)**: `netstat | grep LISTEN` findet auf
+   deutschem Windows nichts — dort heißt es „ABHÖREN". Alter Prozess hat mit
+   altem Regex nachklassifiziert und die Messung verfälscht. Merken:
+   `grep ":5330 .*ABH"`.
+
+Verifiziert: 7 synthetische Fälle ✓, 68 echte Treffer → 39 Remote / 2 Hybrid /
+27 Unklar, 18 saubere Standorte ✓, Kombi-Filter ✓ (ki_automation+remote = 2),
+node --check auf ausgeliefertem JS ✓, Dashboard-Proxy 200 ✓.
+
+---
+
 ## 2026-07-16 (Tag 6) — Research-Agent: Themen-Gruppen + Gewinnchancen · Dashboard-Feinschliff
 
 1. **Themen-Gruppierung im Research-Agent** (CEO-Wunsch): 8 Kategorien

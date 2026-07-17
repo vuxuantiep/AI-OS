@@ -151,6 +151,55 @@ def klassifiziere_rolle(text):
     return "sonstiges"
 
 
+ARBEITSORT_LABELS = {"remote": "🏠 100% Remote", "hybrid": "🔀 Hybrid",
+                     "vor_ort": "🏢 Vor Ort", "unbekannt": "❔ Unklar"}
+# Wörter, die in Titel-Klammern stehen, aber KEIN Standort sind
+# (Gender-Kürzel, Anstellungsart, Seniorität, Technologien, Sprachen)
+KEIN_STANDORT = re.compile(r"remote|hybrid|m/w|w/m|f/m|m/f|d\)|gn\)|part[- ]?time|full[- ]?time"
+                           r"|teilzeit|vollzeit|senior|junior|freelance|contract"
+                           r"|python|java|react|node|golang|\bphp\b|ruby|rust|\.net|angular|vue|typescript"
+                           r"|full[- ]?stack|front[- ]?end|back[- ]?end|devops|engineer|developer"
+                           r"|english|german|spanish|french|italian|arabic|portuguese|dutch|polish"
+                           r"|chinese|japanese|russian|vietnamese|deutsch|englisch|claude|gpt", re.I)
+
+
+def klassifiziere_arbeitsort(text):
+    t = text.lower()
+    ist_hybrid = bool(re.search(r"\bhybrid\b|teilweise remote|tage.{0,15}(büro|office)", t))
+    ist_remote = bool(re.search(r"100\s?% remote|fully remote|remote[- ]first|\bremote\b"
+                                r"|home[- ]?office|ortsunabhängig|work from anywhere", t))
+    if ist_hybrid:
+        return "hybrid"
+    if ist_remote:
+        return "remote"
+    if re.search(r"vor ort|on[- ]?site|onsite|präsenz", t):
+        return "vor_ort"
+    return "unbekannt"
+
+
+def ist_kein_standort(s):
+    return bool(KEIN_STANDORT.search(s)) or not re.search(r"[A-Za-zÄÖÜäöü]{3}", s)
+
+
+def extrahiere_standort(titel, text):
+    """Standort-Heuristik: Klammer-Inhalt im Titel, 'in <Stadt>' oder 'Location: X'."""
+    for m in re.finditer(r"\(([^)]{2,40})\)", titel):
+        inhalt = m.group(1).strip()
+        if not ist_kein_standort(inhalt):
+            return inhalt[:60]
+    # "in <Stadt>" nur im Titel (im Fließtext zu mehrdeutig: "experience in X"),
+    # explizite Marker wie "Location:" auch im Text
+    stadt = r"([A-ZÄÖÜ][a-zäöüß]+(?:[ -][A-ZÄÖÜ][a-zäöüß]+)?)"
+    m = re.search(r"\bin[:\s]+" + stadt, titel)
+    if m and not ist_kein_standort(m.group(1)):
+        return m.group(1)[:60]
+    m = re.search(r"\b(?:standort|location|based in|ort)[:\s]+" + stadt,
+                  titel + " " + text[:600], re.I)
+    if m and not ist_kein_standort(m.group(1)):
+        return m.group(1)[:60]
+    return ""
+
+
 RADAR_QUELLEN = [
     {"name": "RemoteOK Dev", "typ": "feed", "url": "https://remoteok.com/remote-dev-jobs.rss"},
     {"name": "WeWorkRemotely Programming", "typ": "feed",
@@ -544,6 +593,8 @@ def radar_scan():
                 it["keywords"] = treffer_kw
                 it["score"] = len(treffer_kw)
                 it["rolle"] = klassifiziere_rolle(text)
+                it["arbeitsort"] = klassifiziere_arbeitsort(text)
+                it["standort"] = extrahiere_standort(it["titel"], it["text"])
                 it["gefunden_am"] = _now()
                 it["id"] = str(uuid.uuid4())
                 neue.append(it)
@@ -955,25 +1006,36 @@ def webhook_calcom():
 def api_radar():
     radar = lade("radar.json", {"treffer": [], "letzter_scan": None})
     treffer = radar["treffer"]
-    # Alt-Treffer ohne Rolle nachklassifizieren (Titel + Textauszug)
+    # Alt-Treffer ohne Rolle/Arbeitsort nachklassifizieren (Titel + Textauszug)
     geaendert = False
     for t in treffer:
         if "rolle" not in t:
             t["rolle"] = klassifiziere_rolle(t.get("titel", "") + " " + t.get("text", ""))
             geaendert = True
+        if "arbeitsort" not in t:
+            t["arbeitsort"] = klassifiziere_arbeitsort(t.get("titel", "") + " " + t.get("text", ""))
+            t["standort"] = extrahiere_standort(t.get("titel", ""), t.get("text", ""))
+            geaendert = True
     if geaendert:
         speichere("radar.json", radar)
-    rollen_zaehler = {}
+    rollen_zaehler, ort_zaehler = {}, {}
     for t in treffer:
         rollen_zaehler[t["rolle"]] = rollen_zaehler.get(t["rolle"], 0) + 1
+        ort_zaehler[t["arbeitsort"]] = ort_zaehler.get(t["arbeitsort"], 0) + 1
     rolle_filter = request.args.get("rolle")
     if rolle_filter:
         treffer = [t for t in treffer if t["rolle"] == rolle_filter]
+    ort_filter = request.args.get("arbeitsort")
+    if ort_filter:
+        treffer = [t for t in treffer if t.get("arbeitsort") == ort_filter]
     rollen = ([{"key": p["key"], "name": p["name"], "anzahl": rollen_zaehler.get(p["key"], 0)}
                for p in ROLLEN_PROFILE]
               + [{"key": "sonstiges", "name": "Sonstiges", "anzahl": rollen_zaehler.get("sonstiges", 0)}])
+    arbeitsorte = [{"key": k, "name": label, "anzahl": ort_zaehler.get(k, 0)}
+                   for k, label in ARBEITSORT_LABELS.items()]
     return jsonify({"treffer": treffer[:150], "letzter_scan": radar["letzter_scan"],
                     "rollen": [r for r in rollen if r["anzahl"] > 0],
+                    "arbeitsorte": [o for o in arbeitsorte if o["anzahl"] > 0],
                     "quellen": [q["name"] for q in RADAR_QUELLEN]
                                + [q.get("name", "eigene") for q in lade_config().get("radar_quellen_eigene", [])]})
 
