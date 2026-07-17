@@ -51,6 +51,30 @@ SLMs nie als „allwissendes Genie" einsetzen, sondern als **spezialisierten Exp
 - Werkzeuge aus dem Dokument, die wir noch nicht nutzen: Readability.js, OPFS,
   BrowserOS/BrowserClaw (Agent-Loop im Browser), Microsoft Wassette (Wasm-Sandbox + MCP)
 
+## Wassette als Sandbox-Baustein — praktisch verifiziert (17.07.2026)
+
+Wassette v0.4.0 ist lokal installiert (`C:\Users\vuxua\Tools\wassette\`, als
+MCP-Server `wassette` für Claude Code registriert). Hands-on geprüft:
+
+- **OCI-Load funktioniert:** `wassette component load oci://ghcr.io/microsoft/time-server-js:latest`
+  → Komponente persistent registriert, Tool-Schema automatisch generiert.
+- **Deny-by-default bestätigt:** `wassette policy get <id>` → „no policy found" =
+  frisch geladene Komponente hat NULL Rechte (kein Netz, kein Dateisystem, keine
+  Env-Vars). Rechte einzeln per `grant-network-permission` / `grant-storage-permission`
+  (auch als MCP-Tools verfügbar) — exakt das Sicherheitsmodell aus Part 1 des
+  Chat-Exports (Agent darf PDF schreiben, aber nie Passwörter lesen).
+- **Einschränkung v0.4.0:** `wassette tool invoke` findet Komponenten-Tools im
+  Einzel-CLI-Aufruf nicht — Tools werden über die laufende MCP-Session exponiert
+  (Claude-Code-Session mit wassette-MCP nutzt sie direkt).
+
+**Rolle in der Architektur:** Wassette ist das Desktop-Pendant zur Browser-Sandbox —
+Werkzeuge des Self-Evolving-Agents (Scraper, Datei-Schreiber, Parser) laufen als
+Wasm-Komponenten mit minimalen, explizit erteilten Rechten. Für die Browser-Variante
+bleibt die native Sandbox + CORS; für die AI-OS-Agenten-Seite (Radar, Research-Agent)
+ist Wassette der Weg, Tool-Ausführung vom Host zu isolieren. Nächster sinnvoller
+Schritt: eigenen Mini-Scraper als Wasm-Komponente bauen (componentize-js) und ihm
+NUR `grant-network-permission` für die erlaubten Feeds geben.
+
 ## Status
 
 Konzeptphase. ⚠️ Wirtschaftlichkeits-Gate (Regel 4) vor Umsetzung nötig —
