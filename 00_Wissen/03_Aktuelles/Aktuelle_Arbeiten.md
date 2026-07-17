@@ -128,6 +128,28 @@ für Agenten-Tools, deny-by-default-Permissions) installiert:
 - Nutzung: Komponenten aus OCI-Registries laden (`wassette component load ...`),
   Rechte per `wassette permission` steuern. Tools erscheinen in NEUEN
   Claude-Code-Sitzungen als MCP-Tools.
+
+### Nachtrag: Bauplan Feed-Scraper-Wasm + Fusion LLM-App → Plattform
+
+CEO-Auftrag: Mini-Scraper als Wasm-Komponente genau planen (Smartphone-
+Endverbraucher zuerst, 3 SLM-Hebel nutzen) + prüfen, ob Lokal-Private-LLM-App
+und Lokal-SML-Webassembly-MultiMemory fusionieren sollen.
+
+1. **Fusions-Prüfung → JA:** gleiche Mission (souveräne lokale KI für
+   Endverbraucher), gleiche Memory-Architektur, gleiche Modellklasse. Smartphone-
+   first wird SCHON von der PWA bedient (zero-install); die native App (USP:
+   Inferenz-Router zum Heim-Ollama) wird **Ausbaustufe 3** der Plattform statt
+   eigenes Produkt → `Plannung/Native-App/` (Architektur-Plan + Expo-Skeleton).
+   Ergebnis: ein Gate statt drei, ein Portfolio-Eintrag weniger.
+2. **Bauplan** (`Plannung/Bauplan-Feed-Scraper-Wasm.md`): Usecase „Persönlicher
+   Themen-Assistent" (Feeds statt Scraping — gleiche rechtliche Linie wie
+   Lead-Radar), Architektur „eine Wasm-Komponente, zwei Laufzeiten" (Wassette
+   desktop mit Feed-only-Netzrechten / jco-Transpile für die PWA), 3-Hebel-
+   Mapping (RAG Phase 3, Agentic Loop Phase 4, QLoRA bewusst später),
+   4 Phasen mit Kommandos, Risiken (CORS→Proxy-Fallback, fetch-Support,
+   Speicherbudget, iOS-WebGPU).
+3. **Phase 0 erledigt:** Toolchain verifiziert (Node 24.15, componentize-js
+   0.21.0, jco 1.25.2) — Umsetzung ab Phase 1 wartet auf Gate-Freigabe.
 `git add` bricht bei EINEM ungültigen Pfad KOMPLETT ab (fatal pathspec →
 nichts gestaged, obwohl es so aussah). Vendor-Check vor Commit: kein
 node_modules/EspoCRM/web-llm-chat im Staging ✓. Services nachher: LeadPilot

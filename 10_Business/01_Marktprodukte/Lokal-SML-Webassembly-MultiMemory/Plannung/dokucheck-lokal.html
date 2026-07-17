@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DokuCheck Lokal – KI-Dokumentanalyse ohne Cloud</title>
+<meta name="description" content="Analysiere Verträge und Behördenbriefe direkt im Browser. Keine Cloud, keine Datenübertragung – die KI läuft auf deinem Gerät.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17222C;        /* Tinte / Text */
+    --paper:#EDF1F3;      /* Aktenpapier / Hintergrund */
+    --card:#FFFFFF;
+    --steel:#2E5E7E;      /* Steel-Blue Akzent */
+    --steel-dark:#1E4258;
+    --proof:#1F8A4C;      /* Beweis-Grün */
+    --warn:#B7791F;
+    --line:#C9D3D9;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto} *{animation:none!important;transition:none!important}}
+  body{
+    font-family:'IBM Plex Sans',system-ui,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.55;
+    min-height:100vh;
+  }
+  a{color:var(--steel)}
+  button{font:inherit;cursor:pointer}
+  button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--steel);outline-offset:2px}
+
+  /* ---------- Kopf: Beweis-Leiste (Signatur-Element) ---------- */
+  .proofbar{
+    background:var(--ink);
+    color:#DDE7ED;
+    font-family:var(--mono);
+    font-size:.8rem;
+    padding:.55rem 1rem;
+    display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;align-items:center;justify-content:center;
+    border-bottom:3px solid var(--proof);
+  }
+  .proofbar .dot{width:.55rem;height:.55rem;border-radius:50%;background:var(--proof);display:inline-block;margin-right:.4rem;animation:pulse 2.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .proofbar strong{color:#fff;font-weight:500}
+  .proofbar .net-alert{color:#FFB4A2}
+
+  header.hero{max-width:880px;margin:0 auto;padding:2.6rem 1.2rem 1.4rem}
+  .eyebrow{font-family:var(--mono);font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--steel)}
+  h1{font-family:'IBM Plex Serif',Georgia,serif;font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.15;margin:.4rem 0 .7rem}
+  .lede{max-width:60ch;color:#3C4A55}
+
+  main{max-width:880px;margin:0 auto;padding:0 1.2rem 4rem}
+  section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1.3rem 1.4rem;margin-top:1.2rem}
+  h2{font-family:'IBM Plex Serif',serif;font-size:1.15rem;margin-bottom:.6rem}
+  .step-tag{font-family:var(--mono);font-size:.72rem;color:var(--steel);letter-spacing:.1em;text-transform:uppercase}
+
+  /* Modell laden */
+  .row{display:flex;flex-wrap:wrap;gap:.7rem;align-items:center}
+  select{padding:.55rem .7rem;border:1px solid var(--line);border-radius:7px;background:#fff;font:inherit}
+  .btn{background:var(--steel);color:#fff;border:none;border-radius:7px;padding:.6rem 1.1rem;font-weight:600;transition:background .15s}
+  .btn:hover{background:var(--steel-dark)}
+  .btn[disabled]{background:#9AA9B3;cursor:not-allowed}
+  .btn.ghost{background:transparent;color:var(--steel);border:1.5px solid var(--steel)}
+  .btn.ghost:hover{background:#E7EEF3}
+  progress{width:100%;height:.7rem;margin-top:.8rem;accent-color:var(--steel)}
+  .status{font-family:var(--mono);font-size:.78rem;color:#51616D;margin-top:.5rem;min-height:1.2em}
+  .hint{font-size:.85rem;color:#51616D;margin-top:.6rem}
+  .badge-ok{color:var(--proof);font-weight:600}
+  .badge-warn{color:var(--warn);font-weight:600}
+
+  /* Upload */
+  .drop{
+    border:2px dashed var(--line);border-radius:10px;padding:1.6rem;text-align:center;
+    color:#51616D;transition:border-color .15s,background .15s;
+  }
+  .drop.over{border-color:var(--steel);background:#F2F7FA}
+  .drop input{display:none}
+  .filemeta{font-family:var(--mono);font-size:.78rem;margin-top:.6rem;color:var(--steel-dark)}
+
+  /* Aktionen + Ausgabe */
+  .actions{display:flex;flex-wrap:wrap;gap:.6rem;margin:.4rem 0 .9rem}
+  .out{
+    background:#F7FAFB;border:1px solid var(--line);border-radius:8px;
+    padding:1rem 1.1rem;white-space:pre-wrap;font-size:.93rem;min-height:3rem;
+  }
+  .qa{display:flex;gap:.6rem;margin-top:.9rem}
+  .qa input{flex:1;padding:.6rem .8rem;border:1px solid var(--line);border-radius:7px;font:inherit}
+
+  .disclaimer{font-size:.78rem;color:#6A7883;margin-top:2rem;border-top:1px solid var(--line);padding-top:1rem}
+  footer{max-width:880px;margin:0 auto;padding:0 1.2rem 2rem;font-size:.78rem;color:#6A7883}
+</style>
+</head>
+<body>
+
+<!-- Signatur: der lebende Datenschutz-Beweis -->
+<div class="proofbar" role="status" aria-live="polite">
+  <span><span class="dot" aria-hidden="true"></span>LOKALER MODUS</span>
+  <span>Netzwerk-Anfragen seit Analyse-Start: <strong id="netCount">0</strong></span>
+  <span id="netVerdict">Deine Dokumente verlassen dieses Gerät nicht.</span>
+</div>
+
+<header class="hero">
+  <p class="eyebrow">Souveräne KI · Läuft in deinem Browser</p>
+  <h1>DokuCheck Lokal</h1>
+  <p class="lede">Lade einen Vertrag, Behördenbrief oder AGB hoch. Ein kleines Sprachmodell analysiert das Dokument direkt auf deinem Gerät – per WebGPU, ohne Server, ohne Cloud-Konto. Prüfe es selbst: Öffne die Entwicklertools (F12 → Netzwerk) während der Analyse.</p>
+</header>
+
+<main>
+
+  <!-- Schritt 1: Modell -->
+  <section aria-labelledby="s1">
+    <p class="step-tag">Schritt 1</p>
+    <h2 id="s1">KI-Modell auf dein Gerät laden</h2>
+    <div class="row">
+      <label for="modelSel" style="font-weight:600">Modell:</label>
+      <select id="modelSel">
+        <option value="Qwen3-1.7B-q4f16_1-MLC">Qwen3 1.7B – schnell, gutes Deutsch (~1,2 GB)</option>
+        <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama 3.2 3B – ausgewogen (~2 GB)</option>
+        <option value="Llama-3.2-1B-Instruct-q4f16_1-MLC">Llama 3.2 1B – für schwache Geräte (~0,8 GB)</option>
+      </select>
+      <button class="btn" id="loadBtn">Modell laden</button>
+    </div>
+    <progress id="loadProg" max="1" value="0" hidden></progress>
+    <p class="status" id="loadStatus"></p>
+    <p class="hint">Einmaliger Download – wird im Browser zwischengespeichert (IndexedDB). Danach funktioniert die Analyse auch offline. <span id="gpuInfo"></span></p>
+  </section>
+
+  <!-- Schritt 2: Dokument -->
+  <section aria-labelledby="s2">
+    <p class="step-tag">Schritt 2</p>
+    <h2 id="s2">Dokument auswählen</h2>
+    <label class="drop" id="drop">
+      <input type="file" id="fileInput" accept=".pdf,.txt,.md">
+      <strong>PDF oder Textdatei hierher ziehen</strong><br>oder klicken zum Auswählen.<br>
+      <span style="font-size:.8rem">Das Parsing passiert lokal – die Datei wird nirgendwohin gesendet.</span>
+      <div class="filemeta" id="fileMeta"></div>
+    </label>
+  </section>
+
+  <!-- Schritt 3: Analyse -->
+  <section aria-labelledby="s3">
+    <p class="step-tag">Schritt 3</p>
+    <h2 id="s3">Analysieren</h2>
+    <div class="actions">
+      <button class="btn" id="sumBtn" disabled>Zusammenfassen</button>
+      <button class="btn" id="riskBtn" disabled>Worauf muss ich achten?</button>
+      <button class="btn ghost" id="stopBtn" hidden>Stopp</button>
+    </div>
+    <div class="out" id="output" aria-live="polite">Die Analyse erscheint hier, sobald Modell und Dokument bereit sind.</div>
+
+    <div class="qa">
+      <input id="qInput" placeholder="Eigene Frage zum Dokument stellen …" disabled>
+      <button class="btn" id="qBtn" disabled>Fragen</button>
+    </div>
+
+    <p class="disclaimer"><strong>Hinweis:</strong> DokuCheck Lokal liefert eine automatisierte Ersteinschätzung durch ein kleines KI-Modell und ist <strong>keine Rechtsberatung</strong>. Bei wichtigen Verträgen und Fristen wende dich an eine Anwältin, einen Anwalt oder eine Beratungsstelle. Kleine Modelle können Fehler machen – prüfe zentrale Aussagen immer im Originaltext.</p>
+  </section>
+</main>
+
+<footer>
+  Prototyp · Technologie: WebLLM (MLC AI, Apache 2.0) + WebGPU + pdf.js · Erstellt als Demo für souveräne Browser-KI.
+</footer>
+
+<!-- pdf.js für lokales PDF-Parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.js"></script>
+
+<script type="module">
+/* =========================================================
+   DokuCheck Lokal – Woche-1-Prototyp
+   Architektur: UI (dieser Thread) + WebLLM-Engine (WebWorker
+   folgt in Woche 2 – für den Prototyp läuft die Engine hier).
+   ========================================================= */
+import * as webllm from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/+esm";
+// pdf.js is loaded globally via <script> above as pdfjsLib
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.js";
+
+const $ = id => document.getElementById(id);
+let engine = null;
+let docText = "";
+let chunks = [];
+let generating = false;
+let stopFlag = false;
+
+/* ---------- Netzwerk-Beweiszähler (Signatur-Feature) ----------
+   Zählt Requests NACH dem Modell-Load. Während der Analyse
+   muss der Zähler bei 0 bleiben – das ist der Live-Beweis.   */
+let counting = false, netCount = 0;
+const obs = new PerformanceObserver(list => {
+  if (!counting) return;
+  for (const e of list.getEntries()) {
+    if (e.initiatorType === "fetch" || e.initiatorType === "xmlhttprequest") {
+      netCount++;
+      $("netCount").textContent = netCount;
+      $("netVerdict").innerHTML = '<span class="net-alert">Achtung: Netzwerkaktivität erkannt.</span>';
+    }
+  }
+});
+obs.observe({ entryTypes: ["resource"] });
+
+/* ---------- WebGPU-Erkennung ---------- */
+if (!("gpu" in navigator)) {
+  $("gpuInfo").innerHTML = '<span class="badge-warn">Kein WebGPU erkannt – bitte aktuellen Chrome/Edge nutzen (WASM-Fallback folgt in einer späteren Version).</span>';
+  $("loadBtn").disabled = true;
+} else {
+  $("gpuInfo").innerHTML = '<span class="badge-ok">WebGPU verfügbar ✓</span>';
+}
+
+/* ---------- Schritt 1: Modell laden ---------- */
+$("loadBtn").addEventListener("click", async () => {
+  const model = $("modelSel").value;
+  $("loadBtn").disabled = true;
+  $("loadProg").hidden = false;
+  try {
+    engine = await webllm.CreateMLCEngine(model, {
+      initProgressCallback: p => {
+        $("loadProg").value = p.progress ?? 0;
+        $("loadStatus").textContent = p.text ?? "";
+      }
+    });
+    $("loadStatus").innerHTML = '<span class="badge-ok">Modell bereit – ab jetzt zählt der Netzwerk-Beweis.</span>';
+    counting = true;               // Beweiszähler scharf schalten
+    updateReady();
+  } catch (err) {
+    $("loadStatus").innerHTML = '<span class="badge-warn">Fehler beim Laden: ' + err.message + '</span>';
+    $("loadBtn").disabled = false;
+  }
+});
+
+/* ---------- Schritt 2: Datei einlesen (lokal) ---------- */
+const drop = $("drop"), fileInput = $("fileInput");
+drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener("change", () => fileInput.files[0] && handleFile(fileInput.files[0]));
+
+async function handleFile(file) {
+  $("fileMeta").textContent = "Lese: " + file.name + " …";
+  try {
+    if (file.name.toLowerCase().endsWith(".pdf")) {
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjs.getDocument({ data: buf }).promise;
+      let text = "";
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const tc = await page.getTextContent();
+        text += tc.items.map(it => it.str).join(" ") + "\n";
+      }
+      docText = text;
+    } else {
+      docText = await file.text();
+    }
+    docText = docText.replace(/\s{3,}/g, " ").trim();
+    chunks = makeChunks(docText, 1400);
+    $("fileMeta").textContent = `✓ ${file.name} · ${docText.length.toLocaleString("de-DE")} Zeichen · ${chunks.length} Abschnitte (lokal verarbeitet)`;
+    updateReady();
+  } catch (err) {
+    $("fileMeta").textContent = "Fehler beim Lesen: " + err.message;
+  }
+}
+
+/* Einfaches Chunking mit Überlappung */
+function makeChunks(text, size) {
+  const out = [];
+  for (let i = 0; i < text.length; i += size - 200) out.push(text.slice(i, i + size));
+  return out;
+}
+
+/* Naive lokale Relevanzsuche für Q&A (Woche 2: bessere Embeddings) */
+function topChunks(question, n = 3) {
+  const terms = question.toLowerCase().split(/\W+/).filter(w => w.length > 3);
+  return chunks
+    .map(c => ({ c, score: terms.reduce((s, t) => s + (c.toLowerCase().includes(t) ? 1 : 0), 0) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, n).map(x => x.c);
+}
+
+function updateReady() {
+  const ready = engine && docText.length > 0;
+  ["sumBtn","riskBtn","qBtn","qInput"].forEach(id => $(id).disabled = !ready);
+}
+
+/* ---------- Schritt 3: Analysen ---------- */
+const SYS = "Du bist ein sorgfältiger Assistent, der deutsche Dokumente für Laien verständlich erklärt. Antworte auf Deutsch, klar und knapp. Erfinde nichts: Wenn eine Information nicht im Text steht, sage das ausdrücklich.";
+
+async function run(promptBuilder) {
+  if (generating) return;
+  generating = true; stopFlag = false;
+  $("stopBtn").hidden = false;
+  $("output").textContent = "";
+  try {
+    /* Bei langen Dokumenten: erste Abschnitte nutzen (Kontextfenster kleiner Modelle!) */
+    const context = chunks.slice(0, 4).join("\n---\n");
+    const stream = await engine.chat.completions.create({
+      stream: true,
+      messages: [
+        { role: "system", content: SYS },
+        { role: "user", content: promptBuilder(context) }
+      ],
+      temperature: 0.3,
+      max_tokens: 700
+    });
+    for await (const part of stream) {
+      if (stopFlag) break;
+      $("output").textContent += part.choices[0]?.delta?.content ?? "";
+    }
+  } catch (err) {
+    $("output").textContent = "Fehler: " + err.message;
+  } finally {
+    generating = false;
+    $("stopBtn").hidden = true;
+  }
+}
+
+$("sumBtn").addEventListener("click", () => run(ctx =>
+  `Fasse das folgende Dokument in einfachem Deutsch zusammen (max. 8 Sätze). Nenne zuerst in einem Satz, was für ein Dokument es ist.\n\nDOKUMENT:\n${ctx}`));
+
+$("riskBtn").addEventListener("click", () => run(ctx =>
+  `Analysiere das folgende Dokument. Liste auf, worauf der Leser besonders achten muss:\n1. Fristen und Termine\n2. Kosten und Zahlungspflichten\n3. Kündigungs- oder Widerrufsregeln\n4. Ungewöhnliche oder nachteilige Klauseln\nZitiere kurz die relevante Stelle. Wenn zu einem Punkt nichts im Text steht, schreibe "Nichts gefunden".\n\nDOKUMENT:\n${ctx}`));
+
+$("qBtn").addEventListener("click", askQuestion);
+$("qInput").addEventListener("keydown", e => e.key === "Enter" && askQuestion());
+function askQuestion() {
+  const q = $("qInput").value.trim();
+  if (!q) return;
+  run(() => `Beantworte die Frage NUR anhand der folgenden Dokument-Auszüge. Wenn die Antwort dort nicht steht, sage das.\n\nAUSZÜGE:\n${topChunks(q).join("\n---\n")}\n\nFRAGE: ${q}`);
+}
+
+$("stopBtn").addEventListener("click", () => { stopFlag = true; });
+</script>
+</body>
+</html>

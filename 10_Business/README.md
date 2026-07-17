@@ -21,12 +21,12 @@ immer als Markdown schreiben, PDFs/Screenshots sind nur Beilage.
 |---|---|---|
 | `IT Pipeline System inkl CRM/` | LeadPilot CRM + Lead-Radar (Port 5330) | In Betrieb (Phase A) |
 | `KI-Avatar/` | Video-Pipeline YouTube/TikTok + AI-Business-Checker | In Betrieb (Board :5310, Checker :5320) |
-| `Lokal-SML-Webassembly-MultiMemory/` | DokuCheck Lokal (Browser-KI) + Ausblick Self-Evolving Agent | v0.2, unter `/produkte/dokucheck/` |
-| `Lokal-Private-LLM-App/` | Mobile Gateway-App (Expo, On-Device-LLM + Tailscale-Routing) | Konzept — Gate ausstehend |
+| `Lokal-SML-Webassembly-MultiMemory/` | Plattform „Souveräne lokale KI": DokuCheck (Stufe 1) + Self-Evolving Agent (Stufe 2, Bauplan liegt) + Native App (Stufe 3) | v0.2, unter `/produkte/dokucheck/` |
 
-Hinweis: „Client-Side Self-Evolving AI" wurde am 17.07.2026 in
-`Lokal-SML-Webassembly-MultiMemory/Plannung/Konzept-Self-Evolving-Agent.md`
-eingegliedert (gleiche Nische, gleicher Stack — Stufe 2 der Plattform).
+Hinweis: Am 17.07.2026 wurden „Client-Side Self-Evolving AI" (→ Stufe 2) und
+„Lokal-Private-LLM-App" (→ Stufe 3, `Plannung/Native-App/`) in die
+Lokal-SML-Plattform eingegliedert — gleiche Nische, gleiche Zielgruppe,
+ein Gate statt drei.
 
 ## 02_Interne-Tools (Eigenbedarf)
 

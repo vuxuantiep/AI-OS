@@ -113,6 +113,20 @@ und **selbstwachsendes Gedächtnis** (autonome Web-Recherche → Embeddings →
 IndexedDB/OPFS). Synergie: nutzt exakt die v0.3-Embedding-Technik und füllt das
 Multi-Memory-Panel. ⚠️ Wirtschaftlichkeits-Gate vor Umsetzung nötig.
 
+**Konkreter Bauplan:** `Plannung/Bauplan-Feed-Scraper-Wasm.md` — Feed-Scraper
+als Wasm-Komponente (eine Komponente, zwei Laufzeiten: Wassette am Desktop mit
+Feed-only-Netzwerkrechten, jco-Transpile für die Smartphone-PWA), Usecase
+„Persönlicher Themen-Assistent" für Endverbraucher, 3 SLM-Qualitäts-Hebel
+eingeplant. Phase 0 (Toolchain + Wassette) ✅ erledigt.
+
+## Ausbaustufe 3: Native Mobile App (ehemals „Lokal-Private-LLM-App")
+
+Am 17.07.2026 als Plattform-Stufe eingegliedert (`Plannung/Native-App/`):
+React-Native/Expo-App mit On-Device-Inferenz + **dynamischem Inferenz-Router**
+zum Heim-Ollama (Tailscale/Cloudflare) — kommt, wenn die PWA an Grenzen stößt
+(Hintergrund-Sync, NPU-Zugriff, App-Store-Präsenz). Architektur-Plan + Expo-
+Skeleton liegen dort. ⚠️ Gate ebenfalls ausstehend.
+
 ## Grenzen / Hinweise
 
 - **Keine Rechtsberatung** — Ersteinschätzung durch ein kleines Modell, Disclaimer in der App.
