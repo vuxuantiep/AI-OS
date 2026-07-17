@@ -74,6 +74,21 @@ referenziert und blieben deshalb unangetastet.
 
 Stolpersteine: Windows-Ordnersperren (Move-Item statt mv half; 1 leerer
 Ordner „Konzept und Plannung" bleibt gesperrt zurück — bei Gelegenheit löschen).
+
+### Nachtrag: „Client-Side Self-Evolving AI" in Lokal-SML eingegliedert
+
+CEO-Frage: passt die docx (82k-Zeichen-Chat-Export über die „5 Technologien")
+zu Lokal-SML-Webassembly-MultiMemory oder neues Projekt? **Analyse: gleiche
+Nische, gleicher Stack** (WebLLM, WASM/WebGPU, Transformers.js-Embeddings,
+IndexedDB/OPFS) — das Praxisbeispiel im Dokument IST quasi DokuCheck. Neu darin
+nur: Agenten-Loop + Self-Evolving Memory (autonome Recherche erweitert eigenes
+Gedächtnis) = **Stufe 2 der Plattform, kein neues Produkt.**
+
+- Kernaussagen als `Plannung/Konzept-Self-Evolving-Agent.md` destilliert
+  (3-Säulen-Architektur, 3 SLM-Qualitäts-Hebel: RAG/QLoRA/Agentic Loops,
+  B2B-Argument, Roadmap-Synergie mit v0.3-Embeddings) → geht ins RAG-Gedächtnis.
+- docx daneben gelegt, Produktordner „Client-Side Self-Evolving AI" aufgelöst
+  (nur gesperrte leere Hülle bleibt), beide READMEs angepasst.
 `git add` bricht bei EINEM ungültigen Pfad KOMPLETT ab (fatal pathspec →
 nichts gestaged, obwohl es so aussah). Vendor-Check vor Commit: kein
 node_modules/EspoCRM/web-llm-chat im Staging ✓. Services nachher: LeadPilot

@@ -104,6 +104,15 @@ nicht; dort OCR-only oder HTTPS (z. B. Cloudflare Tunnel) verwenden.
 | v0.4 | CPU-Fallback ohne WebGPU (wllama/llama.cpp-WASM), Self-Hosting der Modellgewichte | — |
 | v0.5 | GraphRAG / Knowledge-Graph über Dokumente; optionaler Hybrid-Sync zum FastAPI-RAG (`backend/app/rag/`, Port 8000, Opt-in, default aus) | 3b GraphRAG + 6 AI-OS ✓ |
 
+## Ausblick: Self-Evolving Research Agent (Stufe 2 der Plattform)
+
+Konzept in `Plannung/Konzept-Self-Evolving-Agent.md` (eingegliedert 17.07.2026,
+vorher eigener Ordner „Client-Side Self-Evolving AI"): gleicher Stack wie
+DokuCheck, erweitert um **Agenten-Loop** (Planung → Ausführung → Selbstkorrektur)
+und **selbstwachsendes Gedächtnis** (autonome Web-Recherche → Embeddings →
+IndexedDB/OPFS). Synergie: nutzt exakt die v0.3-Embedding-Technik und füllt das
+Multi-Memory-Panel. ⚠️ Wirtschaftlichkeits-Gate vor Umsetzung nötig.
+
 ## Grenzen / Hinweise
 
 - **Keine Rechtsberatung** — Ersteinschätzung durch ein kleines Modell, Disclaimer in der App.
