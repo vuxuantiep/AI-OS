@@ -32,6 +32,33 @@ Vertrieb über vorhandene Kanäle (KI-Avatar/Checker, vuxuantiep.de).
 - **Dämpfer:** Erklärungsbedürftige Produkte konvertieren bei Endverbrauchern
   schlecht ohne Reichweite; 0,8–1,2 GB Modell-Download ist eine echte Hürde.
 
+## 1b. Usecase-Analyse nach Branchen (Ergänzung 17.07.2026)
+
+Das Konzept-Dokument (docx, „Part 2: Nutzen für spezifische Branchen") nennt
+drei Leuchtturm-Usecases. Prüfer-Bewertung: **alle drei sind technisch dieselbe
+Plattform** (lokales SLM + Multi-Memory + Agenten-Loop in der PWA) — aber ihre
+Erreichbarkeit für einen Solo-Freelancer unterscheidet sich dramatisch:
+
+| Usecase (Quelle) | Bedarf | Blocker für Solo-Einstieg | Erreichbarkeit Jahr 1 | Rolle |
+|---|---|---|---|---|
+| 🏥 Medizin: OP-/Ultraschall-Diagnostik (docx) | sehr hoch | **Medizinprodukt-Regulierung (MDR/CE)**, Haftung, Klinik-Sales 12–24 Monate | ❌ nicht erreichbar | Fernziel/Marketing-Narrativ |
+| 🏦 Banken: lokale Betrugserkennung (docx) | hoch | BaFin/DORA-Compliance, Enterprise-Vendor-Onboarding — kauft nicht bei Einzelpersonen | ❌ nicht erreichbar | Fernziel/Marketing-Narrativ |
+| 🏭 Industrie: Offline-Wartungs-Assistent (docx) | hoch | kein Regulierungs-Blocker; Zugang über regionale KMU/Maschinenbau mühsam, aber möglich | ⚠️ mittelfristig (M6+) | **B2B-Ziel #2**: „10.000-Seiten-Handbuch als Offline-PWA" = Done-for-you-Setup |
+| ⚖️ Kanzleien/Steuerberater/Notare (eigene Ableitung) | hoch | keiner — DSGVO-Druck ist dort KAUFGRUND; dokumentenlastig = exakt DokuCheck-Terrain | ✅ **Beachhead** | **B2B-Ziel #1**: „Mandanten-Dokumente lokal prüfen + Kanzlei-Wissen lokal" |
+| 🔧 KMU/Handwerk: interner Wissens-Assistent (eigene Ableitung) | mittel | keiner; kleine Budgets, aber kurze Entscheidungswege | ✅ ab M4 | B2B-Ziel #3 (Industrie-Usecase „light") |
+| 📱 Endverbraucher Themen-Assistent (Kern Stufe 2) | mittel | Reichweite (siehe Abschnitt 1) | ✅ sofort baubar | Produkt-Kern + Demo-Vehikel für alle B2B-Ziele |
+
+**Konsequenz für die Strategie:** Die docx-Leuchttürme (Medizin, Banken) sind
+Jahr-1-Vertriebsziele **nicht** — aber sie sind das perfekte Marketing-Narrativ
+(„dieselbe Technik, die im OP funktionieren könnte, prüft Ihre Mandanten-Akten").
+Der realistische Einstieg ist **Kanzleien/Steuerberater** (DSGVO als Kaufgrund,
+DokuCheck-Risiko-Check existiert schon als Basis) und danach der
+**Industrie-Wartungs-Usecase als KMU-Variante** — beide bedienen das bestehende
+Done-for-you-Modell (1.500–5.000 €/Setup). Der Endverbraucher-Themen-Assistent
+bleibt der Kern: Er ist das öffentlich vorführbare Demo-Vehikel, aus dem jede
+Branchen-Variante nur durch **andere Feeds/Dokumente + anderes Finetuning**
+entsteht (gleiche Codebasis — das ist der eigentliche Plattform-Hebel).
+
 ## 2. Einnahmequellen-Inventar
 
 | Quelle | Voraussetzung | Kennzahl (Herkunft) | fließt ab | konserv. €/M (M12) | Basis €/M (M12) | optim. €/M (M12) |
@@ -82,7 +109,9 @@ Auflagen:
 2. **Kein Payment-/Premium-Aufwand vor Trigger** „>500 aktive Gratis-Nutzer ODER
    erste konkrete B2B-Anfrage" — vorher ist Monetarisierungs-Arbeit verschwendet.
 3. **B2B-Pfad ab Phase 4 mitdenken:** 1 Demo-Video + Abschnitt auf vuxuantiep.de
-   (max. 0,5 Tage) — das ist der wahrscheinlichste Geldweg.
+   (max. 0,5 Tage) — das ist der wahrscheinlichste Geldweg. **Zielbranche zuerst:
+   Kanzleien/Steuerberater** (Beachhead laut Usecase-Analyse 1b), danach
+   KMU-Wartungs-/Wissens-Assistent; Medizin/Banken nur als Narrativ nutzen.
 4. **Nachprüfung M3** nach Launch: Prognose vs. Ist in diesem Dokument nachtragen.
 
 ```json
@@ -92,8 +121,9 @@ Auflagen:
   "kosten": {"einmalig_eur": 0, "laufend_eur_monat": 0, "arbeitszeit_h_woche": 2, "bau_h_einmalig": 30},
   "break_even_monat": {"konservativ": null, "basis": 10, "optimistisch": 7},
   "eur_pro_arbeitsstunde_monat12": {"konservativ": 1, "basis": 40, "optimistisch": 90},
+  "usecase_prioritaet": ["1. Kanzleien/Steuerberater (Beachhead)", "2. Industrie/KMU-Wartung (M6+)", "3. Endverbraucher (Demo-Vehikel)", "Fernziel-Narrativ: Medizin, Banken"],
   "empfehlung": "GO_MIT_AUFLAGEN",
-  "auflagen": ["max 4 Arbeitstage Phasen 1-4", "Monetarisierung erst ab Trigger", "B2B-Demo ab Phase 4", "Nachpruefung M3"],
+  "auflagen": ["max 4 Arbeitstage Phasen 1-4", "Monetarisierung erst ab Trigger", "B2B-Demo ab Phase 4 (Zielbranche: Kanzleien/Steuerberater)", "Nachpruefung M3"],
   "status": "WARTET_AUF_FREIGABE"
 }
 ```

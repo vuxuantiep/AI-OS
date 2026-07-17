@@ -162,6 +162,14 @@ und Lokal-SML-Webassembly-MultiMemory fusionieren sollen.
    → **GO_MIT_AUFLAGEN** (max. 4 Bautage, Payment erst ab Trigger >500 Nutzer
    oder B2B-Anfrage, Demo-Video ab Phase 4, Nachprüfung M3).
    **Status WARTET_AUF_FREIGABE.**
+1b. **Usecase-Analyse nachgereicht** (CEO-Wunsch, Branchen aus der docx bewertet):
+   Medizin/Banken = technisch gleiche Plattform, aber für Solo-Einstieg
+   blockiert (MDR/CE bzw. BaFin/Enterprise-Onboarding) → nur Marketing-Narrativ.
+   Realistisch: **Kanzleien/Steuerberater als Beachhead** (DSGVO = Kaufgrund,
+   DokuCheck-Basis existiert), dann Industrie-Wartung als KMU-Variante (M6+).
+   Kern-Erkenntnis: jede Branchen-Variante = gleiche Codebasis, nur andere
+   Feeds/Dokumente/Finetuning → das ist der Plattform-Hebel. Auflage 3 auf
+   Zielbranche Kanzleien geschärft.
 2. **Browser vs. Native** (`Plannung/Analyse-Browser-vs-Native.md`, CEO-Frage):
    Kernbefund — **Antwortqualität ist identisch** (gleiche Gewichte/Quantisierung,
    RAG + Loop sind Software); Unterschiede nur Tempo (WebGPU ≈ 80–90 % nativ,
