@@ -112,6 +112,22 @@ Diesmal eine echte Migration, weil referenzierte Service-Pfade umzogen:
 E2E verifiziert: Dashboard 200, LeadPilot direkt + via Proxy 200, DokuCheck-Proxy
 200, **Board-Start über die Dashboard-API vom neuen Pfad** → :5310 health 200 ✓.
 Memories (dokucheck/ki-avatar/leadpilot/wissens-einordnung) auf neue Pfade gesetzt.
+
+### Nachtrag: Wassette v0.4.0 installiert (Wasm-Sandbox + MCP)
+
+Microsofts Wassette (aus dem Self-Evolving-Agent-Konzept: sichere Wasm-Sandbox
+für Agenten-Tools, deny-by-default-Permissions) installiert:
+
+- winget hing beim Quellen-Update → **Release-Binary direkt** von GitHub
+  (v0.4.0, `wassette_0.4.0_windows_amd64.zip`) nach `C:\Users\vuxua\Tools\wassette\`,
+  User-PATH ergänzt (kein Admin nötig).
+- Als MCP-Server für Claude Code registriert (User-Scope, stdio):
+  `claude mcp add --scope user wassette -- ...\wassette.exe run` → ✔ Connected.
+- Smoke-Test: `component list` (leer, frisch) ✓, `registry search time` findet
+  OCI-Komponente `ghcr.io/microsoft/time-server-js` ✓.
+- Nutzung: Komponenten aus OCI-Registries laden (`wassette component load ...`),
+  Rechte per `wassette permission` steuern. Tools erscheinen in NEUEN
+  Claude-Code-Sitzungen als MCP-Tools.
 `git add` bricht bei EINEM ungültigen Pfad KOMPLETT ab (fatal pathspec →
 nichts gestaged, obwohl es so aussah). Vendor-Check vor Commit: kein
 node_modules/EspoCRM/web-llm-chat im Staging ✓. Services nachher: LeadPilot
