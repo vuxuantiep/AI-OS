@@ -150,6 +150,26 @@ und Lokal-SML-Webassembly-MultiMemory fusionieren sollen.
    Speicherbudget, iOS-WebGPU).
 3. **Phase 0 erledigt:** Toolchain verifiziert (Node 24.15, componentize-js
    0.21.0, jco 1.25.2) — Umsetzung ab Phase 1 wartet auf Gate-Freigabe.
+
+### Nachtrag: Gate-Prüfung Themen-Assistent + Analyse Browser vs. Native
+
+1. **Wirtschaftlichkeitsprüfung** (`wirtschaftlichkeit-themen-assistent.md`,
+   Format des Prüfer-Agenten): Marktbedarf 6/10 (echte Lücke „lokal statt
+   Cloud", aber erklärungsbedürftig + Reichweiten-abhängig). Ehrlich: als
+   reines Endverbraucher-Produkt trägt es sich im Jahr 1 NICHT (Anlaufkurve
+   M1–6 ≈ 0 €); belastbarer Geldweg = B2B-Done-for-you (1.500–5.000 €/Setup,
+   LeadPilot-Muster). 0 € Cash, ~30 h Bau, Doppelnutzen mit DokuCheck v0.3.
+   → **GO_MIT_AUFLAGEN** (max. 4 Bautage, Payment erst ab Trigger >500 Nutzer
+   oder B2B-Anfrage, Demo-Video ab Phase 4, Nachprüfung M3).
+   **Status WARTET_AUF_FREIGABE.**
+2. **Browser vs. Native** (`Plannung/Analyse-Browser-vs-Native.md`, CEO-Frage):
+   Kernbefund — **Antwortqualität ist identisch** (gleiche Gewichte/Quantisierung,
+   RAG + Loop sind Software); Unterschiede nur Tempo (WebGPU ≈ 80–90 % nativ,
+   kein NPU-Zugriff) und Komfort (kein zuverlässiger Hintergrund-Sync im
+   Browser). Für den Usecase verschmerzbar (Feeds laden beim Öffnen). PWA-
+   Vorteile überwiegen klar (Link-Distribution, eine Codebase, 0 €, Datenschutz
+   per F12 beweisbar > App-Vertrauen). **Native App zurückgestellt**, nur bei
+   Triggern T1–T3; Inferenz-Router als mögliches PWA-Feature „Stufe 2.5".
 `git add` bricht bei EINEM ungültigen Pfad KOMPLETT ab (fatal pathspec →
 nichts gestaged, obwohl es so aussah). Vendor-Check vor Commit: kein
 node_modules/EspoCRM/web-llm-chat im Staging ✓. Services nachher: LeadPilot

@@ -118,14 +118,20 @@ als Wasm-Komponente (eine Komponente, zwei Laufzeiten: Wassette am Desktop mit
 Feed-only-Netzwerkrechten, jco-Transpile für die Smartphone-PWA), Usecase
 „Persönlicher Themen-Assistent" für Endverbraucher, 3 SLM-Qualitäts-Hebel
 eingeplant. Phase 0 (Toolchain + Wassette) ✅ erledigt.
+**Gate:** `wirtschaftlichkeit-themen-assistent.md` → **GO_MIT_AUFLAGEN**,
+Status WARTET_AUF_FREIGABE (max. 4 Bautage, Monetarisierung Trigger-basiert,
+B2B-Demo als wahrscheinlichster Geldweg).
 
-## Ausbaustufe 3: Native Mobile App (ehemals „Lokal-Private-LLM-App")
+## Ausbaustufe 3: Native Mobile App — ZURÜCKGESTELLT (Trigger-basiert)
 
-Am 17.07.2026 als Plattform-Stufe eingegliedert (`Plannung/Native-App/`):
-React-Native/Expo-App mit On-Device-Inferenz + **dynamischem Inferenz-Router**
-zum Heim-Ollama (Tailscale/Cloudflare) — kommt, wenn die PWA an Grenzen stößt
-(Hintergrund-Sync, NPU-Zugriff, App-Store-Präsenz). Architektur-Plan + Expo-
-Skeleton liegen dort. ⚠️ Gate ebenfalls ausstehend.
+Analyse `Plannung/Analyse-Browser-vs-Native.md` (17.07.2026): **Antwortqualität
+im Browser identisch** (gleiche Gewichte + RAG + Loop); Unterschiede sind nur
+Tempo/Komfort. Browser-first gewinnt strategisch (Distribution per Link, eine
+Codebase, 0 €, Datenschutz per F12 beweisbar). Native App (`Plannung/Native-App/`,
+ehemals „Lokal-Private-LLM-App": Expo + Inferenz-Router zum Heim-Ollama) wird
+erst bei Trigger gebaut: T1 Nutzer fordern Hintergrund-Sync/Push · T2 Modelle
+>3B mobil (NPU) · T3 App-Store als Vertriebskanal nötig. Der Inferenz-Router
+ist als PWA-Feature umsetzbar (Kandidat „Stufe 2.5").
 
 ## Grenzen / Hinweise
 
