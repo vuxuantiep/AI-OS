@@ -34,6 +34,26 @@ Verifiziert: 7 synthetische Fälle ✓, 68 echte Treffer → 39 Remote / 2 Hybri
 27 Unklar, 18 saubere Standorte ✓, Kombi-Filter ✓ (ki_automation+remote = 2),
 node --check auf ausgeliefertem JS ✓, Dashboard-Proxy 200 ✓.
 
+### Nachtrag: KI-Gedächtnis liest jetzt auch 10_Business (Indexer erweitert)
+
+CEO-Frage „wo speichere ich Produktideen, damit die KI sie lernt?" deckte eine
+Lücke auf: Der RAG-Indexer (`06_Gedächtnis/knowledge_agent.py`) las nur
+`00_Wissen/` — dort liegen aber nur **8** .md-Dateien. Die gesamte
+Produktplanung in `10_Business/` war fürs Gedächtnis unsichtbar.
+
+1. **INDEX_QUELLEN** = `00_Wissen` + `10_Business` (Antwort auf die CEO-Frage:
+   neue Produktidee → `10_Business/<Name>/` mit README + `Plannung/` +
+   `wirtschaftlichkeit-<name>.md`, Material als .md → wandert automatisch ins RAG).
+2. **INDEX_AUSSCHLUSS**: `01_Persönlich` (privat, CEO-Wunsch) + node_modules/
+   venv/EspoCRM-10.0.2. Wichtig: ohne die Ausschlüsse wären **453 von 489**
+   Dateien Fremd-Doku gewesen (EspoCRM-Handbuch 234, node_modules-READMEs 219) —
+   erst zählen, dann indexieren!
+3. Index neu aufgebaut: 36 Dateien → 210 Chunks (nomic-embed-text via Ollama).
+
+Verifiziert per semantischer Suche: „Wie viel kann das IT Pipeline CRM
+einbringen?" → 0.85 auf README + Konzept-Prüfung ✓, „SLM im Browser" → WebLLM-
+Doku + neuer Lernpfad ✓, „Compliance KI-Avatar" → compliance-critic-agent ✓.
+
 ---
 
 ## 2026-07-16 (Tag 6) — Research-Agent: Themen-Gruppen + Gewinnchancen · Dashboard-Feinschliff

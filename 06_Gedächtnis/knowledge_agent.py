@@ -31,6 +31,13 @@ CHAT_MODEL = "llama3"
 # Vektordatenbank (einfache JSON-basierte Implementierung)
 VECTOR_DB_PATH = AI_OS_ROOT / "06_Gedächtnis" / "Vector-Database" / "vector_store.json"
 
+# Welche Vault-Bereiche ins KI-Gedächtnis wandern (nur *.md)
+INDEX_QUELLEN = ["00_Wissen", "10_Business"]
+# Privates bleibt draußen (00_Wissen/01_Persönlich = "nur für mich"),
+# ebenso Fremd-Doku aus Abhängigkeiten/vendored Code (sonst 450+ Junk-Dateien)
+INDEX_AUSSCHLUSS = {"01_Persönlich", "node_modules", "__pycache__",
+                    "venv", ".venv", "EspoCRM-10.0.2"}
+
 class SimpleVectorStore:
     """Einfache Vektordatenbank für semantische Suche"""
     
@@ -151,14 +158,18 @@ class SimpleVectorStore:
         return results
     
     def index_knowledge_base(self):
-        """Indiziere alle Markdown-Dateien in der Wissensdatenbank"""
-        knowledge_dir = AI_OS_ROOT / "00_Wissen"
-        if not knowledge_dir.exists():
+        """Indiziere alle Markdown-Dateien aus Wissensdatenbank + Business-Plänen"""
+        files = []
+        for quelle in INDEX_QUELLEN:
+            quelle_dir = AI_OS_ROOT / quelle
+            if quelle_dir.exists():
+                files += quelle_dir.rglob("*.md")
+        files = [f for f in files if not INDEX_AUSSCHLUSS.intersection(f.parts)]
+        if not files:
             print("⚠️ Wissensdatenbank nicht gefunden")
             return 0
-        
+
         indexed = 0
-        files = list(knowledge_dir.rglob("*.md"))
         
         print(f"📖 Indiziere {len(files)} Dateien...")
         
@@ -278,7 +289,8 @@ class KnowledgeAgentHandler(BaseHTTPRequestHandler):
                 "documents": len(self.vector_store.documents),
                 "embeddings": len(self.vector_store.embeddings),
                 "db_path": str(VECTOR_DB_PATH),
-                "knowledge_path": str(AI_OS_ROOT / "00_Wissen")
+                "knowledge_paths": [str(AI_OS_ROOT / q) for q in INDEX_QUELLEN],
+                "ausgeschlossen": sorted(INDEX_AUSSCHLUSS)
             }).encode())
         
         else:
