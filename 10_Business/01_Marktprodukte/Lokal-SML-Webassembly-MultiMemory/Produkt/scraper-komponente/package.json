@@ -1,0 +1,15 @@
+{
+  "name": "feed-scraper-komponente",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Feed-Scraper als Wasm-Komponente (Themen-Assistent, Self-Evolving Stufe 2)",
+  "type": "module",
+  "scripts": {
+    "build": "componentize-js --wit wit --world-name feed-scraper --out feed-scraper.wasm src/scraper.js",
+    "transpile": "jco transpile feed-scraper.wasm -o browser --no-nodejs-compat"
+  },
+  "devDependencies": {
+    "@bytecodealliance/componentize-js": "^0.21.0",
+    "@bytecodealliance/jco": "^1.25.2"
+  }
+}

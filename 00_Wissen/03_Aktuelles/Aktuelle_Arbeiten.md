@@ -151,6 +151,31 @@ und Lokal-SML-Webassembly-MultiMemory fusionieren sollen.
 3. **Phase 0 erledigt:** Toolchain verifiziert (Node 24.15, componentize-js
    0.21.0, jco 1.25.2) — Umsetzung ab Phase 1 wartet auf Gate-Freigabe.
 
+### Nachtrag: FREIGABE + Architektur-Plan + Phase 1 GEBAUT ✅
+
+CEO hat das Gate freigegeben (Status FREIGEGEBEN_2026-07-17) und als neue
+Dauerregel einen **Architektur-Plan (Diagramm) für jeden Produktbau** verlangt
+→ `Plannung/Architektur-Themen-Assistent.md` (Mermaid: Systemübersicht,
+Sequenz des Loops, Modul-Tabelle, Erweiterungspunkte) + Feedback-Memory.
+
+**Phase 1 umgesetzt und verifiziert:**
+1. `Produkt/scraper-komponente/`: WIT-Interface (`fetch-feed(url) →
+   result<list<feed-item>, string>`), JS mit Regex-RSS/Atom-Parser (kein
+   DOMParser in StarlingMonkey!), componentize-js-Build auf Anhieb → 12,5-MB-Wasm.
+2. Wassette-Load: Pfadformat-Falle — `file:///C:/...` wird abgelehnt,
+   `file://C:/...` (zwei Slashes) funktioniert.
+3. Policy: `permission grant network feed-scraper www.tagesschau.de` — NUR
+   dieser Host.
+4. **Test über `wassette serve --streamable-http` + MCP-JSON-RPC** (das CLI
+   `tool invoke` löst Komponenten-Tools in v0.4.0 nicht auf — Session nötig):
+   Tagesschau-Feed → saubere Items mit Titel/Link/Datum/Text ✓;
+   **example.com → von der Sandbox verweigert** („fetch_https: host API
+   error") ✓. Deny-by-default funktioniert in der Praxis.
+
+Gelernt: Wasm-Komponente wirft JS-`throw` als result-err durch — sauberes
+Fehler-Mapping ohne Extra-Code. Nächster Schritt: Phase 2 (jco transpile
+für die PWA + CORS-Realitätstest).
+
 ### Nachtrag: Gate-Prüfung Themen-Assistent + Analyse Browser vs. Native
 
 1. **Wirtschaftlichkeitsprüfung** (`wirtschaftlichkeit-themen-assistent.md`,

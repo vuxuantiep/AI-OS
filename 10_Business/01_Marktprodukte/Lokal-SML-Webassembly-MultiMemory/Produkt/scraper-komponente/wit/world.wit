@@ -1,0 +1,19 @@
+package local:feed-scraper;
+
+interface scraper {
+  record feed-item {
+    titel: string,
+    link: string,
+    datum: string,
+    text: string,
+  }
+
+  /// Holt einen RSS/Atom-Feed und liefert bereinigte Items.
+  /// Netzwerkrechte kommen von der Laufzeit (Wassette-Policy) — die
+  /// Komponente selbst kann nur erreichen, was explizit erlaubt wurde.
+  fetch-feed: func(url: string) -> result<list<feed-item>, string>;
+}
+
+world feed-scraper {
+  export scraper;
+}

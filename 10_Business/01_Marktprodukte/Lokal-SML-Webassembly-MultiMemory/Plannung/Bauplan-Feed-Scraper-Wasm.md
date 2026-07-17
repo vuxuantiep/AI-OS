@@ -54,7 +54,15 @@ Modell Llama 3.2 1B ~0,8 GB). Die native App ist Ausbaustufe 3 (`Plannung/Native
 - Toolchain geprüft: Node v24.15.0, componentize-js 0.21.0, jco 1.25.2
 - Fusion Lokal-Private-LLM-App → Plattform (siehe unten)
 
-**Phase 1 — Wasm-Komponente bauen (Desktop, ~1 Tag)**
+**Phase 1 — Wasm-Komponente bauen (Desktop, ~1 Tag) ✅ ERLEDIGT 17.07.2026**
+
+> Ergebnis: `Produkt/scraper-komponente/` (WIT + JS, Build auf Anhieb),
+> in Wassette geladen (`file://C:/...`-Format nötig!), Policy nur für
+> www.tagesschau.de. Funktionstest: echter Tagesschau-Feed → saubere Items ✓.
+> **Sicherheitstest: example.com wird von der Sandbox verweigert** („fetch_https:
+> host API error") ✓. Test-Aufruf via `wassette serve --streamable-http` +
+> MCP-JSON-RPC (CLI `tool invoke` löst Komponenten-Tools in v0.4.0 nicht auf).
+> Original-Plan:
 1. Projekt `scraper-komponente/` (WIT-Datei + JS): `world feed-scraper { export fetch-feed: func(url: string) -> result<list<item>, string> }`
 2. JS-Implementierung: `fetch()` + Feed-Parsing (RSS/Atom, ohne externe Lib oder mit
    kleinem Vendored-Parser), Text-Bereinigung

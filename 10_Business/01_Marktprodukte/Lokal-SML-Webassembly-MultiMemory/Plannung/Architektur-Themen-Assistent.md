@@ -74,10 +74,10 @@ sequenceDiagram
 
 | Pfad | Inhalt | Status |
 |---|---|---|
-| `Produkt/scraper-komponente/wit/world.wit` | WIT-Interface der Komponente | Phase 1 |
-| `Produkt/scraper-komponente/src/scraper.js` | fetch + RSS/Atom-Parser + Bereinigung | Phase 1 |
-| `Produkt/scraper-komponente/package.json` | componentize-js + jco als devDeps, Build-Skripte | Phase 1 |
-| `Produkt/scraper-komponente/feed-scraper.wasm` | Build-Artefakt (gitignored, reproduzierbar) | Phase 1 |
+| `Produkt/scraper-komponente/wit/world.wit` | WIT-Interface der Komponente | ✅ 17.07. |
+| `Produkt/scraper-komponente/src/scraper.js` | fetch + RSS/Atom-Parser + Bereinigung | ✅ 17.07. |
+| `Produkt/scraper-komponente/package.json` | componentize-js + jco als devDeps, Build-Skripte | ✅ 17.07. |
+| `Produkt/scraper-komponente/feed-scraper.wasm` | Build-Artefakt (gitignored, reproduzierbar) | ✅ 17.07. (12,5 MB) |
 | `Produkt/themen-assistent/` | PWA-Modul (UI + Loop), nutzt Vendor-Libs von dokucheck-lokal | Phase 2–4 |
 | `Produkt/dokucheck-lokal/vendor/` | WebLLM, transformers.js, pdf.js — WIRD MITGENUTZT, nicht dupliziert | existiert |
 | Dashboard-Route `/produkte/themen-assistent/` | Auslieferung wie dokucheck (PRODUCTS-Dict) | Phase 2 |
