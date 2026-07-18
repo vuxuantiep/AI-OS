@@ -6,6 +6,33 @@
 
 ---
 
+## 2026-07-18 (Tag 8f) — Broki: Wettbewerbsanalyse + Priorisierung + Landingpage-Plan
+
+CEO-Frage „ist Broki stärker als andere? → vollständig entwickeln + priorisieren"
++ Frontend-Mockup (`Broki Ai-Frontend.png`) + Landingpage planen.
+
+1. **Wettbewerbsanalyse** (`Wettbewerbsanalyse-und-Priorisierung-Broki.md`,
+   web-recherchiert): Kernbefund — in der DSGVO-Nische (Kanzleien/Praxen) ist
+   Broki strukturell überlegen, weil die bequeme Konkurrenz (Merlin/Sider/Monica)
+   dort rechtlich DISQUALIFIZIERT ist: UCL-Studie 2025 (DSGVO-Verstoß, Aufzeichnung
+   im Privatmodus), Merlin exfiltrierte eine Steuer-ID aus IRS-Formular,
+   Sider/TinaMind teilen Prompts+IP mit Trackern → „ungeeignet für Enterprise".
+   Die lokalen Alternativen (WebLLM/WebML) sind nur Tech-Demos ohne Firmen-RAG.
+   Ehrlich: für den Massenmarkt NICHT stärker (Setup-Hürde). → Fokus-Empfehlung,
+   kein „Merlin-Killer für alle".
+2. **Priorisierung/MVP-Roadmap** zum Mockup-Nordstern: MVP-0 (Dogfooding, fast
+   fertig) → MVP-1 verkaufbar (Dashboard-Grundgerüst + Lizenz-Wächter) → MVP-2
+   „das WOW" (proaktive Assistenz = einziges Feature, das keiner hat) → Ausbau →
+   Vision (Hermes/Mesh, nur Pitch). Proaktive Assistenz bewusst NACH dem
+   verkaufbaren Gerüst, aber VOR Nice-to-have.
+3. **Landingpage-Plan** (`Landingpage-Plan-Broki.md`): konkretisiert die docx zu
+   8 baubaren Sektionen. NEU ggü. docx: „Datenschutz-Schock"-Sektion + direkte
+   Vergleichstabelle (Broki vs. Merlin/Sider vs. Copilot) als Konversionskern —
+   mit seriösen Quellen (Abmahnrisiko beachtet). ~2–3 Tage für v1. Bauen erst
+   nach Dogfooding (Gate-Auflage 2).
+
+---
+
 ## 2026-07-18 (Tag 8e) — Broki-Businessplan 2. Erweiterung (IP-Schutz, Hermes, Mesh)
 
 Plan von 118k → 133k gewachsen. Neue Inhalte eingearbeitet:
