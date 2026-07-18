@@ -102,6 +102,18 @@ CSP-konform für die MV3-Extension + passt zur „keine Cloud"-Botschaft.
 - Einsatz: Hintergrund der Landingpage-Hero UND optional des Produkt-Frontends
   (Übersicht-Header), dezent hinter dem Inhalt.
 
+## 5c. Hell/Dunkel-Umschalter (Standard für ALLE Broki-UIs)
+
+CEO-Wunsch: Umschalter in Landingpage UND Produkt-Frontend. Standard-Muster:
+- **Default = dunkel** (Corporate Identity), Toggle 🌙/☀️ oben rechts.
+- Themen über `data-theme` auf `<html>`; Wahl in `localStorage` (`broki-theme`).
+- Beide Paletten in §1 (dunkel) + die helle Variante:
+  BG `#f6f7fb`/Karten `#fff`, Grün etwas dunkler (`#00a548`) für Kontrast auf Hell.
+- Der Partikel-Hintergrund liest seine Farben aus den CSS-Variablen (`--dot`,
+  `--line`) → schaltet automatisch mit (dunkleres Grün auf hellem Grund).
+- `?theme=light|dark` als Deep-Link (Test/Direktlink).
+- Umgesetzt & live: `broki-landingpage/index.html` (Artifact-Preview veröffentlicht 18.07.).
+
 ## 6. Wiederverwendung im AI-OS
 
 Diese Tokens eignen sich als gemeinsame Marken-Palette für ALLE Marktprodukte

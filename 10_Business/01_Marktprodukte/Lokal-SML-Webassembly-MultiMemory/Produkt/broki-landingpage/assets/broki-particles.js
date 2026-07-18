@@ -21,8 +21,12 @@
   "use strict";
 
   const DEFAULTS = {
-    partikelFarbe: "rgba(180, 200, 190, 0.55)", // dezente helle Punkte
-    linienFarbe:   "0, 199, 88",                // Broki-Grün #00c758 (als RGB für rgba())
+    // Farben: entweder feste Werte ODER CSS-Variablennamen (dann themen-adaptiv,
+    // schaltet mit Hell/Dunkel automatisch mit). RGB-Tripel als String, z. B. "0,199,88".
+    dotVar:        "--dot",   // CSS-Var mit RGB-Tripel für die Punkte (Fallback unten)
+    lineVar:       "--line",  // CSS-Var mit RGB-Tripel für die Linien (= Broki-Grün)
+    partikelFarbe: "180, 200, 190",             // Fallback, falls --dot fehlt
+    linienFarbe:   "0, 199, 88",                // Fallback Broki-Grün #00c758
     dichte:        11000,   // 1 Partikel je X Pixel Fläche (kleiner = mehr Punkte)
     maxPartikel:   140,
     maxDistanz:    140,     // px: bis hierhin werden Linien gezogen
@@ -65,7 +69,15 @@
       }
     }
 
+    // Themen-adaptiv: Farbe pro Frame aus der CSS-Variable lesen (Fallback fest).
+    function rgb(varName, fallback) {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+      return v || fallback;
+    }
+
     function schritt() {
+      const dotRgb = rgb(cfg.dotVar, cfg.partikelFarbe);
+      const lineRgb = rgb(cfg.lineVar, cfg.linienFarbe);
       ctx.clearRect(0, 0, w, h);
 
       for (const p of partikel) {
@@ -86,7 +98,7 @@
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, cfg.punktGroesse, 0, Math.PI * 2);
-        ctx.fillStyle = cfg.partikelFarbe;
+        ctx.fillStyle = `rgba(${dotRgb}, 0.55)`;
         ctx.fill();
       }
 
@@ -97,7 +109,7 @@
           const d = Math.hypot(a.x - b.x, a.y - b.y);
           if (d < cfg.maxDistanz) {
             const alpha = (1 - d / cfg.maxDistanz) * 0.5;
-            ctx.strokeStyle = `rgba(${cfg.linienFarbe}, ${alpha})`;
+            ctx.strokeStyle = `rgba(${lineRgb}, ${alpha})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
@@ -109,7 +121,7 @@
         const dc = Math.hypot(partikel[i].x - maus.x, partikel[i].y - maus.y);
         if (dc < cfg.maxDistanz) {
           const alpha = (1 - dc / cfg.maxDistanz) * 0.7;
-          ctx.strokeStyle = `rgba(${cfg.linienFarbe}, ${alpha})`;
+          ctx.strokeStyle = `rgba(${lineRgb}, ${alpha})`;
           ctx.beginPath();
           ctx.moveTo(partikel[i].x, partikel[i].y);
           ctx.lineTo(maus.x, maus.y);
