@@ -111,6 +111,26 @@
   .red { color: var(--danger); }
   .accent-text { color: var(--accent-soft); }
 
+  /* ROI RECHNER */
+  .roi-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 1.6rem; max-width: 760px; margin: 0 auto; }
+  .roi-slider { width: 100%; margin: 1rem 0 0.6rem; accent-color: var(--accent); }
+  .roi-output { font-family: "JetBrains Mono", ui-monospace, monospace;
+    color: var(--accent-soft); font-size: 0.95rem; }
+  .roi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+  .roi-col { background: var(--bg-elevated); border-radius: 10px; padding: 1rem; }
+  .roi-col h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text-muted); margin-bottom: 0.4rem; }
+  .roi-col .zahl { font-size: 1.6rem; font-weight: 800; }
+  .roi-col .hinweis { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem; }
+  .roi-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem; margin-top: 1.6rem; }
+  .roi-fact { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.1rem; text-align: center; }
+  .roi-fact .num { font-family: "JetBrains Mono", ui-monospace, monospace;
+    color: var(--accent); font-weight: 700; font-size: 1.3rem; }
+  .roi-fact p { color: var(--text-dim); font-size: 0.88rem; margin-top: 0.3rem; line-height: 1.45; }
+
   /* ROADMAP / STEPS */
   .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1.2rem; margin-top: 1.6rem; }
@@ -168,6 +188,7 @@
       <ul class="nav-links">
         <li><a href="#vorteile">Vorteile</a></li>
         <li><a href="#vergleich">Vergleich</a></li>
+        <li><a href="#roi">ROI</a></li>
         <li><a href="#how">How</a></li>
         <li><a href="#faq">FAQ</a></li>
         <li><a href="#demo" class="btn btn-primary" style="padding:0.5rem 1rem; color:#05130a;">Demo</a></li>
@@ -314,6 +335,46 @@
     </div>
   </section>
 
+  <!-- ROI RECHNER -->
+  <section id="roi">
+    <div class="container">
+      <h2>Schluss mit unkontrollierbaren Cloud-Gebühren.<br>Ihre Ersparnis: <span class="gruen">sofort sichtbar.</span></h2>
+      <p class="lead">Nutzen Sie den ROI-Rechner und sehen Sie, wie viel Broki AI gegenüber klassischen Cloud-KI-Abos einspart — bei gleicher oder besserer Datenschutz-Garantie.</p>
+      <div class="roi-box">
+        <label style="font-size:0.9rem;color:var(--text-dim);">Wie viele Mitarbeiter nutzen bei Ihnen KI?</label>
+        <input type="range" class="roi-slider" id="roi-slider" min="10" max="5000" value="50" step="10">
+        <div class="roi-output" id="roi-output">50 Mitarbeiter · Cloud: ~18.000 €/Jahr · Broki: ~600 €/Jahr · Ersparnis: ~17.400 €/Jahr</div>
+        <div class="roi-row">
+          <div class="roi-col">
+            <h4>Cloud-KI (30 €/Seat/M + Server)</h4>
+            <div class="zahl" id="roi-cloud">18.000 €</div>
+            <div class="hinweis">Skaliert linear mit jedem neuen Mitarbeiter.</div>
+          </div>
+          <div class="roi-col">
+            <h4>Broki AI (Fixkosten)</h4>
+            <div class="zahl" id="roi-broki">600 €</div>
+            <div class="hinweis">0 € Server, 0 € Lizenzskalierung — egal ob 10 oder 5.000 Nutzer.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="roi-facts">
+        <div class="roi-fact">
+          <div class="num">0 €</div>
+          <p><strong>Server-Skalierung.</strong> Die Rechenleistung wächst kostenlos mit jedem Laptop Ihrer Mitarbeiter — kein Upgrade, kein Cluster.</p>
+        </div>
+        <div class="roi-fact">
+          <div class="num">100 %</div>
+          <p><strong>Betriebsrat-Garantie.</strong> Keine Übermittlung von Prompts oder Nutzerdaten ins Internet. 100 % lokale Inferenz im RAM.</p>
+        </div>
+        <div class="roi-fact">
+          <div class="num">∞</div>
+          <p><strong>Unzerstörbares Backup.</strong> Integrierte IT-Crash-Lebensversicherung mit lokalem Rollback-Schutz bei Systemausfällen.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- HOW IT WORKS -->
   <section id="how">
     <div class="container">
@@ -449,6 +510,23 @@
       items.forEach(item => {
         item.addEventListener('click', () => item.classList.toggle('open'));
       });
+    })();
+    (function () {
+      const slider = document.getElementById("roi-slider");
+      const output = document.getElementById("roi-output");
+      const cloudEl = document.getElementById("roi-cloud");
+      const brokiEl = document.getElementById("roi-broki");
+      function update() {
+        const n = parseInt(slider.value, 10);
+        const cloud = n * 30 * 12;
+        const broki = 600;
+        const save = cloud - broki;
+        output.textContent = `${n} Mitarbeiter · Cloud: ~${cloud.toLocaleString("de-DE")} €/Jahr · Broki: ~${broki.toLocaleString("de-DE")} €/Jahr · Ersparnis: ~${save.toLocaleString("de-DE")} €/Jahr`;
+        cloudEl.textContent = cloud.toLocaleString("de-DE") + " €";
+        brokiEl.textContent = broki.toLocaleString("de-DE") + " €";
+      }
+      slider.addEventListener("input", update);
+      update();
     })();
   </script>
 </body>
