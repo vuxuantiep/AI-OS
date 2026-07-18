@@ -103,6 +103,28 @@ OPENROUTER_ALTERNATES = [
 ]
 
 
+# ---------- Globaler LLM-Modus-Schalter (Lokal / Hybrid) ----------
+# Vom Dashboard umschaltbar. "lokal" = NUR selbst-gehostete Engines
+# (Ollama, LM Studio, Raspberry Pi über Tailscale) — KEIN Fremd-Cloud-Provider.
+# "hybrid" = lokale Engine zuerst, dann Cloud-Fallback (Workers AI/OpenRouter/…).
+# Hinweis: 00_Wissen (knowledge_agent.py) ist DAVON UNABHÄNGIG immer rein lokal.
+LLM_MODE_FILE = Path(__file__).parent / "llm_mode.json"
+
+
+def get_llm_mode():
+    """Aktueller Modus: 'lokal' oder 'hybrid' (Default: hybrid)."""
+    try:
+        return json.loads(LLM_MODE_FILE.read_text(encoding="utf-8")).get("mode", "hybrid")
+    except Exception:
+        return "hybrid"
+
+
+def set_llm_mode(mode):
+    mode = "lokal" if str(mode).lower() in ("lokal", "local", "lokal-only") else "hybrid"
+    LLM_MODE_FILE.write_text(json.dumps({"mode": mode}), encoding="utf-8")
+    return mode
+
+
 def _base_model_name(model):
     """'qwen2.5-coder:7b' -> 'qwen2.5-coder'"""
     return (model or "").split(":")[0].strip().lower()
@@ -530,6 +552,10 @@ class LLMRouter:
         base = _base_model_name(model)
         errors = []
 
+        # Globaler Schalter: im Lokal-Modus werden alle Fremd-Cloud-Provider
+        # übersprungen (nur Ollama / LM Studio / Pi über Tailscale).
+        nur_lokal = get_llm_mode() == "lokal"
+
         # Lokale Engine bei Bedarf automatisch hochfahren (entkoppelt von VSCode/Terminal)
         if not self.local_engine_online():
             self.autostart_local_engine(wait=8)
@@ -555,7 +581,9 @@ class LLMRouter:
             except Exception as e:
                 errors.append(f"LM Studio: {e}")
 
-        if self.litellm_online():
+        # LiteLLM hat eigene Cloud-Fallbacks → im Lokal-Modus überspringen
+        # (Ollama wurde oben bereits direkt versucht).
+        if not nur_lokal and self.litellm_online():
             try:
                 ll_model = base if base in LITELLM_KNOWN_MODELS else "llama3"
                 content, used = self._chat_openai_compatible(
@@ -578,7 +606,7 @@ class LLMRouter:
             except Exception as e:
                 errors.append(f"Pi-Gateway: {e}")
 
-        if s["github_token"]:
+        if not nur_lokal and s["github_token"]:
             try:
                 gh_model = GITHUB_MODEL_MAP.get(base, GITHUB_MODEL_MAP["default"])
                 content, used = self._chat_openai_compatible(
@@ -590,7 +618,7 @@ class LLMRouter:
             except Exception as e:
                 errors.append(f"GitHub Models: {e}")
 
-        if s["openrouter_api_key"]:
+        if not nur_lokal and s["openrouter_api_key"]:
             # Freie Modelle sind oft überlastet (429) -> mehrere Kandidaten durchprobieren
             or_model = OPENROUTER_MODEL_MAP.get(base, OPENROUTER_MODEL_MAP["default"])
             candidates = [or_model] + [m for m in OPENROUTER_ALTERNATES if m != or_model]
@@ -609,7 +637,7 @@ class LLMRouter:
                 except Exception as e:
                     errors.append(f"OpenRouter ({candidate}): {e}")
 
-        if s["huggingface_api_key"]:
+        if not nur_lokal and s["huggingface_api_key"]:
             try:
                 hf_model = HUGGINGFACE_MODEL_MAP.get(base, HUGGINGFACE_MODEL_MAP["default"])
                 content, used = self._chat_openai_compatible(
@@ -622,7 +650,7 @@ class LLMRouter:
             except Exception as e:
                 errors.append(f"HuggingFace: {e}")
 
-        if s["cloudflare_account_id"] and s["cloudflare_api_token"]:
+        if not nur_lokal and s["cloudflare_account_id"] and s["cloudflare_api_token"]:
             try:
                 cf_model = CLOUDFLARE_MODEL_MAP.get(base, CLOUDFLARE_MODEL_MAP["default"])
                 via = "AI Gateway" if s["cloudflare_gateway"] else "Workers AI"
@@ -636,9 +664,14 @@ class LLMRouter:
                 errors.append(f"Cloudflare: {e}")
 
         if not errors:
-            errors.append("Keine lokale Engine (Ollama/LM Studio) erreichbar und kein "
-                          "Fallback konfiguriert (PI_LLM_URL / GITHUB_MODELS_TOKEN / "
-                          "OPENROUTER_API_KEY / Cloudflare-Keys fehlen in der .env).")
+            if nur_lokal:
+                errors.append("Lokal-Modus aktiv und keine lokale Engine erreichbar "
+                              "(Ollama/LM Studio/Pi). Cloud ist per Schalter gesperrt — "
+                              "Ollama starten oder im Dashboard auf Hybrid umschalten.")
+            else:
+                errors.append("Keine lokale Engine (Ollama/LM Studio) erreichbar und kein "
+                              "Fallback konfiguriert (PI_LLM_URL / GITHUB_MODELS_TOKEN / "
+                              "OPENROUTER_API_KEY / Cloudflare-Keys fehlen in der .env).")
         raise RuntimeError("Kein LLM-Provider verfügbar. " + " | ".join(errors))
 
     def generate(self, system, prompt, model="llama3", temperature=0.5,

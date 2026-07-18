@@ -21,6 +21,10 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # Konfiguration
+# WICHTIG (CEO-Regel 18.07.2026): Das Wissen aus 00_Wissen darf NIEMALS an eine
+# Cloud-LLM gehen. Dieser Dienst spricht Ollama deshalb DIREKT an (kein LLM-Router,
+# kein LiteLLM-Gateway mit Cloud-Fallback). Der globale Lokal/Cloud-Schalter des
+# Dashboards gilt hier NICHT — 00_Wissen ist unabhängig davon immer rein lokal.
 AI_OS_ROOT = Path(os.environ.get("AI_OS_ROOT", Path(__file__).parent.parent))
 OLLAMA_HOST = "127.0.0.1"
 OLLAMA_PORT = 11434

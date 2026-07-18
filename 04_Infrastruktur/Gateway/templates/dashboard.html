@@ -1265,6 +1265,19 @@
                         <span class="pill" id="llm-summary">Lade Provider-Status...</span>
                         <button class="btn btn-success btn-sm" id="llm-start-btn" style="display:none;" onclick="startLocalEngine(this)">▶ Lokale KI-Engine starten</button>
                     </div>
+                    <div class="service-card" style="max-width:720px;margin-top:1rem;border-left:3px solid var(--accent);">
+                        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+                            <div style="flex:1;min-width:220px;">
+                                <b>🔒 Datenschutz-Schalter</b>
+                                <div class="desc" style="margin-top:0.3rem;">
+                                    <b id="llm-mode-label">…</b> —
+                                    <span id="llm-mode-hint"></span><br>
+                                    <span class="muted">Das Gedächtnis (00_Wissen) bleibt IMMER lokal, unabhängig von diesem Schalter.</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm" id="llm-mode-btn" onclick="toggleLlmMode(this)">…</button>
+                        </div>
+                    </div>
                     <div class="services-grid" id="llm-grid" style="margin-top: 1rem;">
                         <div class="empty-state">Lade Provider...</div>
                     </div>
@@ -1614,6 +1627,46 @@
                             </div>
                             <div class="muted" id="kiavatar-hint" style="display:none;font-size:0.72rem;margin-top:0.5rem;">
                                 Board offline — im Dienste-Tab starten oder: <code>python 10_Business/KI-Avatar/board/app.py</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-title" style="margin-top:1.5rem;">🧱 Bausteine <span class="muted">— wiederverwendbare Komponenten (keine eigenständigen Server)</span></div>
+                    <div class="services-grid">
+                        <div class="service-card">
+                            <div class="head" style="display:flex;align-items:center;gap:0.75rem;">
+                                <span style="font-size:1.6rem;">🧩</span>
+                                <div>
+                                    <b>Feed-Scraper (Wasm-Komponente)</b>
+                                    <div class="muted" style="font-size:0.75rem;">WebAssembly · sandboxed · kein Server</div>
+                                </div>
+                            </div>
+                            <div class="desc" style="margin-top:0.6rem;">
+                                RSS/Atom-Feeds als sichere Wasm-Komponente (Feed-only-Netzrechte).
+                                Läuft im Browser (via DokuCheck) und am Desktop (Wassette). Baustein für
+                                Themen-Assistent, CorporateLLM &amp; Research-Agent.
+                            </div>
+                            <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.8rem;flex-wrap:wrap;">
+                                <button class="btn btn-sm" onclick="window.open('/produkte/dokucheck/scraper-test.html?auto=1','_blank')">↗ Test-Seite öffnen</button>
+                            </div>
+                        </div>
+                        <div class="service-card">
+                            <div class="head" style="display:flex;align-items:center;gap:0.75rem;">
+                                <span style="font-size:1.6rem;">🤖</span>
+                                <div>
+                                    <b>Broki AI (Browser-Extension)</b>
+                                    <div class="muted" style="font-size:0.75rem;">Manifest V3 · in Chrome/Edge laden</div>
+                                </div>
+                            </div>
+                            <div class="desc" style="margin-top:0.6rem;">
+                                Lokaler KI-Wiki-Assistent: Firmen-Wiki + Berater 100&nbsp;% im Browser,
+                                Sync vom Raspberry Pi über Tailscale, 3-Stufen-Gedächtnis, Crash-Rollback.
+                                <b>Als Extension kein Server</b> — Test: <code>chrome://extensions</code> →
+                                Entwicklermodus → „Entpackt laden".
+                            </div>
+                            <div class="muted" style="font-size:0.72rem;margin-top:0.6rem;">
+                                📁 <code>10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Produkt/broki-extension/</code><br>
+                                ⏳ Voll nutzbar nach Pi-Gegenstück (wartet auf CEO-Freigabe im Gate).
                             </div>
                         </div>
                     </div>
@@ -2125,7 +2178,40 @@
                 </div>`;
         }
 
+        // --- Lokal/Cloud-Datenschutz-Schalter ---
+        function renderLlmMode(mode) {
+            const lokal = mode === 'lokal';
+            const label = document.getElementById('llm-mode-label');
+            const hint = document.getElementById('llm-mode-hint');
+            const btn = document.getElementById('llm-mode-btn');
+            if (!label || !btn) return;
+            label.textContent = lokal ? '🔒 Nur lokal' : '☁️ Hybrid (lokal + Cloud)';
+            label.style.color = lokal ? 'var(--success)' : 'var(--warning)';
+            hint.textContent = lokal
+                ? 'Es werden ausschließlich eigene Engines genutzt (Ollama/LM Studio/Pi). Keine Fremd-Cloud.'
+                : 'Lokale Engine zuerst; fällt sie aus, übernimmt automatisch die Cloud (Workers AI/OpenRouter …).';
+            btn.textContent = lokal ? '☁️ Cloud-Fallback erlauben' : '🔒 Auf „nur lokal" schalten';
+        }
+        async function loadLlmMode() {
+            try {
+                const r = await fetch('/api/llm/mode');
+                renderLlmMode((await r.json()).mode);
+            } catch (e) {}
+        }
+        async function toggleLlmMode(btnEl) {
+            btnEl.disabled = true;
+            try {
+                const cur = await (await fetch('/api/llm/mode')).json();
+                const neu = cur.mode === 'lokal' ? 'hybrid' : 'lokal';
+                const r = await fetch('/api/llm/mode', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({mode: neu})});
+                renderLlmMode((await r.json()).mode);
+            } finally { btnEl.disabled = false; }
+        }
+
         async function loadLlmStatus() {
+            loadLlmMode();
             try {
                 const resp = await fetch('/api/llm/status');
                 const data = await resp.json();

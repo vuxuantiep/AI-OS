@@ -100,6 +100,10 @@ SERVICES = [
      "desc": "Autonomer Coding-Agent (Docker) — nutzt LiteLLM als LLM-Backend",
      "layer": "05_Agenten", "script": "05_Agenten/openhands_launcher.py",
      "env_key": "OPENHANDS_PORT", "health_path": "/"},
+    {"key": "litellm", "name": "LiteLLM Gateway", "icon": "🔀", "port": 4000,
+     "desc": "Ein OpenAI-Endpunkt für alle Provider — fällt Ollama aus, schaltet er autonom auf Workers AI/OpenRouter um",
+     "layer": "04_Infrastruktur", "script": "04_Infrastruktur/Gateway/litellm_gateway.py",
+     "env_key": "LITELLM_PORT", "health_path": "/health/liveliness"},
     {"key": "kiavatar_board", "name": "KI-Avatar Board", "icon": "🎬", "port": 5310,
      "desc": "Pipeline-Board für KI-Avatar-Videos (YouTube-Automation & TikTok-Shop)",
      "layer": "10_Business", "script": "10_Business/01_Marktprodukte/KI-Avatar/board/app.py",
@@ -909,6 +913,16 @@ def llm_status():
 def llm_start():
     """Startet die lokale KI-Engine (Ollama oder LM Studio) als entkoppelten Hintergrundprozess."""
     return jsonify(LLM_ROUTER.autostart_local_engine(force=True, wait=12))
+
+@app.route("/api/llm/mode", methods=["GET", "POST"])
+def llm_mode():
+    """Globaler LLM-Modus-Schalter: 'lokal' (nur Ollama/LM Studio/Pi) oder 'hybrid'
+    (mit Cloud-Fallback). 00_Wissen bleibt DAVON UNABHÄNGIG immer rein lokal."""
+    from llm_router import get_llm_mode, set_llm_mode
+    if request.method == "POST":
+        gewuenscht = (request.get_json(silent=True) or {}).get("mode", "hybrid")
+        return jsonify({"mode": set_llm_mode(gewuenscht)})
+    return jsonify({"mode": get_llm_mode()})
 
 @app.route("/api/stats")
 def get_stats():

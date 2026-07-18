@@ -6,6 +6,39 @@
 
 ---
 
+## 2026-07-18 (Tag 8b) — Betrieb: Tunnel + LLM-Fallback + Datenschutz-Schalter
+
+CEO meldete „ai-os.vuxuantiep.de läuft nicht" + „KI-Fallback muss autonom sein"
++ „00_Wissen NIE Cloud" + „Schalter Lokal/Cloud" + „wo sind scraper & broki?".
+
+1. **Tunnel repariert:** cloudflared lief nicht (401 = nur Worker-Fallback).
+   Kein Windows-Dienst → per Aufgabenplanung **„Cloudflare Tunnel AI-OS"**
+   (AtLogOn, Restart×3) eingerichtet, altes VBS aus shell:startup entfernt
+   (Duplikat). 4 Tunnel-Verbindungen ✓.
+2. **LLM-Fallback autonom gemacht:** LiteLLM lief gar nicht + Kette war kaputt
+   (HuggingFace-Credits leer, OpenRouter-:free 429). Fix: eigenen **Workers-AI**-
+   Provider vorn in die Fallback-Kette (planbares Kontingent, eigener CF-Account;
+   WORKERS_AI_*→CLOUDFLARE_* gemappt). **E2E bewiesen:** Ollama AN→llama3 lokal,
+   Ollama AUS→cloudflare/llama-3.1-8b automatisch, Ollama wieder AN→llama3.
+   LiteLLM-Autostart-Task + Dashboard-Dienst-Kachel.
+3. **00_Wissen hart lokal:** knowledge_agent.py spricht Ollama eh DIREKT an
+   (kein Router, keine Cloud) — als CEO-Regel im Code-Kopf zementiert; Schalter
+   gilt dort NICHT.
+4. **Datenschutz-Schalter (Lokal/Hybrid):** `llm_router.py` liest `llm_mode.json`;
+   im Lokal-Modus werden LiteLLM+GitHub+OpenRouter+HuggingFace+Cloudflare
+   übersprungen (nur Ollama/LM Studio/Pi = selbst-gehostet). Dashboard-API
+   `/api/llm/mode` + UI-Schalter im KI-Gateway-Tab. **Bewiesen:** Lokal-Modus +
+   Ollama aus → „kein Provider", NULL Cloud-Kontakt (statt heimlich Cloud).
+5. **Bausteine sichtbar:** neue Sektion „🧱 Bausteine" im Produktion-Tab —
+   Feed-Scraper (Test-Seite verlinkt) + Broki-Extension (mit Lade-Anleitung).
+   Erklärt, warum sie nicht als „Dienst" auftauchen: Wasm-Komponente bzw.
+   Browser-Extension = kein eigener Server.
+
+Verifiziert: py_compile + node --check aufs Template-JS grün, Schalter-
+Persistenz, Failover, Screenshot des Gateway-Tabs.
+
+---
+
 ## 2026-07-18 (Tag 8) — Broki AI: Browser-Extension-Architektur gebaut
 
 CEO-Auftrag (Senior-Architekt-Rolle): Manifest-V3-Extension „lokaler KI-Wiki-

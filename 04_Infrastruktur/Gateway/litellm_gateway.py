@@ -51,6 +51,12 @@ def load_env():
         pass
     # Defaults, damit os.environ/-Referenzen der lokalen Modelle immer auflösen
     os.environ.setdefault("OLLAMA_URL", "http://127.0.0.1:11434")
+    # LiteLLMs Cloudflare-Provider erwartet CLOUDFLARE_*-Namen — unsere .env
+    # nutzt WORKERS_AI_* (gleicher Account wie das AI-Gateway) → hier mappen.
+    if os.environ.get("WORKERS_AI_API_TOKEN"):
+        os.environ.setdefault("CLOUDFLARE_API_KEY", os.environ["WORKERS_AI_API_TOKEN"])
+    if os.environ.get("WORKERS_AI_ACCOUNT_ID"):
+        os.environ.setdefault("CLOUDFLARE_ACCOUNT_ID", os.environ["WORKERS_AI_ACCOUNT_ID"])
 
 
 def build_runtime_config():

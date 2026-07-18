@@ -37,6 +37,10 @@ model_list:
     litellm_params:
       model: openrouter/openai/gpt-oss-120b:free
       api_key: os.environ/OPENROUTER_API_KEY
+  - model_name: workers-ai
+    litellm_params:
+      model: cloudflare/@cf/meta/llama-3.1-8b-instruct
+      api_key: os.environ/CLOUDFLARE_API_KEY
   - model_name: huggingface-llama
     litellm_params:
       model: huggingface/meta-llama/Llama-3.3-70B-Instruct
@@ -49,9 +53,13 @@ model_list:
 router_settings:
   # Fällt Ollama aus, routet LiteLLM selbstständig auf die Online-Modelle
   fallbacks:
-    - llama3: ["openrouter-free", "huggingface-llama", "github-gpt4o-mini"]
-    - mistral: ["openrouter-free", "huggingface-llama"]
-    - qwen2.5-coder: ["openrouter-free"]
+    # workers-ai zuerst: eigener Cloudflare-Account = planbares Kontingent.
+    # OpenRouter-:free ist ein geteilter Pool (oft 429), HuggingFace-Credits
+    # waren im Juli 2026 aufgebraucht — beide nur noch Nachrücker.
+    - llama3: ["workers-ai", "openrouter-free", "huggingface-llama", "github-gpt4o-mini"]
+    - mistral: ["workers-ai", "openrouter-free", "huggingface-llama"]
+    - qwen2.5-coder: ["workers-ai", "openrouter-free"]
+    - deepseek-coder: ["workers-ai", "openrouter-free"]
   num_retries: 1
 
 litellm_settings:
