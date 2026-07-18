@@ -176,6 +176,29 @@ Gelernt: Wasm-Komponente wirft JS-`throw` als result-err durch — sauberes
 Fehler-Mapping ohne Extra-Code. Nächster Schritt: Phase 2 (jco transpile
 für die PWA + CORS-Realitätstest).
 
+### Nachtrag: Phase 2 ✅ — dieselbe Komponente läuft im Browser (DokuCheck-Testseite)
+
+CEO-Frage „keine GUI? in DokuCheck einbauen?" → Phase 2 vorgezogen und gebaut:
+
+1. jco-Transpile + **vendored** preview2-shims (Import-Map statt Bundler,
+   CSP/offline-konform wie DokuCheck), Feed-Proxy `/feeds/<id>` im Dashboard
+   (Whitelist, Fremd-IDs → 404), Testseite `scraper-test.html` mit Auto-Run-
+   Parameter für Headless-Tests.
+2. **Zwei echte Stolpersteine:** (a) WASI-HTTP-Shim braucht absolute URLs —
+   relative Proxy-Pfade werfen URL-Constructor-Fehler; (b) danach trapte
+   wasi-http komplett (C++ out_of_range in StarlingMonkey, Chrome-Konsole via
+   `--enable-logging=stderr` war der Schlüssel). Statt Shim-Debugging:
+   **Architektur-Entscheid** — Browser-Pfad = Seite fetcht (Browser/CORS = Netz-
+   Sandbox), Wasm parst via neuem Export `parse-feed(xml)`; Desktop behält
+   `fetch-feed` + Wassette-Policy. Kein Sicherheitsverlust, eine Codebasis.
+3. E2E: Headless-Chrome mit `--virtual-time-budget` + `--dump-dom` →
+   **„50 Items in 10 ms"**, echte Tagesschau-Artikel im DOM, Screenshot visuell
+   geprüft; Desktop-Regression (test-scraper.py) weiter grün — Komponente
+   exportiert jetzt 2 Tools (fetch-feed, parse-feed).
+4. Wiederverwendung dokumentiert: CorporateLLM (Browser, parse-feed) und
+   Research-Agent/AI-OS-Agenten (Wassette-MCP, fetch-feed) können die
+   identische .wasm nutzen — im Architektur-Plan festgehalten.
+
 ### Nachtrag: Gate-Prüfung Themen-Assistent + Analyse Browser vs. Native
 
 1. **Wirtschaftlichkeitsprüfung** (`wirtschaftlichkeit-themen-assistent.md`,

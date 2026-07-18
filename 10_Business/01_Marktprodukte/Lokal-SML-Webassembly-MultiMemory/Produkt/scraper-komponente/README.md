@@ -4,6 +4,15 @@ Holt RSS/Atom-Feeds als sandboxed WebAssembly-Komponente. Netzwerkzugriff nur
 auf explizit freigegebene Hosts (Wassette-Policy, deny-by-default).
 Architektur: `../../Plannung/Architektur-Themen-Assistent.md`
 
+## Testen im Browser (GUI!)
+
+Dashboard starten, dann öffnen:
+**http://localhost:5000/produkte/dokucheck/scraper-test.html** → „📡 Feed laden".
+Die Seite holt den Feed (via Dashboard-Proxy `/feeds/<id>`, Whitelist im
+Dashboard-Code), die Wasm-Komponente parst (`parse-feed`). Braucht Chrome/Edge (JSPI).
+Nach Code-Änderungen: `npm run build && npm run transpile` und die 3 Dateien
+aus `browser/` nach `../dokucheck-lokal/scraper/` kopieren.
+
 ## Testen (einfachster Weg)
 
 ```bash

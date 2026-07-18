@@ -11,7 +11,12 @@ interface scraper {
   /// Holt einen RSS/Atom-Feed und liefert bereinigte Items.
   /// Netzwerkrechte kommen von der Laufzeit (Wassette-Policy) — die
   /// Komponente selbst kann nur erreichen, was explizit erlaubt wurde.
+  /// (Desktop-Pfad; im Browser ist wasi-http derzeit instabil.)
   fetch-feed: func(url: string) -> result<list<feed-item>, string>;
+
+  /// Parst bereits geholtes RSS/Atom-XML (Browser-Pfad: die Seite holt den
+  /// Feed per fetch — Browser/CORS = Netz-Sandbox —, das Wasm parst).
+  parse-feed: func(xml: string) -> result<list<feed-item>, string>;
 }
 
 world feed-scraper {

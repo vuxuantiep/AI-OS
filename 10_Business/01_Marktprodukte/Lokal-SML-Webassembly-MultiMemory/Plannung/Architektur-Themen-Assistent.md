@@ -22,7 +22,7 @@ flowchart TB
 
     subgraph PHONE["📱 Smartphone / PWA (Endnutzer)"]
         JCO["jco transpile<br/>→ ES-Modul im Browser"]
-        ALLOW["Feed-Allowlist im Code<br/>+ CORS / Proxy-Fallback"]
+        ALLOW["Seite holt Feed per fetch<br/>(Browser/CORS = Netz-Sandbox),<br/>Wasm parst via parse-feed(xml)<br/>+ Dashboard-Proxy /feeds/&lt;id&gt;"]
         JCO --> ALLOW
     end
 
@@ -78,10 +78,20 @@ sequenceDiagram
 | `Produkt/scraper-komponente/src/scraper.js` | fetch + RSS/Atom-Parser + Bereinigung | ✅ 17.07. |
 | `Produkt/scraper-komponente/package.json` | componentize-js + jco als devDeps, Build-Skripte | ✅ 17.07. |
 | `Produkt/scraper-komponente/feed-scraper.wasm` | Build-Artefakt (gitignored, reproduzierbar) | ✅ 17.07. (12,5 MB) |
-| `Produkt/themen-assistent/` | PWA-Modul (UI + Loop), nutzt Vendor-Libs von dokucheck-lokal | Phase 2–4 |
+| `Produkt/dokucheck-lokal/scraper-test.html` | Browser-Testseite der Komponente (?auto=1 für Auto-Run) | ✅ 17.07. |
+| `Produkt/dokucheck-lokal/scraper/` + `vendor/preview2-shim/` | transpiliertes Modul + WASI-Browser-Shims (vendored) | ✅ 17.07. |
+| Dashboard-Route `/feeds/<id>` | CORS-Proxy für Feeds (Whitelist `FEED_PROXY_WHITELIST`) | ✅ 17.07. |
+| `Produkt/themen-assistent/` | PWA-Modul (UI + Loop), nutzt Vendor-Libs von dokucheck-lokal | Phase 3–4 |
 | `Produkt/dokucheck-lokal/vendor/` | WebLLM, transformers.js, pdf.js — WIRD MITGENUTZT, nicht dupliziert | existiert |
-| Dashboard-Route `/produkte/themen-assistent/` | Auslieferung wie dokucheck (PRODUCTS-Dict) | Phase 2 |
-| Dashboard-Route `/feeds/<id>` | CORS-Proxy für Feeds ohne CORS-Header (Whitelist) | Phase 2, nur bei Bedarf |
+| Dashboard-Route `/produkte/themen-assistent/` | Auslieferung wie dokucheck (PRODUCTS-Dict) | Phase 4 |
+
+**Gelernt 17.07. (Phase 2):** wasi-http trapt im Browser-Shim (componentize-js
+0.21 + jco 1.25) → Browser-Pfad = Seite fetcht, Wasm parst (`parse-feed`).
+Kein Sicherheitsverlust: Im Browser IST der Browser die Netz-Sandbox; die
+Wassette-Policy schützt den Desktop-Pfad. **Wiederverwendung:** Die Komponente
+ist damit überall einsetzbar, wo es EINE der beiden Laufzeiten gibt — z. B.
+CorporateLLM (Trace-AI OS, Browser) über `parse-feed`, Research-Agent/AI-OS-
+Agenten (Desktop) über Wassette-MCP mit Feed-Policy.
 
 ## 4. Erweiterungspunkte (für später — hier ansetzen!)
 

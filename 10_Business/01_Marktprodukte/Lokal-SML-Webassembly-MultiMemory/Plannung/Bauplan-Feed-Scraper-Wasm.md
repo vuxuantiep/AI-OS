@@ -71,7 +71,16 @@ Modell Llama 3.2 1B ~0,8 GB). Die native App ist Ausbaustufe 3 (`Plannung/Native
    NUR für 2–3 Test-Feed-Hosts (z. B. tagesschau.de)
 5. **Sicherheitstest:** Zugriff auf NICHT freigegebenen Host muss fehlschlagen
 
-**Phase 2 — Browser-Transpile (PWA, ~0,5 Tag)**
+**Phase 2 — Browser-Transpile (PWA, ~0,5 Tag) ✅ ERLEDIGT 17.07.2026**
+
+> Ergebnis: jco-Transpile + vendored preview2-shims + Testseite
+> `dokucheck-lokal/scraper-test.html` (50 Tagesschau-Items in 10 ms) +
+> Feed-Proxy `/feeds/<id>` im Dashboard (Whitelist, 404 für Unbekanntes).
+> **Wichtige Abweichung:** wasi-http im Browser-Shim trapt (C++ out_of_range,
+> componentize-js 0.21/jco 1.25) → Architektur geändert: im Browser holt die
+> SEITE den Feed (Browser/CORS = Netz-Sandbox), das Wasm bekam einen zweiten
+> Export `parse-feed(xml)`. Desktop behält `fetch-feed` unter Wassette-Policy.
+> JSPI nötig → Chrome/Edge (gleiche Klasse wie WebGPU). Original-Plan:
 1. `npx jco transpile feed-scraper.wasm -o pwa/` → ES-Modul für den Browser
 2. CORS-Test gegen reale Feeds; für Feeds ohne CORS: Mini-Proxy-Route am
    AI-OS-Dashboard (`/feeds/<whitelist-id>`, analog DokuCheck-Proxy)

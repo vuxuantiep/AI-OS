@@ -1319,6 +1319,27 @@ def get_wiki_file(dir_key, filename):
     except Exception:
         return jsonify({"error": "Datei nicht gefunden"}), 404
 
+# Feed-Proxy für den Themen-Assistenten (Wasm-Scraper in der PWA): Feeds ohne
+# CORS-Header werden same-origin durchgereicht. Whitelist statt freier URL —
+# der Proxy darf nie zum offenen Relay werden. Inhalte werden nicht geloggt.
+FEED_PROXY_WHITELIST = {
+    "tagesschau": "https://www.tagesschau.de/index~rss2.xml",
+    "heise": "https://www.heise.de/rss/heise-atom.xml",
+}
+
+@app.route("/feeds/<feed_id>")
+def feed_proxy(feed_id):
+    from flask import Response
+    url = FEED_PROXY_WHITELIST.get(feed_id)
+    if not url:
+        return jsonify({"error": "Feed nicht in der Whitelist"}), 404
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "AI-OS Feed-Proxy/0.1"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return Response(r.read(), mimetype="application/xml")
+    except Exception as e:
+        return jsonify({"error": f"Feed nicht erreichbar: {type(e).__name__}"}), 502
+
 # Eigenständige Produkt-Dienste (eigene Flask-Server) hinter /produkte/<name>/.
 # Proxy statt Redirect/Direktlink, damit sie auch über Cloudflare-Tunnel und
 # Tailscale erreichbar sind (dort ist nur Port 5000 exponiert). Die Dienste

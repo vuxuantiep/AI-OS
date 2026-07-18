@@ -34,7 +34,7 @@ function atomLink(block) {
   return "";
 }
 
-function parseFeed(xml) {
+function parseXml(xml) {
   const items = [];
   // RSS 2.0: <item>, Atom: <entry>
   const bloecke = [...xml.matchAll(/<(item|entry)\b[\s\S]*?<\/\1>/gi)].map(m => m[0]);
@@ -51,8 +51,12 @@ function parseFeed(xml) {
 
 export const scraper = {
   async fetchFeed(url) {
-    if (!/^https:\/\//i.test(url)) {
-      throw "Nur https:// Feed-URLs erlaubt: " + url;
+    // https = Direktzugriff (Desktop/Wassette); http nur für den lokalen
+    // Dashboard-Proxy (CORS-Fallback der PWA, Whitelist liegt serverseitig).
+    // Der WASI-HTTP-Shim braucht absolute URLs — relative Pfade gehen nicht.
+    const istLokalerProxy = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//i.test(url);
+    if (!/^https:\/\//i.test(url) && !istLokalerProxy) {
+      throw "Nur https:// oder lokaler Proxy (http://localhost…) erlaubt: " + url;
     }
     let resp;
     try {
@@ -62,8 +66,14 @@ export const scraper = {
     }
     if (!resp.ok) throw "HTTP " + resp.status + " für " + url;
     const xml = await resp.text();
-    const items = parseFeed(xml);
+    const items = parseXml(xml);
     if (items.length === 0) throw "Kein RSS/Atom-Inhalt erkannt: " + url;
+    return items;
+  },
+
+  parseFeed(xml) {
+    const items = parseXml(xml);
+    if (items.length === 0) throw "Kein RSS/Atom-Inhalt im XML erkannt";
     return items;
   },
 };
