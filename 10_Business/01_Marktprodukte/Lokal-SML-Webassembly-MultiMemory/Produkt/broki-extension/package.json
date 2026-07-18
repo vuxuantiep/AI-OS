@@ -1,0 +1,15 @@
+{
+  "name": "broki-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Broki AI — Lokaler KI-Wiki-Assistent (Browser Extension MV3)",
+  "scripts": {
+    "build:vendor": "node scripts/build-vendor.js",
+    "download:models": "node scripts/download-models.js",
+    "postinstall": "node scripts/build-vendor.js && node scripts/download-models.js"
+  },
+  "dependencies": {
+    "@mlc-ai/web-llm": "^0.2.78",
+    "@wllama/wllama": "^0.8.3"
+  }
+}

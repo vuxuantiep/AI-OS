@@ -6,33 +6,50 @@ LLM-Gateway, privater Tresor, IT-Crash-Rollback.
 **Architektur (Diagramme):** `../../Plannung/Architektur-Broki-Extension.md`
 **Businessplan:** `../../Plannung/Businessplanung und Produkt Konzept der Broki AI.docx`
 
-## Einrichten (Entwicklung)
+## Schnellstart
 
-1. **Firmenschlüssel erzeugen** (auf einer vertrauenswürdigen Maschine):
-   ```bash
-   openssl ecparam -name prime256v1 -genkey -noout -out firma.key      # bleibt auf dem Pi!
-   openssl ec -in firma.key -pubout -outform DER | base64 -w0          # → in broki-config.js
-   ```
-2. `config/broki-config.js`: Public Key eintragen, Pi-URL prüfen
-   (Standard: `http://pi-ki-tiep.tailed32d1.ts.net:8088`), Firmen-Domains setzen
-   (auch in `manifest.json` unter `content_scripts.matches`).
-3. **Vendor befüllen** (noch offen, siehe Architektur-Plan Punkt 6):
-   `vendor/webllm/` (npm `@mlc-ai/web-llm`), `vendor/wllama/` (npm `@wllama/wllama`),
-   `vendor/modelle/` (GGUF, z. B. qwen2.5-1.5b-instruct-q4_k_m).
-4. Chrome/Edge → `chrome://extensions` → Entwicklermodus → **„Entpackt laden"**
-   → diesen Ordner wählen. Sidebar öffnet per Klick aufs Icon.
+```bash
+npm install
+npm run build:vendor
+npm run download:models
+```
 
-## Pi-Gegenstück (eigenes Arbeitspaket)
+Danach Chrome/Edge → `chrome://extensions` → Entwicklermodus → **„Entpackt laden"**
+→ diesen Ordner wählen. Sidebar öffnet per Klick aufs Icon.
 
-Der Pi liefert unter `:8088`:
-- `GET /index/manifest.json?rolle=<r>` → `{ version, dateien: [{pfad, signatur}] }`
-- `GET /index/<partition>.bin` → JSON-Zeilen `{chunkId, partition, text, vektor}`
-Signatur: ECDSA-P256 über SHA-256 des Pakets, mit `firma.key`.
+## Was `npm run build:vendor` macht
 
-## Testen ohne Pi
+Kopiert die Laufzeitdateien aus `node_modules` in `vendor/`:
+- `vendor/webllm/` — WebLLM (WebGPU-Inferenz)
+- `vendor/wllama/` — wllama (WebAssembly/CPU-Inferenz)
+- `vendor/modelle/` — GGUF-Modelle (werden von `download:models` befüllt)
+
+## Ohne Pi testen
 
 `sync-jetzt` über die Sidebar-Konsole schicken → Status „offline" ist korrekt,
 solange kein Pi antwortet; die Frage-Kaskade meldet dann sauber
 „Noch kein Wissens-Index geladen". Signatur-/Sperrlogik lässt sich mit einem
 lokalen Python-Server + absichtlich falscher Signatur durchspielen
 (Erwartung: 🚫-Banner in der Sidebar, L3 verweigert).
+
+## Cloud-Fallback testen
+
+In `config/broki-config.js` eintragen:
+```javascript
+cloud: {
+  endpoint: "https://api.openai.com/v1/chat/completions",
+  apiKey: "DEIN_API_KEY",
+  modell: "gpt-4o-mini"
+}
+```
+
+Sidebar → Modus „☁️ Cloud" wählen → Frage stellen.
+
+## Features
+
+- 🧠 Dreistufiges Gedächtnis (L1 Exact → L2 Semantic → L3 RAG)
+- 🔒 Privat-Modus (RAM-Sandbox, kein Sync, kein Persistenz)
+- 🛟 Crash-Rollback (AES-GCM-Journal + Heartbeat-Erkennung)
+- 🔐 Manipulationsschutz (ECDSA-P256 über SHA-256)
+- 🎨 Hell/Dunkel-Modus
+- 🖥️ Lokal / Cloud-Umschalter
