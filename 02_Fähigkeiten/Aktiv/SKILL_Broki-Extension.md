@@ -46,6 +46,23 @@ Gedächtnis + austauschbarem LLM-Motor.
 - Schlüssel: `openssl ecparam -name prime256v1` (privat → NUR Pi),
   SPKI-Base64 des Public Key → `config/broki-config.js`.
 
+## Geschäftlich (aus erweitertem Businessplan 18.07.2026)
+
+- **Erlösmodell:** B2B SaaS-Light 5–10 €/Seat/Monat (~95 % Marge, 0 € Serverkosten);
+  Done-for-you-Setup 2.500–8.000 €; B2C Freemium + 5 €/M Premium.
+- **GTM „Trojanisches Pferd":** kostenloses Audit-Tool zeigt IT-Leitern, wie oft
+  Mitarbeiter Firmendaten in ChatGPT kopieren → dann Broki als Lösung.
+- **Zielmarkt-Phasen:** 1) Kanzleien/Praxen/Steuerberater/Hausverwaltung (Beachhead),
+  2) Enterprise via Zero-Trust-Partner-Schnittstelle, 3) B2C Chrome Store.
+- **Abgrenzung:** vs. Copilot = lokal + plattformübergreifend + 0 €/Seat;
+  vs. WebLLM = proaktiv mit Firmen-RAG statt passiver Chat-Demo.
+- Gate: `wirtschaftlichkeit-broki-ai.md` GO_MIT_AUFLAGEN (Basis ≈ 13k €/Jahr 1).
+
+## Ausbau-Ideen (Phase 2+, NICHT v1)
+
+P2P-Vektor-Sync via WebRTC (Gossip im LAN) · Zero-Trust-Partner-Partition ·
+Auto-Learning aus Feedback (Vorsicht Modell-Drift) · BSI-Zertifizierung.
+
 ## Offene Bausteine
 
 Pi-Gegenstück (Index-Builder + Signaturdienst, API in der Produkt-README

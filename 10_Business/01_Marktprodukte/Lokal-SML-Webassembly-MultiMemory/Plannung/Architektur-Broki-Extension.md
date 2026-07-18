@@ -115,12 +115,28 @@ broki-extension/
 | Besseres Embedding | `embed()` im Gateway (z. B. transformers.js-Modell) | L2/L3-Logik bleibt (Re-Embedding nötig) |
 | Feed-/Wissens-Import | Wasm-`feed-scraper` (Phase 2) als zusätzliche Wissensquelle des Pi | Extension merkt nichts davon |
 
+## 5b. Ausbau-Ideen aus dem erweiterten Businessplan (18.07.2026)
+
+Der Plan (118k Z.) beschreibt drei Ausbaustufen, die die aktuelle Sync-Architektur
+(Pi → signierter Index → Client) NICHT ersetzen, sondern ergänzen:
+
+| Idee | Was | Einordnung Prüfer/Architekt |
+|---|---|---|
+| **P2P Knowledge Sharing (WebRTC)** | Clients tauschen neue Wissens-Vektoren direkt im LAN aus („Gossip/Flüster-Netzwerk"), statt nur zentral über den Pi | Reizvoll, aber Komplexität hoch (NAT, Konsistenz, Vergiftungs-Schutz P2P). **Erst NACH** dem zentralen Pi-Sync; nicht v1. Sicherheit: gleiche Signaturpflicht wie zentral |
+| **Zero-Trust Partner-Netzwerk** | Externen Partnern einen GEFILTERTEN Teil des RAG-Index geben (Wissen teilen, nie Systemzugang) | Passt sauber aufs Rollen-Modell (neue Partition „partner" + eigener Public-Key). Guter B2B-Hebel Phase 2 |
+| **Auto-Learning aus Nutzer-Feedback** | Lokales Fine-Tuning/Feedback verbessert den Client über Zeit | Vorsicht: lokale Modell-Drift + kein Rückkanal in den signierten Kollektiv-Index. Als reine L1/L2-Cache-Anreicherung ok; echtes Finetuning = späteres Forschungsthema |
+
+**Wettbewerbs-Abgrenzung (aus dem Plan, für Pitch/README):** vs. M365 Copilot =
+lokal statt Cloud, plattformübergreifend (jede Web-App, auch SAP/CRM), 0 € statt
+~30 €/Seat; vs. WebLLM/WebChatLLM = proaktive Extension mit Firmen-RAG statt
+passiver Chat-Demo, Modell gecacht statt jedes Mal 2–4 GB neu.
+
 ## 6. Offene Punkte (ehrlich)
 
 1. **Pi-Gegenstück** (Index-Builder + Signatur-Dienst + HTTP-Server) — eigenes Arbeitspaket,
    gehört ins AI-OS (Python, läuft auf pi-ki-tiep).
 2. **vendor/** muss befüllt werden (WebLLM/wllama npm-Pakete + GGUF-Modelle) — Build-Skript folgt.
 3. window.ai-Namensräume differieren je Browser-Generation — Gateway probt defensiv 3 Varianten.
-4. **Gate-Hinweis:** Broki AI hat einen eigenen Businessplan (102k Zeichen, docx) →
-   eigene Wirtschaftlichkeitsprüfung nach Regel 4 vor Launch/Vermarktung fällig
-   (Kern-Umsetzung hier war expliziter CEO-Auftrag).
+4. **Gate:** `wirtschaftlichkeit-broki-ai.md` → GO_MIT_AUFLAGEN (18.07.2026, mit
+   Businessplan-Zahlen: SaaS-Light 5–10 €/Seat/M, GTM „Trojanisches Pferd").
+   Status WARTET_AUF_FREIGABE. P2P/Zero-Trust/BSI sind ausdrücklich Phase 2+.

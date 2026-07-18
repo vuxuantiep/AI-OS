@@ -3,8 +3,11 @@
 > Gate-Prüfung nach Regel 4, erstellt 18.07.2026 durch den Wirtschaftlichkeits-
 > Prüfer-Agenten. Prüfgegenstand: Broki AI als eigenständig vermarktbares
 > Produkt (Businessplan-docx + Landingpage-Konzept + gebaute Extension v0.1).
-> Zeithorizont: 12 Monate. Hinweis: Der Businessplan ist primär Technik-
-> Recherche — **alle Preiszahlen hier sind gekennzeichnete Annahmen-Spannen.**
+> Zeithorizont: 12 Monate.
+> **UPDATE 18.07.2026 (Businessplan erweitert auf 118k Z.):** enthält jetzt
+> ein explizites Erlösmodell, ROI-Kalkulation, Zielmarkt-Phasen und GTM —
+> Zahlen unten aktualisiert. Prüfer-Hinweis bleibt: Plan-Zahlen sind
+> UNVALIDIERT (keine Pilot-Verkäufe), realistische Spannen daher konservativer.
 
 ## Management-Summary (5 Sätze, Klartext)
 
@@ -34,21 +37,35 @@ Dogfooding-Pilot zuerst, hartes Zeitbudget, Preisliste erst nach Pilot-Feedback.
 - **Dämpfer:** erklärungsbedürftig; konservative Zielgruppe kauft Referenzen,
   nicht Technik.
 
-## 2. Einnahmequellen-Inventar (Preise = ANNAHMEN, Spannen)
+## 1c. Businessplan-Zahlen (Stand 18.07.2026) — mit Prüfer-Einordnung
+
+Der erweiterte Plan liefert jetzt konkrete Werte. Gegenüberstellung Plan ↔ Prüfer:
+
+| Plan-Aussage | Beleg im Plan | Prüfer-Bewertung |
+|---|---|---|
+| **ROI: >380.000 €/Jahr Ersparnis @ 1.000 Nutzer** (Cloud ≈ 390k: 30 €/Seat + 2.500 €/M Server + API) | ROI-Tabelle | Rechnerisch plausibel, ABER: 1.000-Nutzer-Kunde ist für einen Solo-Anbieter Jahr 1 unerreichbar → als **Pitch-Argument** top, als Umsatz-Basis untauglich |
+| **B2B SaaS-Light: 5–10 €/Seat/Monat, ~95 % Marge** | Erlösmodell | Marge realistisch (0 € Serverkosten). Preis plausibel, aber unvalidiert. **Wiederkehrend** = echter Pluspunkt ggü. Themen-Assistent |
+| **B2C Premium 5 €/Monat** (Offline-Speicher, Vorlagen) | Erlösmodell | Reichweiten-abhängig, Jahr 1 vernachlässigbar (wie Themen-Assistent-Prüfung) |
+| **GTM „Trojanisches Pferd"** (kostenloses Audit-Tool „wie oft kopieren MA Daten in ChatGPT?") | GTM-Strategie | **Stark** — löst das Zugangsproblem clever, konkret baubar (Mini-Extension), ehrlicher Aufhänger |
+| **BSI-Zertifizierung** für Kanzleien/Behörden | GTM-Strategie | Türöffner, aber teuer + langwierig (Monate, 4-/5-stellig) → NICHT Jahr 1, später als Enterprise-Hebel |
+
+## 2. Einnahmequellen-Inventar (Basis = Businessplan-Zahlen, konservativ gedeckelt)
 
 | Quelle | Voraussetzung | Kennzahl (Herkunft) | fließt ab | konserv. | Basis | optim. |
 |---|---|---|---|---|---|---|
-| **Done-for-you-Setup** (Pi + Extension + Wiki-Indexierung + Schulung) | Pilot-Referenz + Demo-Video | 2.500–8.000 €/Setup (ANNAHME: IT-Dienstleister-Tagessätze 800–1.200 € × 3–7 Tage; LeadPilot-Recherche als Untergrenze) | M4+ | 0 | 2 Setups ≈ 8.000 €/Jahr | 5 Setups ≈ 25.000 € |
-| **Wartungsvertrag** (Index-Pflege, Updates, Support) | bestehendes Setup | 100–300 €/Monat/Firma (ANNAHME: üblicher KMU-IT-Wartungssatz) | M5+ | 0 | 2 × 150 €/M ab M6 ≈ 2.000 € | 5 × 200 €/M ≈ 7.000 € |
-| Per-Seat-Lizenz / Chrome-Store-Freemium | Produktreife + Reichweite | nicht seriös bezifferbar → 0 € angesetzt | M10+ | 0 | 0 | erste Umsätze p.m. |
+| **B2B SaaS-Light-Lizenz** (5–10 €/Seat/M) | Pilot-Referenz + BSI/Datenschutzsiegel hilfreich | Businessplan: 5–10 €/Seat/M, ~95 % Marge | M5+ | 0 | 2 Firmen × 8 Seats × 7 €/M ab M6 ≈ 5.400 €/Jahr | 5 Firmen × 12 Seats × 8 €/M ≈ 23.000 € |
+| **Done-for-you-Setup** (Pi + Extension + Wiki-Indexierung + Schulung) | Pilot-Referenz + Demo-Video | 2.500–8.000 €/Setup (IT-Tagessätze 800–1.200 € × 3–7 Tage) | M4+ | 0 | 2 Setups ≈ 8.000 € | 5 Setups ≈ 25.000 € |
+| **Audit-Tool → Lead-Magnet** (Trojanisches Pferd) | Mini-Extension (~2 Tage) | kein Direktumsatz, aber Conversion-Treiber für die beiden oberen Zeilen | M4+ | 0 | (wirkt auf Setups/Lizenzen) | (Verstärker) |
+| B2C Chrome-Store-Freemium (5 €/M) | Produktreife + Reichweite | Businessplan-Preis, aber reichweitenabhängig → 0 € Jahr 1 | M10+ | 0 | 0 | erste Umsätze p.m. |
 
 ## 3. Szenario-Rechnung (12 Monate, Anlaufkurve ehrlich)
 
 - **Konservativ (P70):** kein zahlender Kunde (Vertriebszugang fehlt). Jahressumme
   ≈ 0 €. Restwert: internes Wiki-KI-Tool fürs AI-OS + stärkstes Demo-Asset.
-- **Basis (P50):** M1–3 Bau/Dogfooding, M4 erster Pilot (ggf. vergünstigt),
-  M6+ zweites Setup + 2 Wartungsverträge. Jahressumme ≈ **10.000 €**.
-- **Optimistisch (P20):** Referenz zieht, 5 Setups + Wartung. ≈ **30.000 €**.
+- **Basis (P50):** M1–3 Bau/Dogfooding, M4 Audit-Tool + erster Pilot, M6+ zweites
+  Setup + laufende SaaS-Light-Lizenzen. Setups ≈ 8.000 € + Lizenzen ≈ 5.400 €
+  → Jahressumme ≈ **13.000 €** (die wiederkehrende Lizenz ist der Fortschritt ggü. der Erst-Prüfung).
+- **Optimistisch (P20):** Audit-Tool/Referenz zieht, 5 Setups + Lizenzen. ≈ **45.000 €**.
 
 **€/Arbeitsstunde (M12; ~50 h Restbau + 3 h/Woche laufend ≈ 200 h gesamt):**
 konservativ 0 € ❌ · Basis ≈ 50–80 €/h ✓ · optimistisch ≈ 150 €/h ✓✓
@@ -83,18 +100,25 @@ konservativ 0 € ❌ · Basis ≈ 50–80 €/h ✓ · optimistisch ≈ 150 €
    genutzt wird, ist es demo-reif. Max. **7 Arbeitstage** bis dahin.
 2. **Kein Vertrieb vor Referenz:** Demo-Video + Landingpage (Konzept liegt)
    erst NACH funktionierendem Dogfooding; Preisliste erst nach Pilot-Feedback.
-3. **Wartungsverträge nur mit begrenzter SLA** (next business day, werktags).
-4. **Nachprüfung M3** nach Pilot: Prognose vs. Ist hier nachtragen.
+3. **SaaS-Light/Wartung nur mit begrenzter SLA** (next business day, werktags) —
+   keine 24/7-Zusagen als Einzelperson.
+4. **Audit-Tool als Lead-Magnet** (Trojanisches Pferd) ist der GTM-Hebel:
+   Mini-Extension (~2 Tage) NACH dem Dogfooding, vor aktivem Vertrieb.
+5. **BSI-Zertifizierung NICHT Jahr 1** (teuer/langwierig) — als Enterprise-Hebel
+   für Phase 2 vormerken, nicht in die Startkalkulation nehmen.
+6. **Nachprüfung M3** nach Pilot: Prognose vs. Ist hier nachtragen.
 
 ```json
 {
   "produkt": "Broki AI Browser-Extension (B2B: Kanzleien/Praxen/KMU)",
   "marktbedarf": {"score_0_10": 7, "begruendung": "DSGVO-Kaufdruck real + Copilot-FOMO; Engpass ist Vertriebszugang, nicht Technik"},
-  "kosten": {"einmalig_eur": 0, "laufend_eur_monat": 0, "arbeitszeit_h_woche": 3, "restbau_h": 50},
+  "erloesmodell": {"b2b_saas_light_eur_seat_monat": "5-10 (Businessplan, unvalidiert)", "bruttomarge_prozent": 95, "done_for_you_setup_eur": "2500-8000", "b2c_premium_eur_monat": 5},
+  "kosten": {"einmalig_eur": 0, "laufend_eur_monat": 0, "arbeitszeit_h_woche": 3, "restbau_h": 60},
   "break_even_monat": {"konservativ": null, "basis": 8, "optimistisch": 5},
-  "eur_pro_arbeitsstunde_monat12": {"konservativ": 0, "basis": 65, "optimistisch": 150},
+  "jahresumsatz_eur": {"konservativ": 0, "basis": 13000, "optimistisch": 45000},
+  "eur_pro_arbeitsstunde_monat12": {"konservativ": 0, "basis": 65, "optimistisch": 160},
   "empfehlung": "GO_MIT_AUFLAGEN",
-  "auflagen": ["Dogfooding-Pilot aufs eigene AI-OS-Wiki zuerst (max 7 Arbeitstage)", "kein Vertrieb vor Referenz", "SLA begrenzen", "Nachpruefung M3"],
+  "auflagen": ["Dogfooding-Pilot aufs eigene AI-OS-Wiki zuerst (max 7 Arbeitstage)", "Audit-Tool als GTM-Lead-Magnet", "kein Vertrieb vor Referenz", "SLA begrenzen", "BSI erst Phase 2", "Nachpruefung M3"],
   "status": "WARTET_AUF_FREIGABE"
 }
 ```

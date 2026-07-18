@@ -6,6 +6,27 @@
 
 ---
 
+## 2026-07-18 (Tag 8c) — Broki-Businessplan erweitert → Wissen aktualisiert
+
+CEO hat den Businessplan erweitert (102k → 118k Z.) — enthält jetzt die Zahlen,
+die bei der Erst-Gate-Prüfung fehlten. Eingearbeitet:
+
+1. **Gate-Prüfung aktualisiert** (`wirtschaftlichkeit-broki-ai.md`): Erlösmodell
+   ist jetzt belegt statt geraten — B2B SaaS-Light **5–10 €/Seat/M bei ~95 %
+   Marge** (wiederkehrend = echter Fortschritt!), Setup 2.500–8.000 €, ROI
+   „>380k €/Jahr @ 1.000 Nutzer" (als Pitch top, als Solo-Umsatz-Basis untauglich).
+   Prüfer bleibt konservativ: Plan-Zahlen UNVALIDIERT → Basis-Szenario ≈ 13k €/
+   Jahr 1 (vorher 10k). Neue Auflagen: Audit-Tool als GTM-Lead-Magnet, BSI erst
+   Phase 2. Empfehlung unverändert GO_MIT_AUFLAGEN.
+2. **Architektur-Plan** (`Architektur-Broki-Extension.md`, Abschnitt 5b): drei
+   Ausbau-Ideen aus dem Plan eingeordnet — P2P-Vektor-Sync (WebRTC/Gossip),
+   Zero-Trust-Partner-Partition, Auto-Learning — alle ausdrücklich Phase 2+
+   (nicht v1). Wettbewerbs-Abgrenzung (vs. Copilot / WebLLM) für Pitch festgehalten.
+3. **SKILL** ergänzt (Erlösmodell, GTM „Trojanisches Pferd", Zielmarkt-Phasen).
+   → alles ins RAG-Gedächtnis.
+
+---
+
 ## 2026-07-18 (Tag 8b) — Betrieb: Tunnel + LLM-Fallback + Datenschutz-Schalter
 
 CEO meldete „ai-os.vuxuantiep.de läuft nicht" + „KI-Fallback muss autonom sein"
