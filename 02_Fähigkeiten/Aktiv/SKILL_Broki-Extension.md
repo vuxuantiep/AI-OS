@@ -58,10 +58,28 @@ Gedächtnis + austauschbarem LLM-Motor.
   vs. WebLLM = proaktiv mit Firmen-RAG statt passiver Chat-Demo.
 - Gate: `wirtschaftlichkeit-broki-ai.md` GO_MIT_AUFLAGEN (Basis ≈ 13k €/Jahr 1).
 
+## Kopierschutz (CEO-Frage „wie schütze ich Broki vor Nachbau?")
+
+4-stufige „IP-Schutzburg", Empfehlung nach ROI:
+1. **Lizenz-Wächter (Chef-Schlüssel)** ⭐ — UI/RAG schaltet nur mit signiertem,
+   an die Firmen-Domain gebundenem Lizenz-Zertifikat frei. **Nutzt die schon
+   gebaute ECDSA-Signaturkette** → ~1 Tag, gehört in v1. Wirksamster Schutz.
+2. **Rechtsschutz** — Urheberrecht (→ DMCA-Takedown bei 1:1-Kopie aus dem Web
+   Store) + Marke „Broki AI" anmelden (paar hundert €).
+3. **WASM-Obfuskation** — Kernlogik in C++/Rust → Emscripten-Bytecode, Symbole
+   strippen, LLVM-Control-Flow-Obfuscation. Erst bei zahlenden Kunden.
+4. **Netzwerk-Geheimnis** — echter USP ist das WebRTC-Mesh-Protokoll (nicht
+   kopierbar); ergibt sich mit dem Mesh-Ausbau.
+Merksatz: Sichtbares JS ist nachbaubar, aber wertlos ohne dein Lizenz-Zertifikat.
+
 ## Ausbau-Ideen (Phase 2+, NICHT v1)
 
 P2P-Vektor-Sync via WebRTC (Gossip im LAN) · Zero-Trust-Partner-Partition ·
-Auto-Learning aus Feedback (Vorsicht Modell-Drift) · BSI-Zertifizierung.
+Auto-Learning aus Feedback (Vorsicht Modell-Drift) · BSI-Zertifizierung ·
+**Hermes-Loop** (autonome Skill-Generierung: beobachtet repetitive Formulare →
+schlägt lokalen Workflow vor) · **Mesh-Schwarm** (Rollen-Sub-Agenten, Task-
+Chunking via WebRTC an freie Kollegen-CPUs, serverlose Team-KI). Beide =
+Investoren-Vision 2027/2028, NICHT Jahr-1-Zusage (Haftung/Komplexität).
 
 ## Offene Bausteine
 

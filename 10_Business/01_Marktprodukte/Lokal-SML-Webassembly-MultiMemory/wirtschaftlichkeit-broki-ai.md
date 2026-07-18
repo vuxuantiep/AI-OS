@@ -49,6 +49,25 @@ Der erweiterte Plan liefert jetzt konkrete Werte. Gegenüberstellung Plan ↔ Pr
 | **GTM „Trojanisches Pferd"** (kostenloses Audit-Tool „wie oft kopieren MA Daten in ChatGPT?") | GTM-Strategie | **Stark** — löst das Zugangsproblem clever, konkret baubar (Mini-Extension), ehrlicher Aufhänger |
 | **BSI-Zertifizierung** für Kanzleien/Behörden | GTM-Strategie | Türöffner, aber teuer + langwierig (Monate, 4-/5-stellig) → NICHT Jahr 1, später als Enterprise-Hebel |
 
+## 1d. Nachtrag Businessplan-Erweiterung (133k Z., 18.07.2026 abends)
+
+Neue Inhalte, Prüfer-Einordnung:
+
+- **Neue Branchen — Logistik/Hafen + E-Commerce:** starke Usecases genau dort, wo
+  Netzausfälle teuer sind (Hamburger Hafen: Funklöcher durch Stahlcontainer →
+  Zoll-/Gefahrgut-Index offline im Browser). **Aber:** HHLA/EUROGATE = Großenterprise-
+  Vertrieb (12–24 Monate, Ausschreibungen) → Jahr-1-unerreichbar für Solo, wie
+  Medizin/Banken. Einordnung: **Phase-2-Narrativ**, nicht Startmarkt. Beachhead
+  bleibt Kanzleien/Steuerberater.
+- **IP-/Kopierschutz** (CEO-Kernfrage): senkt das Risiko „Konkurrent baut nach"
+  deutlich — v.a. der **Lizenz-Wächter** (nutzt vorhandene Signaturkette, ~1 Tag)
+  + Markenanmeldung (~ein paar hundert €). Details in `Architektur-Broki-Extension.md`
+  §5c. Neue Auflage unten.
+- **Hermes-Loop + Mesh-Schwarm** (autonome Workflows, serverlose Team-KI): das
+  ist die **Investoren-Vision 2027/2028** — hebt die Valuation im Pitch, aber
+  Prüfer-Warnung: NICHT als Jahr-1-Feature kalkulieren oder versprechen
+  (Autonomie-Haftung, WebRTC-Mesh-Komplexität). Gehört ins Pitch-Deck, nicht in die 12-Monats-Rechnung.
+
 ## 2. Einnahmequellen-Inventar (Basis = Businessplan-Zahlen, konservativ gedeckelt)
 
 | Quelle | Voraussetzung | Kennzahl (Herkunft) | fließt ab | konserv. | Basis | optim. |
@@ -106,7 +125,12 @@ konservativ 0 € ❌ · Basis ≈ 50–80 €/h ✓ · optimistisch ≈ 150 €
    Mini-Extension (~2 Tage) NACH dem Dogfooding, vor aktivem Vertrieb.
 5. **BSI-Zertifizierung NICHT Jahr 1** (teuer/langwierig) — als Enterprise-Hebel
    für Phase 2 vormerken, nicht in die Startkalkulation nehmen.
-6. **Nachprüfung M3** nach Pilot: Prognose vs. Ist hier nachtragen.
+6. **Kopierschutz früh**: Lizenz-Wächter (Chef-Schlüssel, ~1 Tag, nutzt vorhandene
+   Signaturkette) + Markenanmeldung „Broki AI" vor dem ersten Verkauf. WASM-
+   Obfuskation erst bei zahlenden Kunden.
+7. **Vision sauber trennen**: Hermes-Loop/Mesh-Schwarm nur im Pitch-Deck als
+   „Vision 2027/2028", nie als Jahr-1-Zusage — sonst Haftungs-/Erwartungsfalle.
+8. **Nachprüfung M3** nach Pilot: Prognose vs. Ist hier nachtragen.
 
 ```json
 {

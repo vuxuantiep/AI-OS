@@ -6,6 +6,27 @@
 
 ---
 
+## 2026-07-18 (Tag 8e) — Broki-Businessplan 2. Erweiterung (IP-Schutz, Hermes, Mesh)
+
+Plan von 118k → 133k gewachsen. Neue Inhalte eingearbeitet:
+
+1. **IP-/Kopierschutz** (CEO-Kernfrage „wie schütze ich Broki vor Nachbau?"):
+   4-stufige „Schutzburg" in `Architektur-Broki-Extension.md` §5c mit ROI-Ranking.
+   Wichtigste Erkenntnis: der **Lizenz-Wächter (Chef-Schlüssel)** ist quasi
+   geschenkt — er nutzt die BEREITS gebaute ECDSA-Signaturkette (nur ein
+   zusätzliches, an die Firmen-Domain gebundenes Lizenz-Zertifikat, das UI/RAG
+   freischaltet). Bester Schutz, ~1 Tag, v1-tauglich. Rest: Marke anmelden
+   (billig), WASM-Obfuskation (erst bei Kunden), Mesh-Protokoll = eigentlicher USP.
+2. **Neue Branchen** Hafen/Logistik + E-Commerce: super Usecases (Netzausfall-
+   Umfeld), aber Großenterprise-Vertrieb → Phase-2-Narrativ, nicht Startmarkt.
+3. **Hermes-Loop + Mesh-Schwarm** (autonome Workflows, serverlose Team-KI via
+   WebRTC): als Ausbau-Ideen §5b + Gate klar als **Vision 2027/2028** markiert —
+   Pitch-Deck-Material, NICHT Jahr-1-Kalkulation (Autonomie-Haftung).
+4. Gate um 2 Auflagen erweitert (Kopierschutz früh, Vision sauber trennen),
+   SKILL um IP-Schutz + Hermes/Mesh ergänzt. → alles ins RAG-Gedächtnis.
+
+---
+
 ## 2026-07-18 (Tag 8d) — Pi-Gegenstück gebaut + 3-Wege-LLM-Schalter + Hell-Theme
 
 CEO-Freigabe fürs Pi-Gegenstück erteilt → gebaut (Dogfooding aufs eigene 00_Wissen,

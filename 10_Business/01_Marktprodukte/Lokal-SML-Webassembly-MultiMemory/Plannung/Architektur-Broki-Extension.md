@@ -125,11 +125,30 @@ Der Plan (118k Z.) beschreibt drei Ausbaustufen, die die aktuelle Sync-Architekt
 | **P2P Knowledge Sharing (WebRTC)** | Clients tauschen neue Wissens-Vektoren direkt im LAN aus („Gossip/Flüster-Netzwerk"), statt nur zentral über den Pi | Reizvoll, aber Komplexität hoch (NAT, Konsistenz, Vergiftungs-Schutz P2P). **Erst NACH** dem zentralen Pi-Sync; nicht v1. Sicherheit: gleiche Signaturpflicht wie zentral |
 | **Zero-Trust Partner-Netzwerk** | Externen Partnern einen GEFILTERTEN Teil des RAG-Index geben (Wissen teilen, nie Systemzugang) | Passt sauber aufs Rollen-Modell (neue Partition „partner" + eigener Public-Key). Guter B2B-Hebel Phase 2 |
 | **Auto-Learning aus Nutzer-Feedback** | Lokales Fine-Tuning/Feedback verbessert den Client über Zeit | Vorsicht: lokale Modell-Drift + kein Rückkanal in den signierten Kollektiv-Index. Als reine L1/L2-Cache-Anreicherung ok; echtes Finetuning = späteres Forschungsthema |
+| **Hermes-Loop (autonome Skill-Generierung)** | Beobachtet repetitive Klicks/Formulare → schlägt lokal generierten Workflow vor („Soll ich das ab jetzt für dich machen?") | Baut auf dem bestehenden Crash-Rollback-Beobachter auf (der protokolliert schon Feldeingaben). **Vision-Feature 2027**, hohes WOW im Pitch; v1 zu komplex/riskant (Autonomie-Freigaben, Fehlerhaftung) |
+| **Autonome Teamfähigkeit (Mesh-Schwarm)** | Rollen-Sub-Agenten auf mehreren Laptops; großes Dokument wird per WebRTC an Kollegen mit freien CPUs verteilt (Task-Chunking) → kollektive Synthese, komplett serverlos | Starke Investoren-Vision („Post-Cloud-Ära, Schwarm-Intelligenz"). Technisch weit (WebRTC-Mesh, Scheduling, Konsistenz). Klar als **Vision 2027/2028** kennzeichnen, NICHT als Jahr-1-Zusage verkaufen |
 
 **Wettbewerbs-Abgrenzung (aus dem Plan, für Pitch/README):** vs. M365 Copilot =
 lokal statt Cloud, plattformübergreifend (jede Web-App, auch SAP/CRM), 0 € statt
 ~30 €/Seat; vs. WebLLM/WebChatLLM = proaktive Extension mit Firmen-RAG statt
 passiver Chat-Demo, Modell gecacht statt jedes Mal 2–4 GB neu.
+
+## 5c. IP-/Kopierschutz — „Wie schütze ich Broki vor Nachbau?" (CEO-Frage)
+
+Der Plan skizziert eine 4-stufige „IP-Schutzburg". Architekt-Einordnung nach
+Aufwand vs. Wirkung — **Reihenfolge = Empfehlung**:
+
+| Stufe | Methode | Bewertung / wann |
+|---|---|---|
+| **1. Lizenz-Wächter (Chef-Schlüssel)** ⭐ | Extension bleibt gratis ladbar, aber UI + RAG schalten NUR mit signiertem Lizenz-Zertifikat frei, kryptografisch an die Firmen-Domain gebunden. Kopie ohne gültige Signatur = tot. | **SOFORT machbar** — nutzt die BEREITS gebaute ECDSA-Signaturkette (`sign_utils.py`/`crypto-utils.js`)! Selbe Technik wie Index-Signatur, nur ein zusätzliches Lizenz-Objekt. Bester ROI, gehört in v1. |
+| **2. Rechtsschutz** | Urheberrecht (automatisch, ermöglicht DMCA-Takedown aus dem Web Store bei 1:1-Kopie) + **Marke „Broki AI"** anmelden. | Günstig/schnell (Marke ein paar hundert €). Sollte parallel laufen — schützt den Namen im Enterprise-Markt. |
+| **3. WASM-Obfuskation** | Kernlogik in C++/Rust → Emscripten → `.wasm`-Bytecode, Debug-Symbole/Source-Maps strippen, Control-Flow-Obfuscation (LLVM-Obfuscator). | Echter Aufwand (Kernlogik umschreiben). Lohnt erst, wenn zahlende Kunden da sind. wllama IST schon WASM — eigene Logik nachziehen ist Stufe 2+. |
+| **4. Netzwerk-Geheimnis (Protokoll-USP)** | Der eigentliche, nicht kopierbare Wert ist das dezentrale WebRTC-Mesh-Protokoll — ein Einzel-Browser-LLM (WebChatLLM) ist trivial kopierbar, das Zusammenspiel nicht. | Ergibt sich automatisch, WENN das Mesh (5b) gebaut wird. Bis dahin theoretisch. |
+
+**Kernaussage für den CEO:** Der wirksamste Schutz ist NICHT Verschleierung,
+sondern der **Lizenz-Wächter** — und den kann Broki quasi geschenkt bekommen,
+weil die Signatur-Infrastruktur schon steht. Nachbau des sichtbaren JS ist
+möglich, aber wertlos ohne dein signiertes Lizenz-Zertifikat + (später) das Mesh.
 
 ## 6. Offene Punkte (ehrlich)
 
