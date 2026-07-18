@@ -88,6 +88,17 @@ Links: Datenschutz (Betriebsrat-Konformität als PDF), Impressum, GitHub (Open-S
 4. Echte Screenshots einsetzen, sobald MVP-1-Frontend steht.
 → Gesamt ~2–3 Tage für eine überzeugende v1, ohne Video/Logo (die parallel).
 
+## ⚠️ Positionierungs-Regel: Raspberry Pi = Zusatzpaket, NICHT im Kern-Verkaufstext
+
+CEO-Vorgabe 18.07.2026: Der Raspberry Pi / Tailscale-Sync ist NUR das
+MVP-/Homelab-Setup zum Testen. Im Verkauf ist der „Mini-KI-Server" ein
+**optionales Zusatzpaket**, kein Grundbestandteil.
+→ In Hero, Sub-Headline und Tech-Stack **kein Pi/Tailscale** erwähnen.
+Kern-Verkaufsargument = „100 % lokal im Browser (WebGPU/WASM), DSGVO, keine Cloud".
+Das kollektive Firmen-Wissensnetz (Pi-Sync) darf in einer SPÄTEREN Sektion als
+**Zusatzpaket „Mini-KI-Server"** vorkommen (Upsell), nie im ersten Eindruck.
+Gilt auch für die Broki-Karte auf vuxuantiep.de und das Produkt-Frontend.
+
 ## Wichtige Ehrlichkeits-Regel (Prüfer)
 
 Der Datenschutz-Schock (Sektion 2) und die Vergleichstabelle (7) müssen mit
