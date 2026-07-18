@@ -6,6 +6,40 @@
 
 ---
 
+## 2026-07-18 (Tag 8i) — Broki auf vuxuantiep.de integriert + Sicherheit/Compliance
+
+CEO: Broki-Präsentation auf der Hauptseite (ersetzt „Lego-AI"), Landingpage-Link,
+Hell/Dunkel im Frontend, + Sicherheits-/Compliance-Anforderungen (Zero-Trust,
+Signatur, Auditierbar, EU-AI-Act/NIS2/BSI/ISO).
+
+1. **Website-Integration** (separates Repo `Github_Projekte/vuxuantiep.de`,
+   TanStack/React, CEO gab „direkt im Repo bauen" frei):
+   - `BrokiHeroCard` ersetzt die KI-Fabrik-Slideshow im Hero — Browser-Fenster-
+     Mockup mit Broki-Sidebar + proaktivem Prüfhinweis (USt-IdNr §27a), zeigt den
+     USP sofort. CTA „Broki entdecken" → /broki.
+   - `/broki` Produktseite: Hero (vorhandener ParticleBackground) + 6 Vorteile +
+     Cloud-Assistenten-Abgrenzung + Sicherheit&Compliance-Grid + CTA. Dreisprachig
+     (t() DE/EN/VI), im Corporate-Design. Build ✓ (Route-Tree generiert).
+   - Sauber committet (NUR Broki-Dateien — mein `git add -A src/` hatte erst die
+     laufende Arbeit des Users mitgezogen → per reset --soft getrennt). NICHT
+     gepusht (Live-Website, CEO deployt selbst).
+   - **Positionierung:** kein Raspberry Pi/Tailscale im Verkaufstext (CEO: Pi =
+     MVP-Homelab, im Verkauf optionales Zusatzpaket „Mini-KI-Server"). Als
+     Feedback-Memory + Landingpage-Plan-Regel festgehalten.
+2. **Sicherheits-/Compliance-Konzept** (`Sicherheit-Compliance-Konzept-Broki.md`):
+   Was gebaut ist (ECDSA-Signatur, Zero-Trust-lokal, Rollen-Access, fail-closed,
+   AES-Journal) + Auditierbarkeit (Quellen-Rückführung, Netzwerk-Beweis, geplantes
+   signiertes Audit-Log) + regulatorische Ausrichtung (DSGVO by design, AI-Act
+   begrenztes Risiko, NIS2 unterstützend, BSI/ISO = Ziel Phase 2, NICHT Jahr 1).
+   Harte Ehrlichkeits-Regel: nie „zertifiziert" behaupten, nur „auditierbar/
+   vorbereitet" — auf /broki bereits mit Fußnote umgesetzt.
+3. Hell/Dunkel-Umschalter in Broki-Hero eingebaut + als Artifact veröffentlicht
+   (live ansehbar), themen-adaptiver Partikel-Hintergrund.
+
+Nächstes großes Paket: Broki-Frontend-Dashboard (MVP aus dem Mockup) — CEO-Wahl.
+
+---
+
 ## 2026-07-18 (Tag 8h) — Broki: animierter Partikel-Hintergrund + Hero-Seite gebaut
 
 CEO-Wunsch: Partikel-Netzwerk-Hintergrund wie itsupporthh.de, aber in Broki-Farben.
