@@ -6,6 +6,41 @@
 
 ---
 
+## 2026-07-18 (Tag 8d) — Pi-Gegenstück gebaut + 3-Wege-LLM-Schalter + Hell-Theme
+
+CEO-Freigabe fürs Pi-Gegenstück erteilt → gebaut (Dogfooding aufs eigene 00_Wissen,
+Gate-Auflage 1). Dazu 2 CEO-Wünsche: Cloud-Modus zum Rechner-Entlasten + helles UX-Theme.
+
+**1. Broki Pi-Server** (`Produkt/broki-pi-server/`, eigenständig, Python):
+- `sign_utils.py`: ECDSA-P256, **DER→P1363-Konvertierung** — der kritische Punkt,
+  weil WebCrypto (crypto.subtle.verify) NUR das P1363-Rohformat (r||s, 64 Byte)
+  akzeptiert, Python `cryptography` aber DER erzeugt. `test_signatur.py` beweist
+  es E2E: Python signiert → Node/WebCrypto verifiziert echt=✓, manipuliert=✗.
+- `index_builder.py`: 00_Wissen → Chunks → Embeddings via Ollama nomic (LOKAL,
+  nie Cloud) → rollenbasierte Partitionen (mitarbeiter/admin) → signiert.
+  Ergebnis: 74/75 Chunks, ~1,2 MB je Rolle, Public Key erzeugt.
+- `pi_server.py` :8088: manifest + partitionen, pfadsicher, Live getestet
+  (health ✓, 404 bei falscher Rolle ✓, 400 bei Pfad-Traversal/non-jsonl ✓).
+- Public Key in `broki-extension/config/broki-config.js` eingetragen.
+- Stolperstein: Windows-cp1252-Emoji-Crash im print → sys.stdout.reconfigure.
+
+**2. LLM-Schalter jetzt 3-Wege** (`llm_router.py` + Dashboard): lokal / hybrid /
+**cloud**. Cloud-Modus überspringt Ollama/LM Studio/LiteLLM → entlastet den
+eigenen Rechner (Pi bleibt, ist remote). **Bewiesen:** Ollama läuft, aber
+Cloud-Modus antwortet via Cloudflare Workers AI. UI: 3-Knopf-Schalter im Gateway-Tab.
+
+**3. Hell/Dunkel-Theme** (Dashboard-UX): `[data-theme="light"]`-Variablen-Override
+(inkl. neuer --bg-sidebar/--bg-topbar, damit auch Sidebar/Topbar mitschalten),
+🌙/☀️-Toggle in der Sidebar-Fußzeile, localStorage-Persistenz, `?theme=`-Deep-Link.
+Beide Themes per Screenshot geprüft — hell durchgängig konsistent.
+
+**Broki-Teststatus (Antwort an CEO):** Pi-Server + Signatur-Kette fertig & bewiesen.
+Für vollen Extension-Test fehlt clientseitig nur: `npm install` (vendor: WebLLM/
+wllama — User baut das gerade) ODER Cloud-Modus mit Key; + basisUrl auf
+127.0.0.1:8088 für lokalen Test. UI/Schalter/Tresor sind schon testbar.
+
+---
+
 ## 2026-07-18 (Tag 8c) — Broki-Businessplan erweitert → Wissen aktualisiert
 
 CEO hat den Businessplan erweitert (102k → 118k Z.) — enthält jetzt die Zahlen,

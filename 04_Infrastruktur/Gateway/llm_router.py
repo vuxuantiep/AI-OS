@@ -103,24 +103,34 @@ OPENROUTER_ALTERNATES = [
 ]
 
 
-# ---------- Globaler LLM-Modus-Schalter (Lokal / Hybrid) ----------
-# Vom Dashboard umschaltbar. "lokal" = NUR selbst-gehostete Engines
-# (Ollama, LM Studio, Raspberry Pi über Tailscale) — KEIN Fremd-Cloud-Provider.
-# "hybrid" = lokale Engine zuerst, dann Cloud-Fallback (Workers AI/OpenRouter/…).
+# ---------- Globaler LLM-Modus-Schalter (Lokal / Hybrid / Cloud) ----------
+# Vom Dashboard umschaltbar:
+#   "lokal"  = NUR selbst-gehostete Engines (Ollama, LM Studio, Pi über Tailscale)
+#              — KEIN Fremd-Cloud-Provider. Maximaler Datenschutz.
+#   "hybrid" = lokale Engine zuerst, dann Cloud-Fallback (Standard).
+#   "cloud"  = Cloud/Remote ZUERST — überspringt lokale Engines (Ollama/LM Studio/
+#              LiteLLM), um den EIGENEN Rechner zu entlasten. Sinnvoll, wenn die
+#              lokale GPU/CPU stark ausgelastet ist. Pi (remote) bleibt erlaubt.
 # Hinweis: 00_Wissen (knowledge_agent.py) ist DAVON UNABHÄNGIG immer rein lokal.
 LLM_MODE_FILE = Path(__file__).parent / "llm_mode.json"
+LLM_MODI = ("lokal", "hybrid", "cloud")
 
 
 def get_llm_mode():
-    """Aktueller Modus: 'lokal' oder 'hybrid' (Default: hybrid)."""
+    """Aktueller Modus: 'lokal', 'hybrid' oder 'cloud' (Default: hybrid)."""
     try:
-        return json.loads(LLM_MODE_FILE.read_text(encoding="utf-8")).get("mode", "hybrid")
+        mode = json.loads(LLM_MODE_FILE.read_text(encoding="utf-8")).get("mode", "hybrid")
+        return mode if mode in LLM_MODI else "hybrid"
     except Exception:
         return "hybrid"
 
 
 def set_llm_mode(mode):
-    mode = "lokal" if str(mode).lower() in ("lokal", "local", "lokal-only") else "hybrid"
+    mode = str(mode).lower()
+    if mode in ("local", "lokal-only"):
+        mode = "lokal"
+    if mode not in LLM_MODI:
+        mode = "hybrid"
     LLM_MODE_FILE.write_text(json.dumps({"mode": mode}), encoding="utf-8")
     return mode
 
@@ -552,15 +562,19 @@ class LLMRouter:
         base = _base_model_name(model)
         errors = []
 
-        # Globaler Schalter: im Lokal-Modus werden alle Fremd-Cloud-Provider
-        # übersprungen (nur Ollama / LM Studio / Pi über Tailscale).
-        nur_lokal = get_llm_mode() == "lokal"
+        # Globaler Schalter:
+        #   nur_lokal    → alle Fremd-Cloud-Provider übersprungen
+        #   cloud_zuerst → lokale Engines (Ollama/LM Studio/LiteLLM) übersprungen,
+        #                  um den eigenen Rechner zu entlasten (Pi bleibt, ist remote)
+        _mode = get_llm_mode()
+        nur_lokal = _mode == "lokal"
+        cloud_zuerst = _mode == "cloud"
 
-        # Lokale Engine bei Bedarf automatisch hochfahren (entkoppelt von VSCode/Terminal)
-        if not self.local_engine_online():
+        # Lokale Engine nur hochfahren, wenn wir sie auch nutzen wollen.
+        if not cloud_zuerst and not self.local_engine_online():
             self.autostart_local_engine(wait=8)
 
-        if self.ollama_online():
+        if not cloud_zuerst and self.ollama_online():
             try:
                 content, used = self._chat_ollama(messages, model, temperature, num_predict, timeout)
                 self.last_provider = "ollama"
@@ -569,7 +583,7 @@ class LLMRouter:
             except Exception as e:
                 errors.append(f"Ollama: {e}")
 
-        if self.lmstudio_online():
+        if not cloud_zuerst and self.lmstudio_online():
             try:
                 lm_model = self._lmstudio_model(base)
                 content, used = self._chat_openai_compatible(
@@ -581,9 +595,9 @@ class LLMRouter:
             except Exception as e:
                 errors.append(f"LM Studio: {e}")
 
-        # LiteLLM hat eigene Cloud-Fallbacks → im Lokal-Modus überspringen
-        # (Ollama wurde oben bereits direkt versucht).
-        if not nur_lokal and self.litellm_online():
+        # LiteLLM startet selbst mit Ollama → im Lokal-Modus (Cloud gesperrt) UND
+        # im Cloud-Modus (lokale Last vermeiden) überspringen.
+        if not nur_lokal and not cloud_zuerst and self.litellm_online():
             try:
                 ll_model = base if base in LITELLM_KNOWN_MODELS else "llama3"
                 content, used = self._chat_openai_compatible(
@@ -663,6 +677,10 @@ class LLMRouter:
             except Exception as e:
                 errors.append(f"Cloudflare: {e}")
 
+        if cloud_zuerst and not errors:
+            errors.append("Cloud-Modus aktiv (lokale Engines übersprungen, um den "
+                          "Rechner zu entlasten), aber kein Cloud-Provider erreichbar. "
+                          "Cloud-Keys in .env prüfen oder im Dashboard auf Hybrid/Lokal schalten.")
         if not errors:
             if nur_lokal:
                 errors.append("Lokal-Modus aktiv und keine lokale Engine erreichbar "

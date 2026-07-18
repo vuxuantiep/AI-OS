@@ -36,6 +36,38 @@
             --shadow: 0 8px 32px rgba(0,0,0,0.5);
             --shadow-lg: 0 16px 48px rgba(0,0,0,0.6);
             --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg-sidebar: rgba(15,15,17,0.85);
+            --bg-topbar: rgba(10,10,11,0.75);
+        }
+
+        /* Helles Theme (UX-Umschalter) — überschreibt nur die Farb-Variablen,
+           Layout/Radius/Transition bleiben. Aktiviert via <html data-theme="light">. */
+        [data-theme="light"] {
+            --bg-primary: #f6f7fb;
+            --bg-secondary: #eef0f6;
+            --bg-tertiary: #e7eaf2;
+            --bg-card: #ffffff;
+            --bg-elevated: #ffffff;
+            --bg-hover: #eef2fb;
+            --text-primary: #1c2333;
+            --text-secondary: #4a5262;
+            --text-muted: #8a92a3;
+            --accent: #2f6fed;
+            --accent-hover: #1d5ad6;
+            --accent-soft: rgba(47,111,237,0.10);
+            --accent-glow: rgba(47,111,237,0.18);
+            --success: #1a9e5c;
+            --success-soft: rgba(26,158,92,0.12);
+            --warning: #b7791f;
+            --warning-soft: rgba(183,121,31,0.14);
+            --danger: #c0392b;
+            --danger-soft: rgba(192,57,43,0.12);
+            --border: rgba(20,30,60,0.10);
+            --border-strong: rgba(20,30,60,0.18);
+            --shadow: 0 8px 32px rgba(30,40,70,0.10);
+            --shadow-lg: 0 16px 48px rgba(30,40,70,0.14);
+            --bg-sidebar: rgba(255,255,255,0.88);
+            --bg-topbar: rgba(246,247,251,0.80);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -74,7 +106,7 @@
         .sidebar {
             width: 230px;
             flex-shrink: 0;
-            background: rgba(15,15,17,0.85);
+            background: var(--bg-sidebar);
             border-right: 1px solid var(--border);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -185,7 +217,7 @@
             justify-content: space-between;
             align-items: center;
             flex-shrink: 0;
-            background: rgba(10,10,11,0.75);
+            background: var(--bg-topbar);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             position: sticky;
@@ -1091,6 +1123,8 @@
             <div class="sidebar-footer">
                 <span class="status-dot" id="ollama-dot"></span>
                 <span class="label">Ollama</span>
+                <button id="theme-toggle" onclick="toggleTheme()" title="Hell/Dunkel umschalten"
+                    style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text-secondary);cursor:pointer;padding:0.2rem 0.45rem;font-size:0.95rem;">🌙</button>
             </div>
         </aside>
 
@@ -1266,17 +1300,14 @@
                         <button class="btn btn-success btn-sm" id="llm-start-btn" style="display:none;" onclick="startLocalEngine(this)">▶ Lokale KI-Engine starten</button>
                     </div>
                     <div class="service-card" style="max-width:720px;margin-top:1rem;border-left:3px solid var(--accent);">
-                        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-                            <div style="flex:1;min-width:220px;">
-                                <b>🔒 Datenschutz-Schalter</b>
-                                <div class="desc" style="margin-top:0.3rem;">
-                                    <b id="llm-mode-label">…</b> —
-                                    <span id="llm-mode-hint"></span><br>
-                                    <span class="muted">Das Gedächtnis (00_Wissen) bleibt IMMER lokal, unabhängig von diesem Schalter.</span>
-                                </div>
-                            </div>
-                            <button class="btn btn-sm" id="llm-mode-btn" onclick="toggleLlmMode(this)">…</button>
+                        <b>🎚️ KI-Modus-Schalter</b>
+                        <div style="display:flex;gap:0.4rem;margin:0.7rem 0;flex-wrap:wrap;">
+                            <button class="btn btn-sm llm-mode-opt" data-mode="lokal" onclick="setLlmMode('lokal')">🔒 Nur lokal</button>
+                            <button class="btn btn-sm llm-mode-opt" data-mode="hybrid" onclick="setLlmMode('hybrid')">⚖️ Hybrid</button>
+                            <button class="btn btn-sm llm-mode-opt" data-mode="cloud" onclick="setLlmMode('cloud')">☁️ Cloud (Rechner entlasten)</button>
                         </div>
+                        <div class="desc" id="llm-mode-hint">…</div>
+                        <div class="muted" style="margin-top:0.4rem;">Das Gedächtnis (00_Wissen) bleibt IMMER lokal, unabhängig von diesem Schalter.</div>
                     </div>
                     <div class="services-grid" id="llm-grid" style="margin-top: 1rem;">
                         <div class="empty-state">Lade Provider...</div>
@@ -1712,6 +1743,22 @@
     <div id="toast-container"></div>
 
     <script>
+        // === Theme (Hell/Dunkel) — früh anwenden, damit kein Flackern entsteht ===
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            const btn = document.getElementById('theme-toggle');
+            if (btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+        }
+        function toggleTheme() {
+            const neu = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            localStorage.setItem('ai-os-theme', neu);
+            applyTheme(neu);
+        }
+        // Deep-Link ?theme=light|dark überschreibt einmalig die gespeicherte Wahl
+        const _themeParam = new URLSearchParams(location.search).get('theme');
+        if (_themeParam === 'light' || _themeParam === 'dark') localStorage.setItem('ai-os-theme', _themeParam);
+        applyTheme(localStorage.getItem('ai-os-theme') || 'dark');
+
         // === State ===
         let chatHistory = [];
         let knownServices = [];
@@ -2178,36 +2225,29 @@
                 </div>`;
         }
 
-        // --- Lokal/Cloud-Datenschutz-Schalter ---
+        // --- KI-Modus-Schalter (Lokal / Hybrid / Cloud) ---
+        const LLM_MODE_HINTS = {
+            lokal:  '🔒 <b>Nur lokal</b> — ausschließlich eigene Engines (Ollama/LM Studio/Pi). Keine Fremd-Cloud, maximaler Datenschutz.',
+            hybrid: '⚖️ <b>Hybrid</b> — lokale Engine zuerst; fällt sie aus, übernimmt automatisch die Cloud (Workers AI/OpenRouter …).',
+            cloud:  '☁️ <b>Cloud</b> — Cloud/Pi zuerst, lokale Engines werden übersprungen, um deinen Rechner zu entlasten (bei hoher GPU/CPU-Last).'
+        };
         function renderLlmMode(mode) {
-            const lokal = mode === 'lokal';
-            const label = document.getElementById('llm-mode-label');
             const hint = document.getElementById('llm-mode-hint');
-            const btn = document.getElementById('llm-mode-btn');
-            if (!label || !btn) return;
-            label.textContent = lokal ? '🔒 Nur lokal' : '☁️ Hybrid (lokal + Cloud)';
-            label.style.color = lokal ? 'var(--success)' : 'var(--warning)';
-            hint.textContent = lokal
-                ? 'Es werden ausschließlich eigene Engines genutzt (Ollama/LM Studio/Pi). Keine Fremd-Cloud.'
-                : 'Lokale Engine zuerst; fällt sie aus, übernimmt automatisch die Cloud (Workers AI/OpenRouter …).';
-            btn.textContent = lokal ? '☁️ Cloud-Fallback erlauben' : '🔒 Auf „nur lokal" schalten';
+            if (hint) hint.innerHTML = LLM_MODE_HINTS[mode] || LLM_MODE_HINTS.hybrid;
+            document.querySelectorAll('.llm-mode-opt').forEach(b =>
+                b.classList.toggle('btn-success', b.dataset.mode === mode));
         }
         async function loadLlmMode() {
-            try {
-                const r = await fetch('/api/llm/mode');
-                renderLlmMode((await r.json()).mode);
-            } catch (e) {}
+            try { renderLlmMode((await (await fetch('/api/llm/mode')).json()).mode); } catch (e) {}
         }
-        async function toggleLlmMode(btnEl) {
-            btnEl.disabled = true;
+        async function setLlmMode(mode) {
             try {
-                const cur = await (await fetch('/api/llm/mode')).json();
-                const neu = cur.mode === 'lokal' ? 'hybrid' : 'lokal';
                 const r = await fetch('/api/llm/mode', {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({mode: neu})});
+                    body: JSON.stringify({mode})});
                 renderLlmMode((await r.json()).mode);
-            } finally { btnEl.disabled = false; }
+                loadLlmStatus();
+            } catch (e) {}
         }
 
         async function loadLlmStatus() {

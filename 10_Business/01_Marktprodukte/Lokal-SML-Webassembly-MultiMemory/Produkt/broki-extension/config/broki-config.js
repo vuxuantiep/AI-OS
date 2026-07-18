@@ -8,21 +8,25 @@ export const BROKI_CONFIG = {
   // MagicDNS-Name des Pi im Tailnet. Traffic ist durch Tailscale (WireGuard)
   // bereits transportverschlüsselt — deshalb reicht http im Tailnet.
   pi: {
+    // Ziel-Deployment: MagicDNS-Name des Pi im Tailnet (Traffic ist via
+    // Tailscale/WireGuard verschlüsselt → http reicht).
+    // LOKALER DOGFOODING-TEST: auf "http://127.0.0.1:8088" umstellen und die
+    // host_permissions im manifest.json entsprechend ergänzen.
     basisUrl: "http://pi-ki-tiep.tailed32d1.ts.net:8088",
-    // Endpunkte, die der Pi bereitstellt (siehe Server-Gegenstück):
-    //   GET /index/manifest.json     → { version, rolle, dateien: [...], signatur }
-    //   GET /index/<datei>.bin       → Vektor-Partition (Binärpaket)
+    // Endpunkte des broki-pi-server (Gegenstück):
+    //   GET /index/manifest.json?rolle=<r> → { version, rolle, dateien:[{pfad,sha256,signatur,chunks}] }
+    //   GET /index/<rolle>.jsonl           → JSON-Zeilen {chunkId, partition, text, vektor}
     manifestPfad: "/index/manifest.json",
     syncIntervallMinuten: 30
   },
 
   // --- Manipulationsschutz ---------------------------------------------------
-  // Firmen-Public-Key (ECDSA P-256, SPKI, Base64). Der Pi signiert das
-  // SHA-256-Digest jedes Index-Pakets mit dem privaten Firmen-Schlüssel;
-  // die Extension verifiziert VOR dem Entpacken. Schlüsselerzeugung:
-  //   openssl ecparam -name prime256v1 -genkey -noout -out firma.key
-  //   openssl ec -in firma.key -pubout -outform DER | base64 -w0
-  firmenPublicKeySpkiB64: "ERSETZEN_DURCH_FIRMEN_PUBLIC_KEY_BASE64",
+  // Firmen-Public-Key (ECDSA P-256, SPKI, Base64). Der Pi signiert jedes
+  // Index-Paket mit dem privaten Firmen-Schlüssel; die Extension verifiziert
+  // VOR dem Entpacken. Erzeugt vom broki-pi-server (index_builder.py gibt den
+  // passenden Public Key aus). Dieser Wert gehört zum Schlüssel in
+  // broki-pi-server/keys/firma_privat.pem (Dogfooding-Instanz, Stand 18.07.2026):
+  firmenPublicKeySpkiB64: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEF1i+hiQuBFZdqI7dQ1rzGrqMc3xxPd6glnreigG3bauoj46ZHSEX/LXrd6GM0MQlRav5TmoHPR+7t/YQM0bCMA==",
 
   // --- Rollen (rollenbasierter RAG-Index) ------------------------------------
   // Die Rolle entscheidet, welche Index-Partitionen der Pi ausliefert.
