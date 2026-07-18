@@ -22,6 +22,14 @@ export class LLMGateway {
     this.motor = null;        // { name, generate(prompt), embed(text)? }
     this.motorName = "keiner";
     this._initPromise = null;
+    this.modus = "local";     // "local" | "cloud"
+  }
+
+  /** Modus umschalten: „local" = nur lokale Motoren, „cloud" = lokale Motoren
+   *  zuerst, bei Fehler automatisch auf Cloud-API fallen. */
+  setModus(modus) {
+    this.modus = modus === "cloud" ? "cloud" : "local";
+    console.log("[Broki/LLM] Modus gewechselt auf:", this.modus);
   }
 
   // ---------------------------------------------------------------------------
@@ -111,10 +119,14 @@ export class LLMGateway {
         return this.motorName;
       } catch (e) {
         console.warn("[Broki/LLM] WebLLM-Start fehlgeschlagen:", e.message);
+        if (this.modus === "cloud") {
+          const name = await this._initCloud();
+          if (name) return name;
+        }
       }
     }
 
-    // --- Motor 3: wllama (CPU, läuft fast überall) --------------------------
+    // --- Motor 3: wllama (CPU, läuft praktisch überall) ----------------------
     try {
       const { Wllama } = await import("../vendor/wllama/index.js");
       const wllama = new Wllama({
@@ -136,8 +148,67 @@ export class LLMGateway {
       console.log("[Broki/LLM] Motor: wllama (CPU),", stufe.wllamaGguf);
       return this.motorName;
     } catch (e) {
-      console.error("[Broki/LLM] Kein Motor verfügbar:", e.message);
-      throw new Error("Kein KI-Motor verfügbar (weder native API, WebGPU noch WASM).");
+      console.warn("[Broki/LLM] wllama-Start fehlgeschlagen:", e.message);
+      if (this.modus === "cloud") {
+        const name = await this._initCloud();
+        if (name) return name;
+      }
+    }
+
+    // --- Motor 4: Cloud-Fallback (nur wenn Modus=cloud) ----------------------
+    if (this.modus === "cloud") {
+      const name = await this._initCloud();
+      if (name) return name;
+    }
+
+    throw new Error("Kein KI-Motor verfügbar (weder native API, WebGPU noch WASM).");
+  }
+
+  /** Cloud-Fallback: OpenAI-kompatibler Endpoint (z.B. eigener Server,
+   *  Azure OpenAI, OpenRouter, etc.). Konfiguration in broki-config.js. */
+  async _initCloud() {
+    const url = BROKI_CONFIG.cloud?.endpoint;
+    const key = BROKI_CONFIG.cloud?.apiKey;
+    const modell = BROKI_CONFIG.cloud?.modell || "gpt-4o-mini";
+    if (!url || !key) {
+      console.warn("[Broki/LLM] Cloud-Modus aktiv, aber keine URL/Key in broki-config.js konfiguriert.");
+      return null;
+    }
+    try {
+      this.motor = {
+        name: `cloud (${modell})`,
+        generate: async (prompt) => {
+          const r = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
+            body: JSON.stringify({
+              model: modell,
+              messages: [{ role: "user", content: prompt }],
+              max_tokens: this.cfg.antwortTokensMax,
+              temperature: this.cfg.temperatur
+            })
+          });
+          if (!r.ok) throw new Error("Cloud-API HTTP " + r.status);
+          const data = await r.json();
+          return data.choices?.[0]?.message?.content || "(keine Antwort)";
+        },
+        embed: async (text) => {
+          const r = await fetch(url.replace("/chat/completions", "/embeddings"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
+            body: JSON.stringify({ model: modell, input: text })
+          });
+          if (!r.ok) throw new Error("Cloud-Embedding HTTP " + r.status);
+          const data = await r.json();
+          return data.data?.[0]?.embedding || LLMGateway.hashEmbedding(text);
+        }
+      };
+      this.motorName = this.motor.name;
+      console.log("[Broki/LLM] Motor: Cloud-Fallback,", modell);
+      return this.motorName;
+    } catch (e) {
+      console.error("[Broki/LLM] Cloud-Fallback fehlgeschlagen:", e.message);
+      return null;
     }
   }
 

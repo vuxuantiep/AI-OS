@@ -54,5 +54,15 @@ export const BROKI_CONFIG = {
     l2SchwelleCosine: 0.92,      // Semantic Cache: ab dieser Ähnlichkeit "Treffer"
     l2MaxEintraege: 500,
     ragTopK: 4
+  },
+
+  // --- Cloud-Fallback (optional) ---------------------------------------------
+  // Wenn der Rechner zu belastet ist oder kein lokaler Motor verfügbar ist,
+  // kann auf einen OpenAI-kompatiblen Cloud-Endpoint gefallen werden.
+  // WICHTIG: Cloud-Modus = Daten verlassen das Gerät! Nur für Test/Notbetrieb.
+  cloud: {
+    endpoint: "",                 // z.B. "https://api.openai.com/v1/chat/completions"
+    apiKey: "",                   // API-Key des Cloud-Anbieters
+    modell: "gpt-4o-mini"         // Fallback-Modell
   }
 };

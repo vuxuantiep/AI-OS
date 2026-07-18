@@ -8,6 +8,8 @@ const chat = document.getElementById("chat");
 const banner = document.getElementById("banner");
 const statusZeile = document.getElementById("status");
 const privatCheckbox = document.getElementById("privat");
+const themeToggle = document.getElementById("themeToggle");
+const modeSelect = document.getElementById("modeSelect");
 
 const sende = (msg) => chrome.runtime.sendMessage(msg);
 
@@ -24,7 +26,40 @@ function zeige(text, wer, meta) {
   div.scrollIntoView({ block: "end" });
 }
 
-// --- Frage stellen -------------------------------------------------------------
+// --- Design: Hell / Dunkel ------------------------------------------------------
+function toggleTheme() {
+  const aktuell = document.body.classList.contains("dark");
+  const neu = !aktuell;
+  document.body.classList.toggle("dark", neu);
+  chrome.storage.local.set({ brokiTheme: neu ? "dark" : "light" });
+}
+themeToggle.addEventListener("click", toggleTheme);
+
+(async () => {
+  const { brokiTheme } = await chrome.storage.local.get("brokiTheme");
+  if (brokiTheme === "dark") document.body.classList.add("dark");
+})();
+
+// --- KI-Modus: Lokal / Cloud ----------------------------------------------------
+modeSelect.addEventListener("change", async () => {
+  const modus = modeSelect.value; // "local" | "cloud"
+  await chrome.storage.local.set({ brokiMode: modus });
+  statusZeile.textContent = modus === "cloud"
+    ? "Modus: Cloud-Fallback (nutzt lokale Modelle, bei Fehler automatisch Cloud)"
+    : "Modus: Nur lokal (WebGPU / WASM)";
+  // Gateway neu initialisieren lassen, damit es den Modus beim nächsten Prompt berücksichtigt.
+  await sende({ typ: "mode-wechsel", modus });
+});
+
+(async () => {
+  const { brokiMode } = await chrome.storage.local.get("brokiMode");
+  if (brokiMode) modeSelect.value = brokiMode;
+  statusZeile.textContent = (brokiMode === "cloud")
+    ? "Modus: Cloud-Fallback (nutzt lokale Modelle, bei Fehler automatisch Cloud)"
+    : "Modus: Nur lokal (WebGPU / WASM)";
+})();
+
+// --- Frage stellen --------------------------------------------------------------
 document.getElementById("frageForm").addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const feld = document.getElementById("frage");

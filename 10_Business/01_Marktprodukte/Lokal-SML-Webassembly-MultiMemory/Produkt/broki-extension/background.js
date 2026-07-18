@@ -49,6 +49,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendeAntwort) => {
   (async () => {
     switch (msg.typ) {
 
+      // ---- Modus wechseln (Lokal / Cloud) ------------------------------------
+      case "mode-wechsel":
+        gateway.setModus(msg.modus);
+        return { ok: true, modus: gateway.modus };
+
       // ---- Kern: Frage beantworten (L1 → L2 → L3 → LLM) --------------------
       case "frage": {
         const privat = await PrivateVault.istAktiv();

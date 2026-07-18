@@ -42,6 +42,12 @@ SLMs nie als „allwissendes Genie" einsetzen, sondern als **spezialisierten Exp
 - NPUs in Smartphones werden jährlich drastisch stärker → heutige Ruckler sind in 12–24 Monaten weg
 - **B2B-USP:** Firmen-Agent scrapt nur Intranet/Fachportale; Gelerntes bleibt in der
   IndexedDB des einen Geräts — kein Abfluss in Cloud-Training (DSGVO-Argument wie bei DokuCheck)
+- **Marktbestätigung (2026):** BrowserOS/BrowserClaw (YC S24, 12,8k Stars) bauen den
+  „agentiven Browser" als offene Plattform — Chromium-Fork mit 53+ MCP-Tools, Ollama/LMStudio
+  für lokale Modelle, isolierte Agenten-Tabs. Bestätigt, dass die Vision „Browser als
+  KI-Plattform" mainstream wird. Unterschied zu unserem Ansatz: BrowserOS ist Desktop-App
+  für Power-User; wir sind browser-native PWA für Endanwender + B2B. Kein Konkurrenzkonflikt,
+  aber strategische Referenz für die Architektur-Richtung.
 
 ## Bezug zur bestehenden Roadmap (DokuCheck / Plattform)
 

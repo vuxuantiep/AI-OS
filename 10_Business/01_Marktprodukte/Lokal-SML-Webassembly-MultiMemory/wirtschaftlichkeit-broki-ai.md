@@ -119,9 +119,9 @@ konservativ 0 € ❌ · Basis ≈ 50–80 €/h ✓ · optimistisch ≈ 150 €
   "eur_pro_arbeitsstunde_monat12": {"konservativ": 0, "basis": 65, "optimistisch": 160},
   "empfehlung": "GO_MIT_AUFLAGEN",
   "auflagen": ["Dogfooding-Pilot aufs eigene AI-OS-Wiki zuerst (max 7 Arbeitstage)", "Audit-Tool als GTM-Lead-Magnet", "kein Vertrieb vor Referenz", "SLA begrenzen", "BSI erst Phase 2", "Nachpruefung M3"],
-  "status": "WARTET_AUF_FREIGABE"
+  "status": "FREIGEGEBEN_2026-07-18"
 }
 ```
 
-**Status: WARTET_AUF_FREIGABE** — nach CEO-Freigabe startet das Pi-Gegenstück
-(= zugleich Dogfooding-Baustein, Auflage 1).
+**Status: ✅ FREIGEGEBEN durch CEO am 18.07.2026** — Umsetzung des Pi-Gegenstücks
+gestartet (= zugleich Dogfooding-Baustein, Auflage 1: erst aufs eigene 00_Wissen).

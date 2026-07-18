@@ -5,25 +5,41 @@
 <title>Broki AI</title>
 <style>
   :root { --acc:#2f6fed; --ok:#1a9e5c; --warn:#c0392b; --line:#e3e7f0; }
-  body { margin:0; font-family:system-ui,Segoe UI,sans-serif; font-size:14px; color:#1c2333; }
-  header { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--line); }
+  body.dark { --acc:#5b9aff; --ok:#2ecc71; --warn:#e74c3c; --line:#2d3748; --bg:#1a202c; --panel:#2d3748; --text:#e2e8f0; --input-bg:#4a5568; }
+  body { margin:0; font-family:system-ui,Segoe UI,sans-serif; font-size:14px; color:#1c2333; background:#fff; }
+  body.dark { color:#e2e8f0; background:#1a202c; }
+  header { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--line); background:inherit; }
   header h1 { font-size:15px; margin:0; flex:1; }
   #tresor { font-size:12px; cursor:pointer; user-select:none; }
   #banner { display:none; padding:8px 12px; font-size:12px; color:#fff; background:var(--warn); }
   #chat { padding:10px 12px; min-height:200px; }
   .msg { margin:8px 0; padding:8px 10px; border-radius:10px; background:#f2f5fb; white-space:pre-wrap; }
   .msg.ich { background:#e8f0ff; }
+  body.dark .msg { background:#2d3748; }
+  body.dark .msg.ich { background:#4a5568; }
   .meta { font-size:11px; color:#5a6478; margin-top:4px; }
-  form { display:flex; gap:6px; padding:10px 12px; border-top:1px solid var(--line); }
-  input[type=text] { flex:1; padding:8px 10px; border:1px solid var(--line); border-radius:8px; }
+  body.dark .meta { color:#a0aec0; }
+  form { display:flex; gap:6px; padding:10px 12px; border-top:1px solid var(--line); background:inherit; }
+  input[type=text] { flex:1; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:#fff; color:#1c2333; }
+  body.dark input[type=text] { background:#4a5568; color:#e2e8f0; border-color:#718096; }
   button { padding:8px 12px; border:none; border-radius:8px; background:var(--acc); color:#fff; cursor:pointer; }
-  #status { padding:6px 12px; font-size:11px; color:#5a6478; border-top:1px solid var(--line); }
+  #status { padding:6px 12px; font-size:11px; color:#5a6478; border-top:1px solid var(--line); background:inherit; }
+  body.dark #status { color:#a0aec0; }
+  .mode-toggle { display:flex; align-items:center; gap:4px; font-size:11px; cursor:pointer; user-select:none; padding:2px 6px; border-radius:4px; border:1px solid var(--line); background:inherit; color:inherit; }
+  .mode-toggle:hover { background:var(--line); }
 </style>
 </head>
 <body>
   <header>
     <h1>🤖 Broki AI</h1>
-    <label id="tresor"><input type="checkbox" id="privat"> 🔒 Privat</label>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <select id="modeSelect" class="mode-toggle" title="KI-Modus">
+        <option value="local">🖥️ Nur Lokal</option>
+        <option value="cloud">☁️ Cloud (Fallback)</option>
+      </select>
+      <button id="themeToggle" title="Design umschalten" style="background:transparent;border:1px solid var(--line);color:#1c2333;font-size:12px;padding:4px 8px;">🌓</button>
+      <label id="tresor" style="font-size:12px;cursor:pointer;user-select:none;"><input type="checkbox" id="privat"> 🔒 Privat</label>
+    </div>
   </header>
   <div id="banner"></div>
   <div id="chat"></div>
