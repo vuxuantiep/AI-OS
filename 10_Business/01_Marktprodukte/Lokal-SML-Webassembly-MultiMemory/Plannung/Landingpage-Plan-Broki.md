@@ -14,8 +14,12 @@
   vor Referenz"). Dieser PLAN ist vom Gate ausgenommen.
 - **Technik:** statische Single-Page (HTML/CSS/JS, keine Cloud-Abhängigkeit —
   passt zur Botschaft!). Deploybar über das AI-OS-Dashboard (`/produkte/broki-lp/`)
-  oder Cloudflare Pages. Design-Sprache = Mockup (dunkel, Lila-Akzent #7c5cff,
-  Trust-Grün, moderne Cards).
+  oder Cloudflare Pages.
+- **Design:** verbindlich nach [[Broki-Design-System]] — **Corporate Identity
+  von vuxuantiep.de**: tiefschwarz (#0a0a0a), Grün-Akzent (#00c758), Inter +
+  JetBrains Mono, Terminal/Code-Ästhetik, grün-cyaner Robot. Fonts LOKAL vendorn
+  (nicht Google-CDN — sonst widerspricht es der „keine Cloud"-Botschaft).
+  Sprach-Umschalter DE/EN/VI wie auf der Hauptseite.
 
 ## Sektionsplan (Reihenfolge = Scroll-Fluss)
 

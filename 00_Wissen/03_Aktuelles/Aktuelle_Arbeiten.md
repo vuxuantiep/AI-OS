@@ -6,6 +6,23 @@
 
 ---
 
+## 2026-07-18 (Tag 8g) — Broki Design-System = Corporate Identity (vuxuantiep.de)
+
+CEO: Broki soll aussehen wie vuxuantiep.de (einheitliche Marke). Echtes CSS der
+Live-Website geholt und die Tokens extrahiert → `Broki-Design-System.md`:
+- **Farben:** BG #0a0a0a/#000, Karten #0d0d0f, Border #27272a; Grün-Signatur
+  #00c758 (primär) / #00d294 (mint) / #4ade80 (hell) / #00bb7f (teal).
+- **Fonts:** Inter (Text) + JetBrains Mono (Code/Tech) — LOKAL vendorn, nie
+  Google-CDN (sonst Widerspruch zur „keine Cloud"-Botschaft + Extension-CSP).
+- **Signatur:** Terminal/Code-Ästhetik (//-Kommentare, grüner Status-Text),
+  grün-cyaner Robot (gleiche Maskottchen-Familie wie Website-„LEGO AI-OS").
+- **Wichtigste Änderung:** das Frontend-Mockup nutzt Lila #7c5cff → auf Grün
+  #00c758 umstellen (Buttons, Aktiv-Zustände, Banner, Robot). Layout bleibt.
+- Landingpage-Plan darauf verwiesen; Palette als mögliche gemeinsame brand.css
+  für ALLE Marktprodukte vermerkt (Portfolio als „ein Haus").
+
+---
+
 ## 2026-07-18 (Tag 8f) — Broki: Wettbewerbsanalyse + Priorisierung + Landingpage-Plan
 
 CEO-Frage „ist Broki stärker als andere? → vollständig entwickeln + priorisieren"
