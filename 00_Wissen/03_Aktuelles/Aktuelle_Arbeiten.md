@@ -41,6 +41,25 @@ Offen (im Architektur-Plan dokumentiert): Pi-Gegenstück (Index-Builder +
 Signaturdienst), vendor/-Befüllung, **eigene Gate-Prüfung für Broki als Produkt**
 (Businessplan liegt ja schon — Kern-Umsetzung war expliziter CEO-Auftrag).
 
+### Nachtrag: Gate-Prüfung Broki + Wissen ins Gedächtnis (SKILL + Indexer)
+
+1. **Gate-Prüfung** (`wirtschaftlichkeit-broki-ai.md`): Businessplan-docx hat
+   KEINE Preise (reine Technik-Recherche) → alle Zahlen als Annahmen-Spannen
+   gekennzeichnet (Prüfer-Regel 1). Marktbedarf 7/10 (DSGVO-Kaufdruck +
+   Copilot-FOMO; Referenzpreis ChatGPT Enterprise 30–60 €/Nutzer/M). Stärke:
+   einziges Produkt mit **wiederkehrendem** Modell (Setup 2.500–8.000 € +
+   Wartung 100–300 €/M). Basis ≈ 10.000 €/Jahr 1 bei 50–80 €/h; konservativ
+   0 € Umsatz, aber internes Wiki-KI-Tool bleibt. → **GO_MIT_AUFLAGEN**:
+   Dogfooding aufs eigene 00_Wissen ZUERST (max. 7 Tage), kein Vertrieb vor
+   Referenz, SLA begrenzt, Nachprüfung M3. **Status WARTET_AUF_FREIGABE.**
+2. **Wissen ins Gedächtnis:** `SKILL_Broki-Extension.md` (7 Kern-Patterns:
+   MV3-Grundgesetz, Signatur-statt-Hash, fail closed, storage.session-Flüchtig-
+   keit, Heartbeat-Crash-Trick, Motor-Adapter, Memory-Kaskade) nach
+   `02_Fähigkeiten/Aktiv/`. **Indexer erweitert:** INDEX_QUELLEN + `02_Fähigkeiten`
+   (8 saubere .md, vorher gezählt — kein Junk).
+3. Pi-Gegenstück bewusst NICHT begonnen — wartet auf CEO-Freigabe (Auflage 1
+   macht es zum Dogfooding-Baustein).
+
 ---
 
 ## 2026-07-17 (Tag 7) — Lead-Radar: Arbeitsort-Filter + Standort-Erkennung

@@ -32,7 +32,7 @@ CHAT_MODEL = "llama3"
 VECTOR_DB_PATH = AI_OS_ROOT / "06_Gedächtnis" / "Vector-Database" / "vector_store.json"
 
 # Welche Vault-Bereiche ins KI-Gedächtnis wandern (nur *.md)
-INDEX_QUELLEN = ["00_Wissen", "10_Business"]
+INDEX_QUELLEN = ["00_Wissen", "10_Business", "02_Fähigkeiten"]
 # Privates bleibt draußen (00_Wissen/01_Persönlich = "nur für mich"),
 # ebenso Fremd-Doku aus Abhängigkeiten/vendored Code (sonst 450+ Junk-Dateien)
 INDEX_AUSSCHLUSS = {"01_Persönlich", "node_modules", "__pycache__",
