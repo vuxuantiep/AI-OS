@@ -85,6 +85,23 @@ Akzent. → **Auf Grün (`#00c758`) umstellen.** Konkret:
 - Robot-Maskottchen: von Lila-Anteilen auf Grün/Cyan (wie Website-Robot).
 Layout, Struktur, Komponenten des Mockups bleiben — nur die Farbwelt wechselt.
 
+## 5b. Hintergrund-Signatur: Partikel-Netzwerk (Constellation)
+
+Gebaut 18.07.2026 (CEO-Wunsch, Vorbild itsupporthh.de). Verbundene, langsam
+driftende Punkte + Linien im Broki-Grün, reagiert dezent auf die Maus.
+**Self-contained Canvas, KEINE Fremd-Library** (kein particles.js/jQuery) —
+CSP-konform für die MV3-Extension + passt zur „keine Cloud"-Botschaft.
+
+- Datei: `Produkt/broki-landingpage/assets/broki-particles.js`
+  (`BrokiParticles.init("canvas-id", {optionaleConfig})`).
+- Performance: pausiert bei unsichtbarem Tab, respektiert `prefers-reduced-motion`,
+  Partikelzahl skaliert mit Fläche (Deckel 140), devicePixelRatio-bewusst.
+  Die CPU gehört dem LLM — die Deko darf sie nicht fressen.
+- Farben aus dem Design-System: helle Punkte, Linien im Grün `#00c758`.
+- Live-Beispiel: `Produkt/broki-landingpage/index.html` (Hero mit Animation).
+- Einsatz: Hintergrund der Landingpage-Hero UND optional des Produkt-Frontends
+  (Übersicht-Header), dezent hinter dem Inhalt.
+
 ## 6. Wiederverwendung im AI-OS
 
 Diese Tokens eignen sich als gemeinsame Marken-Palette für ALLE Marktprodukte

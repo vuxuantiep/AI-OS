@@ -6,6 +6,26 @@
 
 ---
 
+## 2026-07-18 (Tag 8h) — Broki: animierter Partikel-Hintergrund + Hero-Seite gebaut
+
+CEO-Wunsch: Partikel-Netzwerk-Hintergrund wie itsupporthh.de, aber in Broki-Farben.
+Deren Seite nutzt particles.js + jQuery (WordPress) → bewusst NICHT übernommen.
+
+1. **Eigene Canvas-Komponente** `broki-landingpage/assets/broki-particles.js`:
+   self-contained (keine Fremd-Lib → CSP-konform für MV3 + „keine Cloud"-treu),
+   driftende Punkte + Distanz-Linien im Grün #00c758, dezente Maus-Anziehung.
+   Performance: pausiert bei verstecktem Tab, `prefers-reduced-motion`,
+   Partikel-Deckel 140, devicePixelRatio-aware — die CPU bleibt fürs LLM frei.
+2. **Hero-Seite** `broki-landingpage/index.html` als erster echter Landingpage-
+   Baustein im Corporate-Design (schwarz/grün, Inter + JetBrains Mono, grüne
+   Wort-Highlights „bleibt."/„privat." wie vuxuantiep.de „skaliert."/„liefert.",
+   Trust-Leiste, grüner Primär- + Ghost-Button, Terminal-Tech-Stack-Zeile).
+   Headless-Screenshot geprüft: Animation sichtbar, Layout stimmig.
+3. Design-System §5b um die Hintergrund-Signatur ergänzt. Fonts noch System-
+   Fallback (Inter/JetBrains Mono für Produktion lokal vendorn).
+
+---
+
 ## 2026-07-18 (Tag 8g) — Broki Design-System = Corporate Identity (vuxuantiep.de)
 
 CEO: Broki soll aussehen wie vuxuantiep.de (einheitliche Marke). Echtes CSS der
