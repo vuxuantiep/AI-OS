@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Betriebsrat-Konformitätserklärung — Broki AI</title>
+<style>
+  @page { size: A4; margin: 2.5cm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Inter", Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #1a1a1a; }
+  h1 { font-size: 18pt; font-weight: 700; margin-bottom: 1.5rem; border-bottom: 2px solid #00c758; padding-bottom: 0.5rem; }
+  h2 { font-size: 13pt; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.8rem; color: #0a0a0a; }
+  p { margin-bottom: 0.8rem; text-align: justify; }
+  ul { margin: 0.8rem 0 0.8rem 1.5rem; }
+  li { margin-bottom: 0.4rem; }
+  .meta { font-size: 10pt; color: #666; margin-bottom: 1.2rem; }
+  .highlight { background: #f0fdf4; border-left: 3px solid #00c758; padding: 0.8rem 1rem; margin: 1rem 0; }
+  .signature-block { margin-top: 3rem; page-break-inside: avoid; }
+  .signature-line { border-top: 1px solid #000; padding-top: 0.3rem; margin-top: 4rem; width: 45%; display: inline-block; }
+  .signature-label { font-size: 10pt; color: #666; margin-top: 0.2rem; }
+  .footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ccc; font-size: 9pt; color: #888; }
+  .page-break { page-break-before: always; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 10pt; }
+  th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
+  th { background: #f5f5f5; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>Betriebsrat-Konformitätserklärung<br>Broki AI — Lokale KI-Assistenten</h1>
+
+<div class="meta">
+  <strong>Version:</strong> 1.0 · <strong>Datum:</strong> 18.07.2026 · <strong>Gültig ab:</strong> [Einführungsdatum] · <strong>Gültig bis:</strong> [Änderungsdatum]
+</div>
+
+<div class="highlight">
+  <strong>Zusammenfassung für den Betriebsrat:</strong> Broki AI ist eine Browser-Erweiterung, die KI-Funktionen vollständig lokal im Browser ausführt. Keine Daten verlassen das Gerät. Keine Cloud-Übertragung. Keine Mitarbeiter-Identifizierung. Die Erweiterung ist damit gemäß § 87 Abs. 1 Nr. 6 BetrVG (Mitbestimmung bei technischen Einrichtungen) und DSGVO-konform einsetzbar.
+</div>
+
+<h2>1. Zweck und Funktionsweise</h2>
+<p>Broki AI bringt lokale KI-Assistenten in den Browser — ohne Cloud, ohne Server, ohne Upload. Die Erweiterung nutzt WebGPU und WebAssembly, um Sprachmodelle direkt im Browser auszuführen. Alle Daten bleiben auf dem Gerät des Nutzers.</p>
+
+<p><strong>Kernprinzip:</strong> „Zero Data Transfer" — es werden keine Prompts, keine Dokumente und keine Nutzerdaten an externe Server übertragen.</p>
+
+<h2>2. Datenschutz-Fakten</h2>
+<ul>
+  <li><strong>Datenhaltung:</strong> 100 % lokal im Browser (IndexedDB, RAM)</li>
+  <li><strong>Upload:</strong> 0 Bytes — prüfbar via F12-Netzwerk-Tab</li>
+  <li><strong>Server:</strong> Keine Server-Komponente in der Basisversion</li>
+  <li><strong>Cloud:</strong> Optionaler Cloud-Fallback (nur auf ausdrücklichen Wunsch des Admins)</li>
+  <li><strong>Mitarbeiter-Identifizierung:</strong> Nicht möglich — keine Accounts, keine Logins, keine Telemetrie</li>
+  <li><strong>Protokollierung:</strong> Keine Nutzeraktivitäten werden protokolliert</li>
+</ul>
+
+<h2>3. Technische Maßnahmen</h2>
+<p>Folgende Maßnahmen gewährleisten die Datenschutz-Konformität:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Maßnahme</th>
+      <th>Beschreibung</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Lokale Inferenz</td>
+      <td>SLM-Modelle (1B–3B Parameter) laufen im Browser via WebGPU/WebAssembly</td>
+      <td>✅ Aktiv</td>
+    </tr>
+    <tr>
+      <td>Keine Cloud-Übertragung</td>
+      <td>Alle Verarbeitungsschritte erfolgen im RAM des Browsers</td>
+      <td>✅ Aktiv</td>
+    </tr>
+    <tr>
+      <td>Manifest V3 Sandbox</td>
+      <td>Gekapselte Ausführung im Service Worker — kein Zugriff auf andere Tabs/Extensions</td>
+      <td>✅ Aktiv</td>
+    </tr>
+    <tr>
+      <td>Privat-Modus</td>
+      <td>RAM-Sandbox — keine Persistenz, kein Sync, kein Journal</td>
+      <td>✅ Aktiv</td>
+    </tr>
+    <tr>
+      <td>ECDSA-Signaturprüfung</td>
+      <td>Nur signierte Wissens-Index-Pakete werden geladen (optionaler Pi-Sync)</td>
+      <td>✅ Aktiv</td>
+    </tr>
+    <tr>
+      <td>Crash-Rollback</td>
+      <td>Lokales Journal im Browser-Cache, verschlüsselt mit AES-256-GCM</td>
+      <td>✅ Aktiv</td>
+    </tr>
+    <tr>
+      <td>Keine Telemetrie</td>
+      <td>Keine Nutzeraktivitäten, keine Fehlerreports, keine Analytics</td>
+      <td>✅ Aktiv</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>4. Betriebsrat-Mitbestimmung</h2>
+<p>Gemäß § 87 Abs. 1 Nr. 6 BetrVG (Mitbestimmung bei der Einführung und Anwendung von technischen Einrichtungen, die dazu geeignet sind, das Verhalten oder die Leistung der Arbeitnehmer zu überwachen) teilen wir mit:</p>
+
+<ul>
+  <li><strong>Keine Überwachung:</strong> Broki AI überwacht nicht das Verhalten oder die Leistung von Mitarbeitern.</li>
+  <li><strong>Keine Erfassung personenbezogener Daten:</strong> Es werden keine personenbezogenen Daten erfasst, gespeichert oder verarbeitet.</li>
+  <li><strong>Keine Auswertung:</strong> Es erfolgt keine Auswertung von Nutzerverhalten, Eingaben oder Suchanfragen.</li>
+  <li><strong>Keine Weitergabe:</strong> Es werden keine Daten an Dritte weitergegeben.</li>
+</ul>
+
+<div class="highlight">
+  <strong>Fazit:</strong> Broki AI unterliegt nicht der Mitbestimmung nach § 87 Abs. 1 Nr. 6 BetrVG, da sie nicht zur Überwachung geeignet ist. Wir empfehlen dennoch die freiwillige Information und Konsultation des Betriebsrats vor der Einführung.
+</div>
+
+<h2>5. DSGVO-Konformität</h2>
+<p>Die Verarbeitung personenbezogener Daten erfolgt ausschließlich lokal auf dem Endgerät des Nutzers. Es findet keine Datenübertragung an Dritte statt. Die Erweiterung erfüllt die Anforderungen der DSGVO, insbesondere:</p>
+
+<ul>
+  <li><strong>Art. 5 DSGVO:</strong> Datenminimierung — es werden nur die Daten verarbeitet, die der Nutzer explizit eingibt</li>
+  <li><strong>Art. 25 DSGVO:</strong> Privacy by Design — lokale Verarbeitung ist die Standardeinstellung</li>
+  <li><strong>Art. 32 DSGVO:</strong> Sicherheit der Verarbeitung — ECDSA-Signaturprüfung, AES-256-GCM-Verschlüsselung</li>
+  <li><strong>Art. 35 DSGVO:</strong> Datenschutz-Folgenabschätzung — keine Risiken für die Rechte der Betroffenen</li>
+</ul>
+
+<h2>6. Einwilligungserklärung</h2>
+<p>Die Nutzung von Broki AI erfolgt auf freiwilliger Basis. Mitarbeiter können die Erweiterung jederzeit deaktivieren oder entfernen. Es gibt keine arbeitsvertraglichen Pflichten zur Nutzung.</p>
+
+<div class="signature-block">
+  <p><strong>Erklärung des Arbeitgebers:</strong></p>
+  <p>Wir bestätigen, dass Broki AI gemäß dieser Erklärung datenschutz-konform und ohne Überwachungsfunktion eingesetzt wird. Die technischen Maßnahmen wurden implementiert und getestet.</p>
+  <div class="signature-line">
+    <div class="signature-label">Unterschrift / Datum</div>
+  </div>
+  <div class="signature-line" style="margin-left: 2rem;">
+    <div class="signature-label">Unterschrift / Datum</div>
+  </div>
+</div>
+
+<div class="footer">
+  <p><strong>Hinweis:</strong> Diese Erklärung dient als Vorlage und muss von einem Rechtsanwalt oder Datenschutzbeauftragten geprüft und angepasst werden. Sie ersetzt keine rechtliche Beratung.</p>
+  <p>© 2026 Broki AI — Intelligent. Lokal. Unabhängig.</p>
+</div>
+
+</body>
+</html>
