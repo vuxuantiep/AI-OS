@@ -438,6 +438,99 @@
     </div>
   </section>
 
+  <!-- ZIELGRUPPEN -->
+  <section id="zielgruppen">
+    <div class="container">
+      <h2>Maßgeschneidert für Ihre <span class="gruen">Branche.</span></h2>
+      <p class="lead">Ob Kanzlei, Arztpraxis, Hausverwaltung oder Migrationsberatung — Broki AI passt sich Ihrem Workflow an.</p>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" aria-selected="true" data-tab="kanzlei">Kanzleien / Steuerberater</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="arzt">Arztpraxen / Kliniken</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="haus">Hausverwaltung</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="migrant">Privat / Migranten</button>
+      </div>
+      <div class="tab-panel active" id="tab-kanzlei">
+        <div class="card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:1.8rem;">
+          <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:0.6rem;">Mandantendaten bleiben in der Kanzlei</h3>
+          <p style="color:var(--text-dim);line-height:1.7;">Analysieren Sie 500-seitige Verträge, Steuerrichtlinien oder BGH-Urteile direkt im Browser — ohne dass ein einziges Byte das Gerät verlässt. Broki AI versteht Ihre Dokumente, zitiert Quellen und bleibt dabei zu 100 % DSGVO-konform.</p>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-arzt">
+        <div class="card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:1.8rem;">
+          <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:0.6rem;">Befunde verstehen — ohne Patientendaten zu teilen</h3>
+          <p style="color:var(--text-dim);line-height:1.7;">Arztpraxen und Kliniken können medizinische Leitlinien, Befunde oder Arzneimittelinformationen lokal abgleichen — ohne Server, ohne Cloud. Perfekt für datenschutzsensible Umgebungen.</p>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-haus">
+        <div class="card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:1.8rem;">
+          <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:0.6rem;">Mietverträge prüfen — direkt bei der Nebenkostenabrechnung</h3>
+          <p style="color:var(--text-dim);line-height:1.7;">Hausverwaltungen analysieren Mietverträge, BGH-Urteile oder Betriebskostenverordnungen direkt im Browser. Kein Datenleck, keine Cloud, kein Abo.</p>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-migrant">
+        <div class="card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:1.8rem;">
+          <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:0.6rem;">Behördenbriefe verstehen — in Ihrer Sprache</h3>
+          <p style="color:var(--text-dim);line-height:1.7;">Fotografieren Sie komplizierte Amtsschreiben und lassen Sie diese lokal im Browser in Ihre Muttersprache übersetzen. Ideal für Migranten, Integrationskurse und Ehrenamtsvereine.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECURITY -->
+  <section id="security">
+    <div class="container">
+      <h2>Für die IT-Sicherheit <span class="gruen">gebaut.</span><br>Von Administratoren geliebt.</h2>
+      <p class="lead">Keine Blackbox, keine Cloud-Abhängigkeit, keine versteckten Datenströme. Broki AI ist von Grund auf für den Einsatz in regulierten Umgebungen konzipiert.</p>
+      <div class="spec-grid">
+        <div class="spec">
+          <span class="icon">🔒</span>
+          <strong>Manifest V3 Sandbox</strong>
+          <p>Gekapselte Ausführung im Service Worker. Ein Tab-Absturz beeinträchtigt niemals die KI oder das Betriebssystem.</p>
+        </div>
+        <div class="spec">
+          <span class="icon">🔑</span>
+          <strong>SHA-256 / ECDSA-Integrität</strong>
+          <p>Schutz vor Data Poisoning durch kryptografische Signaturprüfung des RAG-Index — nur signierte Pakete werden geladen.</p>
+        </div>
+        <div class="spec">
+          <span class="icon">📦</span>
+          <strong>Plattformunabhängig</strong>
+          <p>Läuft auf Windows, Mac und Linux gleichermaßen — einfach via Browser-Erweiterung. Keine Softwareverteilungs-Hölle.</p>
+        </div>
+        <div class="spec">
+          <span class="icon">🛟</span>
+          <strong>Crash-Rollback</strong>
+          <p>Lokales Journal verschlüsselt im Browser-Cache. Nach einem Absturz werden ungesicherte Eingaben automatisch wiederhergestellt.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREENSHOTS -->
+  <section id="screenshots">
+    <div class="container">
+      <h2>So sieht <span class="gruen">Broki AI</span> aus.</h2>
+      <p class="lead">Einblick in die Extension — lokal, schnell, sicher.</p>
+      <div class="screenshot-grid">
+        <div class="screenshot-card">
+          <div class="placeholder">Screenshot 1: Sidebar-Chat</div>
+          <h4>Sidebar-Chat</h4>
+          <p>Fragen stellen, Antworten bekommen — alles lokal im Browser.</p>
+        </div>
+        <div class="screenshot-card">
+          <div class="placeholder">Screenshot 2: Privat-Modus</div>
+          <h4>Privat-Modus</h4>
+          <p>RAM-Sandbox aktiv — kein Sync, kein Persistenz, keine Spuren.</p>
+        </div>
+        <div class="screenshot-card">
+          <div class="placeholder">Screenshot 3: Rollback</div>
+          <h4>Crash-Rollback</h4>
+          <p>Nach einem Absturz: Eingaben mit einem Klick wiederherstellen.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- CTA BANNER -->
   <section id="demo">
     <div class="container">
@@ -461,7 +554,9 @@
           <ul>
             <li><a href="#vorteile">Vorteile</a></li>
             <li><a href="#vergleich">Vergleich</a></li>
+            <li><a href="#roi">ROI</a></li>
             <li><a href="#how">How it works</a></li>
+            <li><a href="#zielgruppen">Branchen</a></li>
             <li><a href="#faq">FAQ</a></li>
           </ul>
         </div>
