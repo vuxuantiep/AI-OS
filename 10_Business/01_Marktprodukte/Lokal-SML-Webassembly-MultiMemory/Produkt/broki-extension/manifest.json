@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Broki AI — Lokaler KI-Wiki-Assistent",
+  "version": "0.1.0",
+  "description": "Firmen-Wiki + KI-Berater, 100 % lokal im Browser. Sync über Tailscale vom Raspberry Pi, dreistufiges Gedächtnis, IT-Crash-Rollback.",
+  "minimum_chrome_version": "121",
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "side_panel": {
+    "default_path": "sidebar/sidebar.html"
+  },
+
+  "action": {
+    "default_title": "Broki AI öffnen"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://*.firmen-domain.example/*"],
+      "js": ["content/content-script.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "alarms",
+    "sidePanel",
+    "scripting"
+  ],
+
+  "host_permissions": [
+    "http://pi-ki-tiep.tailed32d1.ts.net:8088/*"
+  ],
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  }
+}

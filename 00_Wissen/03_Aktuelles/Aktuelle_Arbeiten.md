@@ -6,6 +6,43 @@
 
 ---
 
+## 2026-07-18 (Tag 8) — Broki AI: Browser-Extension-Architektur gebaut
+
+CEO-Auftrag (Senior-Architekt-Rolle): Manifest-V3-Extension „lokaler KI-Wiki-
+Assistent" mit Tailscale/Pi-Sync. Vorher: die 2 Broki-docx gelesen — **Broki AI
+ist die Produktisierung der Plattform** (Businessplan 102k Zeichen: Pi+Tailscale,
+380k-€-Ersparnis-Story, Zielgruppe Kanzleien/Arztpraxen = unser Gate-Beachhead!).
+Einordnung: `Produkt/broki-extension/` in Lokal-SML.
+
+**Gebaut (11 Dateien, alle node --check-grün, Manifest JSON-valide):**
+1. **tailscale-sync.js**: Alarm-basierter Sync (MV3: chrome.alarms statt Timer!)
+   vom echten Tailnet (`pi-ki-tiep.tailed32d1.ts.net:8088`), rollenbasiert.
+   Integrität: **ECDSA-P256 über SHA-256** statt nacktem Hash-Vergleich —
+   wichtig verstanden: einen mitgelieferten Hash kann der Angreifer auf dem Pi
+   selbst fälschen, die Signatur ohne privaten Firmenschlüssel nicht.
+   Fail closed: Signaturfehler → Index GESPERRT (Flag + UI-Banner), Pi offline
+   → alter Index bleibt (kein Sicherheitsfall). Atomare Übernahme.
+2. **memory-manager.js**: L1 Exact (SHA-256 der Normalform, TTL 7 Tage) →
+   L2 Semantic (Cosine ≥ 0.92, gedeckelt 500) → L3 RAG (Top-4). Rückschreiben
+   nach LLM-Antwort — außer im Privat-Modus.
+3. **llm-gateway.js**: window.ai (3 Namensraum-Varianten defensiv geprobt) →
+   WebLLM (WebGPU) → wllama (CPU). `navigator.deviceMemory` → 3 Modellstufen
+   (0.5B/1B/3B) als OOM-Schutz. Embedding vom Motor, Notfall: Hash-Trigramm.
+4. **private-vault.js**: isPrivateMode in `chrome.storage.session` (= reiner
+   RAM, Browser zu → weg) + SW-Map für Drag-and-Drop-Dokumente, Tab-Aufräumer.
+5. **crash-rollback.js**: Heartbeat-Trick (onSuspend feuert bei echtem Crash
+   NICHT → Flag bleibt „laeuft" = Crash erkannt), AES-GCM-Journal (ehrlich
+   dokumentiert: at-rest-Schutz, nicht gegen Profil-Vollzugriff), Content-Script
+   entprellt (1,5 s) + Wiederherstellung mit input-Event für Framework-Bindings.
+6. Sidebar-UI (Chat, Tresor-Schalter, Sperr-Banner, Rollback-Dialog),
+   Architektur-Diagramm (Pflicht-Regel) `Architektur-Broki-Extension.md`.
+
+Offen (im Architektur-Plan dokumentiert): Pi-Gegenstück (Index-Builder +
+Signaturdienst), vendor/-Befüllung, **eigene Gate-Prüfung für Broki als Produkt**
+(Businessplan liegt ja schon — Kern-Umsetzung war expliziter CEO-Auftrag).
+
+---
+
 ## 2026-07-17 (Tag 7) — Lead-Radar: Arbeitsort-Filter + Standort-Erkennung
 
 Angefangenes Feature aus der Vortagssitzung fertiggebaut (lag uncommittet in

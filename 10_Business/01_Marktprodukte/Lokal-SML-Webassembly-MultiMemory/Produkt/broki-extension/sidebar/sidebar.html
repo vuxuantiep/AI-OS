@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Broki AI</title>
+<style>
+  :root { --acc:#2f6fed; --ok:#1a9e5c; --warn:#c0392b; --line:#e3e7f0; }
+  body { margin:0; font-family:system-ui,Segoe UI,sans-serif; font-size:14px; color:#1c2333; }
+  header { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--line); }
+  header h1 { font-size:15px; margin:0; flex:1; }
+  #tresor { font-size:12px; cursor:pointer; user-select:none; }
+  #banner { display:none; padding:8px 12px; font-size:12px; color:#fff; background:var(--warn); }
+  #chat { padding:10px 12px; min-height:200px; }
+  .msg { margin:8px 0; padding:8px 10px; border-radius:10px; background:#f2f5fb; white-space:pre-wrap; }
+  .msg.ich { background:#e8f0ff; }
+  .meta { font-size:11px; color:#5a6478; margin-top:4px; }
+  form { display:flex; gap:6px; padding:10px 12px; border-top:1px solid var(--line); }
+  input[type=text] { flex:1; padding:8px 10px; border:1px solid var(--line); border-radius:8px; }
+  button { padding:8px 12px; border:none; border-radius:8px; background:var(--acc); color:#fff; cursor:pointer; }
+  #status { padding:6px 12px; font-size:11px; color:#5a6478; border-top:1px solid var(--line); }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🤖 Broki AI</h1>
+    <label id="tresor"><input type="checkbox" id="privat"> 🔒 Privat</label>
+  </header>
+  <div id="banner"></div>
+  <div id="chat"></div>
+  <form id="frageForm">
+    <input type="text" id="frage" placeholder="Frag das Firmen-Wiki …" autocomplete="off">
+    <button type="submit">➤</button>
+  </form>
+  <div id="status">Lade Status …</div>
+  <script src="sidebar.js" type="module"></script>
+</body>
+</html>
