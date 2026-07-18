@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Broki AI — Das unzerstörbare Firmengehirn (60s)</title>
+<style>
+  :root, [data-theme="dark"] {
+    --bg-deep: #000; --bg: #0a0a0a; --bg-card: #0d0d0f; --border: #27272a;
+    --accent: #00c758; --accent-soft: #4ade80;
+    --text: #fff; --text-dim: #ccc; --text-muted: #888890;
+    --danger: #f87171; --warn: #facc15;
+  }
+  [data-theme="light"] {
+    --bg-deep: #f6f7fb; --bg: #eef0f6; --bg-card: #fff; --border: #d9deea;
+    --accent: #00a548; --accent-soft: #0b8f3f;
+    --text: #10151f; --text-dim: #3a4252; --text-muted: #6a7080;
+    --danger: #dc2626; --warn: #ca8a04;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg-deep); color: var(--text);
+    font-family: "Inter", system-ui, sans-serif; overflow: hidden; height: 100vh;
+    transition: background 0.3s, color 0.3s; }
+
+  #stage { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+  .scene { position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 2rem;
+    opacity: 0; pointer-events: none; transition: opacity 0.6s ease;
+    text-align: center; }
+  .scene.active { opacity: 1; pointer-events: auto; }
+
+  /* Typografie */
+  h1 { font-size: clamp(1.6rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15;
+    letter-spacing: -0.02em; margin-bottom: 1rem; }
+  h2 { font-size: clamp(1.3rem, 3vw, 2rem); font-weight: 800; line-height: 1.2;
+    letter-spacing: -0.02em; margin-bottom: 0.8rem; }
+  p.lead { font-size: clamp(0.95rem, 1.6vw, 1.1rem); color: var(--text-dim);
+    max-width: 640px; line-height: 1.6; }
+  .gruen { color: var(--accent); }
+
+  /* Untertitel */
+  #subtitle { position: fixed; bottom: 2rem; left: 0; right: 0; text-align: center;
+    font-size: clamp(1rem, 2vw, 1.25rem); font-weight: 600; color: var(--text);
+    text-shadow: 0 2px 12px rgba(0,0,0,0.8); z-index: 10;
+    padding: 0 1rem; min-height: 3rem; }
+  #subtitle .transcript { opacity: 0.7; font-weight: 400; font-size: 0.85em;
+    display: block; margin-top: 0.3rem; }
+
+  /* Buttons */
+  .btn { font-weight: 600; font-size: 0.95rem; padding: 0.85rem 1.5rem; border-radius: 9px;
+    cursor: pointer; border: none; transition: transform 0.15s, box-shadow 0.15s;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
+  .btn-primary { background: var(--accent); color: #05130a; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,199,88,0.35); }
+
+  /* Theme toggle */
+  .theme-toggle { position: fixed; top: 1rem; right: 1rem; z-index: 20;
+    background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+    width: 40px; height: 40px; border-radius: 10px; cursor: pointer; font-size: 1.1rem;
+    display: flex; align-items: center; justify-content: center; }
+
+  /* Szenen-spezifisch */
+  .cloud-bill { font-family: "JetBrains Mono", monospace; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem 1.6rem;
+    margin: 1.2rem 0; font-size: 0.9rem; color: var(--text-dim); }
+  .cloud-bill .rot { color: var(--danger); font-weight: 700; font-size: 1.3rem; }
+  .warn-banner { background: rgba(248,113,113,0.15); border: 1px solid var(--danger);
+    border-radius: 10px; padding: 0.9rem 1.2rem; color: var(--danger);
+    font-weight: 600; margin-top: 1rem; }
+
+  .browser-mock { width: min(720px, 92vw); background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; margin: 1rem 0; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .browser-top { background: var(--bg-elevated, #111114); padding: 0.6rem 0.9rem;
+    display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #ef4444; } .dot.y { background: #facc15; } .dot.g { background: #4ade80; }
+  .browser-body { padding: 1rem; min-height: 180px; display: flex; gap: 1rem; }
+  .sidebar { width: 220px; background: var(--bg-elevated, #111114); border-radius: 8px;
+    padding: 0.8rem; border: 1px solid var(--border); flex-shrink: 0; }
+  .sidebar .line { height: 8px; border-radius: 4px; background: var(--border); margin: 0.4rem 0; }
+  .sidebar .line.accent { background: var(--accent); width: 70%; }
+  .content { flex: 1; }
+  .content .line { height: 10px; border-radius: 5px; background: var(--border); margin: 0.5rem 0; }
+  .content .line.short { width: 60%; }
+
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: min(900px, 94vw); }
+  .split-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.2rem; }
+  .split-box h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text-muted); margin-bottom: 0.6rem; }
+
+  .terminal { font-family: "JetBrains Mono", monospace; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 10px; padding: 1rem;
+    text-align: left; font-size: 0.85rem; color: var(--text-dim); max-width: 560px;
+    margin: 1rem auto; }
+  .terminal .k { color: var(--accent-soft); }
+  .terminal .c { color: var(--text-muted); }
+
+  .badge { display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: "JetBrains Mono", monospace; font-size: 0.78rem;
+    color: var(--accent-soft); border: 1px solid var(--border); background: rgba(0,199,88,0.08);
+    padding: 0.35rem 0.8rem; border-radius: 999px; }
+
+  /* Timeline */
+  #timeline { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent);
+    z-index: 30; transition: width 0.1s linear; }
+  #scene-indicator { position: fixed; top: 1rem; left: 1rem; z-index: 20;
+    font-family: "JetBrains Mono", monospace; font-size: 0.75rem; color: var(--text-muted);
+    background: var(--bg-card); border: 1px solid var(--border); padding: 0.3rem 0.6rem;
+    border-radius: 6px; }
+
+  /* Replay */
+  #replay { position: fixed; bottom: 1rem; right: 1rem; z-index: 20;
+    background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+    padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
+
+  @media (max-width: 640px) {
+    .split { grid-template-columns: 1fr; }
+    .browser-body { flex-direction: column; }
+    .sidebar { width: 100%; }
+  }
+</style>
+</head>
+<body>
+  <div id="timeline"></div>
+  <div id="scene-indicator">Szene 1/5</div>
+  <button class="theme-toggle" id="theme-toggle" title="Hell/Dunkel">🌙</button>
+  <div id="stage">
+
+    <!-- SZENE 1: PROBLEM (0:00-0:10) -->
+    <section class="scene active" id="scene-1">
+      <div class="cloud-bill">
+        <div style="color:var(--text-muted);font-size:0.8rem;margin-bottom:0.4rem;">CLOUD-RECHNUNG</div>
+        <div>ChatGPT Enterprise · 50 Nutzer</div>
+        <div>M365 Copilot · 50 Nutzer</div>
+        <div>Azure OpenAI · Server</div>
+        <div style="border-top:1px solid var(--border);margin:0.5rem 0;padding-top:0.5rem;">
+          <span class="rot">18.000 € / Jahr</span>
+        </div>
+      </div>
+      <div class="warn-banner">⚠️ DSGVO-Verstoß: Mandantendaten an Dritt-Server übertragen</div>
+      <p class="lead" style="margin-top:1.2rem;">Sie wollen KI nutzen — aber die Kosten explodieren
+        und Ihre Rechtsabteilung schlägt Alarm?</p>
+    </section>
+
+    <!-- SZENE 2: LÖSUNG (0:10-0:25) -->
+    <section class="scene" id="scene-2">
+      <div class="browser-mock">
+        <div class="browser-top">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <span style="flex:1;text-align:center;font-size:0.8rem;color:var(--text-muted);">Broki AI Extension</span>
+        </div>
+        <div class="browser-body">
+          <div class="sidebar">
+            <div class="line accent"></div>
+            <div class="line"></div><div class="line"></div>
+            <div class="line" style="margin-top:1rem;"></div>
+            <div class="line accent"></div>
+          </div>
+          <div class="content">
+            <div class="line"></div><div class="line short"></div>
+            <div class="line"></div><div class="line short"></div>
+          </div>
+        </div>
+      </div>
+      <div class="badge" style="margin-top:1rem;"><span class="dot g"></span> Raspberry Pi 4 · online · Tailscale</div>
+      <h1 style="margin-top:1.2rem;">Broki AI — Ihr lokaler <span class="gruen">KI-Berater</span></h1>
+      <p class="lead">Angetrieben von einem Raspberry Pi im Büro, vernetzt über ein sicheres
+        Tailscale-Mesh — und 100 % lokal im Browser.</p>
+    </section>
+
+    <!-- SZENE 3: ALLTAG / USPs (0:25-0:40) -->
+    <section class="scene" id="scene-3">
+      <div class="split">
+        <div class="split-box">
+          <h3>🔒 Anwalt · Vertrags-Analyse</h3>
+          <div class="terminal">
+            <span class="c">// Drag & Drop Vertrag in Sidebar</span><br>
+            <span class="k">frage:</span> „Kündigungsfrist § 5?"<br>
+            <span class="k">antwort:</span> „3 Monate zum Monatsende"<br>
+            <span class="k">modus:</span> lokal · <span class="k">daten:</span> <span style="color:var(--accent);">0 Bytes</span> gesendet
+          </div>
+        </div>
+        <div class="split-box">
+          <h3>💬 Support · Wiki-Assistent</h3>
+          <div class="terminal">
+            <span class="c">// Proaktive Warnung im Hintergrund</span><br>
+            <span class="k">status:</span> neue Richtlinie erkannt<br>
+            <span class="k">hinweis:</span> „Achtung: Update § 12 beachten"<br>
+            <span class="k">quelle:</span> Firmen-Wiki · Partition: support
+          </div>
+        </div>
+      </div>
+      <p class="lead" style="margin-top:1.2rem;">Egal ob Kanzlei, Arztpraxis oder Support-Team:
+        Broki AI liest Ihr Firmen-Wiki und beantwortet Fragen in Millisekunden.
+        <span class="gruen">Zu 100 % offline.</span> <span class="gruen">Absolut DSGVO-konform.</span></p>
+    </section>
+
+    <!-- SZENE 4: CRASH-SCHUTZ (0:40-0:50) -->
+    <section class="scene" id="scene-4">
+      <div class="browser-mock" style="border-color:var(--danger);">
+        <div class="browser-top">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <span style="flex:1;text-align:center;font-size:0.8rem;color:var(--text-muted);">Systemabsturz · Browser-Crash</span>
+        </div>
+        <div class="browser-body" style="opacity:0.6;">
+          <div class="sidebar" style="filter:blur(1px);"></div>
+          <div class="content" style="filter:blur(1px);"></div>
+        </div>
+      </div>
+      <div class="terminal" style="margin-top:1rem;border-color:var(--warn);">
+        <span class="c">// Crash erkannt — Heartbeat-Flag</span><br>
+        <span class="k">status:</span> <span style="color:var(--warn);">unsauber beendet</span><br>
+        <span class="k">journal:</span> 3 gesicherte Felder gefunden
+      </div>
+      <p class="lead" style="margin-top:1rem;">Ihre IT stürzt ab? Broki AI sichert Ihre Arbeit lokal
+        und rettet ungesicherte Eingaben per <span class="gruen">Rollback</span>.</p>
+    </section>
+
+    <!-- SZENE 5: CTA (0:50-1:00) -->
+    <section class="scene" id="scene-5">
+      <h1>Unendlich skalierbar.<br><span class="gruen">Plattformunabhängig.</span><br>Unzerstörbar.</h1>
+      <p class="lead">Starten Sie jetzt die KI-Revolution ohne Cloud-Risiko.<br>
+        Holen Sie sich Broki AI für Ihr AI-OS!</p>
+      <div style="margin-top:1.5rem;">
+        <a class="btn btn-primary" href="#">▸ Jetzt testen</a>
+      </div>
+      <div class="terminal" style="margin-top:1.5rem;">
+        <span class="c">// Ihr erster lokaler KI-Berater — in 60 Sekunden installiert.</span><br>
+        <span class="k">status:</span> online · <span class="k">modus:</span> lokal · <span class="k">daten:</span> <span style="color:var(--accent);">0 Bytes</span> gesendet
+      </div>
+      <div style="margin-top:1.5rem;font-size:0.85rem;color:var(--text-muted);">
+        Broki AI — Intelligent. Lokal. Unabhängig.
+      </div>
+    </section>
+
+  </div>
+
+  <div id="subtitle"></div>
+  <button id="replay">↻ Replay</button>
+
+  <script>
+    // =========================================================================
+    // Broki AI — 60s Video-Skript als animierte Web-Demo
+    // Verwendung: Lokal im Browser öffnen + Screen-Recording (z.B. Windows Game Bar)
+    // =========================================================================
+
+    const SKIP = false; // true = keine Wartezeiten (für Debug)
+
+    const SZENEN = [
+      {
+        id: "scene-1",
+        start: 0,
+        dauer: 10,
+        text: "Sie wollen KI nutzen — aber die Kosten explodieren und Ihre Rechtsabteilung schlägt Alarm?",
+        transcript: "Sie wollen künstliche Intelligenz im Unternehmen nutzen, aber die monatlichen Cloud-Kosten explodieren? Und Ihre Rechtsabteilung schlägt wegen des Datenschutzes Alarm?"
+      },
+      {
+        id: "scene-2",
+        start: 10,
+        dauer: 15,
+        text: "Vergessen Sie teure Server und Datenrisiken. Hier ist Broki AI — Ihr lokaler KI-Berater direkt im Browser-Tab.",
+        transcript: "Vergessen Sie teure Server und Datenrisiken. Hier ist Broki AI – Ihr lokales KI-Kumpel direkt im Browser-Tab. Angetrieben von einem winzigen Raspberry Pi im Büro, vernetzt über ein sicheres Tailscale-Mesh-Netzwerk."
+      },
+      {
+        id: "scene-3",
+        start: 25,
+        dauer: 15,
+        text: "Egal ob Kanzlei, Arztpraxis oder Support-Team: Broki AI liest Ihr Firmen-Wiki und beantwortet Fragen in Millisekunden.",
+        transcript: "Egal ob Kanzlei, Arztpraxis oder Support-Team: Broki AI liest Ihr Firmen-Wiki und beantwortet Fragen in Millisekunden. Zu 100 % offline im Arbeitsspeicher des Laptops. Absolut DSGVO-konform. Ihre Serverkosten? Bleiben dauerhaft bei exakt null Euro."
+      },
+      {
+        id: "scene-4",
+        start: 40,
+        dauer: 10,
+        text: "Und wenn Ihre IT abstürzt? Broki AI sichert Ihre Arbeit lokal und rettet ungesicherte Eingaben per Rollback.",
+        transcript: "Und wenn Ihre IT abstürzt? Broki AI sichert Ihre Arbeit lokal im Browser-Cache und rettet Ihre ungespeicherten Daten per Rollback."
+      },
+      {
+        id: "scene-5",
+        start: 50,
+        dauer: 10,
+        text: "Unendlich skalierbar. Plattformunabhängig. Unzerstörbar. Starten Sie jetzt die KI-Revolution ohne Cloud-Risiko.",
+        transcript: "Unendlich skalierbar. Plattformunabhängig. Unzerstörbar. Starten Sie jetzt die KI-Revolution ohne Cloud-Risiko. Holen Sie sich Broki AI für Ihr AI-OS!"
+      }
+    ];
+
+    const TOTAL = 60; // Sekunden
+
+    // --- Theme ---------------------------------------------------------------
+    (function () {
+      const btn = document.getElementById("theme-toggle");
+      const root = document.documentElement;
+      function apply(t) { root.setAttribute("data-theme", t); btn.textContent = t === "light" ? "☀️" : "🌙"; }
+      let saved = "dark";
+      try { saved = localStorage.getItem("broki-theme") || "dark"; } catch (e) {}
+      apply(saved);
+      btn.addEventListener("click", () => {
+        const neu = root.getAttribute("data-theme") === "light" ? "dark" : "light";
+        try { localStorage.setItem("broki-theme", neu); } catch (e) {}
+        apply(neu);
+      });
+    })();
+
+    // --- Player --------------------------------------------------------------
+    const timeline = document.getElementById("timeline");
+    const subtitle = document.getElementById("subtitle");
+    const indicator = document.getElementById("scene-indicator");
+    const scenes = SZENEN.map(s => ({ ...s, el: document.getElementById(s.id) }));
+
+    function setScene(idx) {
+      scenes.forEach((s, i) => s.el.classList.toggle("active", i === idx));
+      const s = scenes[idx];
+      subtitle.innerHTML = s.text + (s.transcript ? `<span class="transcript">${s.transcript}</span>` : "");
+      indicator.textContent = `Szene ${idx + 1}/${scenes.length}`;
+    }
+
+    let start = null;
+    function tick(now) {
+      if (!start) start = now;
+      const elapsed = SKIP ? TOTAL : (now - start) / 1000;
+      if (elapsed >= TOTAL) {
+        timeline.style.width = "100%";
+        setScene(scenes.length - 1);
+        return;
+      }
+      timeline.style.width = ((elapsed / TOTAL) * 100) + "%";
+      const idx = scenes.findIndex(s => elapsed >= s.start && elapsed < s.start + s.dauer);
+      if (idx >= 0 && !scenes[idx].el.classList.contains("active")) setScene(idx);
+      requestAnimationFrame(tick);
+    }
+
+    document.getElementById("replay").addEventListener("click", () => {
+      start = null;
+      setScene(0);
+      requestAnimationFrame(tick);
+    });
+
+    setScene(0);
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>
