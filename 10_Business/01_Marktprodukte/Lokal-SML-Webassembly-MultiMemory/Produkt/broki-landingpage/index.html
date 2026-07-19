@@ -181,7 +181,10 @@
 
   /* VERGLEICH */
   .compare-wrap { overflow-x: auto; margin-top: 1.6rem; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; min-width: 640px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; min-width: 940px; }
+  .tabelle-hinweis { margin-top: 1rem; font-size: 0.88rem; color: var(--text-muted); }
+  .tabelle-hinweis code { font-family: "JetBrains Mono", ui-monospace, monospace;
+    color: var(--accent-soft); font-size: 0.85em; }
   th, td { padding: 0.75rem 0.9rem; text-align: left; border-bottom: 1px solid var(--border); }
   th { color: var(--text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase;
     letter-spacing: 0.06em; background: var(--bg-card); }
@@ -212,6 +215,32 @@
   .roi-fact .num { font-family: "JetBrains Mono", ui-monospace, monospace;
     color: var(--accent); font-weight: 700; font-size: 1.3rem; }
   .roi-fact p { color: var(--text-dim); font-size: 0.88rem; margin-top: 0.3rem; line-height: 1.45; }
+
+  /* PAKETE / PRICING */
+  .preis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem; margin-top: 1.6rem; align-items: stretch; }
+  .preis-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 1.8rem 1.6rem; display: flex; flex-direction: column; position: relative;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; }
+  .preis-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .preis-card.beliebt { border-color: var(--accent);
+    background: radial-gradient(400px 200px at 50% 0%, rgba(0,199,88,0.10), transparent 70%), var(--bg-card);
+    box-shadow: 0 14px 40px var(--glow); }
+  .preis-badge { position: absolute; top: -0.8rem; left: 50%; transform: translateX(-50%);
+    background: var(--accent); color: #05130a; font-size: 0.72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em; padding: 0.3rem 0.9rem; border-radius: 999px; }
+  .preis-card h3 { font-size: 1.15rem; font-weight: 800; margin-bottom: 0.2rem; }
+  .preis-card .zielgruppe { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+  .preis-card .betrag { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.2rem; }
+  .preis-card .betrag small { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); }
+  .preis-card .abrechnung { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.2rem; }
+  .preis-card ul { list-style: none; margin: 0 0 1.4rem; flex: 1; }
+  .preis-card li { font-size: 0.9rem; color: var(--text-dim); line-height: 1.5;
+    padding: 0.35rem 0 0.35rem 1.5rem; position: relative; }
+  .preis-card li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+  .preis-card li.bald::before { content: "◷"; color: var(--text-muted); }
+  .preis-card li.bald { color: var(--text-muted); }
+  .preis-card .btn { justify-content: center; }
 
   /* ROADMAP / STEPS */
   .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -312,6 +341,7 @@
         <li><a href="#lernen">Autonomes Lernen</a></li>
         <li><a href="#usecases">Use-Cases</a></li>
         <li><a href="#roi">ROI</a></li>
+        <li><a href="#pakete">Pakete</a></li>
         <li><a href="#faq">FAQ</a></li>
         <li><a href="#demo" class="btn btn-primary" style="padding:0.5rem 1rem; color:#05130a;">Demo</a></li>
       </ul>
@@ -439,8 +469,8 @@
   <section id="vergleich" class="zebra">
     <div class="container reveal">
       <span class="eyebrow">Produkt-Hierarchie</span>
-      <h2>Broki AI vs. <span class="gruen">M365 Copilot &amp; WebChatLLM</span></h2>
-      <p class="lead">M365 Copilot lädt jeden Buchstaben in die Microsoft-Cloud. WebChatLLM ist ein passives Chatfenster, das bei jedem Besuch 2–4 GB neu lädt. Broki AI kombiniert das Beste beider Welten — ohne deren Schwächen.</p>
+      <h2>Broki AI vs. <span class="gruen">M365 Copilot, WebChatLLM, Gemini Nano &amp; BrowserOS</span></h2>
+      <p class="lead">M365 Copilot lädt jeden Buchstaben in die Microsoft-Cloud. WebChatLLM ist ein passives Chatfenster mit Gigabyte-Downloads. Chrome Built-in AI ist eine Blackbox von Google. BrowserOS verlangt einen kompletten Browser-Wechsel. Broki AI kombiniert die Stärken — ohne die Schwächen.</p>
       <div class="compare-wrap">
         <table>
           <thead>
@@ -449,6 +479,8 @@
               <th class="broki-col">⭐ Broki AI</th>
               <th>M365 Copilot</th>
               <th>WebChatLLM &amp; Co.</th>
+              <th>Chrome Built-in AI (Gemini Nano)</th>
+              <th>BrowserOS</th>
             </tr>
           </thead>
           <tbody>
@@ -457,52 +489,93 @@
               <td class="green broki-col">Lokal im Browser (Service Worker)</td>
               <td class="red">Cloud (Microsoft-Server)</td>
               <td class="accent-text">Lokal im Browser-Tab</td>
+              <td class="accent-text">Lokal (OS-Ebene)</td>
+              <td class="accent-text">Lokal oder Cloud-API (gemischt)</td>
             </tr>
             <tr>
               <td>Datenschutz</td>
               <td class="green broki-col">Absolut — verschlüsselte Sandbox</td>
               <td class="red">Kritisch (Cloud-Übertragung)</td>
               <td class="accent-text">Gut (lokal im Tab)</td>
+              <td class="red">Blackbox — Google bestimmt Modell &amp; Regeln</td>
+              <td class="accent-text">Gut, sofern rein lokal konfiguriert</td>
             </tr>
             <tr>
               <td>Interaktions-Typ</td>
               <td class="green broki-col">Proaktiv — liest live im Kontext mit</td>
               <td class="red">Passiv (auf Zuruf)</td>
               <td class="red">Passiv (Chatfenster-Website)</td>
+              <td class="red">Passiv (API für Websites)</td>
+              <td class="accent-text">Agentisch, aber auf Zuruf</td>
             </tr>
             <tr>
               <td>Lernverhalten</td>
               <td class="green broki-col">Autonom (Hermes-Skill-Learning)</td>
               <td class="red">Statisch, kein lokaler Lerneffekt</td>
               <td class="red">Vergisst alles nach dem Schließen</td>
+              <td class="red">Kein Custom-Training möglich</td>
+              <td class="red">Statisch</td>
+            </tr>
+            <tr>
+              <td>Firmen-Wissen (RAG)</td>
+              <td class="green broki-col">Ja — signierter, rechte-gefilterter Index</td>
+              <td class="accent-text">Ja (nur M365-Daten)</td>
+              <td class="red">Nein</td>
+              <td class="red">Nein (nur Context-Prompting)</td>
+              <td class="red">Nein</td>
             </tr>
             <tr>
               <td>Modell-Download</td>
-              <td class="green broki-col">Einmalig — via Raspberry Pi im Firmennetz</td>
+              <td class="green broki-col">Einmalig — via Mini-Server im Firmennetz</td>
               <td class="accent-text">Entfällt (Cloud)</td>
               <td class="red">2–4 GB bei jedem Besuch</td>
+              <td class="green">Entfällt (im Browser enthalten)</td>
+              <td class="red">Separate Modell-Installation nötig</td>
             </tr>
             <tr>
               <td>Einsatzort</td>
-              <td class="green broki-col">Jede Website &amp; Web-App (CRM, SAP, Tickets)</td>
+              <td class="green broki-col">Jede Website &amp; Web-App (CRM, SAP, Tickets) — im vorhandenen Browser</td>
               <td class="red">Nur Microsoft-Ökosystem</td>
               <td class="red">Nur die eigene Chat-Website</td>
+              <td class="red">Nur Chrome/Edge mit AI-Flags</td>
+              <td class="red">Kompletter Browser-Wechsel nötig</td>
+            </tr>
+            <tr>
+              <td>IT-Rollout</td>
+              <td class="green broki-col">Eine Erweiterung — keine Softwareverteilung</td>
+              <td class="accent-text">Lizenz-Zuweisung im Tenant</td>
+              <td class="green">Keiner (Website)</td>
+              <td class="red">Browser-Flags je Gerät</td>
+              <td class="red">Neuen Browser unternehmensweit ausrollen</td>
             </tr>
             <tr>
               <td>Infrastruktur-Kosten</td>
-              <td class="green broki-col">Minimal — einmalig ~80 € (Raspberry Pi)</td>
+              <td class="green broki-col">Minimal — einmaliger Mini-Server, 0 € laufend</td>
               <td class="red">~30 €/Nutzer/Monat, laufend</td>
               <td class="green">Keine</td>
+              <td class="green">Keine</td>
+              <td class="accent-text">Keine, ggf. Cloud-API-Kosten</td>
             </tr>
             <tr>
               <td>Offline-fähig</td>
               <td class="green broki-col">Ja (WebGPU / WASM)</td>
               <td class="red">Nein</td>
               <td class="accent-text">Ja (nur Chat)</td>
+              <td class="green">Ja</td>
+              <td class="accent-text">Ja, mit lokalem Modell</td>
+            </tr>
+            <tr>
+              <td>Crash-Rollback</td>
+              <td class="green broki-col">Ja — verschlüsseltes lokales Journal</td>
+              <td class="red">Nein</td>
+              <td class="red">Nein</td>
+              <td class="red">Nein</td>
+              <td class="red">Nein</td>
             </tr>
           </tbody>
         </table>
       </div>
+      <p class="tabelle-hinweis">Übrigens: Chrome Built-in AI ist für Broki kein Gegner, sondern ein Muskel — das LLM-Gateway nutzt <code>window.ai</code> automatisch mit, wenn es verfügbar ist.</p>
     </div>
   </section>
 
@@ -648,17 +721,76 @@
     </div>
   </section>
 
+  <!-- PAKETE -->
+  <section id="pakete">
+    <div class="container reveal">
+      <span class="eyebrow">Pakete</span>
+      <h2>Ein Gehirn, drei <span class="gruen">Ausbaustufen.</span></h2>
+      <p class="lead">Privat kostenlos starten, im Team vernetzen, im Unternehmen skalieren — die Technologie bleibt immer dieselbe: 100 % lokal.</p>
+      <div class="preis-grid">
+        <div class="preis-card">
+          <h3>Free</h3>
+          <div class="zielgruppe">Für Privatpersonen &amp; Selbstständige</div>
+          <div class="betrag">0 €</div>
+          <div class="abrechnung">für immer kostenlos</div>
+          <ul>
+            <li>Lokale KI in jedem Browser-Tab (WebGPU / WASM)</li>
+            <li>Behördenbriefe, Verträge &amp; Dokumente verstehen und übersetzen</li>
+            <li>Eigenen Wissens-Index als Datei laden</li>
+            <li>Privat-Modus (RAM-Sandbox, keine Spuren)</li>
+            <li>Crash-Rollback für eigene Eingaben</li>
+            <li>Community-Support</li>
+          </ul>
+          <a class="btn btn-ghost" href="#">Kostenlos installieren</a>
+        </div>
+        <div class="preis-card beliebt">
+          <span class="preis-badge">Beliebt</span>
+          <h3>Pro</h3>
+          <div class="zielgruppe">Für Teams — Kanzleien, Praxen, Hausverwaltungen</div>
+          <div class="betrag">Auf Anfrage <small>/ Arbeitsplatz</small></div>
+          <div class="abrechnung">Fixpreis statt Cloud-Abo — keine Token-Gebühren</div>
+          <ul>
+            <li>Alles aus Free</li>
+            <li>Gemeinsamer Firmen-Wissens-Index — kryptografisch signiert (ECDSA)</li>
+            <li>Verschlüsselte Index-Verteilung im Firmennetz</li>
+            <li>Hermes-Lernen: Team-Wissen wächst automatisch</li>
+            <li>Rechte-Filterung: jeder sieht nur, was er darf</li>
+            <li>Betriebsrat- &amp; DSGVO-Paket (druckfertige Erklärung)</li>
+            <li>E-Mail-Support</li>
+          </ul>
+          <a class="btn btn-primary" href="#demo">B2B-Demo vereinbaren</a>
+        </div>
+        <div class="preis-card">
+          <h3>Business</h3>
+          <div class="zielgruppe">Für Unternehmen mit eigener IT &amp; Compliance</div>
+          <div class="betrag">Auf Anfrage</div>
+          <div class="abrechnung">inkl. Hardware — einmalig statt monatlich</div>
+          <ul>
+            <li>Alles aus Pro</li>
+            <li>Vorkonfigurierter Mini-Server für Ihr Firmennetz</li>
+            <li>Zentrale Index-Verwaltung &amp; automatische Updates</li>
+            <li>Zero-Trust-Partner-Export: Wissen teilen ohne Systemzugang</li>
+            <li class="bald">Multi-Agenten-Mesh: Laptops rechnen als Team (Roadmap)</li>
+            <li class="bald">Lokales Fine-Tuning via WebGPU (Roadmap)</li>
+            <li>Onboarding, SLA &amp; Priority-Support</li>
+          </ul>
+          <a class="btn btn-ghost" href="#demo">Gespräch vereinbaren</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- HOW IT WORKS -->
   <section id="how" class="zebra">
     <div class="container reveal">
       <span class="eyebrow">So funktioniert's</span>
       <h2>Geniale Technik, einfach <span class="gruen">verpackt.</span></h2>
-      <p class="lead">Drei Schritte — vom Raspberry Pi im Büro bis zur Antwort im Browser-Tab. Keine Cloud dazwischen.</p>
+      <p class="lead">Drei Schritte — vom Mini-Server im Büro bis zur Antwort im Browser-Tab. Keine Cloud dazwischen.</p>
       <div class="steps">
         <div class="step">
           <div class="nr">01</div>
           <h3>Verteilen</h3>
-          <p>Ein Raspberry Pi 4 im Büro erstellt den signierten Wissens-Index und verteilt ihn verschlüsselt über Tailscale — oder Sie laden ihn manuell als Datei.</p>
+          <p>Ein kompakter Mini-Server in Ihrem Büro (auf Wunsch von uns vorkonfiguriert) erstellt den signierten Wissens-Index und verteilt ihn verschlüsselt im Firmennetz — oder Sie laden ihn manuell als Datei.</p>
         </div>
         <div class="step">
           <div class="nr">02</div>
@@ -705,10 +837,10 @@
         <div class="faq-answer">Ja. Da keine Daten das Gerät verlassen, ist die DSGVO-Konformität technisch gewährleistet. Prüfbar via F12-Netzwerk: 0 Bytes Upload.</div>
 
         <div class="faq-item">
-          <h3>Kann ich Broki AI auch ohne Raspberry Pi nutzen?</h3>
+          <h3>Kann ich Broki AI auch ohne Mini-Server nutzen?</h3>
           <span class="plus">+</span>
         </div>
-        <div class="faq-answer">Ja. Der Pi ist optional. Sie können den Wissens-Index auch manuell als Datei laden oder über einen beliebigen HTTP-Server verteilen.</div>
+        <div class="faq-answer">Ja. Der Mini-Server ist optional. Sie können den Wissens-Index auch manuell als Datei laden oder über einen beliebigen internen HTTP-Server verteilen.</div>
       </div>
     </div>
   </section>
@@ -835,6 +967,7 @@
             <li><a href="#lernen">Autonomes Lernen</a></li>
             <li><a href="#usecases">Use-Cases</a></li>
             <li><a href="#roi">ROI</a></li>
+            <li><a href="#pakete">Pakete</a></li>
             <li><a href="#zielgruppen">Branchen</a></li>
             <li><a href="#faq">FAQ</a></li>
           </ul>
