@@ -12,6 +12,7 @@
     --text: #fff; --text-dim: #ccc; --text-muted: #888890;
     --glow: rgba(0,199,88,0.10);
     --ok: #4ade80; --warn: #facc15; --danger: #f87171;
+    --dot: 180, 200, 190; --line: 0, 199, 88;
   }
   [data-theme="light"] {
     --bg-deep: #f6f7fb; --bg: #eef0f6; --bg-card: #fff; --bg-elevated: #f1f3f9; --border: #d9deea;
@@ -19,6 +20,7 @@
     --text: #10151f; --text-dim: #3a4252; --text-muted: #6a7080;
     --glow: rgba(0,165,72,0.08);
     --ok: #16a34a; --warn: #ca8a04; --danger: #dc2626;
+    --dot: 90, 105, 100; --line: 0, 165, 72;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
@@ -28,10 +30,24 @@
     transition: background 0.3s ease, color 0.3s ease; }
 
   .container { max-width: 1100px; margin: 0 auto; padding: 0 1.2rem; }
-  section { padding: 5rem 0; position: relative; }
+  section { padding: 5.5rem 0; position: relative; }
+  section.zebra { background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
   h2 { font-size: clamp(1.6rem, 3.6vw, 2.4rem); font-weight: 800; letter-spacing: -0.02em;
     margin-bottom: 1rem; line-height: 1.2; }
   h2 .gruen { color: var(--accent); }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.45rem;
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.72rem;
+    text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent-soft);
+    background: var(--glow); border: 1px solid rgba(0,199,88,0.25);
+    padding: 0.3rem 0.8rem; border-radius: 999px; margin-bottom: 1rem; }
+
+  /* Scroll-Reveal (dezent, respektiert reduced-motion) */
+  .reveal { opacity: 0; transform: translateY(18px);
+    transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.sichtbar { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+  }
   .lead { font-size: clamp(1rem, 1.8vw, 1.15rem); color: var(--text-dim);
     max-width: 720px; margin: 0 auto 2.4rem; line-height: 1.65; }
 
@@ -63,8 +79,29 @@
   .nav-links a:hover { color: var(--accent-soft); }
 
   /* HERO */
-  .hero { padding: 7rem 0 5rem; background: radial-gradient(1200px 500px at 50% -10%, var(--glow), transparent 60%), var(--bg-deep); }
+  .hero { padding: 7.5rem 0 5rem; background: radial-gradient(1200px 500px at 50% -10%, var(--glow), transparent 60%), var(--bg-deep); overflow: hidden; }
+  #broki-bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.55; }
+  .hero .container { position: relative; z-index: 1; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px;
+    padding: 0.35rem 0.9rem; font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1.2rem; }
+  .hero-badge .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 0 0 rgba(0,199,88,0.5); animation: pulse 2s infinite; }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(0,199,88,0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(0,199,88,0); }
+    100% { box-shadow: 0 0 0 0 rgba(0,199,88,0); }
+  }
   .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+
+  /* STATS STRIP (Social Proof) */
+  .stats-strip { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    background: var(--bg); padding: 1.6rem 0; }
+  .stats-inner { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem; text-align: center; }
+  .stat .num { font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+  .stat .lbl { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem; }
   .hero-visual { position: relative; }
   .browser-mock { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
     overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
@@ -141,6 +178,42 @@
   .step h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.4rem; }
   .step p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; }
 
+  /* ZIELGRUPPEN-TABS */
+  .tabs { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 1.6rem 0 1.4rem; }
+  .tab { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-dim);
+    padding: 0.55rem 1.1rem; border-radius: 999px; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; font-family: inherit; }
+  .tab:hover { border-color: var(--accent); color: var(--text); }
+  .tab[aria-selected="true"] { background: var(--accent); color: #05130a; border-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: einblenden 0.3s ease; }
+  @keyframes einblenden { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* SECURITY SPECS */
+  .spec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.2rem; margin-top: 1.6rem; }
+  .spec { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.4rem; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; }
+  .spec:hover { border-color: var(--accent); transform: translateY(-2px);
+    box-shadow: 0 10px 30px var(--glow); }
+  .spec .icon { font-size: 1.5rem; display: block; margin-bottom: 0.6rem; }
+  .spec strong { display: block; font-size: 1rem; margin-bottom: 0.4rem; }
+  .spec p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; }
+
+  /* SCREENSHOTS */
+  .screenshot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.2rem; margin-top: 1.6rem; }
+  .screenshot-card { background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; transition: transform 0.2s, border-color 0.2s; }
+  .screenshot-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .screenshot-card .placeholder { aspect-ratio: 16/10; display: flex; align-items: center;
+    justify-content: center; background: linear-gradient(135deg, var(--bg-elevated), var(--bg-card));
+    border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem;
+    font-family: "JetBrains Mono", ui-monospace, monospace; }
+  .screenshot-card h4 { font-size: 1rem; font-weight: 700; padding: 1rem 1.2rem 0.3rem; }
+  .screenshot-card p { color: var(--text-dim); font-size: 0.88rem; line-height: 1.5;
+    padding: 0 1.2rem 1.2rem; }
+
   /* FAQ */
   .faq { border-top: 1px solid var(--border); }
   .faq-item { border-bottom: 1px solid var(--border); padding: 1rem 0; cursor: pointer;
@@ -152,8 +225,9 @@
   .faq-item.open + .faq-answer { display: block; }
 
   /* CTA BANNER */
-  .cta-banner { background: linear-gradient(180deg, rgba(0,199,88,0.08) 0%, transparent 100%);
-    border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; text-align: center; }
+  .cta-banner { background: radial-gradient(600px 300px at 50% 0%, rgba(0,199,88,0.14), transparent 70%), var(--bg-card);
+    border: 1px solid rgba(0,199,88,0.3); border-radius: 18px; padding: 3rem 2.5rem; text-align: center;
+    box-shadow: 0 20px 60px var(--glow); }
   .cta-banner h2 { margin-bottom: 0.8rem; }
   .cta-banner .lead { margin-bottom: 1.6rem; }
 
@@ -173,6 +247,8 @@
   @media (max-width: 768px) {
     .hero-inner { grid-template-columns: 1fr; }
     .hero-visual { display: none; }
+    .nav-links li:not(:last-child) { display: none; }
+    section { padding: 3.5rem 0; }
   }
 </style>
 </head>
@@ -198,6 +274,7 @@
 
   <!-- HERO -->
   <section class="hero">
+    <canvas id="broki-bg"></canvas>
     <div class="container">
       <div class="hero-inner">
         <div class="hero-visual">
@@ -221,6 +298,7 @@
           </div>
         </div>
         <div class="hero-text">
+          <div class="hero-badge"><span class="pulse"></span> Open Source · Manifest V3 · 0 Bytes Upload</div>
           <h1>Die KI, die im Browser <span class="gruen">bleibt.</span><br>Zu 100 % <span class="gruen">privat.</span></h1>
           <p class="sub">Broki AI bringt Ihren KI-Berater und Ihr Firmenwissen in jeden Browser-Tab — 100 % lokal via WebGPU und WebAssembly. Null Serverkosten. Absolute DSGVO-Sicherheit.</p>
           <div class="trust">
@@ -237,9 +315,23 @@
     </div>
   </section>
 
+  <!-- STATS STRIP -->
+  <div class="stats-strip">
+    <div class="container">
+      <div class="stats-inner">
+        <div class="stat"><div class="num">0 Bytes</div><div class="lbl">Upload — prüfbar via F12</div></div>
+        <div class="stat"><div class="num">0 €</div><div class="lbl">Serverkosten</div></div>
+        <div class="stat"><div class="num">100 %</div><div class="lbl">DSGVO by Design</div></div>
+        <div class="stat"><div class="num">3 Stufen</div><div class="lbl">Lokales Gedächtnis</div></div>
+        <div class="stat"><div class="num">∞ offline</div><div class="lbl">WebGPU / WASM</div></div>
+      </div>
+    </div>
+  </div>
+
   <!-- VORTEILE -->
   <section id="vorteile">
-    <div class="container">
+    <div class="container reveal">
+      <span class="eyebrow">Vorteile</span>
       <h2>Was Broki AI für Sie <span class="gruen">leistet.</span></h2>
       <p class="lead">Eine Kern-Technologie. Maßgeschneidert für Ihre Branche. Ohne Cloud, ohne Upload, ohne Kompromisse.</p>
       <div class="vorteile-grid">
@@ -278,8 +370,9 @@
   </section>
 
   <!-- VERGLEICH -->
-  <section id="vergleich">
-    <div class="container">
+  <section id="vergleich" class="zebra">
+    <div class="container reveal">
+      <span class="eyebrow">Vergleich</span>
       <h2>Broki AI vs. <span class="gruen">Cloud-Assistenten</span></h2>
       <p class="lead">Die einzige Lösung, die in allen kritischen Dimensionen volle Punktzahl liefert — ohne Kompromisse.</p>
       <div class="compare-wrap">
@@ -337,7 +430,8 @@
 
   <!-- ROI RECHNER -->
   <section id="roi">
-    <div class="container">
+    <div class="container reveal">
+      <span class="eyebrow">ROI-Rechner</span>
       <h2>Schluss mit unkontrollierbaren Cloud-Gebühren.<br>Ihre Ersparnis: <span class="gruen">sofort sichtbar.</span></h2>
       <p class="lead">Nutzen Sie den ROI-Rechner und sehen Sie, wie viel Broki AI gegenüber klassischen Cloud-KI-Abos einspart — bei gleicher oder besserer Datenschutz-Garantie.</p>
       <div class="roi-box">
@@ -376,8 +470,9 @@
   </section>
 
   <!-- HOW IT WORKS -->
-  <section id="how">
-    <div class="container">
+  <section id="how" class="zebra">
+    <div class="container reveal">
+      <span class="eyebrow">So funktioniert's</span>
       <h2>Geniale Technik, einfach <span class="gruen">verpackt.</span></h2>
       <p class="lead">Drei Schritte — vom Raspberry Pi im Büro bis zur Antwort im Browser-Tab. Keine Cloud dazwischen.</p>
       <div class="steps">
@@ -402,7 +497,8 @@
 
   <!-- FAQ -->
   <section id="faq" class="faq">
-    <div class="container">
+    <div class="container reveal">
+      <span class="eyebrow">FAQ</span>
       <h2>Häufig gestellte <span class="gruen">Fragen.</span></h2>
       <div style="max-width: 760px; margin: 0 auto;">
         <div class="faq-item">
@@ -439,8 +535,9 @@
   </section>
 
   <!-- ZIELGRUPPEN -->
-  <section id="zielgruppen">
-    <div class="container">
+  <section id="zielgruppen" class="zebra">
+    <div class="container reveal">
+      <span class="eyebrow">Branchen</span>
       <h2>Maßgeschneidert für Ihre <span class="gruen">Branche.</span></h2>
       <p class="lead">Ob Kanzlei, Arztpraxis, Hausverwaltung oder Migrationsberatung — Broki AI passt sich Ihrem Workflow an.</p>
       <div class="tabs" role="tablist">
@@ -478,7 +575,8 @@
 
   <!-- SECURITY -->
   <section id="security">
-    <div class="container">
+    <div class="container reveal">
+      <span class="eyebrow">IT & Sicherheit</span>
       <h2>Für die IT-Sicherheit <span class="gruen">gebaut.</span><br>Von Administratoren geliebt.</h2>
       <p class="lead">Keine Blackbox, keine Cloud-Abhängigkeit, keine versteckten Datenströme. Broki AI ist von Grund auf für den Einsatz in regulierten Umgebungen konzipiert.</p>
       <div class="spec-grid">
@@ -507,8 +605,9 @@
   </section>
 
   <!-- SCREENSHOTS -->
-  <section id="screenshots">
-    <div class="container">
+  <section id="screenshots" class="zebra">
+    <div class="container reveal">
+      <span class="eyebrow">Einblicke</span>
       <h2>So sieht <span class="gruen">Broki AI</span> aus.</h2>
       <p class="lead">Einblick in die Extension — lokal, schnell, sicher.</p>
       <div class="screenshot-grid">
@@ -533,7 +632,7 @@
 
   <!-- CTA BANNER -->
   <section id="demo">
-    <div class="container">
+    <div class="container reveal">
       <div class="cta-banner">
         <h2>Bereit für die KI-Revolution <span class="gruen">ohne</span> Cloud-Risiko?</h2>
         <p class="lead">Installieren Sie Broki AI jetzt — lokal, sicher, unabhängig. Fordern Sie eine B2B-Demo an.</p>
@@ -605,6 +704,30 @@
       items.forEach(item => {
         item.addEventListener('click', () => item.classList.toggle('open'));
       });
+    })();
+    (function () {
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
+          tab.setAttribute('aria-selected', 'true');
+          document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+          const panel = document.getElementById('tab-' + tab.dataset.tab);
+          if (panel) panel.classList.add('active');
+        });
+      });
+    })();
+    (function () {
+      if (!('IntersectionObserver' in window)) {
+        document.querySelectorAll('.reveal').forEach(el => el.classList.add('sichtbar'));
+        return;
+      }
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) { e.target.classList.add('sichtbar'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.12 });
+      document.querySelectorAll('.reveal').forEach(el => io.observe(el));
     })();
     (function () {
       const slider = document.getElementById("roi-slider");
