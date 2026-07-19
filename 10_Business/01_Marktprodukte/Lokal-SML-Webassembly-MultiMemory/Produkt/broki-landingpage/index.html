@@ -137,6 +137,48 @@
   .vorteil-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
   .vorteil-card p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; }
 
+  /* USP / ABGRENZUNG */
+  .usp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.2rem; margin-top: 1.6rem; }
+  .usp-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 1.6rem; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; }
+  .usp-card:hover { border-color: var(--accent); transform: translateY(-2px);
+    box-shadow: 0 10px 30px var(--glow); }
+  .usp-card .icon { font-size: 1.8rem; margin-bottom: 0.6rem; }
+  .usp-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .usp-card p { color: var(--text-dim); font-size: 0.92rem; line-height: 1.55; }
+  .usp-vs { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border); font-size: 0.85rem; line-height: 1.5; }
+  .usp-vs .andere { display: block; color: var(--danger); margin-bottom: 0.35rem; }
+  .usp-vs .broki { display: block; color: var(--ok); }
+
+  .pitch-banner { margin-top: 2.4rem; background: radial-gradient(700px 300px at 50% 0%, rgba(0,199,88,0.12), transparent 70%), var(--bg-card);
+    border: 1px solid rgba(0,199,88,0.3); border-radius: 18px; padding: 2.4rem 2rem; text-align: center; }
+  .pitch-banner h3 { font-size: clamp(1.3rem, 2.6vw, 1.8rem); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+  .pitch-banner .untertitel { color: var(--text-dim); max-width: 640px; margin: 0 auto; line-height: 1.6; }
+  .pitch-punkte { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem; margin-top: 1.6rem; text-align: left; }
+  .pitch-punkt { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.2rem; }
+  .pitch-punkt .nr { font-family: "JetBrains Mono", ui-monospace, monospace; color: var(--accent);
+    font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; }
+  .pitch-punkt strong { display: block; font-size: 0.95rem; margin-bottom: 0.25rem; }
+  .pitch-punkt p { color: var(--text-dim); font-size: 0.85rem; line-height: 1.5; }
+
+  /* USE-CASES */
+  .case-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.2rem; margin-top: 1.6rem; }
+  .case { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 1.6rem; display: flex; flex-direction: column;
+    transition: transform 0.2s, border-color 0.2s; }
+  .case:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .case .tag { align-self: flex-start; font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-soft);
+    background: var(--glow); border: 1px solid rgba(0,199,88,0.25); border-radius: 999px;
+    padding: 0.25rem 0.7rem; margin-bottom: 0.8rem; }
+  .case h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .case p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.55; flex: 1; }
+  .case .gewinn { margin-top: 1rem; padding-top: 0.9rem; border-top: 1px dashed var(--border);
+    color: var(--ok); font-size: 0.88rem; line-height: 1.5; flex: 0; }
+
   /* VERGLEICH */
   .compare-wrap { overflow-x: auto; margin-top: 1.6rem; }
   table { width: 100%; border-collapse: collapse; font-size: 0.92rem; min-width: 640px; }
@@ -147,6 +189,9 @@
   .green { color: var(--ok); }
   .red { color: var(--danger); }
   .accent-text { color: var(--accent-soft); }
+  th.broki-col, td.broki-col { background: var(--glow);
+    border-left: 1px solid rgba(0,199,88,0.25); border-right: 1px solid rgba(0,199,88,0.25); }
+  th.broki-col { color: var(--accent-soft); }
 
   /* ROI RECHNER */
   .roi-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
@@ -262,10 +307,11 @@
         <b>Broki</b> AI
       </div>
       <ul class="nav-links">
-        <li><a href="#vorteile">Vorteile</a></li>
+        <li><a href="#usp">Warum Broki</a></li>
         <li><a href="#vergleich">Vergleich</a></li>
+        <li><a href="#lernen">Autonomes Lernen</a></li>
+        <li><a href="#usecases">Use-Cases</a></li>
         <li><a href="#roi">ROI</a></li>
-        <li><a href="#how">How</a></li>
         <li><a href="#faq">FAQ</a></li>
         <li><a href="#demo" class="btn btn-primary" style="padding:0.5rem 1rem; color:#05130a;">Demo</a></li>
       </ul>
@@ -299,12 +345,13 @@
         </div>
         <div class="hero-text">
           <div class="hero-badge"><span class="pulse"></span> Open Source · Manifest V3 · 0 Bytes Upload</div>
-          <h1>Die KI, die im Browser <span class="gruen">bleibt.</span><br>Zu 100 % <span class="gruen">privat.</span></h1>
-          <p class="sub">Broki AI bringt Ihren KI-Berater und Ihr Firmenwissen in jeden Browser-Tab — 100 % lokal via WebGPU und WebAssembly. Null Serverkosten. Absolute DSGVO-Sicherheit.</p>
+          <h1>Kein Chatbot.<br>Ihr <span class="gruen">KI-Mitarbeiter</span> im Browser.</h1>
+          <p class="sub">Broki AI ist das <strong>resiliente Firmen-Gehirn</strong>: ein proaktiver Agent, der in jedem Browser-Tab mitliest, Fehler abfängt, bevor sie abgeschickt werden — und jeden Tag intelligenter wird. 100 % lokal via WebGPU &amp; WebAssembly.</p>
           <div class="trust">
-            <span><span class="chk">✓</span> 100 % lokal</span>
-            <span><span class="chk">✓</span> DSGVO-konform</span>
-            <span><span class="chk">✓</span> Keine Cloud</span>
+            <span><span class="chk">✓</span> 100 % lokal &amp; DSGVO-konform</span>
+            <span><span class="chk">✓</span> 0 € Server-Infrastruktur</span>
+            <span><span class="chk">✓</span> Rollback-Schutz bei IT-Ausfällen</span>
+            <span><span class="chk">✓</span> Lernt autonom dazu</span>
           </div>
           <div class="cta">
             <a class="btn btn-primary" href="#">▸ Kostenlos testen (Chrome Store)</a>
@@ -327,6 +374,197 @@
       </div>
     </div>
   </div>
+
+  <!-- USP / ABGRENZUNG -->
+  <section id="usp">
+    <div class="container reveal">
+      <span class="eyebrow">Warum Broki AI</span>
+      <h2>Ein KI-Kollege im Browser — <span class="gruen">kein Chatbot in der Cloud.</span></h2>
+      <p class="lead">Copilot, ChatGPT &amp; Co. warten passiv auf Ihre Frage — in der Cloud. Broki AI lebt im Browser-Kontext Ihrer Mitarbeiter und arbeitet dort wie ein unsichtbarer Kollege: proaktiv, lernfähig, krisensicher.</p>
+      <div class="usp-grid">
+        <div class="usp-card">
+          <div class="icon">🛡️</div>
+          <h3>Proaktiver Agent statt passiver Chatbot</h3>
+          <p>Broki AI liest live im Kontext mit — im CRM, im Ticket-System, in jeder Web-App. Es fängt Fehler ab, <em>bevor</em> sie abgeschickt werden: „Achtung, dieser Rabatt ist laut Wiki-Update von gestern nicht mehr zulässig."</p>
+          <div class="usp-vs">
+            <span class="andere">✗ Andere: leeres Chatfenster, das auf Zuruf wartet</span>
+            <span class="broki">✓ Broki: greift von selbst ein, wenn es zählt</span>
+          </div>
+        </div>
+        <div class="usp-card">
+          <div class="icon">🧠</div>
+          <h3>Autonomes Lernen (Hermes-Pattern)</h3>
+          <p>Korrigiert ein Mitarbeiter eine Antwort, merkt sich Broki das. Nutzt er einen vorgeschlagenen Wiki-Artikel, steigt dessen Relevanz. Repetitive Klick-Abläufe erkennt der Agent und generiert daraus selbstständig autonome Workflows.</p>
+          <div class="usp-vs">
+            <span class="andere">✗ Andere: statisch — oder vergessen alles beim Schließen</span>
+            <span class="broki">✓ Broki: wird jeden Tag intelligenter, ganz ohne Server</span>
+          </div>
+        </div>
+        <div class="usp-card">
+          <div class="icon">🛟</div>
+          <h3>Resilienz: die IT-Crash-Lebensversicherung</h3>
+          <p>Stürzt ERP oder Wiki ab, ist lokal nichts verloren: Broki protokolliert Eingaben verschlüsselt im Browser-Cache mit und organisiert nach dem Neustart den automatischen Rollback aller verlorenen Textbausteine.</p>
+          <div class="usp-vs">
+            <span class="andere">✗ Andere: Cloud weg = Arbeit weg</span>
+            <span class="broki">✓ Broki: null Datenverlust, sofort wieder arbeitsfähig</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pitch-banner">
+        <h3>Kein einfaches KI-Wiki. Das <span class="gruen">Resiliente Firmen-Gehirn.</span></h3>
+        <p class="untertitel">Radikale Privatsphäre moderner In-Browser-Engines + proaktive Intelligenz eines OS-Assistenten + selbstlernendes Gedächtnis.</p>
+        <div class="pitch-punkte">
+          <div class="pitch-punkt">
+            <div class="nr">01</div>
+            <strong>0 € Server-Infrastruktur</strong>
+            <p>Open-Source-Modelle und lokale Rechenleistung — die Laptops Ihrer Mitarbeiter sind schon bezahlt.</p>
+          </div>
+          <div class="pitch-punkt">
+            <div class="nr">02</div>
+            <strong>Schutz vor Datenverlust</strong>
+            <p>Rollback-Schutz bei IT-Ausfällen: Eingaben bleiben lokal erhalten und werden automatisch wiederhergestellt.</p>
+          </div>
+          <div class="pitch-punkt">
+            <div class="nr">03</div>
+            <strong>Wird jeden Tag intelligenter</strong>
+            <p>Passt sich dezentral auf jedem Mitarbeiter-Laptop an — Wissen wächst von unten nach oben.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VERGLEICH -->
+  <section id="vergleich" class="zebra">
+    <div class="container reveal">
+      <span class="eyebrow">Produkt-Hierarchie</span>
+      <h2>Broki AI vs. <span class="gruen">M365 Copilot &amp; WebChatLLM</span></h2>
+      <p class="lead">M365 Copilot lädt jeden Buchstaben in die Microsoft-Cloud. WebChatLLM ist ein passives Chatfenster, das bei jedem Besuch 2–4 GB neu lädt. Broki AI kombiniert das Beste beider Welten — ohne deren Schwächen.</p>
+      <div class="compare-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Funktion</th>
+              <th class="broki-col">⭐ Broki AI</th>
+              <th>M365 Copilot</th>
+              <th>WebChatLLM &amp; Co.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Rechenort</td>
+              <td class="green broki-col">Lokal im Browser (Service Worker)</td>
+              <td class="red">Cloud (Microsoft-Server)</td>
+              <td class="accent-text">Lokal im Browser-Tab</td>
+            </tr>
+            <tr>
+              <td>Datenschutz</td>
+              <td class="green broki-col">Absolut — verschlüsselte Sandbox</td>
+              <td class="red">Kritisch (Cloud-Übertragung)</td>
+              <td class="accent-text">Gut (lokal im Tab)</td>
+            </tr>
+            <tr>
+              <td>Interaktions-Typ</td>
+              <td class="green broki-col">Proaktiv — liest live im Kontext mit</td>
+              <td class="red">Passiv (auf Zuruf)</td>
+              <td class="red">Passiv (Chatfenster-Website)</td>
+            </tr>
+            <tr>
+              <td>Lernverhalten</td>
+              <td class="green broki-col">Autonom (Hermes-Skill-Learning)</td>
+              <td class="red">Statisch, kein lokaler Lerneffekt</td>
+              <td class="red">Vergisst alles nach dem Schließen</td>
+            </tr>
+            <tr>
+              <td>Modell-Download</td>
+              <td class="green broki-col">Einmalig — via Raspberry Pi im Firmennetz</td>
+              <td class="accent-text">Entfällt (Cloud)</td>
+              <td class="red">2–4 GB bei jedem Besuch</td>
+            </tr>
+            <tr>
+              <td>Einsatzort</td>
+              <td class="green broki-col">Jede Website &amp; Web-App (CRM, SAP, Tickets)</td>
+              <td class="red">Nur Microsoft-Ökosystem</td>
+              <td class="red">Nur die eigene Chat-Website</td>
+            </tr>
+            <tr>
+              <td>Infrastruktur-Kosten</td>
+              <td class="green broki-col">Minimal — einmalig ~80 € (Raspberry Pi)</td>
+              <td class="red">~30 €/Nutzer/Monat, laufend</td>
+              <td class="green">Keine</td>
+            </tr>
+            <tr>
+              <td>Offline-fähig</td>
+              <td class="green broki-col">Ja (WebGPU / WASM)</td>
+              <td class="red">Nein</td>
+              <td class="accent-text">Ja (nur Chat)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUTONOMES LERNEN -->
+  <section id="lernen">
+    <div class="container reveal">
+      <span class="eyebrow">Hermes-Pattern</span>
+      <h2>Eine KI, die von Ihren Mitarbeitern <span class="gruen">lernt.</span><br>Ohne zentralen Server.</h2>
+      <p class="lead">Damit das Firmen-Gehirn von Tag zu Tag wertvoller wird, lernt Broki AI autonom aus dem Feedback jedes Mitarbeiters — lokal und dezentral.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="nr">01</div>
+          <h3>Explizites Feedback</h3>
+          <p>Korrigiert der Mitarbeiter eine KI-Antwort manuell im Textfeld, merkt sich Broki: „Für Problem X ist Lösung Y besser." Die Regel gilt ab sofort.</p>
+        </div>
+        <div class="step">
+          <div class="nr">02</div>
+          <h3>Implizites Feedback</h3>
+          <p>Klickt der Mitarbeiter auf einen vorgeschlagenen Wiki-Artikel und nutzt den Textbaustein, steigt dessen Relevanz-Wertung für ähnliche zukünftige Fragen.</p>
+        </div>
+        <div class="step">
+          <div class="nr">03</div>
+          <h3>Skill-Generierung</h3>
+          <p>Broki erkennt repetitive Abläufe: „Du kopierst jeden Dienstag Daten aus System X in Formular Y. Ich habe dafür einen autonomen Workflow generiert — soll ich übernehmen?"</p>
+        </div>
+        <div class="step">
+          <div class="nr">04</div>
+          <h3>Lokales Fine-Tuning</h3>
+          <p>In der Mittagspause läuft ein Mini-Training (LoRA-Adaption) direkt im Browser via WebGPU. Die KI passt sich dem Schreibstil und der täglichen Arbeit an. <em>(Roadmap)</em></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- USE-CASES -->
+  <section id="usecases" class="zebra">
+    <div class="container reveal">
+      <span class="eyebrow">Berufsalltag</span>
+      <h2>Die 3 stärksten <span class="gruen">Use-Cases.</span></h2>
+      <p class="lead">Kein Demo-Spielzeug — drei Szenarien, in denen Broki AI täglich bares Geld und Nerven spart.</p>
+      <div class="case-grid">
+        <div class="case">
+          <span class="tag">Use-Case 1</span>
+          <h3>Der proaktive Support- &amp; Vertriebs-Schutzschild</h3>
+          <p>Ein Support-Mitarbeiter tippt eine Kundenantwort. Broki liest lokal mit und stoppt vor dem Senden: „Achtung: Dieser Rabatt ist laut gestriger Wiki-Aktualisierung für diese Produktgruppe nicht mehr zulässig. Klicke hier, um den Text anzupassen."</p>
+          <div class="gewinn">✓ Verhindert teure Fehlentscheidungen und Compliance-Verstöße — live beim Schreiben.</div>
+        </div>
+        <div class="case">
+          <span class="tag">Use-Case 2</span>
+          <h3>Das autonome „Stille Gedächtnis"</h3>
+          <p>Ein IT-Techniker löst ein neues Problem und notiert die Lösung im Ticket. Broki erkennt sie, vektorisiert lokal und schlägt beim Wochen-Sync vor: „5 identische Lösungswege gesehen — soll ich das Wiki für alle Kollegen aktualisieren?"</p>
+          <div class="gewinn">✓ Firmenwissen wächst vollautomatisch von unten nach oben — ohne Dokumentations-Pflichten.</div>
+        </div>
+        <div class="case">
+          <span class="tag">Use-Case 3</span>
+          <h3>Die IT-Crash-Lebensversicherung</h3>
+          <p>Das zentrale ERP stürzt nach einem fehlgeschlagenen Update ab — 3 Stunden Serverdaten weg. Lokal ist nichts verloren: Broki hat alles verschlüsselt mitprotokolliert und fügt nach dem Neustart alle Textbausteine automatisch wieder ein.</p>
+          <div class="gewinn">✓ Null Datenverlust und sofortige Arbeitsfähigkeit bei IT-Katastrophen.</div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- VORTEILE -->
   <section id="vorteile">
@@ -365,65 +603,6 @@
           <h3>Plattformunabhängig</h3>
           <p>Läuft auf Windows, Mac und Linux — einfach via Browser-Erweiterung. Keine Softwareverteilungs-Hölle.</p>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- VERGLEICH -->
-  <section id="vergleich" class="zebra">
-    <div class="container reveal">
-      <span class="eyebrow">Vergleich</span>
-      <h2>Broki AI vs. <span class="gruen">Cloud-Assistenten</span></h2>
-      <p class="lead">Die einzige Lösung, die in allen kritischen Dimensionen volle Punktzahl liefert — ohne Kompromisse.</p>
-      <div class="compare-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Kriterium</th>
-              <th>Broki AI</th>
-              <th>Cloud-Assistenten</th>
-              <th>M365 Copilot</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Datenhaltung</td>
-              <td class="green">100 % lokal im Browser</td>
-              <td class="red">Teilweise Cloud</td>
-              <td class="red">Microsoft Cloud</td>
-            </tr>
-            <tr>
-              <td>DSGVO-Konformität</td>
-              <td class="green">Vollständig (kein Upload)</td>
-              <td class="red">Eingeschränkt</td>
-              <td class="red">Abhängig von MS-Vertrag</td>
-            </tr>
-            <tr>
-              <td>Serverkosten</td>
-              <td class="green">0 € (Fixkosten)</td>
-              <td class="red">Skaliert mit Nutzern</td>
-              <td class="red">~30 €/Seat/Monat</td>
-            </tr>
-            <tr>
-              <td>Offline-fähig</td>
-              <td class="green">Ja (WebGPU / WASM)</td>
-              <td class="red">Nein</td>
-              <td class="red">Nein</td>
-            </tr>
-            <tr>
-              <td>Firmen-RAG</td>
-              <td class="green">Ja (lokaler Index)</td>
-              <td class="red">Eingeschränkt</td>
-              <td class="accent-text">Ja (M365 Only)</td>
-            </tr>
-            <tr>
-              <td>Plattform</td>
-              <td class="green">Alle Browser / OS</td>
-              <td class="accent-text">Browser (Plugin)</td>
-              <td class="red">Nur M365</td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
   </section>
@@ -651,10 +830,11 @@
         <div>
           <h4>Produkt</h4>
           <ul>
-            <li><a href="#vorteile">Vorteile</a></li>
+            <li><a href="#usp">Warum Broki</a></li>
             <li><a href="#vergleich">Vergleich</a></li>
+            <li><a href="#lernen">Autonomes Lernen</a></li>
+            <li><a href="#usecases">Use-Cases</a></li>
             <li><a href="#roi">ROI</a></li>
-            <li><a href="#how">How it works</a></li>
             <li><a href="#zielgruppen">Branchen</a></li>
             <li><a href="#faq">FAQ</a></li>
           </ul>
