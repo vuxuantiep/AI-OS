@@ -26,8 +26,10 @@
   html { scroll-behavior: smooth; }
   body { color: var(--text);
     background:
-      radial-gradient(1100px 650px at 82% -8%, rgba(0,199,88,0.06), transparent 60%),
-      linear-gradient(160deg, #0b1822 0%, #060f16 45%, #03080c 100%);
+      radial-gradient(1100px 650px at 82% -8%, rgba(0,199,88,0.11), transparent 60%),
+      radial-gradient(900px 550px at -12% 28%, rgba(0,145,200,0.10), transparent 60%),
+      radial-gradient(800px 500px at 55% 115%, rgba(0,199,88,0.07), transparent 60%),
+      linear-gradient(160deg, #0d1c28 0%, #071119 45%, #03080c 100%);
     background-attachment: fixed;
     font-family: "Inter", system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased; overflow-x: hidden;
@@ -409,6 +411,36 @@
   .footer-bottom { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border);
     display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem;
     font-size: 0.85rem; color: var(--text-muted); }
+
+  /* GLAS & LICHT */
+  .vorteil-card, .usp-card, .case, .step, .preis-card, .spec, .screenshot-card,
+  .roi-box, .roi-fact, .rival-box, .pitch-punkt, .browser-mock, .tablet, .phone {
+    background: rgba(12,23,33,0.55);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .preis-card.beliebt { background:
+    radial-gradient(400px 200px at 50% 0%, rgba(0,199,88,0.12), transparent 70%),
+    rgba(12,23,33,0.6); }
+  .pitch-banner, .cta-banner { background:
+    radial-gradient(700px 300px at 50% 0%, rgba(0,199,88,0.14), transparent 70%),
+    rgba(12,23,33,0.55);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  [data-theme="light"] .vorteil-card, [data-theme="light"] .usp-card, [data-theme="light"] .case,
+  [data-theme="light"] .step, [data-theme="light"] .preis-card, [data-theme="light"] .spec,
+  [data-theme="light"] .screenshot-card, [data-theme="light"] .roi-box, [data-theme="light"] .roi-fact,
+  [data-theme="light"] .rival-box, [data-theme="light"] .pitch-punkt, [data-theme="light"] .browser-mock,
+  [data-theme="light"] .tablet, [data-theme="light"] .phone {
+    background: rgba(255,255,255,0.62); }
+  [data-theme="light"] .preis-card.beliebt { background:
+    radial-gradient(400px 200px at 50% 0%, rgba(0,165,72,0.10), transparent 70%),
+    rgba(255,255,255,0.68); }
+  [data-theme="light"] .pitch-banner, [data-theme="light"] .cta-banner { background:
+    radial-gradient(700px 300px at 50% 0%, rgba(0,165,72,0.10), transparent 70%),
+    rgba(255,255,255,0.62); }
+  h1 .gruen, h2 .gruen, .pitch-banner h3 .gruen, .rival-box h3 .gruen {
+    background: linear-gradient(100deg, var(--accent) 20%, var(--accent-mint) 80%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-teal));
+    box-shadow: 0 6px 22px rgba(0,199,88,0.22); }
 
   @media (max-width: 768px) {
     .hero-inner { grid-template-columns: 1fr; }
