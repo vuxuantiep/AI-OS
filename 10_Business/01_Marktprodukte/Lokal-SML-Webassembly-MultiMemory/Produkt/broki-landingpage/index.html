@@ -110,13 +110,71 @@
   .dot { width: 10px; height: 10px; border-radius: 50%; }
   .dot.r { background: #ef4444; } .dot.y { background: #facc15; } .dot.g { background: #4ade80; }
   .browser-body { padding: 1rem; min-height: 200px; display: flex; gap: 1rem; }
-  .sidebar { width: 180px; background: var(--bg-elevated); border-radius: 8px; padding: 0.8rem;
-    border: 1px solid var(--border); flex-shrink: 0; }
-  .sidebar .line { height: 8px; border-radius: 4px; background: var(--border); margin: 0.4rem 0; }
-  .sidebar .line.accent { background: var(--accent); width: 70%; }
-  .content { flex: 1; }
-  .content .line { height: 10px; border-radius: 5px; background: var(--border); margin: 0.5rem 0; }
-  .content .line.short { width: 60%; }
+
+  /* GERÄTE-DIASHOW (Plattformunabhängigkeit) */
+  .device-show { position: relative; height: 320px; }
+  .slide { position: absolute; inset: 0; opacity: 0; transform: translateY(10px);
+    transition: opacity 0.6s ease, transform 0.6s ease; pointer-events: none;
+    display: flex; align-items: center; justify-content: center; }
+  .slide.aktiv { opacity: 1; transform: none; pointer-events: auto; }
+  .slide .browser-mock { width: 100%; }
+  .win-controls { margin-left: auto; display: flex; gap: 0.7rem; font-size: 0.7rem;
+    color: var(--text-muted); letter-spacing: 0.05em; }
+  .browser-tab { display: inline-flex; align-items: center; gap: 0.4rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-bottom: none;
+    border-radius: 8px 8px 0 0; padding: 0.25rem 0.7rem; font-size: 0.72rem; color: var(--text-dim); }
+  .browser-tab .fav { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+  .web-skel { flex: 1; min-width: 0; }
+  .web-skel .line { height: 9px; border-radius: 5px; background: var(--border); margin: 0.55rem 0; }
+  .web-skel .line.kurz { width: 60%; }
+
+  .broki-panel { width: 47%; flex-shrink: 0; background: var(--bg-elevated);
+    border: 1px solid var(--border); border-radius: 10px; padding: 0.7rem;
+    display: flex; flex-direction: column; gap: 0.5rem; }
+  .bp-head { display: flex; align-items: center; gap: 0.45rem; font-size: 0.72rem;
+    font-weight: 700; color: var(--text-dim); padding-bottom: 0.45rem;
+    border-bottom: 1px solid var(--border); }
+  .bp-logo { width: 9px; height: 9px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 8px rgba(0,199,88,0.6); }
+  .bp-bubble { border-radius: 9px; padding: 0.45rem 0.55rem; }
+  .bp-bubble.user { background: var(--bg-card); border: 1px solid var(--border); margin-left: 18%; }
+  .bp-bubble.ai { background: rgba(0,199,88,0.08); border: 1px solid rgba(0,199,88,0.25); margin-right: 12%; }
+  .bp-line { height: 7px; border-radius: 4px; background: var(--border); margin: 0.3rem 0; }
+  .bp-line.gruen { background: var(--accent); opacity: 0.75; }
+  .bp-line.k { width: 55%; }
+  .bp-input { margin-top: auto; display: flex; gap: 0.45rem; align-items: center;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.38rem 0.5rem; }
+  .bp-input .platz { flex: 1; height: 7px; border-radius: 4px; background: var(--border); }
+  .bp-send { width: 20px; height: 20px; border-radius: 6px; background: var(--accent);
+    color: #05130a; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; }
+
+  .tablet { width: 78%; height: 290px; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 1rem; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    display: flex; gap: 0.9rem; position: relative; }
+  .tablet::before { content: ""; position: absolute; top: 7px; left: 50%; transform: translateX(-50%);
+    width: 7px; height: 7px; border-radius: 50%; background: var(--border); }
+  .tablet .web-skel { padding-top: 0.8rem; }
+  .tablet .broki-panel { width: 44%; margin-top: 0.8rem; }
+
+  .phone { width: 185px; height: 305px; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 26px; padding: 1.1rem 0.6rem 0.9rem; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    display: flex; flex-direction: column; position: relative; }
+  .phone::before { content: ""; position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    width: 54px; height: 6px; border-radius: 3px; background: var(--border); }
+  .phone::after { content: ""; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
+    width: 64px; height: 4px; border-radius: 2px; background: var(--border); }
+  .phone .broki-panel { width: 100%; flex: 1; margin-top: 0.5rem; }
+
+  .geraet-caption { text-align: center; margin-top: 0.9rem;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.78rem; color: var(--text-muted); }
+  .geraet-caption b { color: var(--accent-soft); font-weight: 600; }
+  .show-dots { display: flex; gap: 0.45rem; justify-content: center; margin-top: 0.7rem; }
+  .show-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border);
+    border: none; cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s; }
+  .show-dot.aktiv { background: var(--accent); transform: scale(1.25); }
   .hero-text h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; line-height: 1.05;
     letter-spacing: -0.02em; margin-bottom: 1.2rem; }
   .hero-text .sub { font-size: clamp(1rem, 1.6vw, 1.15rem); color: var(--text-dim);
@@ -354,23 +412,90 @@
     <div class="container">
       <div class="hero-inner">
         <div class="hero-visual">
-          <div class="browser-mock">
-            <div class="browser-top">
-              <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-              <span style="flex:1;text-align:center;font-size:0.8rem;color:var(--text-muted);">Broki AI Extension</span>
-            </div>
-            <div class="browser-body">
-              <div class="sidebar">
-                <div class="line accent"></div>
-                <div class="line"></div><div class="line"></div>
-                <div class="line" style="margin-top:1rem;"></div>
-                <div class="line accent"></div>
+          <div class="device-show" id="device-show">
+
+            <!-- Slide 1: Chrome / Windows-PC -->
+            <div class="slide aktiv" data-caption="Google Chrome — Windows-PC">
+              <div class="browser-mock">
+                <div class="browser-top">
+                  <span class="browser-tab"><span class="fav"></span> Firmen-CRM</span>
+                  <span class="win-controls">─ &#9633; ✕</span>
+                </div>
+                <div class="browser-body">
+                  <div class="web-skel">
+                    <div class="line"></div><div class="line kurz"></div>
+                    <div class="line"></div><div class="line kurz"></div>
+                    <div class="line"></div>
+                  </div>
+                  <div class="broki-panel">
+                    <div class="bp-head"><span class="bp-logo"></span> Broki AI</div>
+                    <div class="bp-bubble user"><div class="bp-line"></div><div class="bp-line k"></div></div>
+                    <div class="bp-bubble ai"><div class="bp-line gruen"></div><div class="bp-line"></div><div class="bp-line k"></div></div>
+                    <div class="bp-input"><span class="platz"></span><span class="bp-send">▸</span></div>
+                  </div>
+                </div>
               </div>
-              <div class="content">
-                <div class="line"></div><div class="line short"></div>
-                <div class="line"></div><div class="line short"></div>
+            </div>
+
+            <!-- Slide 2: Edge / MacBook -->
+            <div class="slide" data-caption="Microsoft Edge — MacBook">
+              <div class="browser-mock">
+                <div class="browser-top">
+                  <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+                  <span class="browser-tab"><span class="fav"></span> Intranet-Wiki</span>
+                </div>
+                <div class="browser-body">
+                  <div class="web-skel">
+                    <div class="line"></div><div class="line kurz"></div>
+                    <div class="line"></div><div class="line kurz"></div>
+                    <div class="line"></div>
+                  </div>
+                  <div class="broki-panel">
+                    <div class="bp-head"><span class="bp-logo"></span> Broki AI</div>
+                    <div class="bp-bubble user"><div class="bp-line"></div><div class="bp-line k"></div></div>
+                    <div class="bp-bubble ai"><div class="bp-line gruen"></div><div class="bp-line"></div><div class="bp-line k"></div></div>
+                    <div class="bp-input"><span class="platz"></span><span class="bp-send">▸</span></div>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <!-- Slide 3: Tablet / iPad -->
+            <div class="slide" data-caption="Tablet &amp; iPad">
+              <div class="tablet">
+                <div class="web-skel">
+                  <div class="line"></div><div class="line kurz"></div>
+                  <div class="line"></div><div class="line kurz"></div>
+                </div>
+                <div class="broki-panel">
+                  <div class="bp-head"><span class="bp-logo"></span> Broki AI</div>
+                  <div class="bp-bubble user"><div class="bp-line"></div><div class="bp-line k"></div></div>
+                  <div class="bp-bubble ai"><div class="bp-line gruen"></div><div class="bp-line"></div><div class="bp-line k"></div></div>
+                  <div class="bp-input"><span class="platz"></span><span class="bp-send">▸</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 4: Smartphone -->
+            <div class="slide" data-caption="Smartphone — unterwegs">
+              <div class="phone">
+                <div class="broki-panel">
+                  <div class="bp-head"><span class="bp-logo"></span> Broki AI</div>
+                  <div class="bp-bubble user"><div class="bp-line"></div><div class="bp-line k"></div></div>
+                  <div class="bp-bubble ai"><div class="bp-line gruen"></div><div class="bp-line"></div><div class="bp-line k"></div></div>
+                  <div class="bp-bubble ai"><div class="bp-line"></div><div class="bp-line k"></div></div>
+                  <div class="bp-input"><span class="platz"></span><span class="bp-send">▸</span></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="geraet-caption" id="geraet-caption"><b>Google Chrome</b> — Windows-PC</div>
+          <div class="show-dots" id="show-dots">
+            <button type="button" class="show-dot aktiv" aria-label="Slide 1"></button>
+            <button type="button" class="show-dot" aria-label="Slide 2"></button>
+            <button type="button" class="show-dot" aria-label="Slide 3"></button>
+            <button type="button" class="show-dot" aria-label="Slide 4"></button>
           </div>
         </div>
         <div class="hero-text">
@@ -1011,6 +1136,30 @@
         try { localStorage.setItem("broki-theme", neu); } catch (e) {}
         apply(neu);
       });
+    })();
+    (function () {
+      const show = document.getElementById('device-show');
+      if (!show) return;
+      const slides = Array.from(show.querySelectorAll('.slide'));
+      const dots = Array.from(document.querySelectorAll('#show-dots .show-dot'));
+      const caption = document.getElementById('geraet-caption');
+      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let i = 0, timer = null;
+      function zeigen(n) {
+        i = (n + slides.length) % slides.length;
+        slides.forEach((s, k) => s.classList.toggle('aktiv', k === i));
+        dots.forEach((d, k) => d.classList.toggle('aktiv', k === i));
+        const teile = (slides[i].dataset.caption || '').split(' — ');
+        caption.innerHTML = '<b></b>';
+        caption.querySelector('b').textContent = teile[0];
+        if (teile[1]) caption.append(' — ' + teile[1]);
+      }
+      function start() { if (!timer && !reduce) timer = setInterval(() => zeigen(i + 1), 3500); }
+      function stopp() { clearInterval(timer); timer = null; }
+      dots.forEach((d, k) => d.addEventListener('click', () => { stopp(); zeigen(k); start(); }));
+      show.addEventListener('mouseenter', stopp);
+      show.addEventListener('mouseleave', start);
+      zeigen(0); start();
     })();
     (function () {
       const items = document.querySelectorAll('.faq-item');
