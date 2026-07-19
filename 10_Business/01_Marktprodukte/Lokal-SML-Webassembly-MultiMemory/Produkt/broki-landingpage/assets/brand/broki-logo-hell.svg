@@ -2,26 +2,32 @@
 <!-- Broki AI — Logo (Icon + Wortmarke), fuer helle Hintergruende -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 224 64" width="224" height="64">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="rahmen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00a548"/>
+      <stop offset="55%" stop-color="#00a08c"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <linearGradient id="gruen" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#00a548"/>
       <stop offset="100%" stop-color="#00a070"/>
     </linearGradient>
   </defs>
-  <!-- Icon: Browser-Fenster + Offline-Punkt + KI-Kollege -->
+  <!-- Icon: Apple-Browser-Fenster + Ampel + Offline-Punkt + KI-Kollege -->
   <g transform="translate(2,3) scale(0.9)">
-    <rect x="6" y="8" width="52" height="48" rx="12" ry="12" fill="#ffffff" stroke="url(#grad)" stroke-width="3"/>
-    <line x1="8" y1="22" x2="56" y2="22" stroke="url(#grad)" stroke-width="1.8" opacity="0.5"/>
-    <circle cx="16" cy="15" r="2.2" fill="#00a548" opacity="0.45"/>
-    <circle cx="23" cy="15" r="2.2" fill="#00a548" opacity="0.45"/>
-    <circle cx="48" cy="15" r="5.5" fill="#00a548" opacity="0.22"/>
-    <circle cx="48" cy="15" r="2.9" fill="#00a548"/>
-    <circle cx="24" cy="36" r="4.6" fill="#00a548"/>
-    <circle cx="40" cy="36" r="4.6" fill="#00a548"/>
-    <circle cx="25.4" cy="34.7" r="1.6" fill="#ffffff"/>
-    <circle cx="41.4" cy="34.7" r="1.6" fill="#ffffff"/>
-    <path d="M 24 46 Q 32 51.5 40 46" stroke="#00a548" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <rect x="6" y="8" width="52" height="48" rx="12" ry="12" fill="#ffffff" stroke="url(#rahmen)" stroke-width="3"/>
+    <line x1="8" y1="22" x2="56" y2="22" stroke="url(#rahmen)" stroke-width="1.8" opacity="0.5"/>
+    <circle cx="15.5" cy="15" r="2.6" fill="#ff5f57"/>
+    <circle cx="23" cy="15" r="2.6" fill="#febc2e"/>
+    <circle cx="30.5" cy="15" r="2.6" fill="#28c840"/>
+    <circle cx="48.5" cy="15" r="5.2" fill="#00a548" opacity="0.22"/>
+    <circle cx="48.5" cy="15" r="2.8" fill="#00a548"/>
+    <circle cx="24" cy="36.5" r="4.6" fill="#00a548"/>
+    <circle cx="40" cy="36.5" r="4.6" fill="#00a548"/>
+    <circle cx="25.4" cy="35.2" r="1.6" fill="#ffffff"/>
+    <circle cx="41.4" cy="35.2" r="1.6" fill="#ffffff"/>
+    <path d="M 24 46.5 Q 32 52 40 46.5" stroke="#00a548" stroke-width="2.6" fill="none" stroke-linecap="round"/>
   </g>
   <!-- Wortmarke -->
   <text x="70" y="42" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="30" font-weight="800" fill="#10151f" letter-spacing="-0.02em">Broki</text>
-  <text x="164" y="42" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="30" font-weight="800" fill="url(#grad)" letter-spacing="-0.02em">AI</text>
+  <text x="164" y="42" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="30" font-weight="800" fill="url(#gruen)" letter-spacing="-0.02em">AI</text>
 </svg>
