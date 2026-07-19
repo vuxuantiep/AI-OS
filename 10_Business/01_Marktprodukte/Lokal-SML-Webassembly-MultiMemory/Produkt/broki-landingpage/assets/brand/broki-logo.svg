@@ -1,28 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 64" width="220" height="64">
+<!-- Broki AI — Logo (Icon + Wortmarke), fuer dunkle Hintergruende -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 224 64" width="224" height="64">
   <defs>
     <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#00c758"/>
       <stop offset="100%" stop-color="#00bb7f"/>
     </linearGradient>
   </defs>
-  <!-- Icon -->
-  <g transform="translate(4, 4)">
-    <rect x="0" y="0" width="40" height="36" rx="10" ry="10" fill="#0d0d0f" stroke="url(#grad)" stroke-width="2.5"/>
-    <line x1="10" y1="0" x2="10" y2="-6" stroke="#00c758" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="30" y1="0" x2="30" y2="-6" stroke="#00c758" stroke-width="2.5" stroke-linecap="round"/>
-    <circle cx="10" cy="-6" r="2.5" fill="#00c758"/>
-    <circle cx="30" cy="-6" r="2.5" fill="#00c758"/>
-    <circle cx="12" cy="16" r="5" fill="#00c758"/>
-    <circle cx="28" cy="16" r="5" fill="#00c758"/>
-    <circle cx="13" cy="15" r="1.8" fill="#0d0d0f"/>
-    <circle cx="29" cy="15" r="1.8" fill="#0d0d0f"/>
-    <path d="M 14 24 Q 20 29 26 24" stroke="#00c758" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <rect x="8" y="40" width="24" height="12" rx="6" ry="6" fill="#0d0d0f" stroke="url(#grad)" stroke-width="2.5"/>
-    <rect x="14" y="44" width="12" height="4" rx="2" fill="#00c758" opacity="0.9"/>
+  <!-- Icon: Browser-Fenster + Offline-Punkt + KI-Kollege -->
+  <g transform="translate(2,3) scale(0.9)">
+    <rect x="6" y="8" width="52" height="48" rx="12" ry="12" fill="#081119" stroke="url(#grad)" stroke-width="3"/>
+    <line x1="8" y1="22" x2="56" y2="22" stroke="url(#grad)" stroke-width="1.8" opacity="0.45"/>
+    <circle cx="16" cy="15" r="2.2" fill="#00c758" opacity="0.4"/>
+    <circle cx="23" cy="15" r="2.2" fill="#00c758" opacity="0.4"/>
+    <circle cx="48" cy="15" r="5.5" fill="#00c758" opacity="0.22"/>
+    <circle cx="48" cy="15" r="2.9" fill="#00c758"/>
+    <circle cx="24" cy="36" r="4.6" fill="#00c758"/>
+    <circle cx="40" cy="36" r="4.6" fill="#00c758"/>
+    <circle cx="25.4" cy="34.7" r="1.6" fill="#081119"/>
+    <circle cx="41.4" cy="34.7" r="1.6" fill="#081119"/>
+    <path d="M 24 46 Q 32 51.5 40 46" stroke="#00c758" stroke-width="2.6" fill="none" stroke-linecap="round"/>
   </g>
-  <!-- Text: Broki -->
-  <text x="56" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="800" fill="#ffffff" letter-spacing="-0.02em">Broki</text>
-  <!-- Text: AI -->
-  <text x="156" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="800" fill="url(#grad)" letter-spacing="-0.02em">AI</text>
+  <!-- Wortmarke -->
+  <text x="70" y="42" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="30" font-weight="800" fill="#ffffff" letter-spacing="-0.02em">Broki</text>
+  <text x="164" y="42" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="30" font-weight="800" fill="url(#grad)" letter-spacing="-0.02em">AI</text>
 </svg>
