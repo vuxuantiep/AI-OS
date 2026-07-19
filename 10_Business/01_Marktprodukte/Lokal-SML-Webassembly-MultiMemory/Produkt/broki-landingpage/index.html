@@ -7,7 +7,7 @@
 <title>Broki AI — Die KI, die im Browser bleibt</title>
 <style>
   :root, [data-theme="dark"] {
-    --bg-deep: #04100d; --bg: #071510; --bg-card: #0a1913; --bg-elevated: #0e2018; --border: #1b332a;
+    --bg-deep: #050e14; --bg: #081119; --bg-card: #0a141d; --bg-elevated: #0e1a25; --border: #1a2a38;
     --accent: #00c758; --accent-mint: #00d294; --accent-teal: #00bb7f; --accent-soft: #4ade80;
     --text: #fff; --text-dim: #ccc; --text-muted: #888890;
     --glow: rgba(0,199,88,0.10);
@@ -26,16 +26,16 @@
   html { scroll-behavior: smooth; }
   body { color: var(--text);
     background:
-      radial-gradient(1100px 650px at 82% -8%, rgba(0,199,88,0.09), transparent 60%),
-      linear-gradient(160deg, #0b1d18 0%, #061210 45%, #030a08 100%);
+      radial-gradient(1100px 650px at 82% -8%, rgba(0,199,88,0.06), transparent 60%),
+      linear-gradient(160deg, #0b1822 0%, #060f16 45%, #03080c 100%);
     background-attachment: fixed;
     font-family: "Inter", system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased; overflow-x: hidden;
     transition: background 0.3s ease, color 0.3s ease; }
   /* Plus-Raster-Muster über dem Verlauf (Vorlage: Kreuz-Grid) */
   body::before { content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Cpath d='M15 11.5v7M11.5 15h7' stroke='%2300c758' stroke-opacity='0.13' stroke-width='1'/%3E%3C/svg%3E");
-    background-size: 30px 30px; }
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Cpath d='M14 12.5v3M12.5 14h3' stroke='%2300c758' stroke-opacity='0.11' stroke-width='0.8'/%3E%3C/svg%3E");
+    background-size: 28px 28px; }
   [data-theme="light"] body {
     background:
       radial-gradient(1100px 650px at 82% -8%, rgba(0,165,72,0.07), transparent 60%),
@@ -47,7 +47,7 @@
 
   .container { max-width: 1100px; margin: 0 auto; padding: 0 1.2rem; }
   section { padding: 5.5rem 0; position: relative; }
-  section.zebra { background: rgba(7,21,16,0.55); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  section.zebra { background: rgba(7,16,24,0.55); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
   [data-theme="light"] section.zebra { background: rgba(255,255,255,0.5); }
   h2 { font-size: clamp(1.6rem, 3.6vw, 2.4rem); font-weight: 800; letter-spacing: -0.02em;
     margin-bottom: 1rem; line-height: 1.2; }
@@ -84,7 +84,7 @@
 
   /* NAV */
   nav { position: fixed; top: 0; left: 0; right: 0; z-index: 40;
-    background: rgba(4,16,13,0.82); backdrop-filter: blur(12px);
+    background: rgba(5,14,20,0.82); backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border); transition: background 0.3s; }
   [data-theme="light"] nav { background: rgba(246,247,251,0.85); }
   .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0.9rem 1.2rem;
@@ -113,7 +113,7 @@
 
   /* STATS STRIP (Social Proof) */
   .stats-strip { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-    background: rgba(7,21,16,0.55); padding: 1.6rem 0; }
+    background: rgba(7,16,24,0.55); padding: 1.6rem 0; }
   [data-theme="light"] .stats-strip { background: rgba(255,255,255,0.5); }
   .stats-inner { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem; text-align: center; }
@@ -397,7 +397,7 @@
   .cta-banner .lead { margin-bottom: 1.6rem; }
 
   /* FOOTER */
-  footer { border-top: 1px solid var(--border); padding: 3rem 0 2rem; background: rgba(4,16,13,0.6); }
+  footer { border-top: 1px solid var(--border); padding: 3rem 0 2rem; background: rgba(5,14,20,0.6); }
   [data-theme="light"] footer { background: rgba(255,255,255,0.55); }
   .footer-inner { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 2rem; }
   footer h4 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em;
