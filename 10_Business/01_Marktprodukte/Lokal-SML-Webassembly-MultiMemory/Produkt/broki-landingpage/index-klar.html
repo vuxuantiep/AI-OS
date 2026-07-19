@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="dark">
+<html lang="de" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/svg+xml" href="assets/brand/broki-icon.svg">
-<title>Broki AI — Die KI, die im Browser bleibt</title>
+<title>Broki AI — Ihr KI-Mitarbeiter im Browser (Klar)</title>
 <style>
-  :root, [data-theme="dark"] {
+  html[data-theme="dark"] {
     --bg-deep: #050e14; --bg: #081119; --bg-card: #0a141d; --bg-elevated: #0e1a25; --border: #1a2a38;
     --accent: #00c758; --accent-mint: #00d294; --accent-teal: #00bb7f; --accent-soft: #4ade80;
     --text: #fff; --text-dim: #ccc; --text-muted: #888890;
@@ -14,8 +14,8 @@
     --ok: #4ade80; --warn: #facc15; --danger: #f87171;
     --dot: 180, 200, 190; --line: 0, 199, 88;
   }
-  [data-theme="light"] {
-    --bg-deep: #f2f6f3; --bg: #eaf0ec; --bg-card: #fff; --bg-elevated: #eef4f0; --border: #d2e0d7;
+  :root, [data-theme="light"] {
+    --bg-deep: #f7faf8; --bg: #eef4ef; --bg-card: #ffffff; --bg-elevated: #f3f7f4; --border: #dbe6dd;
     --accent: #00a548; --accent-mint: #00b875; --accent-teal: #00a070; --accent-soft: #0b8f3f;
     --text: #10151f; --text-dim: #3a4252; --text-muted: #6a7080;
     --glow: rgba(0,165,72,0.08);
@@ -25,12 +25,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body { color: var(--text);
-    background:
-      radial-gradient(1100px 650px at 82% -8%, rgba(0,199,88,0.11), transparent 60%),
-      radial-gradient(900px 550px at -12% 28%, rgba(0,145,200,0.10), transparent 60%),
-      radial-gradient(800px 500px at 55% 115%, rgba(0,199,88,0.07), transparent 60%),
-      linear-gradient(160deg, #0d1c28 0%, #071119 45%, #03080c 100%);
-    background-attachment: fixed;
+    background: var(--bg-deep);
     font-family: "Inter", system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased; overflow-x: hidden;
     transition: background 0.3s ease, color 0.3s ease; }
@@ -39,10 +34,7 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Cpath d='M14 12.5v3M12.5 14h3' stroke='%2300c758' stroke-opacity='0.11' stroke-width='0.8'/%3E%3C/svg%3E");
     background-size: 28px 28px; }
   [data-theme="light"] body {
-    background:
-      radial-gradient(1100px 650px at 82% -8%, rgba(0,165,72,0.07), transparent 60%),
-      linear-gradient(160deg, #f2f6f3 0%, #eaf0ec 50%, #e2eae5 100%);
-    background-attachment: fixed; }
+    background: var(--bg-deep); }
   [data-theme="light"] body::before {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Cpath d='M15 11.5v7M11.5 15h7' stroke='%2300a548' stroke-opacity='0.14' stroke-width='1'/%3E%3C/svg%3E"); }
   nav, section, .stats-strip, footer, .theme-toggle { position: relative; z-index: 1; }
@@ -50,7 +42,7 @@
   .container { max-width: 1100px; margin: 0 auto; padding: 0 1.2rem; }
   section { padding: 5.5rem 0; position: relative; }
   section.zebra { background: rgba(7,16,24,0.55); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-  [data-theme="light"] section.zebra { background: rgba(255,255,255,0.5); }
+  [data-theme="light"] section.zebra { background: #f0f5f1; }
   h2 { font-size: clamp(1.6rem, 3.6vw, 2.4rem); font-weight: 800; letter-spacing: -0.02em;
     margin-bottom: 1rem; line-height: 1.2; }
   h2 .gruen { color: var(--accent); }
@@ -88,7 +80,7 @@
   nav { position: fixed; top: 0; left: 0; right: 0; z-index: 40;
     background: rgba(5,14,20,0.82); backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border); transition: background 0.3s; }
-  [data-theme="light"] nav { background: rgba(246,247,251,0.85); }
+  [data-theme="light"] nav { background: rgba(250,252,250,0.9); }
   .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0.9rem 1.2rem;
     display: flex; align-items: center; justify-content: space-between; }
   .nav-logo { font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; display:flex; align-items:center; gap:8px; }
@@ -116,7 +108,7 @@
   /* STATS STRIP (Social Proof) */
   .stats-strip { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
     background: rgba(7,16,24,0.55); padding: 1.6rem 0; }
-  [data-theme="light"] .stats-strip { background: rgba(255,255,255,0.5); }
+  [data-theme="light"] .stats-strip { background: #f0f5f1; }
   .stats-inner { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem; text-align: center; }
   .stat .num { font-family: "JetBrains Mono", ui-monospace, monospace;
@@ -401,7 +393,7 @@
 
   /* FOOTER */
   footer { border-top: 1px solid var(--border); padding: 3rem 0 2rem; background: rgba(5,14,20,0.6); }
-  [data-theme="light"] footer { background: rgba(255,255,255,0.55); }
+  [data-theme="light"] footer { background: #f0f5f1; }
   .footer-inner { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 2rem; }
   footer h4 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--text-muted); margin-bottom: 0.6rem; }
@@ -413,35 +405,21 @@
     display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem;
     font-size: 0.85rem; color: var(--text-muted); }
 
-  /* GLAS & LICHT */
+  /* BROKI KLAR — solide Flaechen, ruhiges Licht */
   .vorteil-card, .usp-card, .case, .step, .preis-card, .spec, .screenshot-card,
   .roi-box, .roi-fact, .rival-box, .pitch-punkt, .browser-mock, .tablet, .phone {
-    background: rgba(12,23,33,0.55);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
-  .preis-card.beliebt { background:
-    radial-gradient(400px 200px at 50% 0%, rgba(0,199,88,0.12), transparent 70%),
-    rgba(12,23,33,0.6); }
-  .pitch-banner, .cta-banner { background:
-    radial-gradient(700px 300px at 50% 0%, rgba(0,199,88,0.14), transparent 70%),
-    rgba(12,23,33,0.55);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
-  [data-theme="light"] .vorteil-card, [data-theme="light"] .usp-card, [data-theme="light"] .case,
-  [data-theme="light"] .step, [data-theme="light"] .preis-card, [data-theme="light"] .spec,
-  [data-theme="light"] .screenshot-card, [data-theme="light"] .roi-box, [data-theme="light"] .roi-fact,
-  [data-theme="light"] .rival-box, [data-theme="light"] .pitch-punkt, [data-theme="light"] .browser-mock,
-  [data-theme="light"] .tablet, [data-theme="light"] .phone {
-    background: rgba(255,255,255,0.62); }
-  [data-theme="light"] .preis-card.beliebt { background:
-    radial-gradient(400px 200px at 50% 0%, rgba(0,165,72,0.10), transparent 70%),
-    rgba(255,255,255,0.68); }
-  [data-theme="light"] .pitch-banner, [data-theme="light"] .cta-banner { background:
-    radial-gradient(700px 300px at 50% 0%, rgba(0,165,72,0.10), transparent 70%),
-    rgba(255,255,255,0.62); }
-  h1 .gruen, h2 .gruen, .pitch-banner h3 .gruen, .rival-box h3 .gruen {
-    background: linear-gradient(100deg, var(--accent) 20%, var(--accent-mint) 80%);
-    -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-teal));
-    box-shadow: 0 6px 22px rgba(0,199,88,0.22); }
+    box-shadow: 0 1px 3px rgba(15,35,25,0.06); }
+  .btn-primary { box-shadow: 0 2px 12px rgba(0,165,72,0.22); }
+  .offline-gag { margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);
+    font-family: "JetBrains Mono", ui-monospace, monospace; }
+  .offline-gag b { color: var(--accent-soft); font-weight: 600; }
+  .bp-hinweis { background: rgba(250,204,21,0.14); border: 1px solid rgba(202,138,4,0.4);
+    color: #854d0e; border-radius: 8px; padding: 0.4rem 0.55rem; font-size: 0.63rem;
+    line-height: 1.45; animation: hinweisPuls 2.6s ease infinite; }
+  [data-theme="dark"] .bp-hinweis { color: #facc15; }
+  @keyframes hinweisPuls { 0%, 100% { transform: none; } 50% { transform: translateY(-2px); } }
+  .dot-offline { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); margin-right: 7px; vertical-align: middle; }
 
   @media (max-width: 768px) {
     .hero-inner { grid-template-columns: 1fr; }
@@ -475,7 +453,6 @@
 
   <!-- HERO -->
   <section class="hero">
-    <canvas id="broki-bg"></canvas>
     <div class="container">
       <div class="hero-inner">
         <div class="hero-visual">
@@ -498,6 +475,7 @@
                     <div class="bp-head"><span class="bp-logo"></span> Broki AI</div>
                     <div class="bp-bubble user"><div class="bp-line"></div><div class="bp-line k"></div></div>
                     <div class="bp-bubble ai"><div class="bp-line gruen"></div><div class="bp-line"></div><div class="bp-line k"></div></div>
+                    <div class="bp-hinweis">⚠ Rabatt laut Wiki-Update nicht mehr zulässig — Text anpassen?</div>
                     <div class="bp-input"><span class="platz"></span><span class="bp-send">▸</span></div>
                   </div>
                 </div>
@@ -566,7 +544,7 @@
           </div>
         </div>
         <div class="hero-text">
-          <div class="hero-badge"><span class="pulse"></span> Open Source · Manifest V3 · 0 Bytes Upload</div>
+          <div class="hero-badge"><span class="pulse"></span> Offline bereit · 0 Bytes Upload · Open Source</div>
           <h1>Ihr <span class="gruen">KI-Mitarbeiter</span><br>im Browser.</h1>
           <p class="sub">Broki AI ist das <strong>resiliente Firmen-Gehirn</strong>: ein proaktiver Agent, der in jedem Browser-Tab im Hintergrund mitarbeitet, Fehler abfängt, bevor sie abgeschickt werden — und jeden Tag intelligenter wird. Alles bleibt auf Ihrem Rechner: Sie behalten die volle Kontrolle über Ihre Daten.</p>
           <div class="trust">
@@ -579,6 +557,7 @@
             <a class="btn btn-primary" href="#">▸ Kostenlos testen (Chrome Store)</a>
             <a class="btn btn-ghost" href="#demo">B2B-Demo vereinbaren</a>
           </div>
+          <p class="offline-gag"><b>Übrigens:</b> Diese Seite würde sogar offline funktionieren — genau wie Broki.</p>
         </div>
       </div>
     </div>
@@ -1212,25 +1191,23 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© 2026 Broki AI — Intelligent. Lokal. Unabhängig.</span>
+        <span><span class="dot-offline"></span>© 2026 Broki AI — Intelligent. Lokal. Offline verfügbar.</span>
         <span>Deutsch · <a href="#" style="color:var(--accent-soft);">English</a> · <a href="#" style="color:var(--accent-soft);">Tiếng Việt</a></span>
       </div>
     </div>
   </footer>
 
-  <script src="assets/broki-particles.js"></script>
   <script>
-    if (window.BrokiParticles) BrokiParticles.init("broki-bg");
     (function () {
       const btn = document.getElementById("theme-toggle");
       const root = document.documentElement;
       function apply(t) { root.setAttribute("data-theme", t); btn.textContent = t === "light" ? "☀️" : "🌙"; }
-      let saved = "dark";
-      try { saved = localStorage.getItem("broki-theme") || "dark"; } catch (e) {}
+      let saved = "light";
+      try { saved = localStorage.getItem("broki-theme-klar") || "light"; } catch (e) {}
       apply(saved);
       btn.addEventListener("click", () => {
         const neu = root.getAttribute("data-theme") === "light" ? "dark" : "light";
-        try { localStorage.setItem("broki-theme", neu); } catch (e) {}
+        try { localStorage.setItem("broki-theme-klar", neu); } catch (e) {}
         apply(neu);
       });
     })();
