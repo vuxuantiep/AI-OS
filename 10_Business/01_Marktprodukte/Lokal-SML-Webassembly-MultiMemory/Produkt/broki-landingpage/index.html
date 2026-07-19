@@ -243,6 +243,16 @@
   .tabelle-hinweis { margin-top: 1rem; font-size: 0.88rem; color: var(--text-muted); }
   .tabelle-hinweis code { font-family: "JetBrains Mono", ui-monospace, monospace;
     color: var(--accent-soft); font-size: 0.85em; }
+  .rival-box { margin-top: 2.2rem; background: var(--bg-card); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); border-radius: 14px; padding: 1.8rem; }
+  .rival-box h3 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 0.5rem; }
+  .rival-box h3 .gruen { color: var(--accent); }
+  .rival-intro { color: var(--text-dim); line-height: 1.6; max-width: 720px; }
+  .rival-punkte { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.2rem; margin-top: 1.4rem; }
+  .rival-punkt strong { display: block; font-size: 0.95rem; margin-bottom: 0.35rem;
+    color: var(--accent-soft); }
+  .rival-punkt p { color: var(--text-dim); font-size: 0.88rem; line-height: 1.55; }
   th, td { padding: 0.75rem 0.9rem; text-align: left; border-bottom: 1px solid var(--border); }
   th { color: var(--text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase;
     letter-spacing: 0.06em; background: var(--bg-card); }
@@ -595,7 +605,7 @@
     <div class="container reveal">
       <span class="eyebrow">Produkt-Hierarchie</span>
       <h2>Broki AI vs. <span class="gruen">M365 Copilot, WebChatLLM, Gemini Nano &amp; BrowserOS</span></h2>
-      <p class="lead">M365 Copilot lädt jeden Buchstaben in die Microsoft-Cloud. WebChatLLM ist ein passives Chatfenster mit Gigabyte-Downloads. Chrome Built-in AI ist eine Blackbox von Google. BrowserOS verlangt einen kompletten Browser-Wechsel. Broki AI kombiniert die Stärken — ohne die Schwächen.</p>
+      <p class="lead">M365 Copilot lädt jeden Buchstaben in die Microsoft-Cloud. WebChatLLM ist ein passives Chatfenster mit Gigabyte-Downloads. Chrome Built-in AI ist eine Blackbox von Google. Und der stärkste Herausforderer — BrowserOS — verlangt einen kompletten Browser-Wechsel. Broki AI kombiniert die Stärken aller — ohne ihre Schwächen.</p>
       <div class="compare-wrap">
         <table>
           <thead>
@@ -701,6 +711,25 @@
         </table>
       </div>
       <p class="tabelle-hinweis">Übrigens: Chrome Built-in AI ist für Broki kein Gegner, sondern ein Muskel — das LLM-Gateway nutzt <code>window.ai</code> automatisch mit, wenn es verfügbar ist.</p>
+
+      <div class="rival-box">
+        <h3>Der stärkste Herausforderer: <span class="gruen">BrowserOS.</span></h3>
+        <p class="rival-intro">Ein beeindruckendes Open-Source-Projekt für Power-User, die einen Agenten-Browser wollen. Für den Unternehmenseinsatz entscheiden aber drei Punkte für Broki:</p>
+        <div class="rival-punkte">
+          <div class="rival-punkt">
+            <strong>Kein Browser-Wechsel</strong>
+            <p>Broki läuft als Erweiterung im vorhandenen Chrome oder Edge. BrowserOS verlangt, dass die IT einen komplett neuen Browser unternehmensweit ausrollt, pflegt und absichert — für viele IT-Abteilungen ein K.-o.-Kriterium.</p>
+          </div>
+          <div class="rival-punkt">
+            <strong>Firmen-Wissen eingebaut</strong>
+            <p>Broki bringt den kryptografisch signierten, rechte-gefilterten Wissens-Index Ihres Unternehmens mit. BrowserOS automatisiert den Browser — kennt aber Ihr Wiki, Ihre Richtlinien und Ihre Verträge nicht.</p>
+          </div>
+          <div class="rival-punkt">
+            <strong>Lernt &amp; schützt</strong>
+            <p>Hermes-Lernen aus dem Feedback jedes Mitarbeiters und Crash-Rollback bei IT-Ausfällen gibt es nur bei Broki — beides existiert in BrowserOS nicht.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
