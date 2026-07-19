@@ -49,7 +49,7 @@
     .reveal { opacity: 1; transform: none; transition: none; }
   }
   .lead { font-size: clamp(1rem, 1.8vw, 1.15rem); color: var(--text-dim);
-    max-width: 720px; margin: 0 auto 2.4rem; line-height: 1.65; }
+    max-width: 720px; margin: 0 0 2.4rem; line-height: 1.65; }
 
   .btn { font-weight: 600; font-size: 0.95rem; padding: 0.85rem 1.5rem; border-radius: 9px;
     cursor: pointer; border: none; transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -186,14 +186,19 @@
   .cta { display: flex; gap: 0.8rem; flex-wrap: wrap; }
 
   /* VORTEILE / ICON-GRID */
-  .vorteile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  .vorteile-grid { display: grid; grid-template-columns: repeat(3, 1fr);
     gap: 1.2rem; margin-top: 1.6rem; }
-  .vorteil-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
-    padding: 1.4rem; transition: transform 0.2s, border-color 0.2s; }
-  .vorteil-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-  .vorteil-card .icon { font-size: 1.6rem; margin-bottom: 0.6rem; }
-  .vorteil-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
-  .vorteil-card p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; }
+  @media (max-width: 900px) { .vorteile-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .vorteile-grid { grid-template-columns: 1fr; } }
+  .vorteil-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 1.6rem; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; }
+  .vorteil-card:hover { border-color: var(--accent); transform: translateY(-2px);
+    box-shadow: 0 10px 30px var(--glow); }
+  .icon-chip { display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border-radius: 11px; background: var(--glow);
+    border: 1px solid rgba(0,199,88,0.22); font-size: 1.25rem; margin-bottom: 0.9rem; }
+  .vorteil-card h3 { font-size: 1.02rem; font-weight: 700; margin-bottom: 0.45rem; }
+  .vorteil-card p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.55; }
 
   /* USP / ABGRENZUNG */
   .usp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -202,7 +207,7 @@
     padding: 1.6rem; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; }
   .usp-card:hover { border-color: var(--accent); transform: translateY(-2px);
     box-shadow: 0 10px 30px var(--glow); }
-  .usp-card .icon { font-size: 1.8rem; margin-bottom: 0.6rem; }
+  .usp-card .icon-chip { width: 48px; height: 48px; font-size: 1.4rem; }
   .usp-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
   .usp-card p { color: var(--text-dim); font-size: 0.92rem; line-height: 1.55; }
   .usp-vs { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border); font-size: 0.85rem; line-height: 1.5; }
@@ -338,7 +343,7 @@
     padding: 1.4rem; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; }
   .spec:hover { border-color: var(--accent); transform: translateY(-2px);
     box-shadow: 0 10px 30px var(--glow); }
-  .spec .icon { font-size: 1.5rem; display: block; margin-bottom: 0.6rem; }
+  .spec .icon-chip { display: flex; }
   .spec strong { display: block; font-size: 1rem; margin-bottom: 0.4rem; }
   .spec p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; }
 
@@ -548,7 +553,7 @@
       <p class="lead">Copilot, ChatGPT &amp; Co. warten passiv auf Ihre Frage — in der Cloud. Broki AI lebt im Browser-Kontext Ihrer Mitarbeiter und arbeitet dort wie ein unsichtbarer Kollege: proaktiv, lernfähig, krisensicher.</p>
       <div class="usp-grid">
         <div class="usp-card">
-          <div class="icon">🛡️</div>
+          <div class="icon-chip">🛡️</div>
           <h3>Proaktiver Agent statt passiver Chatbot</h3>
           <p>Broki AI arbeitet im Hintergrund direkt in Ihrem Arbeitskontext mit — im CRM, im Ticket-System, in jeder Web-App. Es fängt Fehler ab, <em>bevor</em> sie abgeschickt werden: „Achtung, dieser Rabatt ist laut Wiki-Update von gestern nicht mehr zulässig."</p>
           <div class="usp-vs">
@@ -557,7 +562,7 @@
           </div>
         </div>
         <div class="usp-card">
-          <div class="icon">🧠</div>
+          <div class="icon-chip">🧠</div>
           <h3>Autonomes Lernen (Hermes-Pattern)</h3>
           <p>Korrigiert ein Mitarbeiter eine Antwort, merkt sich Broki das. Nutzt er einen vorgeschlagenen Wiki-Artikel, steigt dessen Relevanz. Repetitive Klick-Abläufe erkennt der Agent und generiert daraus selbstständig autonome Workflows.</p>
           <div class="usp-vs">
@@ -566,7 +571,7 @@
           </div>
         </div>
         <div class="usp-card">
-          <div class="icon">🛟</div>
+          <div class="icon-chip">🛟</div>
           <h3>Resilienz: die IT-Crash-Lebensversicherung</h3>
           <p>Stürzt ERP oder Wiki ab, ist lokal nichts verloren: Broki sichert Ihre Eingaben verschlüsselt im lokalen Browser-Cache und organisiert nach dem Neustart den automatischen Rollback aller verlorenen Textbausteine.</p>
           <div class="usp-vs">
@@ -801,32 +806,32 @@
       <p class="lead">Eine Kern-Technologie. Maßgeschneidert für Ihre Branche. Ohne Cloud, ohne Upload, ohne Kompromisse.</p>
       <div class="vorteile-grid">
         <div class="vorteil-card">
-          <div class="icon">🔒</div>
+          <div class="icon-chip">🔒</div>
           <h3>DSGVO by Design</h3>
           <p>Keine Datenübertragung, keine Cloud. Alle Inferenzen laufen lokal im RAM des Browsers — prüfbar via F12-Netzwerk.</p>
         </div>
         <div class="vorteil-card">
-          <div class="icon">⚡</div>
+          <div class="icon-chip">⚡</div>
           <h3>WebGPU / WebAssembly</h3>
           <p>Blitzschnelle lokale Modelle direkt im Browser. Kein Server, keine Latenz — nur Ihre Hardware.</p>
         </div>
         <div class="vorteil-card">
-          <div class="icon">🧠</div>
+          <div class="icon-chip">🧠</div>
           <h3>3-Stufen-Gedächtnis</h3>
           <p>L1 Exact Match → L2 Semantic Cache → L3 RAG. Ihr Wissen bleibt lokal, wird schneller und persönlicher.</p>
         </div>
         <div class="vorteil-card">
-          <div class="icon">🛟</div>
+          <div class="icon-chip">🛟</div>
           <h3>Crash-Rollback</h3>
           <p>Lokales Journal verschlüsselt im Browser-Cache. Nach einem Absturz werden Eingaben automatisch wiederhergestellt.</p>
         </div>
         <div class="vorteil-card">
-          <div class="icon">🔐</div>
+          <div class="icon-chip">🔐</div>
           <h3>ECDSA-Integrität</h3>
           <p>Schutz vor Data Poisoning durch kryptografische Signaturprüfung des RAG-Index — nur signierte Pakete werden geladen.</p>
         </div>
         <div class="vorteil-card">
-          <div class="icon">📦</div>
+          <div class="icon-chip">📦</div>
           <h3>Plattformunabhängig</h3>
           <p>Läuft auf Windows, Mac und Linux — einfach via Browser-Erweiterung. Keine Softwareverteilungs-Hölle.</p>
         </div>
@@ -1046,22 +1051,22 @@
       <p class="lead">Keine Blackbox, keine Cloud-Abhängigkeit, keine versteckten Datenströme. Broki AI ist von Grund auf für den Einsatz in regulierten Umgebungen konzipiert.</p>
       <div class="spec-grid">
         <div class="spec">
-          <span class="icon">🔒</span>
+          <span class="icon-chip">🔒</span>
           <strong>Manifest V3 Sandbox</strong>
           <p>Gekapselte Ausführung im Service Worker. Ein Tab-Absturz beeinträchtigt niemals die KI oder das Betriebssystem.</p>
         </div>
         <div class="spec">
-          <span class="icon">🔑</span>
+          <span class="icon-chip">🔑</span>
           <strong>SHA-256 / ECDSA-Integrität</strong>
           <p>Schutz vor Data Poisoning durch kryptografische Signaturprüfung des RAG-Index — nur signierte Pakete werden geladen.</p>
         </div>
         <div class="spec">
-          <span class="icon">📦</span>
+          <span class="icon-chip">📦</span>
           <strong>Plattformunabhängig</strong>
           <p>Läuft auf Windows, Mac und Linux gleichermaßen — einfach via Browser-Erweiterung. Keine Softwareverteilungs-Hölle.</p>
         </div>
         <div class="spec">
-          <span class="icon">🛟</span>
+          <span class="icon-chip">🛟</span>
           <strong>Crash-Rollback</strong>
           <p>Lokales Journal verschlüsselt im Browser-Cache. Nach einem Absturz werden ungesicherte Eingaben automatisch wiederhergestellt.</p>
         </div>
