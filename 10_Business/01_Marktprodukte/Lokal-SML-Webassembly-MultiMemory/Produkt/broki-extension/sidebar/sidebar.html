@@ -4,43 +4,122 @@
 <meta charset="utf-8">
 <title>Broki AI</title>
 <style>
-  :root { --acc:#2f6fed; --ok:#1a9e5c; --warn:#c0392b; --line:#e3e7f0; }
-  body.dark { --acc:#5b9aff; --ok:#2ecc71; --warn:#e74c3c; --line:#2d3748; --bg:#1a202c; --panel:#2d3748; --text:#e2e8f0; --input-bg:#4a5568; }
-  body { margin:0; font-family:system-ui,Segoe UI,sans-serif; font-size:14px; color:#1c2333; background:#fff; }
-  body.dark { color:#e2e8f0; background:#1a202c; }
-  header { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--line); background:inherit; }
-  header h1 { font-size:15px; margin:0; flex:1; }
-  #tresor { font-size:12px; cursor:pointer; user-select:none; }
-  #banner { display:none; padding:8px 12px; font-size:12px; color:#fff; background:var(--warn); }
-  #chat { padding:10px 12px; min-height:200px; }
-  .msg { margin:8px 0; padding:8px 10px; border-radius:10px; background:#f2f5fb; white-space:pre-wrap; }
-  .msg.ich { background:#e8f0ff; }
-  body.dark .msg { background:#2d3748; }
-  body.dark .msg.ich { background:#4a5568; }
-  .meta { font-size:11px; color:#5a6478; margin-top:4px; }
-  body.dark .meta { color:#a0aec0; }
-  form { display:flex; gap:6px; padding:10px 12px; border-top:1px solid var(--line); background:inherit; }
-  input[type=text] { flex:1; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:#fff; color:#1c2333; }
-  body.dark input[type=text] { background:#4a5568; color:#e2e8f0; border-color:#718096; }
-  button { padding:8px 12px; border:none; border-radius:8px; background:var(--acc); color:#fff; cursor:pointer; }
-  #status { padding:6px 12px; font-size:11px; color:#5a6478; border-top:1px solid var(--line); background:inherit; }
-  body.dark #status { color:#a0aec0; }
-  .mode-toggle { display:flex; align-items:center; gap:4px; font-size:11px; cursor:pointer; user-select:none; padding:2px 6px; border-radius:4px; border:1px solid var(--line); background:inherit; color:inherit; }
-  .mode-toggle:hover { background:var(--line); }
+  :root {
+    --bg-deep:#f7faf8; --bg:#eef4ef; --bg-card:#fff; --bg-elevated:#f3f7f4; --border:#dbe6dd;
+    --acc:#00a548; --acc-soft:#00915f; --ok:#16a34a; --warn:#ca8a04; --danger:#dc2626;
+    --text:#10151f; --text-dim:#3a4252; --text-muted:#6a7080;
+  }
+  body.dark {
+    --bg-deep:#050e14; --bg:#081119; --bg-card:#0a141d; --bg-elevated:#0e1a25; --border:#1a2a38;
+    --acc:#00c758; --acc-soft:#4ade80; --ok:#4ade80; --warn:#facc15; --danger:#f87171;
+    --text:#fff; --text-dim:#ccc; --text-muted:#888890;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:"Inter",system-ui,-apple-system,sans-serif; font-size:13px;
+    color:var(--text); background:var(--bg-deep); display:flex; flex-direction:column; height:100vh;
+    transition:background .2s,color .2s; }
+  code, .mono { font-family:"JetBrains Mono",ui-monospace,monospace; }
+
+  /* HEADER */
+  header { display:flex; align-items:center; gap:8px; padding:10px 12px;
+    border-bottom:1px solid var(--border); background:var(--bg-card); flex-shrink:0; }
+  header .logo-dot { width:9px; height:9px; border-radius:50%; background:var(--acc);
+    box-shadow:0 0 6px rgba(0,199,88,.6); flex-shrink:0; }
+  header h1 { font-size:14px; font-weight:800; margin:0; flex:1; letter-spacing:-.01em; }
+  header h1 b { color:var(--acc); }
+  .icon-btn { background:transparent; border:1px solid var(--border); color:var(--text);
+    font-size:12px; padding:5px 7px; border-radius:7px; cursor:pointer; }
+  .icon-btn:hover { border-color:var(--acc); }
+  .mode-toggle { font-size:11px; cursor:pointer; padding:5px 6px; border-radius:7px;
+    border:1px solid var(--border); background:var(--bg-card); color:inherit; }
+  #tresor { font-size:11px; cursor:pointer; user-select:none; display:flex; align-items:center; gap:4px; }
+
+  /* 4-SÄULEN STATUSLEISTE */
+  .saeulen { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border);
+    border-bottom:1px solid var(--border); flex-shrink:0; }
+  .saeule { background:var(--bg); padding:7px 9px; display:flex; gap:6px; align-items:flex-start; }
+  .saeule .punkt { width:6px; height:6px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+  .saeule .punkt.aktiv { background:var(--ok); }
+  .saeule .punkt.teil { background:var(--warn); }
+  .saeule .txt { min-width:0; }
+  .saeule .label { font-size:9px; text-transform:uppercase; letter-spacing:.07em;
+    color:var(--text-muted); font-weight:700; }
+  .saeule .wert { font-size:11px; color:var(--text-dim); line-height:1.3; margin-top:1px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .saeule .roadmap { font-size:9.5px; color:var(--text-muted); margin-top:1px; font-style:italic; }
+
+  #banner { display:none; padding:8px 12px; font-size:12px; color:#05130a; background:var(--warn); }
+
+  /* CHAT */
+  #chat { flex:1; overflow-y:auto; padding:10px 12px; }
+  .msg { margin:8px 0; padding:9px 11px; border-radius:11px; background:var(--bg-card);
+    border:1px solid var(--border); white-space:pre-wrap; line-height:1.5; }
+  .msg.ich { background:var(--bg-elevated); margin-left:14%; }
+  .msg.broki { border-color:rgba(0,199,88,.25); background:rgba(0,199,88,.06); margin-right:8%; }
+  .meta { font-size:10.5px; color:var(--text-muted); margin-top:5px; }
+  #chat button { margin-top:4px; padding:7px 12px; border:none; border-radius:8px;
+    background:var(--acc); color:#05130a; font-weight:600; cursor:pointer; font-size:12px; }
+
+  /* EINGABE */
+  form { display:flex; gap:6px; padding:10px 12px; border-top:1px solid var(--border);
+    background:var(--bg-card); flex-shrink:0; }
+  input[type=text] { flex:1; padding:8px 10px; border:1px solid var(--border); border-radius:8px;
+    background:var(--bg); color:var(--text); font-family:inherit; font-size:13px; }
+  input[type=text]:focus { outline:none; border-color:var(--acc); }
+  button[type=submit] { padding:8px 13px; border:none; border-radius:8px; background:var(--acc);
+    color:#05130a; font-weight:700; cursor:pointer; }
+
+  #status { padding:6px 12px; font-size:10.5px; color:var(--text-muted);
+    border-top:1px solid var(--border); background:var(--bg-card); flex-shrink:0; }
 </style>
 </head>
 <body>
   <header>
-    <h1>🤖 Broki AI</h1>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <select id="modeSelect" class="mode-toggle" title="KI-Modus">
-        <option value="local">🖥️ Nur Lokal</option>
-        <option value="cloud">☁️ Cloud (Fallback)</option>
-      </select>
-      <button id="themeToggle" title="Design umschalten" style="background:transparent;border:1px solid var(--line);color:#1c2333;font-size:12px;padding:4px 8px;">🌓</button>
-      <label id="tresor" style="font-size:12px;cursor:pointer;user-select:none;"><input type="checkbox" id="privat"> 🔒 Privat</label>
-    </div>
+    <span class="logo-dot"></span>
+    <h1>Broki <b>AI</b></h1>
+    <label id="tresor"><input type="checkbox" id="privat"> 🔒 Privat</label>
+    <select id="modeSelect" class="mode-toggle" title="KI-Modus">
+      <option value="local">🖥️ Nur Lokal</option>
+      <option value="cloud">☁️ Cloud (Fallback)</option>
+    </select>
+    <button type="button" id="themeToggle" class="icon-btn" title="Design umschalten">🌓</button>
   </header>
+
+  <!-- 4-Säulen-Framework: zeigt den ECHTEN Ausbaustand, nicht mehr als gebaut ist -->
+  <div class="saeulen">
+    <div class="saeule">
+      <span class="punkt aktiv"></span>
+      <div class="txt">
+        <div class="label">Continuity</div>
+        <div class="wert mono" id="saeule-continuity">Bereit — lädt bei erster Frage</div>
+      </div>
+    </div>
+    <div class="saeule">
+      <span class="punkt teil"></span>
+      <div class="txt">
+        <div class="label">Resilience</div>
+        <div class="wert" id="saeule-resilience">Tresor: Aus</div>
+        <div class="roadmap">Daten-Filter: in Entwicklung</div>
+      </div>
+    </div>
+    <div class="saeule">
+      <span class="punkt teil"></span>
+      <div class="txt">
+        <div class="label">Agility</div>
+        <div class="wert">Auf jeder Seite aktiv</div>
+        <div class="roadmap">Kontext-Erkennung: in Entwicklung</div>
+      </div>
+    </div>
+    <div class="saeule">
+      <span class="punkt aktiv"></span>
+      <div class="txt">
+        <div class="label">Adaptability</div>
+        <div class="wert mono" id="saeule-adaptability">Lade Index …</div>
+        <div class="roadmap">Hermes-Feedback: in Entwicklung</div>
+      </div>
+    </div>
+  </div>
+
   <div id="banner"></div>
   <div id="chat"></div>
   <form id="frageForm">

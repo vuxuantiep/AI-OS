@@ -11,6 +11,12 @@ const privatCheckbox = document.getElementById("privat");
 const themeToggle = document.getElementById("themeToggle");
 const modeSelect = document.getElementById("modeSelect");
 
+// 4-Säulen-Framework (Continuity/Resilience/Agility/Adaptability) — zeigt
+// bewusst nur, was WIRKLICH läuft. Details: Plannung/Broki-4-Saeulen-Framework.md
+const saeuleContinuity = document.getElementById("saeule-continuity");
+const saeuleResilience = document.getElementById("saeule-resilience");
+const saeuleAdaptability = document.getElementById("saeule-adaptability");
+
 const sende = (msg) => chrome.runtime.sendMessage(msg);
 
 function zeige(text, wer, meta) {
@@ -76,14 +82,23 @@ document.getElementById("frageForm").addEventListener("submit", async (ev) => {
     zeige(d.antwort, "broki",
       `Quelle: ${d.quelle}` + (d.aehnlichkeit ? ` (${d.aehnlichkeit.toFixed(2)})` : "")
       + (d.motor ? ` · Motor: ${d.motor}` : ""));
+    if (d.motor) saeuleContinuity.textContent = d.motor;
+    else if (d.quelle?.startsWith("L1") || d.quelle?.startsWith("L2"))
+      saeuleContinuity.textContent = "Aus Cache — kein Motor nötig";
   } else {
     zeige("⚠️ " + (antwort?.fehler || "Unbekannter Fehler"), "broki");
   }
 });
 
 // --- Tresor-Schalter -----------------------------------------------------------
-privatCheckbox.addEventListener("change", () =>
-  sende({ typ: "privat-modus-setzen", aktiv: privatCheckbox.checked }));
+function resilienceAktualisieren() {
+  saeuleResilience.textContent = "Tresor: " + (privatCheckbox.checked ? "Aktiv (RAM-only)" : "Aus");
+}
+privatCheckbox.addEventListener("change", () => {
+  sende({ typ: "privat-modus-setzen", aktiv: privatCheckbox.checked });
+  resilienceAktualisieren();
+});
+resilienceAktualisieren();
 
 // --- Push-Nachrichten vom Service Worker ---------------------------------------
 chrome.runtime.onMessage.addListener((msg) => {
@@ -110,7 +125,7 @@ chrome.runtime.onMessage.addListener((msg) => {
   }
 });
 
-// --- Statuszeile ---------------------------------------------------------------
+// --- Statuszeile + Adaptability-Säule --------------------------------------------
 (async () => {
   const s = await sende({ typ: "sync-status" });
   if (!s?.ok) return;
@@ -118,8 +133,13 @@ chrome.runtime.onMessage.addListener((msg) => {
   if (d.indexGesperrt) {
     banner.style.display = "block";
     banner.textContent = "🚫 Index gesperrt: " + (d.indexSperrGrund || "");
+    saeuleAdaptability.textContent = "Gesperrt (Signaturprüfung)";
+    return;
   }
   statusZeile.textContent = d.indexVersion
     ? `Index ${d.indexVersion} · Rolle ${d.indexRolle} · Stand ${String(d.indexStand).slice(0, 16)}`
     : "Noch kein Wissens-Index — warte auf ersten Tailscale-Sync.";
+  saeuleAdaptability.textContent = d.indexVersion
+    ? `Index ${d.indexVersion} (${String(d.indexStand).slice(0, 10)})`
+    : "Warte auf ersten Sync";
 })();
