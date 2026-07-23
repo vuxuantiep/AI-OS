@@ -6,6 +6,320 @@
 
 ---
 
+## 2026-07-23 (Tag 11) — Broki AI Backend: Ollama-Pivot, dann echter wllama-Bug endlich gelöst
+
+CEO-Ausgangsfrage: "Chat Nachricht reagiert noch garnicht, bzw. LLM keinen
+Rückmeldung?" — der Broki-Sidebar-Chat hatte seit Sessionbeginn NIE eine
+echte LLM-Antwort geliefert. Zwei Runden, gegenläufige Ergebnisse:
+
+1. **Pivot zu Ollama-HTTP.** Nach CEO-Stopp der WASM-Fehlersuche ("kostet zu
+   viel Zeit für ein wackliges Ergebnis") neuer Motor in `llm-gateway.js`:
+   simples `fetch()` gegen die im restlichen AI-OS eh laufende lokale Ollama-
+   Instanz (Port 11434). Braucht `"http://127.0.0.1:11434/*"` in
+   `host_permissions` (manifest.json). Echter Bug dabei: Ollama blockt
+   standardmäßig JEDE POST-Anfrage mit `Origin: chrome-extension://...` per
+   CORS (403) — ein GET-Ping auf `/api/tags` täuschte "erreichbar" vor, ohne
+   dass der eigentliche `/api/chat`-Call je durchkam. Fix: `OLLAMA_ORIGINS`
+   als persistente Windows-Umgebungsvariable auf die exakte Extension-ID
+   gesetzt, Ollama neu gestartet — mit `curl -H "Origin: ..."` in Sekunden
+   verifiziert statt eines langen Browser-Testzyklus. Chat lief damit zum
+   ersten Mal Ende-zu-Ende durch.
+2. **CEO-Nachfrage, zurecht:** "ich dachte es soll vollständig nur im Browser
+   laufen ohne eigenen PC/Server?" — berechtigt: Ollama-HTTP braucht eine
+   ZUSÄTZLICHE Installation neben der Extension, widerspricht dem
+   "Trojanisches Pferd, einfach installieren"-Verkaufsargument. CEO-
+   Entscheidung: erst den alten wllama-Bug (nie root-gecaust, nur
+   deprioritisiert) richtig diagnostizieren, bevor auf einen Ollama-Bundle-
+   Installer ausgewichen wird.
+3. **Diagnose-Methode, die endlich funktionierte:** Playwright sieht
+   Offscreen-Dokumente grundsätzlich nicht (bekannte Lücke). NEU entdeckt:
+   `chrome.storage` ist im Offscreen-Dokument selbst AUCH `undefined`
+   (eingeschränkte Extension-API-Teilmenge dort) — ein direkter Checkpoint-
+   Versuch dort schlug sofort fehl. Lösung: Checkpoints per
+   `chrome.runtime.sendMessage` an den Service Worker relayen (neuer Case
+   `"wllama-checkpoint"` in `background.js`), der sie in `chrome.storage.local`
+   schreibt — übersteht sowohl Playwrights Blindheit als auch einen
+   möglichen Absturz des Offscreen-Prozesses. Zusätzlich
+   `self.addEventListener("unhandledrejection", ...)` in `offscreen.js`
+   ergänzt — DAS brachte den entscheidenden Fund.
+4. **Echter Root Cause:** wllamas vendorte `utils.js` versucht JEDES Modell
+   automatisch per `caches.open()`/`cache.put()` im Cache-Storage-API
+   zwischenzuspeichern. Die Cache-API akzeptiert aber NUR http(s)-URLs als
+   Schlüssel — `chrome-extension://`-URLs (so lädt die Extension ihre
+   eigenen .gguf-Dateien) wirft sie ab: `"Failed to execute 'put' on
+   'Cache': Request scheme 'chrome-extension' is unsupported"`. Der Fehler
+   passiert in einem ungesicherten XHR-`onload`-Handler → das Lade-Promise
+   resolved/rejected NIE → sah wie ein stummes Einfrieren aus (Ursache des
+   nie root-gecausten `"[object ProgressEvent]"`-Bugs aus früheren Runden).
+   Fix in `offscreen.js` (NICHT in der vendorten/gitignorten `utils.js`, die
+   bei jedem `npm run build:vendor` überschrieben wird): `window.caches` per
+   `Object.defineProperty` auf `undefined` setzen, BEVOR wllama importiert
+   wird.
+5. **Verifiziert, mehrfach reproduziert:** Modell-Laden (0.5B, ~490MB) in 5s
+   ohne Fehler, echte Text-Generierung liefert echten Text, komplette
+   Sidebar-UI-Chat-Flow (Datei-Anhang + Frage) läuft durch mit
+   `Motor: wllama (qwen2.5-0.5b-instruct-q4_k_m.gguf)`.
+6. **Zwei weitere echte Bugs nebenbei gefunden:** die 8GB-RAM-Modellstufe in
+   `broki-config.js` verwies auf eine nie heruntergeladene 3B-Datei (jeder
+   Nutzer mit ≥8GB RAM wäre stillschweigend auf Ollama/Cloud zurückgefallen);
+   die 1.5B-Datei (~1,1GB) brachte im echten UI-Test den GESAMTEN Renderer-
+   Prozess zum Absturz (echter Speicher-Crash). Beide vorläufig konservativ
+   entschärft: alle Modellstufen zeigen jetzt auf das verifiziert stabile
+   0.5B-Modell, Token-Deckel für wllama separat auf 200 gesenkt (volle 1024
+   Ollama-Token sprengten sonst das 25s-Offscreen-Timeout).
+7. **Motor-Reihenfolge wiederhergestellt:** Native → WebLLM → wllama (alle
+   Zero-Install) → Ollama (Fallback, braucht Zusatzinstallation) → Cloud.
+   Ursprüngliche Produktvision damit technisch bewiesen umsetzbar.
+
+**Lehre für künftige MV3-Offscreen-Diagnosen**: wenn Playwright nichts sieht
+UND chrome.storage im Offscreen-Kontext selbst nicht verfügbar ist, den
+Service Worker als Relais nutzen — der hat volle API-Rechte und übersteht
+Abstürze des Offscreen-Dokuments.
+
+**Offen für nächstes Mal:** 1.5B-Modellstufe mit RAM-Profiling stabilisieren
+statt dauerhaft auf 0.5B zu bleiben (aktuelle Antwortqualität schwach —
+Modell rambelt teils über die Token-Grenze hinaus mit erfundenem Text).
+
+---
+
+## 2026-07-22 (Tag 10) — Broki AI: Sidebar-Redesign + echte Assistentin-Illustration als Logo
+
+Ganztägige Design-Iteration der Sidebar (Details siehe `[[project-broki-ai]]`
+Memory, hier nur die Kurzfassung fürs Journal): von generischem Blau-Grau-
+Look über "Apple/Perplexity-Minimalismus" zu einer Optik mit den vom CEO
+gelieferten, professionell illustrierten PNG-Charakteren (Assistentin-Figur)
+als Standard-Logo, Farbpalette per `img.getpixel()` exakt aus dem Logo
+gemessen (dunkles Anthrazit + Blau-Akzent) statt geraten. Header von 3
+Balken auf Punkt+Hamburger-Menü reduziert, Eingabefeld zur mitwachsenden
+Textarea mit Datei-Anhang (`+`) und Spracheingabe (🎤) ausgebaut, alle
+sichtbaren Rahmen entfernt. Mehrere echte Bugs unterwegs gefunden und live
+mit Playwright verifiziert (nicht nur Code geschrieben), u.a. ein CSS-
+Spezifitäts-Bug bei den Feedback-Buttons und ein Menü-Positionierungsfehler.
+Wichtige Produktvision festgehalten: Assistentin (Chat-Frontend) + "Junge"
+(Hintergrund-Analyse-Agent) sind zwei Mitglieder eines künftigen Broki-
+Agenten-Teams — nur die Assistentin ist bisher umgesetzt.
+
+---
+
+## 2026-07-21 (Tag 9, Fortsetzung 7) — Qualitätsoffensive KI-Fabrik: Cloud-Code-Modell + Claude-Code-Prototyp
+
+CEO-Ziel: "wirklich produktiv fähige MVP Produkte liefern". Nach Vergleich von
+Hermes-Agent (eigenes `backend/`-Projekt, aber selbst als "Vorstufe zu
+LangGraph" dokumentiert — kein Fortschritt) und Eigent (github.com/eigent-ai,
+real und aktiv, aber neue Integration mit unbekanntem Aufwand) zwei konkrete
+Bausteine gebaut:
+
+1. **LangGraph bevorzugt jetzt gezielt ein offenes Cloud-Code-Modell.** Neuer
+   Parameter `bevorzugt_cloud` in `llm_router.py` (überspringt für einen
+   einzelnen Aufruf lokale Engines, respektiert aber den globalen
+   "lokal"-Datenschutz-Schalter als harte, nicht überschreibbare Grenze).
+   `node_entwickeln` (LangGraph) und `_factory_build_prototype` (Dashboard)
+   nutzen das jetzt mit `model="qwen2.5-coder"` → OpenRouters kostenlose
+   Qwen3-Coder-Stufe. Stolperstein: ein alter `langgraph_engine.py`-Prozess von
+   18:42 Uhr lief noch mit dem alten Code weiter — `/api/services/start`
+   startet einen bereits laufenden Dienst nicht neu, musste ihn gezielt killen.
+   Live verifiziert: Auftrag lief komplett durch, `entwicklung` + `prototyp`
+   liefen auf "Cloudflare Workers AI" (OpenRouter-Freikontingent war gerade
+   ausgelastet, System wechselte automatisch zum nächsten Cloud-Anbieter).
+2. **Claude-Code-Prototyp als kostenpflichtiger Opt-in.** Vorher zwei echte
+   Kostentests: triviale Aufgabe 22s/$0,15, echtes Kanban-Board aus dem
+   Auftrags-Archiv (mit Playwright verifiziert, inkl. funktionierendem
+   Personen-Filter) 74s/$0,31 — beide sauber, kein Fehlversuch, deutlich besser
+   als der lokale Deep-Agent-Versuch vom selben Tag. Wichtiger Fund: `claude -p`
+   braucht zwingend `--model claude-sonnet-5`, sonst Fehler "Fable 5 requires
+   usage credits". CEO-Vorgabe hart umgesetzt: JEDE Nutzung braucht Vorwarnung +
+   explizite Bestätigung (`confirm()`-Dialog mit echten Kostenzahlen), nie
+   automatisch. Neuer Button "💎 Claude-Code-Prototyp bauen (kostenpflichtig)"
+   neben dem kostenlosen Deep-Prototyp-Button. End-to-End verifiziert: $0,28,
+   sauberes Ergebnis über neue Route ausgeliefert.
+
+---
+
+## 2026-07-21 (Tag 9, Fortsetzung 5) — Agent-Knowledge-Doku, RAM-Guard, Deep-Prototyp (Opt-in)
+
+Drei CEO-Anliegen in einer Runde, alle live geprüft.
+
+1. **"Wo sind Agenten-Fähigkeiten definiert, wie erweitern?"** — ausgelöst durch
+   Screenshot mit leerer Kategorie "Agent-Knowledge" (0 Dateien). Antwort: 3
+   getrennte Code-Stellen (`agent_system.py` 7 Kern-Agenten nur Freitext-Prompt +
+   Modell, KEIN echtes Tool-Calling; `agents/agents.json` 3 Spezial-Microservices
+   mit echtem `capabilities`-Array; `langgraph_engine.py` nochmal separate
+   Knoten-Rollen). Dokumentiert in 4 neuen Dateien unter
+   `06_Gedächtnis/Agent-Knowledge/` (README + 3 Gruppen-Seiten mit Datei:Zeile-
+   Referenzen). Kategorie zeigt jetzt 4 statt 0 Dateien.
+2. **RAM-Guard (neue CEO-Sicherheitsregel)**: RAM darf nie 91% erreichen. Neuer
+   Hintergrund-Thread `_ram_guard_worker()` in `ai_os_dashboard.py` (Muster wie
+   `_docker_autostart_worker`): ab 90% Warn-Banner (jeder Tab), ab 91%
+   automatisches Stoppen entbehrlicher Dienste in fester Reihenfolge (Keycloak/
+   SearXNG/Node-RED/OpenHands/Hermes/Business-Tools zuerst — nie Dashboard/
+   Kern-Infrastruktur). `GET /api/ram-guard/status`, Live getestet (echte 77,2%
+   korrekt angezeigt, kein Fehlalarm).
+3. **Deep-Prototyp als Opt-in** (Fortsetzung von Fortsetzung 3, siehe unten):
+   isolierter Test zuerst — `qwen2.5-coder` kann KEIN echtes Tool-Calling in
+   dieser Ollama-Einrichtung, `qwen3.5:9b` funktioniert aber SEHR langsam
+   (12,5 Min für eine triviale Ein-Datei-Aufgabe, 3 Fehlversuche des Modells bei
+   den Tool-Parametern, bevor der 4. klappte). CEO entschied nach diesem Befund:
+   Opt-in-Button statt Standard-Ersatz. Umgesetzt: `_factory_build_deep_prototype()`
+   mit `deepagents`-Paket + `FilesystemBackend(virtual_mode=True)` (Pfad-Sandbox
+   PFLICHT, sonst kein Schutz gegen `..`/absolute Pfade), bewusst OHNE
+   Shell-`execute`-Tool. Neue Routen `POST /api/factory/orders/deep-prototype` +
+   `GET /factory/prototype/<id>/deep/<pfad>`, neuer Button pro Auftrag in der
+   KI-Fabrik-Karte mit Warn-Dialog vor dem Start. Live-Verifikation mit echtem
+   Testauftrag lief zum Zeitpunkt dieses Journal-Eintrags noch (siehe Memory
+   [[project_ki-fabrik-team-agenten]] für das nachgetragene Ergebnis).
+
+---
+
+## 2026-07-21 (Tag 9, Fortsetzung 3) — LangGraph: lokale Traces statt LangSmith
+
+CEO-Frage: FastAPI für LangGraph schon eingebaut? Und da LangGraph keine eigene GUI
+hat — lohnt sich LangSmith (volle Observability) oder eher "Deep Agents" (Open-
+Source-Harness für Planung/Kontext/Multi-Agenten bei langfristigen Aufgaben)?
+
+- **FastAPI**: war schon drin (`langgraph_engine.py` läuft komplett auf FastAPI +
+  uvicorn, seit dem ursprünglichen Bau der Engine). Installiert bestätigt: fastapi
+  0.139.0, uvicorn 0.49.0, langgraph 1.2.7.
+- **LangSmith vs. Deep Agents — unterschiedliche Probleme, nicht dieselbe Frage:**
+  LangSmith = Transparenz/Debugging on-top vom Bestehenden. Deep Agents = eine
+  Fähigkeits-Erweiterung (Planung, Dateisystem, Sub-Agenten) für den Graphen selbst.
+  Empfehlung gegeben: LangSmith NICHT einbinden (sendet Traces standardmäßig an
+  smith.langchain.com — Cloud-Standard-Verhalten passt nicht zum Lokal-Grundsatz des
+  AI-OS; selbst-hostbar nur im teuren Enterprise-Tier). Stattdessen: eigene, rein
+  lokale Trace-Aufzeichnung gebaut (kein neuer Cloud-Dienst, kein Docker nötig).
+  Deep Agents als separate, größere Entscheidung offen gelassen (siehe unten).
+- **Umsetzung (lokale Traces):**
+  `langgraph_engine.py`: `_graph_stream_traced()` als gemeinsame Basis für `/run`
+  UND `/run-stream` (vorher zwei getrennte Implementierungen des Graph-Durchlaufs),
+  schreibt jeden Knoten-Abschluss in `06_Gedächtnis/Memory/Short-Memory/
+  langgraph_traces.jsonl` (Timestamp, Knoten, Provider, Auftrags-/Ergebnis-Vorschau),
+  auf 500 Zeilen gedeckelt. Neuer Endpunkt `GET /traces`.
+  `ai_os_dashboard.py`: Proxy-Route `/api/langgraph/traces`.
+  `dashboard.html`, Tab 🔄 Automatisierung: neue Karte "🔍 LangGraph-Traces" (auf-/
+  zuklappbar), zeigt die letzten Knoten-Ausführungen mit Vorschau-Text.
+- **Verifikation:** echter Testauftrag durch `/run-stream` geschickt, `/traces`
+  lieferte beide Knoten (planen, entwickeln) mit korrekter Vorschau und Zeitstempel,
+  UI-Elemente im ausgelieferten HTML bestätigt.
+- **Offener Punkt (bewusst nicht in diesem Schritt entschieden):** Deep Agents wäre
+  eine größere Umbau-Entscheidung (ersetzt den simplen 3-Knoten-Graphen durch einen
+  Harness mit Planung/Dateisystem/Sub-Agenten) und würde inhaltlich mit der bereits
+  dokumentierten OpenHands-Lücke zusammenhängen (siehe [[ki-fabrik-team-agenten]]) —
+  dem CEO als eigene, größere Entscheidung vorgelegt statt einfach mitgebaut.
+
+---
+
+## 2026-07-21 (Tag 9, Fortsetzung 2) — Wissensmodell-Grid: von reiner Zahl zu prüf-/löschbar
+
+CEO: "Das Gedächtnis kann ich aktuell nicht prüfen bzw. beeinflüssen" — der Tab
+🧠 Gedächtnis zeigte pro Kategorie (Business-Knowledge, Short-Memory, ...) nur eine
+Dateianzahl, keine Möglichkeit, tatsächlich reinzuschauen oder etwas zu entfernen.
+
+- Backend (`ai_os_dashboard.py`): drei neue Routen nach dem bereits etablierten
+  Wiki-Docs-Muster (`/api/wiki-docs` + `/api/wiki-file/...`):
+  `GET /api/knowledge/<cat_key>/files` (Dateiliste inkl. Größe/Änderungsdatum),
+  `GET /api/knowledge-file/<cat_key>/<relpath>` (Datei anzeigen, `send_from_directory`),
+  `POST /api/knowledge-file/delete` (Datei löschen). Pfadsicherheit über
+  `_knowledge_resolve_file()`: `relpath` wird gegen den aufgelösten Kategorie-Ordner
+  geprüft (`root in candidate.parents`), Traversal-Versuch mit `../../..` live
+  getestet → korrekt mit 404 abgewiesen. `.gitkeep` ist explizit vom Löschen
+  ausgeschlossen.
+- Frontend: jede Karte im Wissensmodell-Grid ist jetzt klickbar, öffnet ein Panel
+  darunter mit der echten Dateiliste (Icon/Name/Größe/Datum), "👁 Anzeigen" öffnet
+  die Datei im neuen Tab, "🗑" löscht mit `confirm()`-Sicherheitsabfrage und lädt
+  Liste + Kategorie-Zähler neu.
+- **Bewusst NICHT gebaut**: Inline-Bearbeiten der Dateien direkt im Browser — zu
+  riskant für strukturierte JSON-Dateien, die laufende Dienste aktiv lesen/schreiben
+  (z.B. `factory_orders.json` unter Short-Memory, 207 KB, aktiv von der KI-Fabrik
+  genutzt). Nur Anschauen + gezieltes Löschen, kein Überschreiben ohne Git-Historie.
+
+**Verifikation:** Datei angelegt → gelistet → per Route inhaltlich angezeigt →
+gelöscht → Liste danach leer (echter Round-Trip getestet, nicht nur Code gelesen).
+Pfad-Traversal-Versuch und `.gitkeep`-Löschversuch beide korrekt abgewiesen.
+
+---
+
+## 2026-07-21 (Tag 9, Fortsetzung) — Produktion-Modul: Test-Umgebung / Live-Umgebung getrennt
+
+CEO: das Produktion-Modul soll klar zwischen "nur lokal, MVP" und "schon produktiv
+veröffentlicht" trennen — jedes neue Produkt UND jede neue Version soll künftig
+immer zuerst durch die Test-Umgebung (Pilotierung), erst danach in die Live-Umgebung.
+
+- `dashboard.html`, Tab 🏭 Produktion neu strukturiert in drei Bereiche: Hinweis-Box
+  zur Ablauf-Regel oben, dann **🧪 Test-Umgebung** (nur lokal/MVP), **🚀 Live-Umgebung**
+  (produktiv im Einsatz), **🧱 Bausteine** (wiederverwendbare Komponenten, unverändert).
+- **Einordnung der bestehenden 5 Einträge (eigene Einschätzung, bitte prüfen):**
+  - Live: **LeadPilot CRM** — bereits in echtem Einsatz fürs eigene IT-Freelancer-
+    Geschäft (echte Angebote/Rechnungen laufen darüber).
+  - Test: **AI Business Checker** (internes Recherche-Tool, kein Kundenprodukt),
+    **DocuCheck Local** (nur über den lokalen AI-OS-Server erreichbar, keine echte
+    öffentliche Domain), **KI-Avatar Pipeline-Board** (Pipeline selbst laut Doku noch
+    im Aufbau), **Broki AI** (wartet laut Gate explizit auf CEO-Freigabe — dafür aus
+    dem "Bausteine"-Bereich raus, wo es sachlich nicht hingehört, in Test verschoben).
+- Rein UI-seitig umgesetzt (Karten sind statisches HTML, kein Backend-Registry nötig).
+  Verifiziert: JS-Syntax-Check (`node --check`) + Dashboard neu gestartet, alle drei
+  neuen Bereichsüberschriften im ausgelieferten HTML bestätigt.
+
+---
+
+## 2026-07-21 (Tag 9) — Prompt-Baukasten (RKZFE) + LangGraph als echter Team-Agent
+
+CEO: zwei Aufträge. 1) Wissen aus `00_Wissen/04_Referenzen/Wiki/Prompt Grundlage Wissen/`
+(Webinar-PDF, reines Bild-PDF ohne Textlayer) auswerten und daraus eine Prompt-Vorlage
+im AI-OS bauen. 2) LangGraph und OpenHands sind als "Team-Agenten" für die
+CEO-Ideen-Werkstatt eigentlich schon da, werden aber gar nicht richtig genutzt —
+beheben.
+
+1. **PDF-Auswertung ohne Textlayer:** `pypdf` lieferte für alle 20 Seiten "kein Text
+   extrahierbar". `pdftoppm` (für das Read-Tool-eigene PDF-Rendering) war nicht
+   installiert. Gelöst mit `pymupdf`/`fitz`, das bereits als Python-Lib vorhanden war —
+   alle 20 Seiten bei 110 DPI zu PNG gerendert und einzeln gelesen. Kernrahmenwerk:
+   **RKZFE** (Rolle/Kontext/Ziel/Format/Einschränkung) für einzelne Prompts, plus die
+   Unterscheidung Prompt (einmalig) vs. Skill (gespeicherter Ablauf) vs. Preset/
+   "Aufstellung" (strukturell erzwungene Agenten-Konfiguration) — Kernsatz der Quelle:
+   *"Ein Prompt ist ein Versprechen, eine Berechtigung ist eine Tatsache."*
+2. **Prompt-Baukasten gebaut** (`06_Gedächtnis/Prompt-Library/README.md` +
+   `RKZFE-Vorlage.md` als Referenz, `/api/prompt-baukasten` in `ai_os_dashboard.py` als
+   Backend, neue Karte im Tab 💡 CEO-Ideen): rohe, unstrukturierte Notiz rein → RKZFE-
+   Prompt raus, nach dem "ALBERT"-Muster aus der Quelle. Direkt Ollama (kein Cloud-
+   Fallback über den LLM-Router) — gleiche Privatsphäre-Regel wie `/api/rag-chat|`,
+   da die Notiz interne/geschäftliche Details enthalten kann.
+   - **Stolperstein:** llama3 hielt sich beim ersten Versuch nicht an den
+     angeforderten JSON-Schlüssel (`einschränkung` statt `einschraenkung`) und ordnete
+     Rolle/Format inhaltlich falsch zu (z.B. "Rolle: Kunde" statt "Rolle:
+     Vertriebsmitarbeiter"). Behoben durch ein konkretes Few-Shot-Beispiel im
+     System-Prompt (das exakte Kugellager-Beispiel aus der Quelle) + defensive
+     Schlüssel-Normalisierung im Backend. Danach live mit zwei verschiedenen Notizen
+     verifiziert (Kugellager-Beispiel + eine echte Broki-Pi-Sync-Testnotiz).
+3. **LangGraph als echter Team-Agent statt Karteileiche:** `_process_factory_order()`
+   in `ai_os_dashboard.py` hat die Planen→Entwickeln→Qualität-Schleife (inkl.
+   Nachbesserungs-Schleife) komplett doppelt von Hand nachgebaut — obwohl
+   `langgraph_engine.py` (Port 5500) genau diesen Zustandsgraphen bereits fertig und
+   getestet bereitstellt, aber von der echten KI-Fabrik nie aufgerufen wurde.
+   - Neuer Endpunkt `POST /run-stream` in `langgraph_engine.py`: NDJSON, ein Event pro
+     abgeschlossenem Graph-Knoten (`GRAPH.stream(...)`), damit die Live-Status-
+     Anzeige der KI-Fabrik (LEGO-Fabrik-Animation) ihre Schritt-für-Schritt-Optik
+     behält, statt nur auf ein einziges Endergebnis zu warten.
+   - `_factory_run_langgraph()` liest diesen Stream und spiegelt jeden Knoten
+     (`planen`→analyse, `entwickeln`→entwicklung inkl. Prototyp-Neubau,
+     `qualitaet`→qualität inkl. Rework-Erkennung) live in die Auftragsschritte.
+   - Alte Inline-Logik bleibt als `_factory_run_inline_pipeline()` Fallback erhalten,
+     falls die LangGraph-Engine (:5500) mal nicht läuft.
+   - **OpenHands bewusst NICHT in diesem Schritt angebunden** (CEO-Entscheidung nach
+     Rückfrage): der Prototyp-Schritt bleibt ein Ein-Schuss-LLM-Aufruf. Echtes
+     OpenHands (autonomer Coding-Agent, Docker :3000) läuft normalerweise nur
+     interaktiv über die GUI; die programmatische Ansteuerung über den neuen
+     Agent-Server (Bild `ghcr.io/openhands/agent-server`) wäre ein eigener,
+     unsicherer Rechercheaufwand — als offener Punkt vermerkt, nicht stillschweigend
+     übersprungen.
+
+**Verifikation:** `node --check` auf dem extrahierten Dashboard-JS, `py_compile` auf
+beiden Python-Dateien, `/api/prompt-baukasten` zweimal live gegen echtes Ollama
+getestet, `/run-stream` direkt gegen die laufende LangGraph-Engine getestet (liefert
+genau 3 Events mit korrektem `path`/`engines`), und ein echter Fabrik-Testauftrag
+(`ord_20260721_175836`) durchlief `annahme → analyse → entwicklung` sichtbar mit
+Engine-Label `LangGraph :5500 · Ollama (lokal)` statt der alten Inline-Engine-Labels.
+
+---
+
 ## 2026-07-18 (Tag 8i) — Broki auf vuxuantiep.de integriert + Sicherheit/Compliance
 
 CEO: Broki-Präsentation auf der Hauptseite (ersetzt „Lego-AI"), Landingpage-Link,

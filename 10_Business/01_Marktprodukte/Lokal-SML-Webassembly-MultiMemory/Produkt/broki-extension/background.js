@@ -46,8 +46,23 @@ chrome.tabs.onRemoved.addListener((tabId) => tresor.vergissTab(tabId));
 // Konvention: { typ: "...", ...nutzlast } → Antwort { ok, daten | fehler }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendeAntwort) => {
+  // Nachrichten für das Offscreen-Dokument (WebLLM/wllama, siehe llm-gateway.js
+  // _offscreenSend) sind NICHT für diesen Handler bestimmt - sonst würde
+  // dieser Listener mit "Unbekannter Nachrichtentyp" antworten, während
+  // parallel offscreen.js die eigentliche (richtige) Antwort schickt.
+  if (msg.target === "offscreen") return false;
   (async () => {
     switch (msg.typ) {
+
+      // ---- Diagnose-Checkpoint (23.07.2026) ---------------------------------
+      // offscreen.js hat KEINEN chrome.storage-Zugriff (Offscreen-Dokumente
+      // erlauben nur eine eingeschraenkte API-Teilmenge) - deshalb schickt es
+      // Fortschritts-Checkpoints hierher, der Service Worker persistiert sie.
+      // Ueberlebt einen Absturz des Offscreen-Prozesses, weil storage.local
+      // unabhaengig vom (dann toten) Offscreen-Kontext ausgelesen werden kann.
+      case "wllama-checkpoint":
+        await chrome.storage.local.set({ wllamaCheckpoint: msg.daten });
+        return { ok: true };
 
       // ---- Modus wechseln (Lokal / Cloud) ------------------------------------
       case "mode-wechsel":
@@ -55,7 +70,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendeAntwort) => {
         return { ok: true, modus: gateway.modus };
 
       // ---- Kern: Frage beantworten (L1 → L2 → L3 → LLM) --------------------
+      // "+"-Anhang (CEO-Wunsch 22.07.2026): eine angehängte Text-Datei ersetzt
+      // für DIESE eine Frage den Wiki-Index-Kontext komplett (bewusst kein
+      // Mischen mit L1/L2-Cache - der Cache kennt die Datei nicht und würde
+      // sonst eine veraltete/falsche Antwort ausliefern).
       case "frage": {
+        if (msg.dokument) {
+          const kontext = [{ chunkId: "Anhang:" + msg.dokument.name, text: msg.dokument.text, sim: 1 }];
+          const antwort = await gateway.antworten(msg.frage, kontext);
+          return { ok: true, daten: { quelle: "Anhang: " + msg.dokument.name, antwort, motor: gateway.motorName } };
+        }
         const privat = await PrivateVault.istAktiv();
         const stufe = await memory.frageAbrufen(msg.frage);
 
@@ -112,6 +136,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendeAntwort) => {
       case "rollback-verwerfen":
         await rollback.verwerfen();
         return { ok: true };
+
+      // ---- Antwort-Feedback (Grundlage der geplanten Hermes-Lernschleife) --
+      // Sammelt nur — wertet noch NICHT aus/lernt noch nicht daraus (Roadmap).
+      case "feedback": {
+        const { feedback = [] } = await chrome.storage.local.get("feedback");
+        feedback.push({
+          frage: msg.frage, antwort: msg.antwort, quelle: msg.quelle,
+          motor: msg.motor, bewertung: msg.bewertung, zeit: Date.now(),
+        });
+        await chrome.storage.local.set({ feedback });
+        return { ok: true };
+      }
 
       default:
         return { ok: false, fehler: "Unbekannter Nachrichtentyp: " + msg.typ };

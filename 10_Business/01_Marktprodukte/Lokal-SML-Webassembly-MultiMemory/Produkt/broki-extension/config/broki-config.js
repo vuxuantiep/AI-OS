@@ -40,14 +40,43 @@ export const BROKI_CONFIG = {
 
   // --- LLM-Gateway -----------------------------------------------------------
   llm: {
+    // Motor 2 (CEO-Entscheidung 23.07.2026): lokales Ollama per HTTP statt
+    // WebLLM/wllama im Browser - dieselbe Ollama-Instanz, die im restlichen
+    // AI-OS schon zuverlaessig laeuft (Port 11434), bleibt trotzdem 100%
+    // lokal (kein Cloud-Verstoss), aber ohne die WASM/Offscreen-Komplexitaet.
+    ollama: { basisUrl: "http://127.0.0.1:11434", modell: "llama3" },
     // Modellwahl nach navigator.deviceMemory (GB, Chrome rundet auf 0.25–8).
     // OOM-Schutz: lieber ein kleineres Modell als ein abgestürzter Tab.
+    // wllama/WebLLM sind seit 23.07.2026 wieder Motor 1/2 (Zero-Install),
+    // Ollama nur noch Fallback (siehe llm-gateway.js).
+    // ECHTER BUG gefunden 23.07.2026 (1): die 8GB-Stufe verwies auf
+    // "qwen2.5-3b-instruct-q4_k_m.gguf" - eine Datei, die scripts/
+    // download-models.js NIE heruntergeladen hat (nur 1.5B/0.5B sind im
+    // Download-Skript gelistet).
+    // ECHTER BUG gefunden 23.07.2026 (2): die 1.5B-Datei (~1,1GB) brachte im
+    // echten Sidebar-UI-Test den GESAMTEN Renderer-Prozess zum Absturz
+    // (Playwright: "Target page ... has been closed" - diesmal fuer die
+    // SIDEBAR-Seite selbst, nicht nur das Offscreen-Dokument -> Indiz fuer
+    // einen echten Speicher-Crash, nicht nur ein Test-Artefakt). Nur die
+    // 0.5B-Datei (~490MB) ist bisher Ende-zu-Ende verifiziert stabil (Laden +
+    // echte Text-Generierung, mehrfach reproduziert). Bis die 1.5B-Stufe
+    // separat mit mehr Zeit/RAM-Profiling geprueft ist: ALLE Stufen zeigen
+    // vorerst auf das verifiziert stabile 0.5B-Modell - lieber zuverlaessig
+    // klein als riskant gross. TODO: 1.5B-Stufe reaktivieren, sobald die
+    // Absturzursache verstanden/geloest ist.
     modellStufen: [
-      { minGb: 8, webllm: "Llama-3.2-3B-Instruct-q4f16_1-MLC", wllamaGguf: "qwen2.5-3b-instruct-q4_k_m.gguf" },
-      { minGb: 4, webllm: "Llama-3.2-1B-Instruct-q4f16_1-MLC", wllamaGguf: "qwen2.5-1.5b-instruct-q4_k_m.gguf" },
+      { minGb: 8, webllm: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", wllamaGguf: "qwen2.5-0.5b-instruct-q4_k_m.gguf" },
+      { minGb: 4, webllm: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", wllamaGguf: "qwen2.5-0.5b-instruct-q4_k_m.gguf" },
       { minGb: 0, webllm: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", wllamaGguf: "qwen2.5-0.5b-instruct-q4_k_m.gguf" }
     ],
     antwortTokensMax: 1024,
+    // wllama laeuft einzelfaedig auf CPU in WASM (bewusst n_threads:1, um die
+    // SharedArrayBuffer/Cross-Origin-Isolation-Komplexitaet des Multi-Thread-
+    // Modus zu vermeiden) - spuerbar langsamer als Ollama/native. 1024 Token
+    // liessen die Generierung ueber das 25s-Offscreen-Timeout laufen (echter
+    // Fund 23.07.2026, Sidebar-UI-Test). Eigener, kleinerer Deckel nur fuer
+    // wllama, damit Zero-Install-Antworten in akzeptabler Zeit fertig werden.
+    wllamaAntwortTokensMax: 200,
     temperatur: 0.3
   },
 

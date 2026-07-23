@@ -2,3 +2,13 @@ node_modules/
 *.log
 .DS_Store
 Thumbs.db
+
+# Von "npm install && npm run build:vendor && npm run download:models" befuellt -
+# echte Bibliotheks-/Modell-Dateien (teils >1GB), nicht versionieren. READMEs
+# in diesen Ordnern bleiben getrackt (liegen direkt drin, nicht per Pattern erfasst).
+vendor/webllm/*
+!vendor/webllm/README.md
+vendor/wllama/*
+!vendor/wllama/README.md
+vendor/modelle/*
+!vendor/modelle/README.md

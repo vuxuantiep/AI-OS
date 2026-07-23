@@ -39,10 +39,31 @@ gebaut). Stand 19.07.2026, Code in `Produkt/broki-extension/`.
 ### 1. Continuity — größtenteils GEBAUT ✅
 | Feature | Status | Wo im Code |
 |---|---|---|
-| Multi-LLM-Fallback (native → WebLLM → wllama → Cloud) | ✅ gebaut | `modules/llm-gateway.js` |
+| Multi-LLM-Fallback (native → WebLLM → wllama → Ollama-HTTP → Cloud) | ✅ gebaut | `modules/llm-gateway.js` |
 | deviceMemory-Stufen (OOM-Schutz statt Absturz) | ✅ gebaut | `llm-gateway.js::modellStufe()` |
 | Crash-Rollback (Formulareingaben überleben Absturz) | ✅ gebaut | `modules/crash-rollback.js` |
 | Offline-Cache für wiederkehrende Antworten (L1/L2) | ✅ gebaut | `modules/memory-manager.js` |
+
+**Zero-Install-Punkt GELÖST (23.07.2026):** der ursprünglich geplante echte
+Zero-Install-Weg (wllama, Modell läuft rein als WASM im Browser-Tab) ist jetzt
+Motor 1 der lokalen Kette und nachweislich funktionsfähig (Modell-Laden +
+echte Text-Generierung, Ende-zu-Ende über die echte Sidebar-UI verifiziert).
+Root Cause des alten `ProgressEvent`-Bugs gefunden: wllamas vendorte
+`utils.js` versuchte jedes Modell per Cache-Storage-API zu cachen, die aber
+nur http(s)-URLs akzeptiert (chrome-extension://-URLs wurden abgelehnt,
+Fehler hing in einem ungesicherten Handler fest → Lade-Promise resolvte nie).
+Fix in `offscreen/offscreen.js`: Cache-API im Offscreen-Kontext deaktiviert,
+bevor wllama importiert wird. Ollama-HTTP bleibt als Fallback für Power-User,
+ist aber NICHT mehr der Standardweg — "Extension installieren, fertig" gilt
+damit wieder wie ursprünglich vorgesehen.
+**Offener Punkt, noch nicht MVP-1-kritisch, aber zu verfolgen:** nur das
+kleinste Modell (0.5B, ~490MB) ist bisher stabil verifiziert — die 1.5B-Stufe
+(~1,1GB) brachte im Test den Renderer-Prozess zum Absturz (echter
+Speicher-Crash, nicht nur ein Timeout). Alle `modellStufen` zeigen deshalb
+vorläufig auf das 0.5B-Modell, unabhängig vom Geräte-RAM. Antwortqualität
+entsprechend schwächer (kleines Modell rambelt teils über die Token-Grenze
+hinaus). TODO: 1.5B-Stufe separat mit RAM-Profiling stabilisieren, dann
+wieder für RAM-starke Geräte aktivieren.
 
 ### 2. Resilience — TEILWEISE, Kernstück offen ⚠️
 | Feature | Status | Wo im Code |

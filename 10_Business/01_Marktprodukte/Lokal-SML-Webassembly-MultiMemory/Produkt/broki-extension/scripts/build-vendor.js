@@ -10,11 +10,14 @@ const vendorDir = path.join(root, "vendor");
 // =============================================================================
 // 1. WebLLM nach vendor/webllm/ kopieren
 // =============================================================================
-const webllmSrc = path.join(root, "node_modules", "@mlc-ai", "web-llm", "dist");
+// Stand 22.07.2026: @mlc-ai/web-llm liefert den Build inzwischen unter lib/,
+// nicht mehr dist/ (Paket-Layout hat sich geändert, echter Breaking-Change
+// gegenüber der urspruenglich dokumentierten ^0.2.78-Struktur).
+const webllmSrc = path.join(root, "node_modules", "@mlc-ai", "web-llm", "lib");
 const webllmDst = path.join(vendorDir, "webllm");
 
 if (!fs.existsSync(webllmSrc)) {
-  console.error("[build-vendor] @mlc-ai/web-llm/dist nicht gefunden. Hast du npm install ausgeführt?");
+  console.error("[build-vendor] @mlc-ai/web-llm/lib nicht gefunden. Hast du npm install ausgeführt?");
   process.exit(1);
 }
 
@@ -25,11 +28,14 @@ console.log("[build-vendor] WebLLM kopiert → vendor/webllm/");
 // =============================================================================
 // 2. wllama nach vendor/wllama/ kopieren
 // =============================================================================
-const wllamaSrc = path.join(root, "node_modules", "@wllama", "wllama", "dist");
+// Stand 22.07.2026: @wllama/wllama ist bei npm inzwischen bei Major 3.x, die
+// alte ^0.8.3-Version existiert im Registry nicht mehr (404). Auf 1.0.0
+// gepinnt (siehe package.json) - dessen Build liegt unter esm/, nicht dist/.
+const wllamaSrc = path.join(root, "node_modules", "@wllama", "wllama", "esm");
 const wllamaDst = path.join(vendorDir, "wllama");
 
 if (!fs.existsSync(wllamaSrc)) {
-  console.error("[build-vendor] @wllama/wllama/dist nicht gefunden. Hast du npm install ausgeführt?");
+  console.error("[build-vendor] @wllama/wllama/esm nicht gefunden. Hast du npm install ausgeführt?");
   process.exit(1);
 }
 

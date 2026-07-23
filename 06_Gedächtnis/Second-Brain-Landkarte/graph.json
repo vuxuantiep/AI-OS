@@ -1,0 +1,650 @@
+{
+  "erzeugt": "2026-07-23 08:36",
+  "knoten": [
+    {
+      "id": "00_Wissen/00_Übersicht.md",
+      "titel": "📖 Wissen - Mein zweites Gehirn",
+      "gruppe": "00_Wissen"
+    },
+    {
+      "id": "00_Wissen/03_Aktuelles/Active/2026-07-17_Lernpfad_SLM-und-Webtechnologie.md",
+      "titel": "🎓 Lernpfad: Webtechnologie & SLM (Small Language Models)",
+      "gruppe": "00_Wissen/03_Aktuelles"
+    },
+    {
+      "id": "00_Wissen/03_Aktuelles/Aktuelle_Arbeiten.md",
+      "titel": "📋 Aktuelle Arbeiten — Arbeitsjournal",
+      "gruppe": "00_Wissen/03_Aktuelles"
+    },
+    {
+      "id": "00_Wissen/04_Referenzen/bubble-agent-docs.md",
+      "titel": "🫧 Bubble No-Code Agent",
+      "gruppe": "00_Wissen/04_Referenzen"
+    },
+    {
+      "id": "00_Wissen/04_Referenzen/cal-agent-docs.md",
+      "titel": "📅 Cal Scheduling Agent",
+      "gruppe": "00_Wissen/04_Referenzen"
+    },
+    {
+      "id": "00_Wissen/04_Referenzen/higgsfield-agent-docs.md",
+      "titel": "🎬 Higgsfield Video Agent",
+      "gruppe": "00_Wissen/04_Referenzen"
+    },
+    {
+      "id": "00_Wissen/INDEX.md",
+      "titel": "Wissens-Index",
+      "gruppe": "00_Wissen"
+    },
+    {
+      "id": "02_Fähigkeiten/Aktiv/SKILL_Broki-Extension.md",
+      "titel": "SKILL: Broki-Extension entwickeln & betreiben",
+      "gruppe": "02_Fähigkeiten/Aktiv"
+    },
+    {
+      "id": "02_Fähigkeiten/Aktiv/SKILL_Meeting_Summary.md",
+      "titel": "SKILL_Meeting_Summary",
+      "gruppe": "02_Fähigkeiten/Aktiv"
+    },
+    {
+      "id": "02_Fähigkeiten/Aktiv/SKILL_Social_Media_From_Transcript.md",
+      "titel": "SKILL_Social_Media_From_Transcript",
+      "gruppe": "02_Fähigkeiten/Aktiv"
+    },
+    {
+      "id": "02_Fähigkeiten/README.md",
+      "titel": "🛠️ Fähigkeiten (Skills)",
+      "gruppe": "02_Fähigkeiten"
+    },
+    {
+      "id": "02_Fähigkeiten/Vorlagen/Daily_Note_Template.md",
+      "titel": "{{date:YYYY-MM-DD}} {{date:dddd}}",
+      "gruppe": "02_Fähigkeiten/Vorlagen"
+    },
+    {
+      "id": "02_Fähigkeiten/Vorlagen/Project_Template.md",
+      "titel": "Project_[Name]",
+      "gruppe": "02_Fähigkeiten/Vorlagen"
+    },
+    {
+      "id": "02_Fähigkeiten/Vorlagen/ROUTINE_Template.md",
+      "titel": "ROUTINE_Template",
+      "gruppe": "02_Fähigkeiten/Vorlagen"
+    },
+    {
+      "id": "02_Fähigkeiten/Vorlagen/SKILL_Template.md",
+      "titel": "SKILL_Template",
+      "gruppe": "02_Fähigkeiten/Vorlagen"
+    },
+    {
+      "id": "06_Gedächtnis/Agent-Knowledge/Fabrik-Agenten.md",
+      "titel": "Fabrik-Agenten (05_Agenten/agent_system.py, Port 5300)",
+      "gruppe": "06_Gedächtnis/Agent-Knowledge"
+    },
+    {
+      "id": "06_Gedächtnis/Agent-Knowledge/LangGraph-Pipeline-Agenten.md",
+      "titel": "LangGraph-Pipeline-Agenten (05_Agenten/langgraph_engine.py, Port 5500)",
+      "gruppe": "06_Gedächtnis/Agent-Knowledge"
+    },
+    {
+      "id": "06_Gedächtnis/Agent-Knowledge/README.md",
+      "titel": "Agent-Knowledge",
+      "gruppe": "06_Gedächtnis/Agent-Knowledge"
+    },
+    {
+      "id": "06_Gedächtnis/Agent-Knowledge/Spezial-Agenten.md",
+      "titel": "Spezial-Agenten (05_Agenten/agents/agents.json)",
+      "gruppe": "06_Gedächtnis/Agent-Knowledge"
+    },
+    {
+      "id": "06_Gedächtnis/Agent-Knowledge/Team-Agenten-Ausbau.md",
+      "titel": "Team-Agenten-Ausbau (LangGraph, lokale Traces, Deep-Prototyp)",
+      "gruppe": "06_Gedächtnis/Agent-Knowledge"
+    },
+    {
+      "id": "06_Gedächtnis/Prompt-Library/README.md",
+      "titel": "Prompt-Library",
+      "gruppe": "06_Gedächtnis/Prompt-Library"
+    },
+    {
+      "id": "06_Gedächtnis/Prompt-Library/RKZFE-Vorlage.md",
+      "titel": "RKZFE-Vorlage",
+      "gruppe": "06_Gedächtnis/Prompt-Library"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/IT Pipeline System inkl CRM/Plannung/Konzept-Pruefung.md",
+      "titel": "Konzept-Prüfung: IT Pipeline System inkl. CRM",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/IT Pipeline System inkl CRM/README.md",
+      "titel": "IT Pipeline System inkl. CRM — „LeadPilot\"",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/IT Pipeline System inkl CRM/app/INSTALL.md",
+      "titel": "LeadPilot CRM — Installation (AI-OS & Trace-AI OS)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/IT Pipeline System inkl CRM/wirtschaftlichkeit-it-pipeline-crm.md",
+      "titel": "Wirtschaftlichkeitsprüfung: IT Pipeline System inkl. CRM",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/Usecases/usecase-ai-business-checker.md",
+      "titel": "Usecase 3: AI Business Checker",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/Usecases/usecase-tiktok-shop.md",
+      "titel": "Usecase 2: TikTok-Shop",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/Usecases/usecase-youtube-automation.md",
+      "titel": "Usecase 1: YouTube-Automation",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/compliance-critic-agent.md",
+      "titel": "COMPLIANCE-CRITIC-AGENT",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/market-research-agent.md",
+      "titel": "MARKET-RESEARCH-AGENT (AI Business Checker)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/KI-Avatar/README.md",
+      "titel": "KI-Avatar — Content-Produkt",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/KI-Avatar/animation/README.md",
+      "titel": "AI Business Checker — Animations-Templates (Remotion)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/KI-Avatar/wirtschaftlichkeit-ai-business-checker.md",
+      "titel": "Wirtschaftlichkeitsprüfung: AI Business Checker",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Analyse-Browser-vs-Native.md",
+      "titel": "⚖️ Analyse: Browser/PWA vs. Native App — reicht der Browser ohne Qualitätsverlust?",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Architektur-Broki-Extension.md",
+      "titel": "🏗️ Architektur-Plan: Broki AI Browser-Extension (Manifest V3)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Architektur-Themen-Assistent.md",
+      "titel": "🏗️ Architektur-Plan: Themen-Assistent (Self-Evolving Stufe 2)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Bauplan-Feed-Scraper-Wasm.md",
+      "titel": "🛠️ Bauplan: Feed-Scraper als Wasm-Komponente (Self-Evolving Stufe 2, Schritt 1)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Broki-4-Saeulen-Framework.md",
+      "titel": "Broki AI — 4-Säulen-Framework („Adaptive Resilience Strategy\")",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Broki-Ai/Investitionsplan-KI-Server.md",
+      "titel": "Investitionsplan: Lokaler KI-Trainings-Server (Fine-Tuning)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Broki-Ai/wirtschaftlichkeit-broki-ai.md",
+      "titel": "💶 Wirtschaftlichkeitsprüfung: Broki AI (Browser-Extension als Produkt)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Broki-Design-Stil-Klar.md",
+      "titel": "Broki-Designstil „Klar\" — Konzept & Vergleichsvariante",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Broki-Design-System.md",
+      "titel": "🎨 Broki AI — Design-System (Corporate Identity)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Konzept-Self-Evolving-Agent.md",
+      "titel": "🧬 Konzept: Client-Side Self-Evolving AI (Ausbaustufe der Plattform)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Landingpage-Plan-Broki.md",
+      "titel": "🌐 Broki AI — Landingpage-Plan (baubar)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Native-App/ARCHITECTURE_PLAN.md",
+      "titel": "Architektur-Plan: Souveränes ChatGPT-Local (React Native / Expo)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Native-App/README.md",
+      "titel": "📱 Lokal-Private-LLM-App",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/PRD_DokuCheck-Lokal.md",
+      "titel": "Product Requirement Document: DokuCheck Lokal v0.3–v0.5",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Sicherheit-Compliance-Konzept-Broki.md",
+      "titel": "🔐 Broki AI — Sicherheits- & Compliance-Konzept",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Wettbewerbsanalyse-und-Priorisierung-Broki.md",
+      "titel": "🥊 Broki AI — Wettbewerbsanalyse & Priorisierungs-Empfehlung",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/web-llm-chat-main/README.md",
+      "titel": "WebLLM Chat",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Produkt/broki-extension/README.md",
+      "titel": "🤖 Broki AI — Browser-Extension (Manifest V3)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Produkt/broki-extension/vendor/modelle/README.md",
+      "titel": "GGUF-Modelle",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Produkt/broki-pi-server/README.md",
+      "titel": "🍓 Broki Pi-Server — Wissens-Verteiler (Gegenstück zur Extension)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Produkt/scraper-komponente/README.md",
+      "titel": "feed-scraper — Wasm-Komponente (Themen-Assistent, Phase 1)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/README.md",
+      "titel": "DokuCheck Lokal — Edge Cognitive AI Platform",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/wirtschaftlichkeit-themen-assistent.md",
+      "titel": "💶 Wirtschaftlichkeitsprüfung: Themen-Assistent (Self-Evolving Stufe 2)",
+      "gruppe": "10_Business/01_Marktprodukte"
+    },
+    {
+      "id": "10_Business/02_Interne-Tools/CEO-Dashboard/Plannung/ai-os-chat.md",
+      "titel": "AI-OS Chat-Export",
+      "gruppe": "10_Business/02_Interne-Tools"
+    },
+    {
+      "id": "10_Business/02_Interne-Tools/CEO-Dashboard/README.md",
+      "titel": "🤖 CEO-Dashboard",
+      "gruppe": "10_Business/02_Interne-Tools"
+    },
+    {
+      "id": "10_Business/02_Interne-Tools/CEO-Dashboard/app/README.md",
+      "titel": "Run and deploy your AI Studio app",
+      "gruppe": "10_Business/02_Interne-Tools"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/README.md",
+      "titel": "🏭 KI-Fabrik-Auftraege (kein Produkt!)",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/ord_20260703_222059_Trace_AI_Commerce.md",
+      "titel": "🏭 KI-Fabrik Auftrag: Trace AI Commerce",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/ord_20260703_224750_HITL-Test.md",
+      "titel": "🏭 KI-Fabrik Auftrag: HITL-Test",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/ord_20260703_225810_Aufgaben-Tracker.md",
+      "titel": "🏭 KI-Fabrik Auftrag: Aufgaben-Tracker",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/ord_20260703_234218_Aufgaben-Tracker_v2.md",
+      "titel": "🏭 KI-Fabrik Auftrag: Aufgaben-Tracker — Version v2",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/ord_20260704_000653_Aufgaben-Tracker_v3.md",
+      "titel": "🏭 KI-Fabrik Auftrag: Aufgaben-Tracker — Version v3",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/ord_20260704_002626_Lokal-Private-LLM-App_v1.md",
+      "titel": "🏭 KI-Fabrik Auftrag: Lokal-Private-LLM-App — Version v1",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/ord_20260704_004542_Lokal-Private-LLM-App_v2.md",
+      "titel": "🏭 KI-Fabrik Auftrag: Lokal-Private-LLM-App — Version v2",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/ord_20260704_152350_Die_Souveräne_KI-Gateway-App__v2.md",
+      "titel": "🏭 KI-Fabrik Auftrag: Die \"Souveräne KI-Gateway-App\" — Version v2",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/ord_20260704_181857_Einkommen_Aufbauen_Ortunabhängigkeit_und_v4.md",
+      "titel": "🏭 KI-Fabrik Auftrag: Einkommen Aufbauen Ortunabhängigkeit und Skalierbarkeit — Version v4",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/ord_20260705_175509_KI_Betriebssystem_Multi_Agenten_Plattfor_v1.md",
+      "titel": "🏭 KI-Fabrik Auftrag: KI Betriebssystem (Multi Agenten Plattform) — Version v1",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/ord_20260706_221950_Trace_AI_Commerce_v2.md",
+      "titel": "🏭 KI-Fabrik Auftrag: Trace AI Commerce — Version v2",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/ord_20260720_230445_Second_Brain_Wissensnetz_für_00_Wissen_v1.md",
+      "titel": "🏭 KI-Fabrik Auftrag: Second Brain — Wissensnetz für 00_Wissen — Version v1",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/ord_20260721_212235_CloudLLM-Test2_v1.md",
+      "titel": "🏭 KI-Fabrik Auftrag: CloudLLM-Test2 — Version v1",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/KI-Fabrik-Auftraege/ord_20260721_215110_RaumInfo-Test_v1.md",
+      "titel": "🏭 KI-Fabrik Auftrag: RaumInfo-Test — Version v1",
+      "gruppe": "10_Business/KI-Fabrik-Auftraege"
+    },
+    {
+      "id": "10_Business/README.md",
+      "titel": "💼 10_Business — Produkte & Geschäftsprojekte",
+      "gruppe": "10_Business"
+    },
+    {
+      "id": "10_Business/wirtschaftlichkeits-pruefer-agent.md",
+      "titel": "WIRTSCHAFTLICHKEITS-PRÜFER-AGENT",
+      "gruppe": "10_Business"
+    }
+  ],
+  "kanten": [
+    {
+      "quelle": "00_Wissen/00_Übersicht.md",
+      "ziel": "10_Business/README.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "00_Wissen/04_Referenzen/bubble-agent-docs.md",
+      "ziel": "00_Wissen/04_Referenzen/cal-agent-docs.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "00_Wissen/04_Referenzen/bubble-agent-docs.md",
+      "ziel": "00_Wissen/04_Referenzen/higgsfield-agent-docs.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "00_Wissen/04_Referenzen/cal-agent-docs.md",
+      "ziel": "00_Wissen/04_Referenzen/higgsfield-agent-docs.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "02_Fähigkeiten/Aktiv/SKILL_Broki-Extension.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Architektur-Broki-Extension.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "02_Fähigkeiten/Aktiv/SKILL_Broki-Extension.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Broki-Ai/wirtschaftlichkeit-broki-ai.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "06_Gedächtnis/Agent-Knowledge/LangGraph-Pipeline-Agenten.md",
+      "ziel": "06_Gedächtnis/Agent-Knowledge/Fabrik-Agenten.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "06_Gedächtnis/Agent-Knowledge/LangGraph-Pipeline-Agenten.md",
+      "ziel": "06_Gedächtnis/Agent-Knowledge/Team-Agenten-Ausbau.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "06_Gedächtnis/Agent-Knowledge/README.md",
+      "ziel": "06_Gedächtnis/Prompt-Library/RKZFE-Vorlage.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "06_Gedächtnis/Agent-Knowledge/README.md",
+      "ziel": "06_Gedächtnis/Agent-Knowledge/Team-Agenten-Ausbau.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "06_Gedächtnis/Agent-Knowledge/Team-Agenten-Ausbau.md",
+      "ziel": "06_Gedächtnis/Agent-Knowledge/Fabrik-Agenten.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/Usecases/usecase-ai-business-checker.md",
+      "ziel": "10_Business/01_Marktprodukte/KI-Avatar/wirtschaftlichkeit-ai-business-checker.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Analyse-Browser-vs-Native.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Bauplan-Feed-Scraper-Wasm.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Architektur-Broki-Extension.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Architektur-Themen-Assistent.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Architektur-Themen-Assistent.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Bauplan-Feed-Scraper-Wasm.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Architektur-Themen-Assistent.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Analyse-Browser-vs-Native.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Architektur-Themen-Assistent.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/wirtschaftlichkeit-themen-assistent.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Bauplan-Feed-Scraper-Wasm.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Konzept-Self-Evolving-Agent.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Bauplan-Feed-Scraper-Wasm.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/PRD_DokuCheck-Lokal.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Broki-Ai/Investitionsplan-KI-Server.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Broki-Ai/wirtschaftlichkeit-broki-ai.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Broki-Design-System.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Landingpage-Plan-Broki.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Konzept-Self-Evolving-Agent.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/PRD_DokuCheck-Lokal.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Konzept-Self-Evolving-Agent.md",
+      "ziel": "00_Wissen/03_Aktuelles/Active/2026-07-17_Lernpfad_SLM-und-Webtechnologie.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Landingpage-Plan-Broki.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Wettbewerbsanalyse-und-Priorisierung-Broki.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Sicherheit-Compliance-Konzept-Broki.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Architektur-Broki-Extension.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Sicherheit-Compliance-Konzept-Broki.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Broki-Ai/wirtschaftlichkeit-broki-ai.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Wettbewerbsanalyse-und-Priorisierung-Broki.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Architektur-Broki-Extension.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Wettbewerbsanalyse-und-Priorisierung-Broki.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Broki-Ai/wirtschaftlichkeit-broki-ai.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/wirtschaftlichkeit-themen-assistent.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Bauplan-Feed-Scraper-Wasm.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/wirtschaftlichkeit-themen-assistent.md",
+      "ziel": "10_Business/01_Marktprodukte/Lokal-SML-Webassembly-MultiMemory/Plannung/Analyse-Browser-vs-Native.md",
+      "typ": "wikilink"
+    },
+    {
+      "quelle": "00_Wissen/03_Aktuelles/Active/2026-07-17_Lernpfad_SLM-und-Webtechnologie.md",
+      "ziel": "00_Wissen/04_Referenzen/bubble-agent-docs.md",
+      "typ": "tag",
+      "tag": "wichtig"
+    },
+    {
+      "quelle": "00_Wissen/04_Referenzen/bubble-agent-docs.md",
+      "ziel": "00_Wissen/04_Referenzen/cal-agent-docs.md",
+      "typ": "tag",
+      "tag": "wichtig"
+    },
+    {
+      "quelle": "00_Wissen/04_Referenzen/cal-agent-docs.md",
+      "ziel": "00_Wissen/04_Referenzen/higgsfield-agent-docs.md",
+      "typ": "tag",
+      "tag": "wichtig"
+    },
+    {
+      "quelle": "00_Wissen/04_Referenzen/higgsfield-agent-docs.md",
+      "ziel": "10_Business/01_Marktprodukte/IT Pipeline System inkl CRM/README.md",
+      "typ": "tag",
+      "tag": "wichtig"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/IT Pipeline System inkl CRM/README.md",
+      "ziel": "10_Business/01_Marktprodukte/KI-Avatar/README.md",
+      "typ": "tag",
+      "tag": "wichtig"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/KI-Avatar/README.md",
+      "ziel": "10_Business/wirtschaftlichkeits-pruefer-agent.md",
+      "typ": "tag",
+      "tag": "wichtig"
+    },
+    {
+      "quelle": "02_Fähigkeiten/Aktiv/SKILL_Social_Media_From_Transcript.md",
+      "ziel": "10_Business/01_Marktprodukte/KI-Avatar/README.md",
+      "typ": "tag",
+      "tag": "business"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/IT Pipeline System inkl CRM/Plannung/Konzept-Pruefung.md",
+      "ziel": "10_Business/01_Marktprodukte/IT Pipeline System inkl CRM/README.md",
+      "typ": "tag",
+      "tag": "it-pipeline"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/IT Pipeline System inkl CRM/README.md",
+      "ziel": "10_Business/01_Marktprodukte/IT Pipeline System inkl CRM/wirtschaftlichkeit-it-pipeline-crm.md",
+      "typ": "tag",
+      "tag": "it-pipeline"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/IT Pipeline System inkl CRM/wirtschaftlichkeit-it-pipeline-crm.md",
+      "ziel": "10_Business/01_Marktprodukte/KI-Avatar/wirtschaftlichkeit-ai-business-checker.md",
+      "typ": "tag",
+      "tag": "wirtschaftlichkeit"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/KI-Avatar/wirtschaftlichkeit-ai-business-checker.md",
+      "ziel": "10_Business/wirtschaftlichkeits-pruefer-agent.md",
+      "typ": "tag",
+      "tag": "wirtschaftlichkeit"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/Usecases/usecase-ai-business-checker.md",
+      "ziel": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/market-research-agent.md",
+      "typ": "tag",
+      "tag": "ai-business-checker"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/market-research-agent.md",
+      "ziel": "10_Business/01_Marktprodukte/KI-Avatar/wirtschaftlichkeit-ai-business-checker.md",
+      "typ": "tag",
+      "tag": "ai-business-checker"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/Usecases/usecase-ai-business-checker.md",
+      "ziel": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/Usecases/usecase-youtube-automation.md",
+      "typ": "tag",
+      "tag": "youtube"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/Usecases/usecase-ai-business-checker.md",
+      "ziel": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/Usecases/usecase-tiktok-shop.md",
+      "typ": "tag",
+      "tag": "ki-avatar"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/Usecases/usecase-tiktok-shop.md",
+      "ziel": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/Usecases/usecase-youtube-automation.md",
+      "typ": "tag",
+      "tag": "ki-avatar"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/Usecases/usecase-youtube-automation.md",
+      "ziel": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/market-research-agent.md",
+      "typ": "tag",
+      "tag": "ki-avatar"
+    },
+    {
+      "quelle": "10_Business/01_Marktprodukte/KI-Avatar/Plannung/market-research-agent.md",
+      "ziel": "10_Business/01_Marktprodukte/KI-Avatar/README.md",
+      "typ": "tag",
+      "tag": "ki-avatar"
+    }
+  ]
+}
