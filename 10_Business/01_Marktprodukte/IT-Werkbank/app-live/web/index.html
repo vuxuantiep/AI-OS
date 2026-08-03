@@ -1,0 +1,1683 @@
+<!-- @copyright Tiep Vu Xuan - 2026 -->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT-Werkbank</title>
+<style>
+  :root{
+    --ink:#14181f; --ink-60:#5a6470; --ink-30:#9aa3ad;
+    --paper:#f2f3ef; --paper-2:#e7e9e3; --card:#fff;
+    --line:#c9cec5;
+    --signal:#1f5f8b;      /* lokal, bestaetigt */
+    --amber:#b0700c;        /* Cloud-Fallback aktiv */
+    --rot:#9a2d20;          /* nichts erreichbar */
+    --gruen:#1f8a4c;        /* Betriebszustand-Sammelanzeige: aktiv */
+    --accent:var(--signal);
+    --mono: ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans: ui-sans-serif,"Inter","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit}
+
+  /* ---------- Grundraster ---------- */
+  /* Feste Höhe statt min-height: die Seite selbst scrollt nicht mehr, jeder
+     Bereich (Modulschiene, Arbeitsbereich, Chatverlauf) verwaltet sein
+     eigenes Scrollen -- Eingabefeld im Chat bleibt dadurch immer sichtbar. */
+  .app{display:grid;grid-template-columns:232px 1fr;height:100vh;transition:grid-template-columns .18s ease}
+  .app.eingeklappt{grid-template-columns:0 1fr}
+  .rail{border-right:1px solid var(--line);background:var(--paper-2);padding:20px 0 40px;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;min-height:0;white-space:nowrap}
+  .app.eingeklappt .rail{padding:20px 0 40px 0;border-right:none}
+  .main{min-width:0;display:flex;flex-direction:column;min-height:0}
+  .hamburger{border:1px solid var(--line);background:var(--card);width:34px;height:34px;font-size:16px;cursor:pointer;color:var(--ink);flex:0 0 auto}
+  .hamburger:hover{background:var(--paper-2)}
+
+  .mark{padding:0 18px 18px}
+  .mark .name{font-stretch:condensed;font-weight:800;font-size:21px;letter-spacing:-.01em;line-height:1}
+  .mark .sub{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-60);margin-top:5px}
+
+  .railhead{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-30);padding:14px 18px 6px}
+  .mod{display:block;width:100%;text-align:left;border:none;background:none;padding:7px 18px;cursor:pointer;color:var(--ink);font-size:14px;border-left:3px solid transparent}
+  .mod:hover{background:#eceee7}
+  .mod[aria-current="true"]{border-left-color:var(--accent);font-weight:600;background:#e2e5dd}
+  .mod small{display:block;color:var(--ink-30);font-size:11px;font-family:var(--mono)}
+  .mod:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+  .neuAbzeichen{display:inline-block;margin-left:6px;padding:1px 6px;font-family:var(--mono);font-size:9px;letter-spacing:.08em;background:var(--rot);color:#fff;vertical-align:middle;animation:blinken 1.3s ease-in-out infinite}
+  @keyframes blinken{0%,100%{opacity:1}50%{opacity:.35}}
+
+  /* Modul-Untergruppe: eigenes details/summary je Modul mit Vorlagen. Die
+     summary traegt direkt die .mod-Optik (Klick waehlt weiterhin das Modul
+     wie ein normaler Button), das vorangestellte Dreieck zeigt/versteckt
+     die Unterkategorien (Vorlagen-Typen) darunter. */
+  .modGruppe{border:none;background:none;margin:0}
+  .modGruppe > summary.mod{list-style:none;cursor:pointer;display:flex;align-items:center;gap:3px}
+  .modGruppe > summary.mod::-webkit-details-marker{display:none}
+  .modGruppe > summary.mod::before{content:"▸";color:var(--ink-30);font-size:10px;flex:0 0 auto}
+  .modGruppe[open] > summary.mod::before{content:"▾"}
+  .modUnter{display:block;width:100%;text-align:left;border:none;background:none;padding:5px 18px 5px 34px;cursor:pointer;color:var(--ink-60);font-size:12px;border-left:3px solid transparent}
+  .modUnter:hover{background:#eceee7;color:var(--ink)}
+  .modUnter:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+
+  /* ---------- Signatur: Betriebszustand ---------- */
+  .betrieb{border-top:1px solid var(--line);margin-top:auto;padding:14px 18px 0}
+  .lampe{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--ink-60);padding:3px 0}
+  .punkt{width:8px;height:8px;flex:0 0 8px;background:var(--ink-30)}
+  .punkt.bereit{background:var(--signal)}
+  .punkt.gestoert{background:var(--rot)}
+  .punkt.aus{background:var(--ink-30)}
+  /* Sammelanzeige direkt neben "Betriebszustand": simple grün/rot-Ampel,
+     unabhaengig von den einzelnen Anbieter-Lampen weiter unten. */
+  .betriebsLampe{width:9px;height:9px;border-radius:50%;display:inline-block;margin-left:7px;background:var(--ink-30);vertical-align:middle}
+  .betriebsLampe.aktiv{background:var(--gruen);box-shadow:0 0 0 3px rgba(31,138,76,.18)}
+  .betriebsLampe.inaktiv{background:var(--rot);box-shadow:0 0 0 3px rgba(154,45,32,.18)}
+  .betrieb .fazit{margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--ink)}
+  .copyright{margin-top:14px;padding:0 18px;font-family:var(--mono);font-size:10px;color:var(--ink-30)}
+
+  /* ---------- Kopf des Arbeitsbereichs ---------- */
+  .top{border-bottom:1px solid var(--line);padding:16px 26px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .top h1{margin:0;font-stretch:condensed;font-size:26px;font-weight:800;letter-spacing:-.01em}
+  .top p{margin:2px 0 0;color:var(--ink-60);font-size:13px}
+  .tabs{display:flex;gap:2px}
+  .tab{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;background:var(--card);border:1px solid var(--line);cursor:pointer;color:var(--ink)}
+  .tab[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+  /* Chat bleibt immer sichtbar (linke Spalte); Werkzeuge (Netzrechner,
+     Skripte, Wiki, Diagramm) öffnen als rechte Spalte daneben, statt den
+     Chat zu ersetzen. Ohne offenes Werkzeug nimmt der Chat die volle
+     Breite ein (seitenSpalte ist dann hidden, kein zweites Flex-Kind). */
+  .flaeche{display:flex;gap:0;flex:1 1 auto;min-height:0;overflow:hidden}
+  .chatSpalte{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;padding:22px 26px 20px;min-height:0}
+  .seitenSpalte{flex:1 1 560px;min-width:320px;padding:22px 26px 60px;overflow-y:auto;min-height:0}
+  .seitenSpalte[hidden]{display:none}
+
+  /* Ziehbare Trennlinie zwischen Chat- und Werkzeug-Spalte -- ersetzt die
+     bisherige feste border-left der Werkzeug-Spalte, damit die Breite frei
+     verschiebbar ist (Breite wird pro Gerät in localStorage gemerkt). */
+  .resizer{flex:0 0 7px;cursor:col-resize;position:relative;touch-action:none}
+  .resizer::after{content:"";position:absolute;top:0;bottom:0;left:3px;width:1px;background:var(--line)}
+  .resizer:hover::after,.resizer.ziehen::after{left:2px;width:3px;background:var(--accent)}
+  .resizer:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  .resizer[hidden]{display:none}
+  .kicker{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-60);margin:0 0 8px}
+  .sucheFeld{width:100%;padding:9px 11px;margin-bottom:14px;border:1px solid var(--line);background:var(--card);font-family:var(--sans);font-size:14px}
+  .sucheFeld:focus{outline:2px solid var(--accent);outline-offset:-1px}
+
+  /* Typ-Filterleiste im Vorlagen-Tab (Alle / Skript / E-Mail / Ticket / Doku) */
+  .filterZeile{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .filterChip{font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:6px 11px;border:1px solid var(--line);background:var(--card);color:var(--ink-60);cursor:pointer}
+  .filterChip:hover{background:var(--paper-2);color:var(--ink)}
+  .filterChip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+  /* Gruppierte, aufklappbare Listen (Skripte, Wiki) */
+  .gruppe{border:1px solid var(--line);margin-bottom:10px;background:var(--card)}
+  .gruppe > summary{cursor:pointer;list-style:none;padding:10px 14px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-60);background:var(--paper-2)}
+  .gruppe > summary::-webkit-details-marker{display:none}
+  .gruppe > summary::before{content:"▸ ";}
+  .gruppe[open] > summary::before{content:"▾ ";}
+  .gruppe > summary:hover{color:var(--ink)}
+  .gruppe .gruppeInhalt{padding:12px 14px}
+
+  /* ---------- Chat ---------- */
+  /* #v-chat füllt die Chat-Spalte und scrollt selbst nicht -- nur .verlauf
+     darin scrollt, .eingabe bleibt dadurch am unteren Rand sichtbar. */
+  #v-chat{display:flex;flex-direction:column;height:100%;min-height:0;flex:1 1 auto}
+  .verlauf{display:flex;flex-direction:column;gap:18px;margin-bottom:22px;flex:1 1 auto;overflow-y:auto;min-height:0}
+  .eingabe{flex:0 0 auto}
+  .bubble{max-width:100%}
+  .bubble .wer{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-60);margin-bottom:5px}
+  .bubble.ich .txt{background:var(--paper-2);border:1px solid var(--line);padding:12px 14px}
+  .bubble.werkbank{border-left:3px solid var(--accent);padding-left:16px}
+  .bubble .txt{white-space:pre-wrap;word-wrap:break-word}
+  .quellen{margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--ink-60)}
+  .quellen span{border:1px solid var(--line);padding:2px 7px;margin-right:5px;background:var(--card)}
+
+  /* Tipp-Anzeige: drei pulsierende Punkte, solange die Werkbank noch
+     arbeitet (LLM-Anfrage oder Anhang-Verarbeitung laeuft) -- ersetzt das
+     bisherige statische "…", damit sichtbar ist, dass es kein Stillstand
+     ist, sondern eine laufende Aktion. */
+  .tippt{display:inline-flex;gap:5px;align-items:center;padding:4px 0}
+  .tippt span{width:6px;height:6px;border-radius:50%;background:var(--ink-60);animation:tippt-puls 1.2s ease-in-out infinite}
+  .tippt span:nth-child(2){animation-delay:.15s}
+  .tippt span:nth-child(3){animation-delay:.3s}
+  @keyframes tippt-puls{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-4px);opacity:1}}
+  @media (prefers-reduced-motion:reduce){.tippt span{animation:none;opacity:.7}}
+
+  .code{position:relative;margin:14px 0;background:var(--ink);color:#e9ece9}
+  .code pre{margin:0;padding:16px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.6}
+  .copy{position:absolute;top:8px;right:8px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:6px 10px;background:transparent;color:#9fb0ba;border:1px solid #39424c;cursor:pointer}
+  .copy:hover{color:#fff;border-color:#7f8d97}
+
+  /* Wiki-Seiten (Markdown) sind Fließtext -- umbrechen statt seitlich zu
+     scrollen, eigene Höhenbegrenzung mit senkrechtem Scrollbalken bei langen
+     Seiten statt die ganze Seite endlos zu strecken. */
+  .proseCode pre{white-space:pre-wrap;word-break:break-word;overflow-x:hidden;overflow-y:auto;max-height:60vh;font-family:var(--sans);font-size:14px}
+
+  .verlaufLeiste{position:relative;padding:2px 2px 8px}
+  .linktext{background:none;border:none;color:var(--ink-60);font-family:var(--mono);font-size:11px;letter-spacing:.06em;cursor:pointer;text-decoration:underline;padding:0}
+  .linktext:hover{color:var(--accent)}
+  .verlaufPanel{position:absolute;bottom:100%;left:2px;margin-bottom:6px;background:var(--card);border:1px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.14);width:360px;max-height:380px;display:flex;flex-direction:column;z-index:5}
+  .verlaufPanel[hidden]{display:none}
+  .verlaufPanel input[type=text]{margin:10px 10px 6px;padding:8px 10px;border:1px solid var(--line);font-family:var(--sans);font-size:13px}
+  .verlaufListe{overflow-y:auto}
+  .verlaufEintrag{display:block;width:100%;text-align:left;border:none;background:none;border-top:1px solid var(--line);padding:9px 12px;cursor:pointer;font-size:13px;color:var(--ink)}
+  .verlaufEintrag:hover{background:var(--paper-2)}
+  .verlaufEintrag .datum{display:block;font-family:var(--mono);font-size:10px;color:var(--ink-60);margin-top:2px}
+
+  .eingabe{border:1px solid var(--line);background:var(--card);padding:12px}
+  textarea{width:100%;min-height:78px;resize:vertical;border:none;outline:none;font-family:var(--sans);font-size:15px;color:var(--ink);background:transparent}
+  .eingabe .zeile{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
+  .eingabe .zeile #senden{margin-left:auto}
+  .symbolLeiste{display:flex;align-items:center;gap:6px}
+  .schalter{font-family:var(--mono);font-size:11px;color:var(--ink-60);display:flex;align-items:center;gap:6px}
+  button.primary{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:11px 20px;border:none;background:var(--ink);color:var(--paper);cursor:pointer}
+  button.primary:hover{background:var(--accent)}
+  button.primary:disabled{opacity:.45;cursor:default}
+
+  .rundknopf{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:15px;line-height:1;color:var(--ink-60);flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:0}
+  .rundknopf:hover{background:var(--paper-2);color:var(--ink)}
+  .rundknopf.aktiv{background:var(--rot);border-color:var(--rot);color:#fff;animation:pulsieren 1.4s ease-in-out infinite}
+  @keyframes pulsieren{0%,100%{opacity:1}50%{opacity:.55}}
+
+  .anhaenge{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .anhang{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;background:var(--paper-2);border:1px solid var(--line);padding:4px 8px}
+  .anhang button{border:none;background:none;cursor:pointer;color:var(--ink-60);font-size:13px;padding:0;line-height:1}
+  .anhang button:hover{color:var(--rot)}
+
+  /* ---------- Tabellen / Listen ---------- */
+  table{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);border:1px solid var(--line)}
+  th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--line)}
+  th{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-60);background:var(--paper-2)}
+  td.zahl{font-family:var(--mono)}
+  tr:last-child td{border-bottom:none}
+
+  .feld{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
+  label.lab{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-60);display:block;margin-bottom:4px}
+  input[type=text],input[type=number],select{font-family:var(--mono);font-size:14px;padding:9px 11px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+
+  .karte{border:1px solid var(--line);background:var(--card);padding:14px;margin-bottom:10px}
+  .karte h3{margin:0 0 4px;font-size:15px;font-weight:600}
+  .karte .meta{font-family:var(--mono);font-size:11px;color:var(--ink-60)}
+  .hinweis{border-left:3px solid var(--amber);padding-left:14px;color:var(--ink-60);font-size:14px;margin:16px 0}
+  .leer{color:var(--ink-60);font-size:14px}
+
+  .drawerHintergrund{display:none}
+
+  /* ---------- Smartphone/Tablet (≤860px) ---------- */
+  @media (max-width:860px){
+    .app,.app.eingeklappt{grid-template-columns:1fr}
+
+    /* Menüleiste wird zur Schublade: liegt über dem Inhalt statt ihn zu
+       verschieben, Hamburger öffnet/schließt, Abdunklung schließt per Klick. */
+    .rail{position:fixed;top:0;left:0;bottom:0;width:min(82vw,300px);
+      z-index:30;transform:translateX(0);transition:transform .22s ease;
+      box-shadow:2px 0 24px rgba(0,0,0,.18);border-right:1px solid var(--line)}
+    .app.eingeklappt .rail{transform:translateX(-100%)}
+    .app:not(.eingeklappt) .drawerHintergrund{
+      display:block;position:fixed;inset:0;background:rgba(20,24,31,.42);z-index:25}
+
+    .top{padding:12px 14px}
+    .top h1{font-size:19px}
+    .top p{font-size:12px}
+    .tabs{width:100%;overflow-x:auto;padding-bottom:2px}
+    .tab{padding:9px 11px;font-size:10px;flex:0 0 auto}
+
+    /* Auf schmalen Bildschirmen nicht nebeneinander -- immer nur Chat ODER
+       Werkzeug sichtbar, sonst wird beides zu schmal zum Bedienen. */
+    .flaeche{flex-direction:column}
+    .chatSpalte{padding:14px 14px 10px}
+    .chatSpalte[hidden]{display:none}
+    .seitenSpalte{flex-basis:auto!important;min-width:0;width:100%;padding:14px 14px 40px}
+    .resizer{display:none}
+
+    .verlaufPanel{width:calc(100vw - 28px);max-width:360px}
+    .eingabe{padding:10px}
+    .eingabe .zeile{gap:8px}
+    textarea{font-size:16px}  /* verhindert Auto-Zoom bei Fokus in iOS Safari */
+
+    /* Eingabezeile umsortieren: Symbole links + Senden rechts auf einer
+       Zeile, "Wissensspeicher mitlesen" auf eine eigene Zeile ganz unten.
+       display:contents "entpackt" den Symbol-Wrapper, damit seine Kinder
+       (inkl. der verschachtelten Checkbox) direkte Flex-Kinder von .zeile
+       werden und per order neu angeordnet werden können. */
+    .symbolLeiste{display:contents}
+    .schalter{order:5;flex:1 0 100%;margin-top:4px}
+  }
+  @media (max-width:480px){
+    .top h1{font-size:17px}
+    .mark .name{font-size:19px}
+    .rundknopf{width:38px;height:38px}
+    button.primary{padding:12px 16px;font-size:11px}
+    .karte{padding:12px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="drawerHintergrund" id="drawerHintergrund"></div>
+
+  <!-- ================= Modulschiene ================= -->
+  <nav class="rail">
+    <div class="mark">
+      <div class="name">IT-Werkbank</div>
+      <div class="sub">Administration &amp; Architektur</div>
+    </div>
+
+    <div class="railhead">Module</div>
+    <div id="module"></div>
+
+    <div class="betrieb">
+      <div class="railhead" style="padding-left:0">Betriebszustand<span class="betriebsLampe" id="betriebsLampe" title="wird geprüft …"></span></div>
+      <div class="fazit" id="fazit">wird geprüft …</div>
+      <details class="gruppe" style="margin-top:8px">
+        <summary>Alle Anbieter</summary>
+        <div class="gruppeInhalt" id="lampen"></div>
+      </details>
+    </div>
+
+    <div class="copyright">© 2026 Tiep Vu Xuan</div>
+  </nav>
+
+  <!-- ================= Arbeitsbereich ================= -->
+  <main class="main">
+    <header class="top">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button id="menuUmschalten" class="hamburger" type="button" aria-label="Menü ein-/ausblenden" title="Menü ein-/ausblenden">☰</button>
+        <div>
+          <h1 id="modulName">Assistent</h1>
+          <p id="modulKurz">Allgemeine Fragen, Architekturentscheidungen, Fehlersuche</p>
+        </div>
+      </div>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-view="chat" aria-selected="true">Assistent</button>
+        <button class="tab" role="tab" data-view="netz" aria-selected="false">Netzrechner</button>
+        <button class="tab" role="tab" data-view="vorlagen" aria-selected="false">Vorlagen</button>
+        <button class="tab" role="tab" data-view="wiki" aria-selected="false">Wiki</button>
+        <button class="tab" role="tab" data-view="diagramm" aria-selected="false">Diagramm</button>
+        <button class="tab" role="tab" data-view="technews" aria-selected="false">Tech-News</button>
+      </div>
+    </header>
+
+    <div class="flaeche" id="flaeche">
+
+      <!-- ---------- Chat: bleibt immer sichtbar ---------- -->
+      <div class="chatSpalte" id="chatSpalte">
+      <section id="v-chat">
+        <div class="verlauf" id="verlauf"></div>
+        <div class="verlaufLeiste">
+          <button type="button" id="chatverlaufOeffnen" class="linktext">↺ Chatverlauf</button>
+          <div id="chatverlaufPanel" class="verlaufPanel" hidden>
+            <input type="text" id="chatverlaufSuche" placeholder="Sitzung suchen …">
+            <button type="button" id="neueSitzung" class="linktext" style="margin:0 12px 8px">+ Neuer Chat</button>
+            <div id="chatverlaufListe" class="verlaufListe"></div>
+          </div>
+        </div>
+        <div class="eingabe">
+          <div id="anhaenge" class="anhaenge" hidden></div>
+          <textarea id="frage" placeholder="Frage an das aktive Modul – z. B. Zwei-Knoten-Hyper-V-Cluster mit Dateizeugen aufbauen, Reihenfolge und Prüfschritte."></textarea>
+          <div class="zeile">
+            <div class="symbolLeiste">
+              <input type="file" id="dateiEingabe" multiple hidden accept=".txt,.md,.csv,.json,.yaml,.yml,.pdf,.docx,.zip,image/*">
+              <button class="rundknopf" id="anhaengen" type="button" title="Datei anhängen (Dokument, ZIP, Foto)">+</button>
+              <button class="rundknopf" id="mikrofon" type="button" title="Spracheingabe">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              </button>
+              <label class="schalter"><input type="checkbox" id="ragAn" checked> Wissensspeicher mitlesen</label>
+            </div>
+            <button class="primary" id="senden">Senden</button>
+          </div>
+        </div>
+        <div class="hinweis" id="chatHinweis" hidden></div>
+      </section>
+      </div>
+
+      <!-- Ziehbare Trennlinie -- Breite der Werkzeug-Spalte per Maus/Touch/Pfeiltasten anpassbar -->
+      <div class="resizer" id="resizer" hidden role="separator" aria-orientation="vertical" aria-label="Spaltenbreite zwischen Chat und Werkzeug anpassen" tabindex="0"></div>
+
+      <!-- ---------- Werkzeuge: öffnen daneben, nicht anstelle des Chats ---------- -->
+      <div class="seitenSpalte" id="seitenSpalte" hidden>
+
+      <!-- ---------- Netzrechner (rechnet im Browser, ohne Backend) ---------- -->
+      <section id="v-netz" hidden>
+        <p class="kicker">Adressplanung · rechnet lokal, ohne Modell</p>
+        <div class="feld">
+          <div>
+            <label class="lab" for="netzEin">Netz oder Adresse</label>
+            <input type="text" id="netzEin" value="10.20.30.0/24" size="20">
+          </div>
+          <div>
+            <label class="lab" for="teilen">Aufteilen in</label>
+            <select id="teilen">
+              <option value="1">nicht aufteilen</option>
+              <option value="2">2 Teilnetze</option>
+              <option value="4">4 Teilnetze</option>
+              <option value="8">8 Teilnetze</option>
+              <option value="16">16 Teilnetze</option>
+            </select>
+          </div>
+          <button class="primary" id="rechnen">Berechnen</button>
+        </div>
+        <div id="netzErgebnis"></div>
+      </section>
+
+      <!-- ---------- Vorlagen (E-Mail/Skript/Ticket/Doku) ---------- -->
+      <section id="v-vorlagen" hidden>
+        <p class="kicker">Vorlagen · E-Mail, Skripte, Tickets, Doku – nach Modul und Typ, editierbar</p>
+        <div id="vorlagenFilter" class="filterZeile"></div>
+        <input type="text" id="vorlagenSuche" class="sucheFeld" placeholder="Vorlagen durchsuchen …">
+        <div id="vorlagen"></div>
+        <div class="karte" style="margin-top:18px">
+          <label class="lab">Neue Vorlage</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:8px">
+            <div style="flex:2;min-width:220px">
+              <label class="lab" for="vTitel">Titel</label>
+              <input type="text" id="vTitel" placeholder="z. B. Wartungsfenster ankündigen" style="width:100%">
+            </div>
+            <div style="flex:1;min-width:160px">
+              <label class="lab" for="vTyp">Typ</label>
+              <select id="vTyp" style="width:100%"></select>
+            </div>
+            <div id="vSpracheFeld" style="flex:1;min-width:120px">
+              <label class="lab" for="vSprache">Sprache</label>
+              <input type="text" id="vSprache" placeholder="z. B. powershell" style="width:100%">
+            </div>
+          </div>
+          <textarea id="vInhalt" placeholder="Inhalt (bei Skript-Vorlagen: Code; sonst Markdown/Fließtext)." style="min-height:130px;border:1px solid var(--line);padding:10px"></textarea>
+          <div style="margin-top:10px"><button class="primary" id="vSpeichern">Vorlage speichern</button></div>
+        </div>
+        <div class="hinweis" id="vorlagenHinweis" hidden></div>
+      </section>
+
+      <!-- ---------- Wiki ---------- -->
+      <section id="v-wiki" hidden>
+        <p class="kicker">Wiki · Nachschlagewissen, wird in den Wissensspeicher indexiert</p>
+        <div class="karte">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div>
+              <label class="lab">Web-Scraper-Agent</label>
+              <div class="meta" id="scraperVerlauf">lädt …</div>
+            </div>
+            <button class="primary" id="scraperJetzt">Jetzt aktualisieren</button>
+          </div>
+        </div>
+        <div class="karte">
+          <label class="lab">Eigene Quellen · fließen täglich automatisch mit ein</label>
+          <div id="quellenListe" style="margin:8px 0"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+            <div style="flex:1;min-width:220px">
+              <label class="lab" for="qUrl">Link</label>
+              <input type="text" id="qUrl" placeholder="https://…" style="width:100%">
+            </div>
+            <div style="flex:1;min-width:180px">
+              <label class="lab" for="qTitel">Titel (optional)</label>
+              <input type="text" id="qTitel" placeholder="wird sonst automatisch erkannt" style="width:100%">
+            </div>
+            <button class="primary" id="qHinzufuegen">Quelle hinzufügen</button>
+          </div>
+          <div class="hinweis" id="quellenHinweis" hidden></div>
+        </div>
+        <input type="text" id="wikiSuche" class="sucheFeld" placeholder="Wiki durchsuchen …">
+        <div id="wikiListe"></div>
+        <div class="karte" style="margin-top:18px">
+          <label class="lab" for="wTitel">Neue Seite</label>
+          <input type="text" id="wTitel" placeholder="Titel, z. B. Clusterzeugen im Standort Nord" style="width:100%;margin-bottom:8px">
+          <textarea id="wInhalt" placeholder="Inhalt in Markdown. Absätze werden für den Wissensspeicher in Abschnitte zerlegt." style="min-height:130px;border:1px solid var(--line);padding:10px"></textarea>
+          <div style="margin-top:10px"><button class="primary" id="wSpeichern">Seite speichern</button></div>
+        </div>
+        <div class="hinweis" id="wikiHinweis" hidden></div>
+      </section>
+
+      <!-- ---------- Architektur-Diagramm ---------- -->
+      <section id="v-diagramm" hidden>
+        <p class="kicker">Architektur · wie die IT-Werkbank aufgebaut ist</p>
+        <div class="karte">
+          <pre id="diagrammQuelle">lädt …</pre>
+        </div>
+      </section>
+
+      <!-- ---------- Tech-News: kuratierte Themen- und Link-Sammlung ---------- -->
+      <section id="v-technews" hidden>
+        <p class="kicker">Tech-News · kuratierte Quellen zum Reinklicken, nach Thema gruppiert</p>
+        <div class="karte">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div>
+              <label class="lab">RSS-Check</label>
+              <div class="meta" id="technewsStatus">lädt …</div>
+            </div>
+            <button class="primary" id="technewsJetzt">Jetzt prüfen</button>
+          </div>
+        </div>
+        <div id="technewsNeu"></div>
+        <div id="technews"></div>
+      </section>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="vendor/mermaid.min.js"></script>
+<script>
+/* Sofort deaktivieren, bevor Mermaids eigener DOMContentLoaded-Scan laufen
+   kann -- sonst "verbraucht" er das Platzhalter-Element mit dem Text
+   "lädt …" und rendert später nichts mehr (data-processed bleibt gesetzt). */
+if(window.mermaid) window.mermaid.initialize({ startOnLoad:false, theme:"neutral" });
+
+/* ==================================================================
+   Konfiguration
+   ================================================================== */
+const BASIS = ""; // leer = gleiche Herkunft. Sonst z. B. "http://werkbank.intern:8080"
+
+/* Notkatalog: greift, wenn das Backend nicht erreichbar ist. Damit sind
+   Netzrechner und Oberfläche auch ohne Server benutzbar. */
+const MODULE_NOTFALL = [
+  {id:"assistent", name:"Assistent",      kurz:"Allgemeine Fragen, Architekturentscheidungen, Fehlersuche"},
+  {id:"m365",      name:"Microsoft 365",  kurz:"Exchange Online, Teams, SharePoint, Lizenzen, Compliance"},
+  {id:"entra",     name:"Entra ID",       kurz:"Identitäten, Conditional Access, Rollen, Gastzugriff"},
+  {id:"winserver", name:"Windows Server", kurz:"AD DS, DNS, DHCP, GPO, Dateidienste, Patchstand"},
+  {id:"hyperv",    name:"Hyper-V Cluster",kurz:"Failover-Cluster, Livemigration, Storage, Replikation"},
+  {id:"powershell",name:"PowerShell",     kurz:"Skriptbibliothek, Automatisierung, geplante Aufgaben"},
+  {id:"iac",       name:"IaC Automation", kurz:"Terraform, Ansible, DSC, Bicep, Pipelines"},
+  {id:"datenbank", name:"Datenbank",      kurz:"SQL & Oracle, DBA-Grundlagen, Rollback- und Update-Konzepte"},
+  {id:"support",   name:"Support",        kurz:"Ticketbearbeitung, Kommunikationsvorlagen, Anwenderschulung"},
+  {id:"netz",      name:"Netz & VPN",     kurz:"Adressplanung, Routen, Site-to-Site, Client-VPN"},
+  {id:"mdm",       name:"MDM",            kurz:"Endgeräteverwaltung, Kiosk-Modus, Enrollment, Compliance"}
+];
+
+let module = MODULE_NOTFALL;
+let aktiv = module[0];
+let sitzungId = "";
+let verlauf = [];   // nur Anzeige; die Wahrheit liegt im Backend
+
+/* ==================================================================
+   Hilfsfunktionen
+   ================================================================== */
+const el = id => document.getElementById(id);
+
+async function hole(pfad, optionen){
+  const res = await fetch(BASIS + pfad, optionen);
+  if(!res.ok) throw new Error("Status " + res.status);
+  return res.json();
+}
+
+function codeblock(code, sprache){
+  const box = document.createElement("div");
+  // Markdown (Wiki-Seiten) ist Fließtext, kein Code -- umbrechen statt seitlich
+  // scrollen zu muessen, dafuer bei langen Seiten eigene Hoehenbegrenzung
+  // mit senkrechtem Scrollbalken statt die ganze Seite endlos zu strecken.
+  box.className = "code" + (sprache === "markdown" ? " proseCode" : "");
+  const btn = document.createElement("button");
+  btn.className = "copy"; btn.type = "button"; btn.textContent = "Kopieren";
+  btn.onclick = async () => {
+    try{ await navigator.clipboard.writeText(code); btn.textContent = "Kopiert"; }
+    catch{ btn.textContent = "Kopieren nicht erlaubt"; }
+    setTimeout(() => btn.textContent = "Kopieren", 1800);
+  };
+  const pre = document.createElement("pre");
+  pre.textContent = code;
+  if(sprache){
+    const tag = document.createElement("div");
+    tag.style.cssText = "font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#7f8d97;padding:10px 16px 0";
+    tag.textContent = sprache;
+    box.appendChild(tag);
+  }
+  box.appendChild(btn); box.appendChild(pre);
+  return box;
+}
+
+/* Antworttext in Fließtext und Codeblöcke trennen — jeder Block mit Kopieren */
+function antwortRendern(text){
+  const frag = document.createDocumentFragment();
+  const teile = text.split(/```/);
+  teile.forEach((teil, i) => {
+    if(i % 2 === 0){
+      if(teil.trim()){
+        const p = document.createElement("div");
+        p.className = "txt"; p.textContent = teil.trim();
+        frag.appendChild(p);
+      }
+    }else{
+      const zeilenumbruch = teil.indexOf("\n");
+      const sprache = zeilenumbruch > 0 ? teil.slice(0, zeilenumbruch).trim() : "";
+      const code = zeilenumbruch > 0 ? teil.slice(zeilenumbruch + 1) : teil;
+      frag.appendChild(codeblock(code.replace(/\s+$/, ""), sprache));
+    }
+  });
+  return frag;
+}
+
+/* ==================================================================
+   Modulschiene und Betriebszustand
+   ================================================================== */
+let moduleMitNeuem = new Set();
+
+async function neueModuleLaden(){
+  try{
+    moduleMitNeuem = new Set(await hole("api/module/neu"));
+  }catch{
+    moduleMitNeuem = new Set();
+  }
+  moduleZeichnen();
+}
+
+/* ---------- Vorlagen-Unterkategorien je Modul (E-Mail/Skript/Ticket/Doku) ----------
+   Macht Module in der Menueleiste "wirklich nuetzlich" statt nur ein Filter fuer
+   Chat/Wiki zu sein: ein Modul mit gespeicherten Vorlagen bekommt aufklappbare
+   Unterpunkte, ein Klick darauf springt direkt in den Vorlagen-Tab, vorgefiltert
+   auf diesen Typ. Module ganz ohne Vorlagen bleiben unveraendert ein flacher Button. */
+let vorlageTypenCache = [];
+let vorlagenUebersichtCache = [];
+let aktivVorlagenTyp = null;
+
+async function vorlageTypenLaden(){
+  try{ vorlageTypenCache = await hole("api/vorlagen/typen"); }
+  catch{ vorlageTypenCache = []; }
+}
+
+async function vorlagenUebersichtLaden(){
+  try{ vorlagenUebersichtCache = await hole("api/vorlagen/uebersicht"); }
+  catch{ vorlagenUebersichtCache = []; }
+  moduleZeichnen();
+}
+
+function vorlagenTypenFuerModul(modulId){
+  const nachId = new Map(vorlageTypenCache.map(t => [t.id, t]));
+  return vorlagenUebersichtCache
+    .filter(u => u.modul === modulId && nachId.has(u.typ))
+    .map(u => ({ ...nachId.get(u.typ), anzahl: u.anzahl }))
+    .sort((a, b) => vorlageTypenCache.findIndex(t => t.id === a.id) - vorlageTypenCache.findIndex(t => t.id === b.id));
+}
+
+function modUnterKnopf(m, typInfo){
+  const b = document.createElement("button");
+  b.className = "modUnter"; b.type = "button";
+  b.textContent = typInfo.name + " (" + typInfo.anzahl + ")";
+  b.title = typInfo.hinweis || "";
+  b.onclick = (ereignis) => {
+    ereignis.stopPropagation();
+    aktiv = m;
+    aktivVorlagenTyp = typInfo.id;
+    moduleZeichnen(); kopfZeichnen();
+    if(istSchmal()) menuAnwenden(true);
+    const vorlagenTab = document.querySelector('.tab[data-view="vorlagen"]');
+    vorlagenTab.click();
+  };
+  return b;
+}
+
+/* Module in Kategorien buendeln, damit die Schiene bei vielen Fachgebieten
+   nicht endlos lang wird -- "Assistent" bleibt oben angeheftet, alles
+   andere in aufklappbaren Gruppen (gleiches Muster wie Skripte/Wiki). Ein
+   vom Backend geliefertes Modul, das hier noch in keiner Gruppe steht,
+   faellt nicht raus, sondern wird flach ergaenzt. */
+const MODULGRUPPEN = [
+  { titel: "Identität & Sicherheit", ids: ["entra", "sicherheit"] },
+  { titel: "Infrastruktur", ids: ["winserver", "hyperv", "container", "iac"] },
+  { titel: "Daten & Automatisierung", ids: ["datenbank", "powershell"] },
+  { titel: "Netzwerk & Geräte", ids: ["netz", "mdm"] },
+  { titel: "Produktivität", ids: ["m365", "support"] },
+];
+
+function modKopf(m, tag){
+  const b = document.createElement(tag);
+  b.className = "mod";
+  if(tag === "button") b.type = "button";
+  b.setAttribute("aria-current", String(m.id === aktiv.id));
+  b.appendChild(document.createTextNode(m.name));
+  if(moduleMitNeuem.has(m.id)){
+    const abzeichen = document.createElement("span");
+    abzeichen.className = "neuAbzeichen"; abzeichen.textContent = "NEU";
+    abzeichen.title = "Neues wichtiges Thema (Sicherheit/Härtung) im Wiki";
+    b.appendChild(abzeichen);
+  }
+  const s = document.createElement("small"); s.textContent = m.id;
+  b.appendChild(s);
+  b.onclick = () => {
+    aktiv = m;
+    aktivVorlagenTyp = null; // Modul direkt gewaehlt -- kein Typ-Vorfilter mehr aktiv
+    const hatteNeues = moduleMitNeuem.has(m.id);
+    moduleZeichnen(); kopfZeichnen();
+    if(istSchmal()) menuAnwenden(true); // Schublade nach Auswahl auf dem Handy schließen
+    if(hatteNeues){
+      // Direkt ins Wiki springen, damit das neue Thema sofort sichtbar ist.
+      const wikiTab = document.querySelector('.tab[data-view="wiki"]');
+      wikiTab.click();
+    }else{
+      ansichtLaden();
+    }
+  };
+  return b;
+}
+
+function modKnopf(m){
+  const typen = vorlagenTypenFuerModul(m.id);
+  if(!typen.length) return modKopf(m, "button");
+
+  // Modul hat Vorlagen: eigenes details/summary, summary traegt die gleiche
+  // .mod-Optik wie ein normaler Modul-Button (Klick waehlt weiterhin das
+  // Modul), das Aufklapp-Dreieck davor zeigt/versteckt die Unterkategorien.
+  const details = document.createElement("details");
+  details.className = "modGruppe";
+  details.open = m.id === aktiv.id;
+  const summary = modKopf(m, "summary");
+  details.appendChild(summary);
+  typen.forEach(t => details.appendChild(modUnterKnopf(m, t)));
+  return details;
+}
+
+function moduleZeichnen(){
+  const box = el("module");
+  box.innerHTML = "";
+  const nachId = new Map(module.map(m => [m.id, m]));
+  const einsortiert = new Set(["assistent"]);
+
+  const assistentModul = nachId.get("assistent");
+  if(assistentModul) box.appendChild(modKnopf(assistentModul));
+
+  MODULGRUPPEN.forEach(gruppe => {
+    const vorhanden = gruppe.ids.map(id => nachId.get(id)).filter(Boolean);
+    if(!vorhanden.length) return;
+    vorhanden.forEach(m => einsortiert.add(m.id));
+    const details = document.createElement("details");
+    details.className = "gruppe";
+    details.open = vorhanden.some(m => m.id === aktiv.id || moduleMitNeuem.has(m.id));
+    const summary = document.createElement("summary");
+    summary.textContent = gruppe.titel + " (" + vorhanden.length + ")";
+    details.appendChild(summary);
+    const inhalt = document.createElement("div"); inhalt.className = "gruppeInhalt";
+    vorhanden.forEach(m => inhalt.appendChild(modKnopf(m)));
+    details.appendChild(inhalt);
+    box.appendChild(details);
+  });
+
+  module.filter(m => !einsortiert.has(m.id)).forEach(m => box.appendChild(modKnopf(m)));
+}
+
+function kopfZeichnen(){
+  el("modulName").textContent = aktiv.name;
+  el("modulKurz").textContent = aktiv.kurz;
+}
+
+async function zustandLaden(){
+  const lampen = el("lampen");
+  try{
+    const z = await hole("api/zustand");
+    lampen.innerHTML = "";
+    z.kette.forEach(a => {
+      const zeile = document.createElement("div");
+      zeile.className = "lampe";
+      const p = document.createElement("span");
+      p.className = "punkt " + (a.zustand === "bereit" ? "bereit" : a.zustand === "gestoert" ? "gestoert" : "aus");
+      zeile.appendChild(p);
+      zeile.appendChild(document.createTextNode(a.name));
+      lampen.appendChild(zeile);
+    });
+    const betriebsLampe = el("betriebsLampe");
+    if(!z.aktiv){
+      el("fazit").textContent = "kein Anbieter erreichbar";
+      document.documentElement.style.setProperty("--accent", "var(--rot)");
+      betriebsLampe.className = "betriebsLampe inaktiv";
+      betriebsLampe.title = "Störung: kein Anbieter erreichbar";
+    }else{
+      el("fazit").textContent = z.art === "lokal" ? "lokal, im Haus" : "Cloud-Fallback aktiv";
+      document.documentElement.style.setProperty("--accent",
+        z.art === "lokal" ? "var(--signal)" : "var(--amber)");
+      betriebsLampe.className = "betriebsLampe aktiv";
+      betriebsLampe.title = "Aktiv: " + z.aktiv;
+    }
+  }catch{
+    lampen.innerHTML = '<div class="lampe"><span class="punkt aus"></span>Backend nicht erreichbar</div>';
+    el("fazit").textContent = "nur Netzrechner nutzbar";
+    document.documentElement.style.setProperty("--accent", "var(--amber)");
+    const betriebsLampe = el("betriebsLampe");
+    betriebsLampe.className = "betriebsLampe inaktiv";
+    betriebsLampe.title = "Störung: Backend nicht erreichbar";
+  }
+}
+
+/* ==================================================================
+   Ansichten
+   ================================================================== */
+/* Chat (v-chat) ist kein Teil der umschaltbaren Ansichten mehr -- er bleibt
+   immer sichtbar. Die anderen vier oeffnen gemeinsam als rechte Spalte. */
+const WERKZEUGE = ["netz","vorlagen","wiki","diagramm","technews"];
+let ansicht = "chat";
+const istSchmal = () => window.matchMedia("(max-width:860px)").matches;
+
+document.querySelectorAll(".tab").forEach(t => {
+  t.onclick = () => {
+    ansicht = t.dataset.view;
+    document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", String(x === t)));
+    if(ansicht === "chat"){
+      el("seitenSpalte").hidden = true;
+      el("resizer").hidden = true;
+      if(istSchmal()) el("chatSpalte").hidden = false;
+    }else{
+      el("seitenSpalte").hidden = false;
+      el("resizer").hidden = false;
+      WERKZEUGE.forEach(v => el("v-" + v).hidden = (v !== ansicht));
+      // Auf schmalen Bildschirmen passen Chat und Werkzeug nicht nebeneinander --
+      // dort ersetzt das Werkzeug den Chat, statt daneben zu öffnen.
+      if(istSchmal()) el("chatSpalte").hidden = true;
+    }
+    ansichtLaden();
+  };
+});
+
+/* ---------- Trennlinie Chat/Werkzeug: Breite per Ziehen anpassen ---------- */
+const SPALTE_KEY = "werkbank-seitenspalte-breite";
+const CHAT_MIN_BREITE = 280, SEITEN_MIN_BREITE = 320;
+function seitenSpalteBreiteSetzen(px){
+  const flaecheBreite = el("flaeche").clientWidth;
+  const resizerBreite = el("resizer").offsetWidth || 7;
+  const max = Math.max(SEITEN_MIN_BREITE, flaecheBreite - CHAT_MIN_BREITE - resizerBreite);
+  const breite = Math.round(Math.min(Math.max(px, SEITEN_MIN_BREITE), max));
+  el("seitenSpalte").style.flex = "0 0 " + breite + "px";
+  return breite;
+}
+(function gespeicherteBreiteAnwenden(){
+  const gespeichert = parseInt(localStorage.getItem(SPALTE_KEY), 10);
+  if(gespeichert) seitenSpalteBreiteSetzen(gespeichert);
+})();
+let spalteZiehtGerade = false;
+function spaltePositionSetzen(clientX){
+  const flaecheRand = el("flaeche").getBoundingClientRect().right;
+  const breite = seitenSpalteBreiteSetzen(flaecheRand - clientX);
+  localStorage.setItem(SPALTE_KEY, String(breite));
+}
+el("resizer").addEventListener("mousedown", e => {
+  spalteZiehtGerade = true;
+  el("resizer").classList.add("ziehen");
+  document.body.style.userSelect = "none";
+  document.body.style.cursor = "col-resize";
+  e.preventDefault();
+});
+window.addEventListener("mousemove", e => { if(spalteZiehtGerade) spaltePositionSetzen(e.clientX); });
+window.addEventListener("mouseup", () => {
+  if(!spalteZiehtGerade) return;
+  spalteZiehtGerade = false;
+  el("resizer").classList.remove("ziehen");
+  document.body.style.userSelect = "";
+  document.body.style.cursor = "";
+});
+el("resizer").addEventListener("touchstart", () => {
+  spalteZiehtGerade = true;
+  el("resizer").classList.add("ziehen");
+}, {passive:true});
+window.addEventListener("touchmove", e => {
+  if(spalteZiehtGerade && e.touches[0]) spaltePositionSetzen(e.touches[0].clientX);
+}, {passive:true});
+window.addEventListener("touchend", () => {
+  spalteZiehtGerade = false;
+  el("resizer").classList.remove("ziehen");
+});
+// Tastatur-Bedienung (Barrierefreiheit): Pfeiltasten verschieben in 20px-Schritten.
+el("resizer").addEventListener("keydown", e => {
+  if(e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+  e.preventDefault();
+  const aktuell = el("seitenSpalte").getBoundingClientRect().width;
+  const breite = seitenSpalteBreiteSetzen(aktuell + (e.key === "ArrowLeft" ? 20 : -20));
+  localStorage.setItem(SPALTE_KEY, String(breite));
+});
+
+/* ---------- Menüleiste ein-/ausklappen (Desktop: schmaler; Mobil: Schublade) ---------- */
+const MENU_KEY = "werkbank-menu-eingeklappt";
+function menuAnwenden(eingeklappt){
+  document.querySelector(".app").classList.toggle("eingeklappt", eingeklappt);
+  if(!istSchmal()) localStorage.setItem(MENU_KEY, eingeklappt ? "1" : "0");
+}
+el("menuUmschalten").onclick = () => {
+  menuAnwenden(!document.querySelector(".app").classList.contains("eingeklappt"));
+};
+el("drawerHintergrund").onclick = () => menuAnwenden(true);
+// Auf dem Handy startet die Schublade immer zu -- die gespeicherte
+// Desktop-Vorliebe (breit/schmal) ist hier nicht sinnvoll übertragbar.
+menuAnwenden(istSchmal() ? true : localStorage.getItem(MENU_KEY) === "1");
+
+function ansichtLaden(){
+  if(ansicht === "vorlagen") vorlagenLaden();
+  if(ansicht === "wiki"){ wikiLaden(); scraperVerlaufLaden(); quellenLaden(); }
+  if(ansicht === "diagramm") diagrammLaden();
+  if(ansicht === "technews") technewsLaden();
+}
+
+/* ---------- Chat ---------- */
+function tipptAnzeige(){
+  const d = document.createElement("span");
+  d.className = "tippt";
+  d.innerHTML = "<span></span><span></span><span></span>";
+  return d;
+}
+
+function bubble(wer, klasse){
+  const d = document.createElement("div");
+  d.className = "bubble " + klasse;
+  const w = document.createElement("div");
+  w.className = "wer"; w.textContent = wer;
+  d.appendChild(w);
+  el("verlauf").appendChild(d);
+  return d;
+}
+
+/* ---------- Chatverlauf: laden, suchen, fortsetzen ---------- */
+let sitzungenCache = [];
+
+el("chatverlaufOeffnen").onclick = async () => {
+  const panel = el("chatverlaufPanel");
+  if(!panel.hidden){ panel.hidden = true; return; }
+  panel.hidden = false;
+  el("chatverlaufSuche").value = "";
+  el("chatverlaufListe").innerHTML = '<p class="leer" style="padding:10px">lädt …</p>';
+  try{
+    sitzungenCache = await hole("api/sitzungen");
+    chatverlaufZeichnen(sitzungenCache);
+  }catch{
+    el("chatverlaufListe").innerHTML = '<p class="leer" style="padding:10px">Verlauf nicht verfügbar.</p>';
+  }
+};
+
+document.addEventListener("click", (ereignis) => {
+  const panel = el("chatverlaufPanel");
+  if(!panel.hidden && !panel.contains(ereignis.target) && ereignis.target !== el("chatverlaufOeffnen")){
+    panel.hidden = true;
+  }
+});
+
+el("chatverlaufSuche").addEventListener("input", () => {
+  const suchtext = el("chatverlaufSuche").value.trim().toLowerCase();
+  const gefiltert = suchtext
+    ? sitzungenCache.filter(s => s.titel.toLowerCase().includes(suchtext))
+    : sitzungenCache;
+  chatverlaufZeichnen(gefiltert);
+});
+
+function chatverlaufZeichnen(liste){
+  const ziel = el("chatverlaufListe");
+  ziel.innerHTML = "";
+  if(!liste.length){
+    ziel.innerHTML = '<p class="leer" style="padding:10px">Keine Sitzung gefunden.</p>';
+    return;
+  }
+  liste.forEach(s => {
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "verlaufEintrag";
+    btn.innerHTML = s.titel.replace(/</g, "&lt;") +
+      '<span class="datum">' + s.modul + " · " + s.geaendert.slice(0, 16).replace("T", " ") + "</span>";
+    btn.onclick = () => sitzungLaden(s.id);
+    ziel.appendChild(btn);
+  });
+}
+
+async function sitzungLaden(id){
+  try{
+    const nachrichten = await hole("api/sitzung/" + id);
+    el("verlauf").innerHTML = "";
+    nachrichten.forEach(n => {
+      if(n.rolle === "user"){
+        const b = bubble("Ich", "ich");
+        const t = document.createElement("div"); t.className = "txt"; t.textContent = n.inhalt;
+        b.appendChild(t);
+      }else if(n.rolle === "assistant"){
+        const b = bubble("Werkbank" + (n.anbieter ? " · " + n.anbieter : ""), "werkbank");
+        b.appendChild(antwortRendern(n.inhalt));
+      }
+    });
+    sitzungId = id;
+    el("chatverlaufPanel").hidden = true;
+    el("verlauf").scrollTop = el("verlauf").scrollHeight;
+  }catch{
+    el("chatHinweis").hidden = false;
+    el("chatHinweis").textContent = "Sitzung konnte nicht geladen werden.";
+  }
+}
+
+el("neueSitzung").onclick = () => {
+  el("verlauf").innerHTML = "";
+  sitzungId = "";
+  el("chatverlaufPanel").hidden = true;
+};
+
+/* ---------- Anhänge (Dokumente, ZIP, Fotos) ---------- */
+let angehaengteDateien = [];
+
+function anhaengeZeichnen(){
+  const ziel = el("anhaenge");
+  ziel.innerHTML = "";
+  ziel.hidden = angehaengteDateien.length === 0;
+  angehaengteDateien.forEach((datei, index) => {
+    const chip = document.createElement("div");
+    chip.className = "anhang";
+    const name = document.createElement("span"); name.textContent = datei.name;
+    const entfernen = document.createElement("button");
+    entfernen.type = "button"; entfernen.textContent = "×"; entfernen.title = "Anhang entfernen";
+    entfernen.onclick = () => { angehaengteDateien.splice(index, 1); anhaengeZeichnen(); };
+    chip.appendChild(name); chip.appendChild(entfernen);
+    ziel.appendChild(chip);
+  });
+}
+
+el("anhaengen").onclick = () => el("dateiEingabe").click();
+el("dateiEingabe").onchange = () => {
+  angehaengteDateien.push(...el("dateiEingabe").files);
+  el("dateiEingabe").value = "";
+  anhaengeZeichnen();
+};
+
+async function anhaengeVerarbeiten(){
+  if(!angehaengteDateien.length) return "";
+  const formular = new FormData();
+  angehaengteDateien.forEach(d => formular.append("dateien", d));
+  const antwort = await fetch(BASIS + "api/anhang", { method: "POST", body: formular });
+  if(!antwort.ok) throw new Error("Anhänge konnten nicht gelesen werden (Status " + antwort.status + ")");
+  const daten = await antwort.json();
+  return daten.texte.map(t => `--- Anhang: ${t.name} ---\n${t.inhalt}`).join("\n\n");
+}
+
+/* ---------- Spracheingabe ---------- */
+const SpracherkennungKlasse = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(SpracherkennungKlasse){
+  const erkennung = new SpracherkennungKlasse();
+  erkennung.lang = "de-DE";
+  erkennung.continuous = true;
+  erkennung.interimResults = true;
+  let laeuft = false;
+
+  erkennung.onresult = (ereignis) => {
+    let text = "";
+    for(let i = 0; i < ereignis.results.length; i++) text += ereignis.results[i][0].transcript;
+    el("frage").value = text;
+  };
+  erkennung.onend = () => { laeuft = false; el("mikrofon").classList.remove("aktiv"); };
+  erkennung.onerror = () => { laeuft = false; el("mikrofon").classList.remove("aktiv"); };
+
+  el("mikrofon").onclick = () => {
+    if(laeuft){ erkennung.stop(); return; }
+    laeuft = true; el("mikrofon").classList.add("aktiv"); el("frage").value = "";
+    erkennung.start();
+  };
+}else{
+  el("mikrofon").disabled = true;
+  el("mikrofon").title = "Spracheingabe wird von diesem Browser nicht unterstützt (Chrome/Edge nutzen)";
+}
+
+el("senden").onclick = async () => {
+  const frageEingabe = el("frage").value.trim();
+  if(!frageEingabe && !angehaengteDateien.length) return;
+  const dateiNamen = angehaengteDateien.map(d => d.name);
+  el("frage").value = "";
+  el("chatHinweis").hidden = true;
+
+  const meine = bubble("Ich", "ich");
+  const t = document.createElement("div"); t.className = "txt"; t.textContent = frageEingabe || "(nur Anhang, keine Frage)";
+  meine.appendChild(t);
+  if(dateiNamen.length){
+    const anhangZeile = document.createElement("div");
+    anhangZeile.className = "quellen";
+    anhangZeile.textContent = "📎 " + dateiNamen.join(", ");
+    meine.appendChild(anhangZeile);
+  }
+
+  const btn = el("senden");
+  btn.disabled = true; btn.textContent = "Läuft …";
+  const antwortBlock = bubble("Werkbank", "werkbank");
+  const platz = document.createElement("div");
+  platz.className = "txt";
+  const tipptPunkte = () => { platz.innerHTML = ""; platz.appendChild(tipptAnzeige()); };
+  tipptPunkte();
+  antwortBlock.appendChild(platz);
+
+  try{
+    let frage = frageEingabe || "Bitte den beigefügten Anhang auswerten.";
+    if(angehaengteDateien.length){
+      platz.innerHTML = "";
+      platz.appendChild(document.createTextNode("Anhänge werden gelesen "));
+      platz.appendChild(tipptAnzeige());
+      const anhangText = await anhaengeVerarbeiten();
+      frage = anhangText + "\n\n---\n\n" + frage;
+      angehaengteDateien = []; anhaengeZeichnen();
+      tipptPunkte();
+    }
+    const daten = await hole("api/chat", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        frage, modul: aktiv.id, sitzung_id: sitzungId, rag: el("ragAn").checked
+      })
+    });
+    sitzungId = daten.sitzung_id;
+    antwortBlock.querySelector(".wer").textContent =
+      "Werkbank · " + daten.anbieter + " (" + daten.art + ")";
+    platz.remove();
+    antwortBlock.appendChild(antwortRendern(daten.antwort));
+
+    if(daten.quellen && daten.quellen.length){
+      const q = document.createElement("div");
+      q.className = "quellen";
+      q.appendChild(document.createTextNode("Herangezogen: "));
+      daten.quellen.forEach(k => {
+        const s = document.createElement("span");
+        s.textContent = k.titel + " · " + k.quelle;
+        q.appendChild(s);
+      });
+      antwortBlock.appendChild(q);
+    }
+  }catch(fehler){
+    platz.textContent = "Keine Antwort: " + fehler.message +
+      ". Kette und Schlüssel im Backend prüfen; der Netzrechner arbeitet unabhängig weiter.";
+  }finally{
+    btn.disabled = false; btn.textContent = "Senden";
+    zustandLaden();
+  }
+};
+
+el("frage").addEventListener("keydown", e => {
+  if(e.key === "Enter" && (e.ctrlKey || e.metaKey)) el("senden").click();
+});
+
+/* ---------- Netzrechner: vollständig im Browser ---------- */
+function zahlZuIp(n){ return [n>>>24, (n>>>16)&255, (n>>>8)&255, n&255].join("."); }
+function ipZuZahl(ip){
+  const t = ip.split(".");
+  if(t.length !== 4) throw new Error("Vier Oktette erwartet.");
+  return t.reduce((acc, o) => {
+    const z = Number(o);
+    if(!/^\d+$/.test(o) || z < 0 || z > 255) throw new Error("Oktett außerhalb 0–255: " + o);
+    return (acc << 8) + z;
+  }, 0) >>> 0;
+}
+
+function netzRechnen(eingabe, teilenIn){
+  const [ipTeil, praefixTeil] = eingabe.trim().split("/");
+  const praefix = praefixTeil === undefined ? 32 : Number(praefixTeil);
+  if(!Number.isInteger(praefix) || praefix < 0 || praefix > 32)
+    throw new Error("Präfix muss zwischen 0 und 32 liegen.");
+
+  const ip = ipZuZahl(ipTeil);
+  const maske = praefix === 0 ? 0 : (0xffffffff << (32 - praefix)) >>> 0;
+  const netz = (ip & maske) >>> 0;
+  const broadcast = (netz | (~maske >>> 0)) >>> 0;
+  const gesamt = praefix >= 31 ? (praefix === 32 ? 1 : 2) : (broadcast - netz + 1);
+  const nutzbar = praefix >= 31 ? gesamt : gesamt - 2;
+
+  const teilnetze = [];
+  if(teilenIn > 1){
+    const zusatz = Math.ceil(Math.log2(teilenIn));
+    const neu = praefix + zusatz;
+    if(neu > 32) throw new Error("Netz ist für diese Aufteilung zu klein.");
+    const schritt = 2 ** (32 - neu);
+    for(let i = 0; i < 2 ** zusatz; i++){
+      const start = (netz + i * schritt) >>> 0;
+      teilnetze.push({
+        netz: zahlZuIp(start) + "/" + neu,
+        erste: zahlZuIp(neu >= 31 ? start : start + 1),
+        letzte: zahlZuIp(neu >= 31 ? (start + schritt - 1) : (start + schritt - 2)),
+        hosts: neu >= 31 ? schritt : schritt - 2
+      });
+    }
+  }
+
+  const o1 = netz >>> 24, o2 = (netz >>> 16) & 255;
+  const privat = o1 === 10
+    || (o1 === 172 && o2 >= 16 && o2 <= 31)
+    || (o1 === 192 && o2 === 168);
+
+  return {
+    netz: zahlZuIp(netz) + "/" + praefix,
+    maske: zahlZuIp(maske),
+    platzhalter: zahlZuIp(~maske >>> 0),
+    erste: praefix >= 31 ? zahlZuIp(netz) : zahlZuIp(netz + 1),
+    letzte: praefix >= 31 ? zahlZuIp(broadcast) : zahlZuIp(broadcast - 1),
+    broadcast: zahlZuIp(broadcast),
+    nutzbar, privat, teilnetze
+  };
+}
+
+el("rechnen").onclick = () => {
+  const ziel = el("netzErgebnis");
+  ziel.innerHTML = "";
+  let r;
+  try{
+    r = netzRechnen(el("netzEin").value, Number(el("teilen").value));
+  }catch(fehler){
+    const p = document.createElement("div");
+    p.className = "hinweis"; p.textContent = fehler.message;
+    ziel.appendChild(p);
+    return;
+  }
+
+  const zeilen = [
+    ["Netz", r.netz], ["Subnetzmaske", r.maske], ["Platzhaltermaske", r.platzhalter],
+    ["Erste nutzbare Adresse", r.erste], ["Letzte nutzbare Adresse", r.letzte],
+    ["Broadcast", r.broadcast], ["Nutzbare Hosts", String(r.nutzbar)],
+    ["Adressbereich", r.privat ? "privat (RFC 1918)" : "öffentlich"]
+  ];
+  const tab = document.createElement("table");
+  tab.innerHTML = "<tr><th>Wert</th><th>Ergebnis</th></tr>";
+  zeilen.forEach(([k, v]) => {
+    const tr = document.createElement("tr");
+    const td1 = document.createElement("td"); td1.textContent = k;
+    const td2 = document.createElement("td"); td2.className = "zahl"; td2.textContent = v;
+    tr.appendChild(td1); tr.appendChild(td2); tab.appendChild(tr);
+  });
+  ziel.appendChild(tab);
+
+  if(r.teilnetze.length){
+    const k = document.createElement("p");
+    k.className = "kicker"; k.style.marginTop = "22px"; k.textContent = "Teilnetze";
+    ziel.appendChild(k);
+    const t2 = document.createElement("table");
+    t2.innerHTML = "<tr><th>Teilnetz</th><th>Erste</th><th>Letzte</th><th>Hosts</th></tr>";
+    r.teilnetze.forEach(s => {
+      const tr = document.createElement("tr");
+      [s.netz, s.erste, s.letzte, String(s.hosts)].forEach(w => {
+        const td = document.createElement("td"); td.className = "zahl"; td.textContent = w;
+        tr.appendChild(td);
+      });
+      t2.appendChild(tr);
+    });
+    ziel.appendChild(t2);
+
+    const liste = r.teilnetze.map(s => s.netz).join("\n");
+    ziel.appendChild(codeblock(liste, "adressplan"));
+  }
+};
+
+/* ---------- Vorlagen (E-Mail/Skript/Ticket/Doku) ---------- */
+function modulName(id){
+  const m = module.find(x => x.id === id);
+  return m ? m.name : id;
+}
+
+function vorlagenTypName(typId){
+  const t = vorlageTypenCache.find(x => x.id === typId);
+  return t ? t.name : typId;
+}
+
+function vorlagenFilterZeichnen(){
+  const ziel = el("vorlagenFilter");
+  ziel.innerHTML = "";
+  const chip = (bezeichnung, hinweis, gedrueckt, klick) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "filterChip";
+    b.textContent = bezeichnung;
+    if(hinweis) b.title = hinweis;
+    b.setAttribute("aria-pressed", String(gedrueckt));
+    b.onclick = klick;
+    ziel.appendChild(b);
+  };
+  chip("Alle", "", aktivVorlagenTyp === null, () => { aktivVorlagenTyp = null; vorlagenLaden(); });
+  vorlageTypenCache.forEach(t => {
+    chip(t.name, t.hinweis, aktivVorlagenTyp === t.id, () => { aktivVorlagenTyp = t.id; vorlagenLaden(); });
+  });
+}
+
+function vorlagenKarte(v){
+  const k = document.createElement("div");
+  k.className = "karte";
+  const h = document.createElement("h3"); h.textContent = v.titel;
+  const m = document.createElement("div"); m.className = "meta";
+  m.textContent = modulName(v.modul) + " · " + vorlagenTypName(v.typ) +
+    (v.geaendert ? " · geändert " + v.geaendert.slice(0, 10) : "");
+  k.appendChild(h); k.appendChild(m);
+  k.appendChild(codeblock(v.inhalt, v.sprache || "markdown"));
+  const del = document.createElement("button");
+  del.className = "copy"; del.type = "button"; del.textContent = "Löschen";
+  del.style.cssText = "margin-top:8px;color:var(--ink-60);border-color:var(--line)";
+  del.onclick = async () => {
+    if(!confirm('Vorlage "' + v.titel + '" wirklich löschen?')) return;
+    await hole("api/vorlagen/" + v.id, { method:"DELETE" });
+    vorlagenLaden();
+    vorlagenUebersichtLaden();
+  };
+  k.appendChild(del);
+  return k;
+}
+
+async function vorlagenLaden(){
+  const ziel = el("vorlagen");
+  vorlagenFilterZeichnen();
+  let alle;
+  try{ alle = await hole("api/vorlagen"); }
+  catch{
+    ziel.innerHTML = "";
+    const p = document.createElement("div");
+    p.className = "hinweis";
+    p.textContent = "Vorlagen liegen im Backend. Ohne Server ist hier nichts zu holen.";
+    ziel.appendChild(p);
+    return;
+  }
+  const suchtext = el("vorlagenSuche").value.trim().toLowerCase();
+  let gefiltert = aktivVorlagenTyp ? alle.filter(v => v.typ === aktivVorlagenTyp) : alle;
+  if(suchtext){
+    gefiltert = gefiltert.filter(v =>
+      v.titel.toLowerCase().includes(suchtext) || v.inhalt.toLowerCase().includes(suchtext));
+  }
+
+  ziel.innerHTML = "";
+  if(!gefiltert.length){
+    const p = document.createElement("p"); p.className = "leer";
+    p.textContent = (suchtext || aktivVorlagenTyp) ? "Nichts gefunden." : "Noch keine Vorlage. Unten anlegen.";
+    ziel.appendChild(p);
+    return;
+  }
+  const gruppen = new Map();
+  gefiltert.forEach(v => {
+    if(!gruppen.has(v.modul)) gruppen.set(v.modul, []);
+    gruppen.get(v.modul).push(v);
+  });
+  gruppen.forEach((liste, modulId) => {
+    const details = document.createElement("details");
+    details.className = "gruppe";
+    details.open = suchtext.length > 0 || aktivVorlagenTyp !== null || modulId === aktiv.id;
+    const summary = document.createElement("summary");
+    summary.textContent = modulName(modulId) + " (" + liste.length + ")";
+    details.appendChild(summary);
+    const inhalt = document.createElement("div"); inhalt.className = "gruppeInhalt";
+    liste.forEach(v => inhalt.appendChild(vorlagenKarte(v)));
+    details.appendChild(inhalt);
+    ziel.appendChild(details);
+  });
+}
+el("vorlagenSuche").addEventListener("input", vorlagenLaden);
+
+/* ---------- Neue Vorlage anlegen ---------- */
+function vTypOptionenZeichnen(){
+  const sel = el("vTyp");
+  sel.innerHTML = "";
+  vorlageTypenCache.forEach(t => {
+    const o = document.createElement("option");
+    o.value = t.id; o.textContent = t.name;
+    sel.appendChild(o);
+  });
+  vSpracheFeldSichtbarkeit();
+}
+function vSpracheFeldSichtbarkeit(){
+  const typ = vorlageTypenCache.find(t => t.id === el("vTyp").value);
+  el("vSpracheFeld").hidden = !(typ && typ.sprache_feld);
+}
+el("vTyp").addEventListener("change", vSpracheFeldSichtbarkeit);
+
+el("vSpeichern").onclick = async () => {
+  const h = el("vorlagenHinweis");
+  h.hidden = true;
+  const titel = el("vTitel").value.trim();
+  const inhalt = el("vInhalt").value;
+  if(!titel || !inhalt.trim()){
+    h.hidden = false; h.textContent = "Titel und Inhalt sind Pflichtfelder.";
+    return;
+  }
+  try{
+    const r = await hole("api/vorlagen", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        titel, inhalt, modul: aktiv.id, typ: el("vTyp").value, sprache: el("vSprache").value.trim()
+      })
+    });
+    h.hidden = false; h.textContent = "Gespeichert als " + r.id + ".";
+    el("vTitel").value = ""; el("vInhalt").value = ""; el("vSprache").value = "";
+    vorlagenLaden();
+    vorlagenUebersichtLaden();
+  }catch(fehler){
+    h.hidden = false; h.textContent = "Speichern fehlgeschlagen: " + fehler.message;
+  }
+};
+
+/* ---------- Wiki ---------- */
+function wikiKarte(s){
+  const k = document.createElement("div");
+  k.className = "karte";
+  const h = document.createElement("h3");
+  h.textContent = (s.neu ? "🆕 " : "") + s.titel;
+  const m = document.createElement("div"); m.className = "meta";
+  m.textContent = s.modul + " · geändert " + s.geaendert.slice(0, 10);
+  const b = document.createElement("button");
+  b.className = "primary"; b.style.marginTop = "10px"; b.textContent = "Öffnen";
+  b.onclick = async () => {
+    const seite = await hole("api/wiki/" + s.slug);
+    k.appendChild(codeblock(seite.inhalt, "markdown"));
+    b.remove();
+    neueModuleLaden(); // Abzeichen aktualisieren -- Seite gilt jetzt als gelesen
+  };
+  const del = document.createElement("button");
+  del.className = "copy"; del.type = "button"; del.textContent = "Löschen";
+  del.style.cssText = "margin-top:10px;margin-left:8px;color:var(--ink-60);border-color:var(--line)";
+  del.onclick = async () => {
+    if(!confirm('Wiki-Seite "' + s.titel + '" wirklich löschen?')) return;
+    await hole("api/wiki/" + s.slug, { method:"DELETE" });
+    wikiLaden();
+  };
+  k.appendChild(h); k.appendChild(m); k.appendChild(b); k.appendChild(del);
+  return k;
+}
+
+async function wikiLaden(){
+  const ziel = el("wikiListe");
+  ziel.innerHTML = "";
+  let seiten;
+  try{
+    seiten = await hole("api/wiki");
+  }catch{
+    const p = document.createElement("div");
+    p.className = "hinweis";
+    p.textContent = "Wiki liegt im Backend. Ohne Server nicht verfügbar.";
+    ziel.appendChild(p);
+    return;
+  }
+  const suchtext = el("wikiSuche").value.trim().toLowerCase();
+  const gefiltert = suchtext ? seiten.filter(s => s.titel.toLowerCase().includes(suchtext)) : seiten;
+  if(!gefiltert.length){
+    const p = document.createElement("p");
+    p.className = "leer";
+    p.textContent = suchtext ? "Nichts gefunden." : "Noch keine Wiki-Seite. Unten anlegen.";
+    ziel.appendChild(p);
+    return;
+  }
+  const gruppen = new Map();
+  gefiltert.forEach(s => {
+    if(!gruppen.has(s.modul)) gruppen.set(s.modul, []);
+    gruppen.get(s.modul).push(s);
+  });
+  gruppen.forEach((liste, modulId) => {
+    const details = document.createElement("details");
+    details.className = "gruppe";
+    details.open = suchtext.length > 0 || modulId === aktiv.id || liste.some(s => s.neu);
+    const summary = document.createElement("summary");
+    summary.textContent = modulName(modulId) + " (" + liste.length + ")";
+    details.appendChild(summary);
+    const inhalt = document.createElement("div"); inhalt.className = "gruppeInhalt";
+    liste.forEach(s => inhalt.appendChild(wikiKarte(s)));
+    details.appendChild(inhalt);
+    ziel.appendChild(details);
+  });
+}
+el("wikiSuche").addEventListener("input", wikiLaden);
+
+/* ---------- Web-Scraper-Agent ---------- */
+async function scraperVerlaufLaden(){
+  const ziel = el("scraperVerlauf");
+  try{
+    const laeufe = await hole("api/scraper/verlauf");
+    if(!laeufe.length){ ziel.textContent = "Noch kein Lauf."; return; }
+    const letzter = laeufe[0];
+    ziel.textContent = letzter.thema + " · " + letzter.status + " · " + letzter.zeit.slice(0, 16).replace("T", " ");
+  }catch{
+    ziel.textContent = "Verlauf nicht verfügbar.";
+  }
+}
+
+el("scraperJetzt").onclick = async () => {
+  const btn = el("scraperJetzt");
+  btn.disabled = true; btn.textContent = "Läuft …";
+  try{
+    await hole("api/scraper/lauf", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ thema: aktiv.name + " aktuelle Best Practices und Sicherheitshinweise 2026", modul: aktiv.id })
+    });
+    await scraperVerlaufLaden();
+    await wikiLaden();
+  }catch{
+    el("scraperVerlauf").textContent = "Lauf fehlgeschlagen.";
+  }finally{
+    btn.disabled = false; btn.textContent = "Jetzt aktualisieren";
+  }
+};
+
+/* ---------- Eigene Quellen ---------- */
+async function quellenLaden(){
+  const ziel = el("quellenListe");
+  try{
+    const liste = await hole("api/quellen");
+    if(!liste.length){ ziel.innerHTML = '<p class="leer">Noch keine eigene Quelle eingetragen.</p>'; return; }
+    ziel.innerHTML = "";
+    liste.forEach(q => {
+      const zeile = document.createElement("div");
+      zeile.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px";
+      const info = document.createElement("div");
+      info.innerHTML = "<b>" + q.titel + "</b> <span class=\"meta\">· " + q.modul + "</span><br>" +
+        "<a href=\"" + q.url + "\" target=\"_blank\" style=\"color:var(--ink-60)\">" + q.url + "</a>";
+      const del = document.createElement("button");
+      del.className = "copy"; del.type = "button"; del.textContent = "Entfernen";
+      del.style.cssText = "color:var(--ink-60);border-color:var(--line)";
+      del.onclick = async () => {
+        await hole("api/quellen/" + q.id, { method:"DELETE" });
+        quellenLaden();
+      };
+      zeile.appendChild(info); zeile.appendChild(del);
+      ziel.appendChild(zeile);
+    });
+  }catch{
+    ziel.innerHTML = '<p class="leer">Quellen nicht verfügbar.</p>';
+  }
+}
+
+el("qHinzufuegen").onclick = async () => {
+  const url = el("qUrl").value.trim();
+  const titel = el("qTitel").value.trim();
+  const h = el("quellenHinweis");
+  if(!url.startsWith("http")){ h.hidden = false; h.textContent = "Bitte einen vollständigen Link (http/https) eintragen."; return; }
+  const btn = el("qHinzufuegen");
+  btn.disabled = true; btn.textContent = "Lädt …";
+  h.hidden = true;
+  try{
+    const r = await hole("api/quellen", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ url, titel, modul: aktiv.id })
+    });
+    el("qUrl").value = ""; el("qTitel").value = "";
+    h.hidden = false;
+    h.textContent = r.status === "ok" ? "Gespeichert als „" + r.thema + "“." : "Quelle gespeichert, aber Zusammenfassung hat noch nicht geklappt (" + r.status + ") — der tägliche Lauf versucht es erneut.";
+    await quellenLaden();
+    await wikiLaden();
+  }catch{
+    h.hidden = false; h.textContent = "Konnte Quelle nicht speichern.";
+  }finally{
+    btn.disabled = false; btn.textContent = "Quelle hinzufügen";
+  }
+};
+
+/* ---------- Architektur-Diagramm ---------- */
+let diagrammGeladen = false;
+async function diagrammLaden(){
+  if(diagrammGeladen) return;
+  const ziel = el("diagrammQuelle");
+  try{
+    const r = await hole("api/architektur");
+    ziel.textContent = r.mermaid || "Kein Diagramm hinterlegt.";
+    if(window.mermaid){
+      ziel.classList.add("mermaid");
+      await window.mermaid.run({ nodes:[ziel] });
+    }
+    diagrammGeladen = true;
+  }catch(e){
+    ziel.textContent = "Diagramm nicht verfügbar: " + e;
+  }
+}
+
+/* ---------- Tech-News: kuratierte Themen- und Link-Sammlung ---------- */
+const TECHNEWS = [
+  {
+    thema: "IT-Architektur (Bundescloud & Cloud)",
+    quellen: [
+      { titel: "IT-Konsolidierung Bund / Bundescloud", beschreibung: "Zentrale Cloud-Plattform der Bundesverwaltung, Stand der IT-Konsolidierung", url: "https://www.cio.bund.de" },
+      { titel: "BSI C5-Kriterienkatalog", beschreibung: "Amtlicher Anforderungskatalog für Cloud-Compliance in Deutschland", url: "https://www.bsi.bund.de" },
+      { titel: "Gaia-X", beschreibung: "Europäische Initiative für eine föderierte, souveräne Cloud-Infrastruktur", url: "https://gaia-x.eu" },
+      { titel: "CNCF Cloud Native Landscape", beschreibung: "Laufend aktualisierte Übersicht über das gesamte Cloud-Native-Ökosystem", url: "https://landscape.cncf.io" },
+      { titel: "Azure Architecture Center", beschreibung: "Referenzarchitekturen und Entscheidungshilfen von Microsoft", url: "https://learn.microsoft.com/azure/architecture" },
+      { titel: "AWS Architecture Center", beschreibung: "Referenzarchitekturen und Best Practices von AWS", url: "https://aws.amazon.com/architecture" }
+    ]
+  },
+  {
+    thema: "Security",
+    quellen: [
+      { titel: "BSI – Bundesamt für Sicherheit in der Informationstechnik", beschreibung: "Amtliche Warnungen, Lageberichte, Grundschutz-Kompendium", url: "https://www.bsi.bund.de" },
+      { titel: "NVD – National Vulnerability Database", beschreibung: "Offizielle CVE-Schwachstellendatenbank (NIST)", url: "https://nvd.nist.gov" },
+      { titel: "heise Security", beschreibung: "Deutschsprachige Sicherheitsnachrichten, tagesaktuell", url: "https://www.heise.de/security" },
+      { titel: "OWASP Top 10", beschreibung: "Die wichtigsten Web-Anwendungsrisiken, Referenzstandard für Absicherung", url: "https://owasp.org/www-project-top-ten" },
+      { titel: "CISA Cybersecurity Advisories", beschreibung: "US-Behörde, häufig erste Quelle bei aktiven Exploits", url: "https://www.cisa.gov/news-events/cybersecurity-advisories" }
+    ]
+  },
+  {
+    thema: "KI",
+    quellen: [
+      { titel: "Artificial Analysis", beschreibung: "Unabhängiger Vergleich von LLMs nach Qualität, Preis und Geschwindigkeit", url: "https://artificialanalysis.ai" },
+      { titel: "Moge.ai – Beste KI-Tools", beschreibung: "Kuratierte Übersicht empfohlener KI-Tools nach Anwendungsfall", url: "https://moge.ai/de/best" },
+      { titel: "Hugging Face Models", beschreibung: "Größter offener Modell-Katalog inkl. lokal betreibbarer Modelle", url: "https://huggingface.co/models" },
+      { titel: "LMArena Leaderboard", beschreibung: "Community-Ranking von KI-Modellen per Blindvergleich", url: "https://lmarena.ai" },
+      { titel: "Papers with Code", beschreibung: "Aktuelle KI-Forschung direkt mit zugehörigem Code", url: "https://paperswithcode.com" },
+      { titel: "r/LocalLLaMA", beschreibung: "Größte Community zu lokal betreibbaren LLMs, sehr aktuell", url: "https://www.reddit.com/r/LocalLLaMA" },
+      { titel: "Model Context Protocol (MCP)", beschreibung: "Offizielle Spezifikation und Server-Verzeichnis für MCP", url: "https://modelcontextprotocol.io" },
+      { titel: "OpenRouter", beschreibung: "Einheitliche API für sehr viele LLM-Anbieter, inkl. Preis-/Nutzungsvergleich", url: "https://openrouter.ai" },
+      { titel: "A2A-Protokoll (Agent2Agent)", beschreibung: "Offener Standard für die Kommunikation zwischen KI-Agenten", url: "https://a2aprotocol.ai" }
+    ]
+  },
+  {
+    thema: "Web & App (WebAssembly)",
+    quellen: [
+      { titel: "WebAssembly.org", beschreibung: "Offizielle Spezifikation und Einstieg in WebAssembly", url: "https://webassembly.org" },
+      { titel: "MDN – WebAssembly", beschreibung: "Ausführliche, gepflegte Dokumentation mit Beispielen", url: "https://developer.mozilla.org/en-US/docs/WebAssembly" },
+      { titel: "Bytecode Alliance", beschreibung: "Industrie-Konsortium für sichere WASM-Laufzeiten (Wasmtime u. a.)", url: "https://bytecodealliance.org" },
+      { titel: "WASI – WebAssembly System Interface", beschreibung: "Standardisierte Systemschnittstelle für WASM außerhalb des Browsers", url: "https://wasi.dev" },
+      { titel: "wasmCloud", beschreibung: "Verteilte Anwendungsplattform auf WebAssembly-Basis", url: "https://wasmcloud.com" }
+    ]
+  },
+  {
+    thema: "Automatisierung (n8n, Dify, etc.)",
+    quellen: [
+      { titel: "n8n", beschreibung: "Self-hosted-fähige Workflow-Automatisierung, bereits im eigenen Stack im Einsatz", url: "https://n8n.io" },
+      { titel: "n8n Blog", beschreibung: "Neue Integrationen, Templates und Best Practices", url: "https://blog.n8n.io" },
+      { titel: "Dify", beschreibung: "Open-Source-Plattform für LLM-Anwendungen und Agenten-Workflows", url: "https://dify.ai" },
+      { titel: "Activepieces", beschreibung: "Open-Source-Automatisierung, Ergänzung zu n8n für agentische Workflow-Teile", url: "https://www.activepieces.com" },
+      { titel: "Make", beschreibung: "Verbreiteter visueller Automatisierungs-Wettbewerber (Cloud, nicht self-hosted)", url: "https://www.make.com" }
+    ]
+  }
+];
+
+async function technewsNeuLaden(){
+  const status = el("technewsStatus");
+  const ziel = el("technewsNeu");
+  try{
+    const eintraege = await hole("api/technews/aktuelles");
+    if(!eintraege.length){
+      status.textContent = "Noch kein RSS-Lauf.";
+      ziel.innerHTML = "";
+      return;
+    }
+    status.textContent = eintraege.length + " gefundene Einträge · zuletzt " +
+      eintraege[0].gefunden_am.slice(0, 16).replace("T", " ");
+    ziel.innerHTML = "";
+    const k = document.createElement("p");
+    k.className = "kicker"; k.style.marginTop = "6px"; k.textContent = "Zuletzt gefunden";
+    ziel.appendChild(k);
+    eintraege.slice(0, 12).forEach(e => {
+      const karte = document.createElement("div");
+      karte.className = "karte";
+      const h = document.createElement("h3");
+      const a = document.createElement("a");
+      a.href = e.url; a.target = "_blank"; a.rel = "noopener";
+      a.style.color = "inherit"; a.textContent = e.titel;
+      h.appendChild(a);
+      const m = document.createElement("div"); m.className = "meta";
+      m.textContent = e.thema + " · " + e.quelle_titel;
+      karte.appendChild(h); karte.appendChild(m);
+      ziel.appendChild(karte);
+    });
+  }catch{
+    status.textContent = "RSS-Ergebnisse nicht verfügbar.";
+  }
+}
+
+el("technewsJetzt").onclick = async () => {
+  const btn = el("technewsJetzt");
+  btn.disabled = true; btn.textContent = "Läuft …";
+  try{
+    await hole("api/technews/pruefen", { method: "POST" });
+    await technewsNeuLaden();
+  }catch{
+    el("technewsStatus").textContent = "Prüfung fehlgeschlagen.";
+  }finally{
+    btn.disabled = false; btn.textContent = "Jetzt prüfen";
+  }
+};
+
+function technewsLaden(){
+  technewsNeuLaden();
+  const ziel = el("technews");
+  if(ziel.dataset.geladen) return;
+  ziel.innerHTML = "";
+  TECHNEWS.forEach(gruppe => {
+    const details = document.createElement("details");
+    details.className = "gruppe";
+    details.open = true;
+    const summary = document.createElement("summary");
+    summary.textContent = gruppe.thema + " (" + gruppe.quellen.length + ")";
+    details.appendChild(summary);
+    const inhalt = document.createElement("div"); inhalt.className = "gruppeInhalt";
+    gruppe.quellen.forEach(q => {
+      const k = document.createElement("div");
+      k.className = "karte";
+      const h = document.createElement("h3");
+      const a = document.createElement("a");
+      a.href = q.url; a.target = "_blank"; a.rel = "noopener";
+      a.style.color = "inherit"; a.textContent = q.titel;
+      h.appendChild(a);
+      const m = document.createElement("div"); m.className = "meta"; m.textContent = q.beschreibung;
+      const link = document.createElement("div");
+      link.style.cssText = "margin-top:6px;font-family:var(--mono);font-size:11px";
+      const linkA = document.createElement("a");
+      linkA.href = q.url; linkA.target = "_blank"; linkA.rel = "noopener";
+      linkA.style.color = "var(--ink-60)"; linkA.textContent = q.url;
+      link.appendChild(linkA);
+      k.appendChild(h); k.appendChild(m); k.appendChild(link);
+      inhalt.appendChild(k);
+    });
+    details.appendChild(inhalt);
+    ziel.appendChild(details);
+  });
+  ziel.dataset.geladen = "1";
+}
+
+el("wSpeichern").onclick = async () => {
+  const titel = el("wTitel").value.trim();
+  const inhalt = el("wInhalt").value.trim();
+  const h = el("wikiHinweis");
+  if(!titel || !inhalt){ h.hidden = false; h.textContent = "Titel und Inhalt ausfüllen."; return; }
+  try{
+    const r = await hole("api/wiki", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ titel, inhalt, modul: aktiv.id })
+    });
+    h.hidden = false;
+    h.textContent = "Gespeichert als " + r.slug + ", " + r.abschnitte_indexiert +
+      " Abschnitte im Wissensspeicher.";
+    el("wTitel").value = ""; el("wInhalt").value = "";
+    wikiLaden();
+  }catch(fehler){
+    h.hidden = false; h.textContent = "Speichern fehlgeschlagen: " + fehler.message;
+  }
+};
+
+/* ==================================================================
+   Start
+   ================================================================== */
+(async function start(){
+  try{
+    const geladen = await hole("api/module");
+    if(Array.isArray(geladen) && geladen.length){ module = geladen; aktiv = module[0]; }
+  }catch{ /* Notkatalog bleibt aktiv */ }
+  await vorlageTypenLaden();
+  vTypOptionenZeichnen();
+  moduleZeichnen(); kopfZeichnen(); zustandLaden(); neueModuleLaden(); vorlagenUebersichtLaden();
+  el("rechnen").click();
+  setInterval(zustandLaden, 60000);
+})();
+</script>
+</body>
+</html>

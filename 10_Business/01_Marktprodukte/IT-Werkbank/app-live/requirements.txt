@@ -1,0 +1,12 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+httpx==0.28.1
+aiosqlite==0.20.0
+qdrant-client==1.12.1
+apscheduler==3.10.4
+trafilatura==1.12.2
+python-multipart==0.0.20
+pypdf==5.1.0
+python-docx==1.1.2
+youtube-transcript-api==0.6.3

@@ -1,0 +1,22 @@
+services:
+  werkbank:
+    build: .
+    ports: ["8090:8080"]
+    # Reihenfolge wichtig: die zentrale AI-OS-Root-.env liefert alle API-
+    # Schluessel, die lokale .env danach nur noch Modul-/Modellauswahl.
+    # Bei gleichem Variablennamen gewinnt die spaeter genannte Datei -- da
+    # die lokale .env keine Schluessel mehr definiert, ueberschreibt sie
+    # dort nichts, sondern ergaenzt nur.
+    env_file: ["../../../../.env", ".env"]
+    volumes: ["werkbank-daten:/daten"]
+    depends_on: [qdrant]
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    volumes: ["qdrant-daten:/qdrant/storage"]
+    restart: unless-stopped
+
+volumes:
+  werkbank-daten:
+  qdrant-daten:

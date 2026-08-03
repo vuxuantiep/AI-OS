@@ -1,0 +1,53 @@
+flowchart TB
+    UI["Browser-UI (web/index.html)<br/>Tabs: Assistent · Netzrechner · Skripte · Wiki · Diagramm · Tech-News"]
+    API["FastAPI (app/main.py)"]
+    UI --> API
+
+    subgraph LLM["LLM-Kette (app/llm.py)"]
+        L1["lokal → LiteLLM-Gateway :4000<br/>(Cloud-first seit 30.07.2026, Ollama nur letzter Fallback)"]
+        L2["hermes → Hermes-Dashboard :9119/api/chat<br/>(Basic-Auth)"]
+        L3["openrouter → direkt, unabhängig vom Gateway<br/>(Schlüssel 01.08.2026 aus AI-OS-Root übernommen)"]
+        L4["cloudflare → Workers AI direkt oder<br/>über Cloudflare AI Gateway (GATEWAY_ID optional)<br/>ACCOUNT_ID noch nicht hinterlegt"]
+        L5["huggingface → Inference-Router direkt<br/>(Schlüssel 01.08.2026 aus AI-OS-Root übernommen)"]
+        L6["gemini → Google AI Studio, OpenAI-kompatibel<br/>(echtes Gratiskontingent ohne Kauf)"]
+        L7["groq → LPU-Inferenz, OpenAI-kompatibel"]
+        L8["cloud-anthropic → Claude direkt"]
+        L9["cloud-openai → GPT direkt"]
+    end
+    API --> LLM
+
+    subgraph RAG["Wissen (app/rag.py)"]
+        Q1[("Qdrant: werkbank_wiki")]
+        Q2[("Qdrant: werkbank_chat")]
+    end
+    API --> RAG
+
+    DB[("SQLite: Sitzungen, Nachrichten, Wiki,<br/>scraper_lauf, quellen")]
+    API --> DB
+
+    subgraph SCRAPER["Web-Scraper-Agent (app/scraper.py)"]
+        S1["Thema (auto)"] --> S2["SearXNG :8888 + gezielt<br/>Microsoft Learn/MSDN"]
+        S2 --> S3["Seiten laden + Haupttext extrahieren<br/>(trafilatura)"]
+        S3 --> S4["Zusammenfassen über LLM-Kette"]
+        S4 --> S5["Wiki-Seite schreiben (store.wiki_schreiben)"]
+        S0["Eigene Quelle (CEO trägt Link ein)"] --> S3
+    end
+    S5 --> DB
+    S4 -.-> LLM
+    S5 --> Q1
+
+    QUELLEN["Eigene Quellen-Verwaltung<br/>(Wiki-Tab, /api/quellen)"] --> S0
+    QUELLEN --> DB
+
+    subgraph TECHNEWS["Tech-News (app/rss.py)"]
+        R1["RSS_QUELLEN: CNCF, Azure Updates,<br/>AWS Neuigkeiten, heise Security,<br/>Hugging Face Blog, n8n Blog"]
+        R2["Feed abrufen (httpx) + parsen<br/>(RSS 2.0 und Atom)"]
+        R3["Neue Einträge speichern<br/>(store.rss_eintrag_speichern, dedupliziert per URL)"]
+        R1 --> R2 --> R3
+    end
+    R3 --> DB
+    TECHNEWS -.->|"5 kuratierte Themengruppen<br/>als Klick-Links, unabhängig vom RSS-Check"| UI
+
+    CRON["Cronjob (app/cron.py, APScheduler)<br/>täglich: Auto-Themen + eigene Quellen + Tech-News-RSS"]
+    CRON --> SCRAPER
+    CRON --> TECHNEWS

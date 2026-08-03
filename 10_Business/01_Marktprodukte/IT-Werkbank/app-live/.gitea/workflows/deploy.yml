@@ -1,0 +1,38 @@
+name: Deploy to Pi4
+
+# Ausgeloest bei jedem Push auf main -- Job laeuft in einem isolierten,
+# ephemeren Container (kein Zugriff auf den Host des Runners), deshalb per
+# SSH zurueck auf den Pi4 selbst (100.71.73.38), um dort git pull + Rebuild
+# auszufuehren. Siehe Projekt-Gedaechtnis "Veroeffentlichungs-Workflow" fuer
+# den Hintergrund (frueher: manueller tar-ueber-ssh-Sync).
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH-Client installieren
+        run: apt-get update && apt-get install -y --no-install-recommends openssh-client
+
+      - name: Deploy-Key einrichten
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p 22 100.71.73.38 >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Pi4 aktualisieren und neu bauen
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=accept-new tiep@100.71.73.38 \
+            "cd /mnt/docker-data/it-werkbank && git pull --ff-only && docker compose up -d --build werkbank"
+
+      - name: Health-Check nach dem Deploy
+        run: |
+          sleep 5
+          curl -fsS --max-time 15 https://it-avatar.vuxuantiep.de/api/health || \
+            (echo "Health-Check nach Deploy fehlgeschlagen" && exit 1)
