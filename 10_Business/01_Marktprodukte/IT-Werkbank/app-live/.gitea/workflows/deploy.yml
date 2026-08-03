@@ -33,6 +33,6 @@ jobs:
 
       - name: Health-Check nach dem Deploy
         run: |
-          sleep 5
+          sleep 20
           curl -fsS --max-time 15 https://it-avatar.vuxuantiep.de/api/health || \
             (echo "Health-Check nach Deploy fehlgeschlagen" && exit 1)
