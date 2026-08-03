@@ -7,7 +7,17 @@ services:
     # Bei gleichem Variablennamen gewinnt die spaeter genannte Datei -- da
     # die lokale .env keine Schluessel mehr definiert, ueberschreibt sie
     # dort nichts, sondern ergaenzt nur.
-    env_file: ["../../../../.env", ".env"]
+    # "../../../../.env" gilt nur innerhalb des AI-OS-Monorepos (dort 4 Ebenen
+    # hoch = Repo-Wurzel) -- im eigenstaendigen Gitea-Deployment auf dem Pi4
+    # gibt es diese Verschachtelung nicht, dort muss die lokale .env alle
+    # Werte direkt enthalten. "required: false" verhindert einen harten
+    # Fehler an dieser Stelle, statt zwei verschiedene Compose-Dateien fuer
+    # PC und Pi4 pflegen zu muessen.
+    env_file:
+      - path: "../../../../.env"
+        required: false
+      - path: ".env"
+        required: true
     volumes: ["werkbank-daten:/daten"]
     depends_on: [qdrant]
     restart: unless-stopped
