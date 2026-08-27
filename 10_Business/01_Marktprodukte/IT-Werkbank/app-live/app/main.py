@@ -498,6 +498,14 @@ async def netz_rechnen(netz: str, teilen_in: int | None = None) -> dict:
 
 app.include_router(api)
 
+# Screenshots/Bilder zu Wiki-Seiten (z.B. aus Schulungsunterlagen extrahiert) --
+# je Slug ein Unterordner, ueber diesen Pfad statisch ausgeliefert. Muss vor
+# dem Frontend-Catch-all-Mount ("/") registriert werden, sonst fangen dessen
+# Routen jede Anfrage vorher ab.
+_BILD_ORDNER = Path(os.getenv("WERKBANK_DATEN", "/daten")) / "wiki-bilder"
+_BILD_ORDNER.mkdir(parents=True, exist_ok=True)
+app.mount("/wiki-bilder", StaticFiles(directory=_BILD_ORDNER), name="wiki-bilder")
+
 # Frontend ausliefern, falls vorhanden
 web = Path(__file__).resolve().parent.parent / "web"
 if web.is_dir():

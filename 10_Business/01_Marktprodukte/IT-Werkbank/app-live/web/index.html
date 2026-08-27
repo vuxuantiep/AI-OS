@@ -529,6 +529,51 @@ function codeblock(code, sprache){
   return box;
 }
 
+/* Wiki-Inhalt mit eingebetteten Screenshots -- Wiki-Text ist kein voller
+   Markdown-Renderer (keine externe Bibliothek eingebunden), erkennt aber
+   Bildzeilen im Format ![Beschriftung](pfad) und zeigt sie als <img> statt
+   als Klartext, damit aus Schulungsunterlagen extrahierte Screenshots
+   sichtbar bleiben (nicht nur der reine Text). */
+function wikiInhaltRendern(text){
+  const box = document.createElement("div");
+  box.className = "code proseCode";
+  const btn = document.createElement("button");
+  btn.className = "copy"; btn.type = "button"; btn.textContent = "Kopieren";
+  btn.onclick = async () => {
+    try{ await navigator.clipboard.writeText(text); btn.textContent = "Kopiert"; }
+    catch{ btn.textContent = "Kopieren nicht erlaubt"; }
+    setTimeout(() => btn.textContent = "Kopieren", 1800);
+  };
+  box.appendChild(btn);
+  const pre = document.createElement("pre");
+  const bildZeile = /^!\[([^\]]*)\]\(([^)]+)\)$/;
+  let puffer = [];
+  const pufferLeeren = () => {
+    if(puffer.length){ pre.appendChild(document.createTextNode(puffer.join("\n") + "\n")); puffer = []; }
+  };
+  text.split("\n").forEach(zeile => {
+    const treffer = zeile.match(bildZeile);
+    if(!treffer){ puffer.push(zeile); return; }
+    pufferLeeren();
+    const fig = document.createElement("figure");
+    fig.style.cssText = "margin:14px 0";
+    const img = document.createElement("img");
+    img.src = treffer[2]; img.alt = treffer[1] || "Screenshot"; img.loading = "lazy";
+    img.style.cssText = "max-width:100%;border:1px solid var(--line);border-radius:6px;display:block";
+    fig.appendChild(img);
+    if(treffer[1]){
+      const cap = document.createElement("figcaption");
+      cap.style.cssText = "font-size:11px;color:var(--ink-60);margin-top:4px";
+      cap.textContent = treffer[1];
+      fig.appendChild(cap);
+    }
+    pre.appendChild(fig);
+  });
+  pufferLeeren();
+  box.appendChild(pre);
+  return box;
+}
+
 /* Antworttext in Fließtext und Codeblöcke trennen — jeder Block mit Kopieren */
 function antwortRendern(text){
   const frag = document.createDocumentFragment();
@@ -1339,7 +1384,7 @@ function wikiKarte(s){
   b.className = "primary"; b.style.marginTop = "10px"; b.textContent = "Öffnen";
   b.onclick = async () => {
     const seite = await hole("api/wiki/" + s.slug);
-    k.appendChild(codeblock(seite.inhalt, "markdown"));
+    k.appendChild(wikiInhaltRendern(seite.inhalt));
     b.remove();
     neueModuleLaden(); // Abzeichen aktualisieren -- Seite gilt jetzt als gelesen
   };

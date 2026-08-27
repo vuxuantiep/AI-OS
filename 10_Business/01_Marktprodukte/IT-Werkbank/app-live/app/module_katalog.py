@@ -224,6 +224,24 @@ MODULE: tuple[Modul, ...] = (
                      "release management", "turbomed", "epa", "anwenderschulung"),
     ),
     Modul(
+        id="navis",
+        name="NAVIS / KIS-Support (UKE)",
+        kurz="CGM NAVIS Klinikinformationssystem, Support vor Ort im UKE",
+        fachprompt="Schwerpunkt: Klinisches Informationssystem CGM NAVIS im Einsatz beim UKE "
+        "(Universitaetsklinikum Eppendorf) -- eigenstaendig vom ambulanten CGM Turbomed "
+        "(siehe Modul Support). Themenbereiche aus den Schulungsunterlagen: Verlegung und "
+        "Entlassung, Orientierung in den Ambulanzen, Labor, Medikation, OP-Prozess, "
+        "Pflegeassessment/-planung/-liste/-evaluierung, Pflegepersonalbemessungsverordnung "
+        "(PPBV), Verlaufsdokumentation, Begrifflichkeit, Abgrenzung NAVIS vs. Soarian. "
+        "Antworte konkret mit Klickpfad/Reiter/Maske innerhalb NAVIS, wenn die "
+        "Schulungsunterlagen das hergeben. Diese Unterlagen sind vertraulich (interne "
+        "UKE-Schulungsmaterialien) -- keine Patienten- oder Personendaten erfinden oder "
+        "ergaenzen, nur die Software-/Prozessseite behandeln.",
+        stichworte=("navis", "kis", "uke", "soarian", "pflegedokumentation", "verlegung",
+                     "entlassung", "labor", "medikation", "op-prozess", "ambulanz", "ppbv",
+                     "pflegeassessment", "verlaufsdokumentation"),
+    ),
+    Modul(
         id="mdm",
         name="MDM",
         kurz="Endgeraeteverwaltung, Kiosk-Modus, Enrollment, Compliance",
