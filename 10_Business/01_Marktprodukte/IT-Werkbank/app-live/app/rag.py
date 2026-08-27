@@ -135,6 +135,17 @@ async def chat_merken(sitzung_id: str, modul: str, frage: str, antwort: str) -> 
     )
 
 
+async def chat_sitzung_vergessen(sitzung_id: str) -> None:
+    """Entfernt alle Frage-Antwort-Paare einer Sitzung aus dem Chat-Gedaechtnis
+    -- wird eine Sitzung geloescht (z.B. weil die Antwort schlecht/veraltet
+    war), soll sie sich nicht bei aehnlichen Wiederholungsfragen ueber die
+    RAG-Suche selbst als Kontext reproduzieren."""
+    await client.delete(
+        collection_name=CHAT,
+        points_selector=Filter(must=[FieldCondition(key="sitzung_id", match=MatchValue(value=sitzung_id))]),
+    )
+
+
 async def suchen(frage: str, modul: str | None = None, anzahl: int = 5) -> list[dict]:
     """Sucht in Wiki und Chatgedaechtnis und mischt nach gewichteter Guete."""
     try:

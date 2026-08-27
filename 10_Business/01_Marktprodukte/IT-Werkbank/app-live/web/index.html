@@ -312,7 +312,10 @@
           <button type="button" id="chatverlaufOeffnen" class="linktext">↺ Chatverlauf</button>
           <div id="chatverlaufPanel" class="verlaufPanel" hidden>
             <input type="text" id="chatverlaufSuche" placeholder="Sitzung suchen …">
-            <button type="button" id="neueSitzung" class="linktext" style="margin:0 12px 8px">+ Neuer Chat</button>
+            <div style="margin:0 12px 8px;display:flex;gap:10px">
+              <button type="button" id="neueSitzung" class="linktext">+ Neuer Chat</button>
+              <button type="button" id="chatLoeschen" class="linktext" style="color:var(--ink-60)">Chat löschen</button>
+            </div>
             <div id="chatverlaufListe" class="verlaufListe"></div>
           </div>
         </div>
@@ -948,13 +951,40 @@ function chatverlaufZeichnen(liste){
     return;
   }
   liste.forEach(s => {
+    const zeile = document.createElement("div");
+    zeile.style.cssText = "display:flex;align-items:stretch;border-top:1px solid var(--line)";
     const btn = document.createElement("button");
     btn.type = "button"; btn.className = "verlaufEintrag";
+    btn.style.cssText = "flex:1 1 auto;border-top:none";
     btn.innerHTML = s.titel.replace(/</g, "&lt;") +
       '<span class="datum">' + s.modul + " · " + s.geaendert.slice(0, 16).replace("T", " ") + "</span>";
     btn.onclick = () => sitzungLaden(s.id);
-    ziel.appendChild(btn);
+    const del = document.createElement("button");
+    del.type = "button"; del.title = "Sitzung löschen";
+    del.textContent = "✕";
+    del.style.cssText = "flex:0 0 auto;border:none;background:none;color:var(--ink-60);padding:0 12px;cursor:pointer";
+    del.onclick = async (ereignis) => {
+      ereignis.stopPropagation();
+      if(!confirm('Sitzung "' + s.titel + '" wirklich löschen?')) return;
+      await sitzungLoeschen(s.id);
+    };
+    zeile.appendChild(btn); zeile.appendChild(del);
+    ziel.appendChild(zeile);
   });
+}
+
+/* Loescht eine Sitzung serverseitig (SQLite + zugehoeriges Chat-Gedaechtnis
+   in Qdrant) und raeumt die aktuelle Ansicht mit auf, falls es die gerade
+   offene Sitzung war -- sonst bliebe eine geloeschte Sitzung im Chatfenster
+   sichtbar, bis man manuell "Neuer Chat" klickt. */
+async function sitzungLoeschen(id){
+  try{ await hole("api/sitzung/" + id, { method: "DELETE" }); }catch{ /* egal, Liste wird trotzdem neu geladen */ }
+  if(id === sitzungId){
+    el("verlauf").innerHTML = "";
+    sitzungId = "";
+  }
+  sitzungenCache = await hole("api/sitzungen").catch(() => []);
+  chatverlaufZeichnen(sitzungenCache);
 }
 
 async function sitzungLaden(id){
@@ -983,6 +1013,21 @@ async function sitzungLaden(id){
 el("neueSitzung").onclick = () => {
   el("verlauf").innerHTML = "";
   sitzungId = "";
+  el("chatverlaufPanel").hidden = true;
+};
+
+/* Loescht den GERADE OFFENEN Chat (falls einer existiert) und startet direkt
+   danach einen neuen -- fuer den Fall, dass eine Unterhaltung sich als
+   Sackgasse/veraltet herausstellt und weder im Verlauf auftauchen noch das
+   Chat-Gedaechtnis fuer spaetere aehnliche Fragen verunreinigen soll. */
+el("chatLoeschen").onclick = async () => {
+  if(!sitzungId){
+    el("verlauf").innerHTML = "";
+    el("chatverlaufPanel").hidden = true;
+    return;
+  }
+  if(!confirm("Diesen Chat wirklich löschen?")) return;
+  await sitzungLoeschen(sitzungId);
   el("chatverlaufPanel").hidden = true;
 };
 

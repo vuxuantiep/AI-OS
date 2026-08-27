@@ -202,6 +202,17 @@ async def sitzungen(grenze: int = 50) -> list[dict]:
         return [dict(z) for z in await cursor.fetchall()]
 
 
+async def sitzung_loeschen(sitzung_id: str) -> None:
+    """Loescht eine einzelne Sitzung samt ihrer Nachrichten -- z.B. wenn eine
+    fehlgeschlagene/veraltete Unterhaltung nicht mehr im Verlauf auftauchen
+    soll. Gleiches Zwei-Schritt-Muster wie alte_sitzungen_loeschen() (siehe
+    Begruendung dort zu ON DELETE CASCADE)."""
+    async with aiosqlite.connect(PFAD) as db:
+        await db.execute("DELETE FROM nachrichten WHERE sitzung_id = ?", (sitzung_id,))
+        await db.execute("DELETE FROM sitzungen WHERE id = ?", (sitzung_id,))
+        await db.commit()
+
+
 async def alte_sitzungen_loeschen(tage: int = 7) -> int:
     """Loescht Sitzungen und ihre Nachrichten, die laenger als `tage` nicht
     mehr geaendert wurden (Aufbewahrungsfrist). Nachrichten werden explizit

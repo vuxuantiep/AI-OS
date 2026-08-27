@@ -276,6 +276,14 @@ async def sitzung(sitzung_id: str) -> list[dict]:
     return await store.verlauf(sitzung_id, grenze=200)
 
 
+@api.delete("/sitzung/{sitzung_id}")
+async def sitzung_loeschen(sitzung_id: str) -> dict:
+    await store.sitzung_loeschen(sitzung_id)
+    with contextlib.suppress(Exception):
+        await rag.chat_sitzung_vergessen(sitzung_id)
+    return {"geloescht": True}
+
+
 # ---------------------------------------------------------------------------
 # Wiki
 # ---------------------------------------------------------------------------
