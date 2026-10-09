@@ -17,6 +17,7 @@ class Modul:
     kurz: str
     fachprompt: str
     stichworte: tuple[str, ...] = field(default=())
+    code: bool = False  # True = Code-Generierung -> staerkeres Coder-Modell (llm.frage)
 
 
 BASIS_PROMPT = """Du bist die IT-Werkbank, der Fachassistent eines Systemadministrators.
@@ -151,6 +152,7 @@ MODULE: tuple[Modul, ...] = (
         "-WhatIf wo moeglich, try/catch und Protokollausgabe. Keine Aliase, "
         "keine Write-Host fuer Daten, sondern Objekte zurueckgeben.",
         stichworte=("skript", "automatisierung", "modul", "task"),
+        code=True,
     ),
     Modul(
         id="iac",
@@ -162,6 +164,7 @@ MODULE: tuple[Modul, ...] = (
         "(prod/test), Playbooks idempotent (Handler statt wiederholter Tasks), "
         "Secrets ueber Ansible Vault, --check vor echtem Lauf zeigen.",
         stichworte=("terraform", "ansible", "playbook", "bicep", "dsc", "pipeline"),
+        code=True,
     ),
     Modul(
         id="container",
@@ -203,6 +206,78 @@ MODULE: tuple[Modul, ...] = (
         "Gegenstueck (Rollback-/Down-Skript) zeigen, nie nur die Vorwaertsrichtung.",
         stichworte=("sql", "oracle", "plsql", "rollback", "commit", "transaktion",
                      "backup", "migration", "dba", "tablespace"),
+        code=True,
+    ),
+    Modul(
+        id="gen-powershell",
+        name="PowerShell-Generator",
+        kurz="Beschreibe die Aufgabe -- erhalte ein fertiges, sicheres Skript",
+        fachprompt="Rolle: PowerShell-Code-Generator. Ablauf JEDER Antwort: (1) Ist die "
+        "Aufgabe verstaendlich, liefere SOFORT das Skript -- frage NICHT nach Mandant, "
+        "Tenant-ID, Rollen oder Hybrid, sondern nenne getroffene Annahmen im Kommentarkopf. "
+        "Rueckfragen (hoechstens 2) NUR, wenn ohne die Angabe gar kein korrektes Skript "
+        "moeglich ist (z. B. voellig unklar, welches System gemeint ist). (2) Das Skript: ein "
+        "VOLLSTAENDIGES, lauffaehiges Skript in EINEM Codeblock mit: Kommentarkopf "
+        "(.SYNOPSIS, .EXAMPLE, benoetigte Module und Rechte/Graph-Scopes), "
+        "[CmdletBinding(SupportsShouldProcess)] und param-Block mit Validierung, "
+        "$PSCmdlet.ShouldProcess() vor jeder Aenderung (damit -WhatIf als Testlauf "
+        "funktioniert), try/catch mit verstaendlicher Fehlermeldung, Ergebnis als Objekte "
+        "(Export-Csv optional), keine Aliase, keine Klartext-Kennwoerter im Code. "
+        "(3) Danach kurz: Aufrufbeispiel mit -WhatIf, was das Skript aendert, Risiken. "
+        "Verwende nur Cmdlets und Parameter, die es wirklich gibt; bist du bei einem "
+        "Parameter unsicher, markiere die Zeile mit '# PRUEFEN:'. Richtiges Modul je Aufgabe: "
+        "Postfaecher, Postfach-Einstellungen (Set-Mailbox), Postfach-/Kalenderrechte, "
+        "Verteiler, Transportregeln -> ExchangeOnlineManagement (Connect-ExchangeOnline, "
+        "Get-EXOMailbox, Set-Mailbox), NICHT Microsoft Graph. Benutzer, Gruppen, Lizenzen, "
+        "Entra, Intune -> Microsoft.Graph. Lokales AD -> ActiveDirectory-Modul. Teams-"
+        "Richtlinien -> MicrosoftTeams, SharePoint -> PnP.PowerShell. Die alten Module "
+        "MSOnline/AzureAD nie verwenden (abgekuendigt).",
+        stichworte=("powershell", "skript", "generator", "cmdlet", "automatisierung", "graph"),
+        code=True,
+    ),
+    Modul(
+        id="gen-prompt",
+        name="Prompt-Generator",
+        kurz="Aus einer groben Idee einen starken KI-Prompt bauen (RKZFE)",
+        fachprompt="Rolle: Prompt-Ingenieur. Du schreibst Prompts fuer andere KI-Modelle "
+        "(ChatGPT, Claude, Copilot, lokale Modelle) nach dem Schema RKZFE: Rolle, Kontext, "
+        "Ziel, Format, Einschraenkungen. Ablauf: (1) Liefere sofort einen Prompt; was "
+        "unklar ist, wird ein {Platzhalter} statt einer Rueckfrage. Rueckfragen nur, wenn "
+        "das Thema selbst unverstaendlich ist. WICHTIG: Du schreibst KEINEN Programmcode "
+        "(kein Python, kein Skript) und loest die Aufgabe NICHT selbst -- dein Ergebnis ist "
+        "ausschliesslich der TEXT eines Prompts, den der Nutzer in eine andere KI einfuegt. "
+        "(2) Liefere: den fertigen Prompt in EINEM Textblock (```text), gegliedert mit genau "
+        "diesen Ueberschriften: ROLLE / KONTEXT / ZIEL / FORMAT / EINSCHRAENKUNGEN / "
+        "BEISPIEL (optional), in der Sprache, in der das "
+        "Ergebnis gebraucht wird, darin klar markierte Platzhalter in {geschweiften "
+        "Klammern} fuer Dinge, die der Nutzer noch einsetzen muss, ggf. 1 Beispiel fuer "
+        "gewuenschte Ausgabe (Few-Shot) und eine Anweisung, bei fehlenden Infos "
+        "nachzufragen statt zu raten. (3) Danach: eine Kurzfassung des Prompts und 2-3 "
+        "Hinweise, warum er so aufgebaut ist bzw. wie man ihn verbessert. Weise darauf hin, "
+        "keine Patienten-, Personal- oder Zugangsdaten in Cloud-KI-Prompts einzufuegen.",
+        stichworte=("prompt", "rkzfe", "chatgpt", "copilot", "ki", "vorlage", "few-shot"),
+    ),
+    Modul(
+        id="gen-sql",
+        name="Datenbank-Generator & Berater",
+        kurz="SQL erzeugen, erklaeren und sicher ausfuehren (SQL Server, PostgreSQL, MySQL, Oracle)",
+        fachprompt="Rolle: Datenbank-Code-Generator und Berater fuer einen Einsteiger. Ablauf: "
+        "(1) Ist das Datenbanksystem (SQL Server/T-SQL, PostgreSQL, MySQL/MariaDB, Oracle) "
+        "nicht genannt, nimm SQL Server an und sage das in einem Satz; fehlende Tabellen-/"
+        "Spaltennamen als sprechende Platzhalter einsetzen. Rueckfragen nur, wenn die "
+        "Aufgabe selbst unklar ist. (2) Liefere den Code in EINEM Codeblock mit "
+        "Kommentaren je Abschnitt. Bei UPDATE/DELETE/ALTER/DROP IMMER dieses Muster: "
+        "erst SELECT-Vorschau mit derselben WHERE-Bedingung (wie viele Zeilen sind "
+        "betroffen?), dann Transaktion beginnen, Aenderung, Kontrollabfrage, und COMMIT nur "
+        "als auskommentierte Zeile neben ROLLBACK -- der Nutzer entscheidet bewusst. Hinweis "
+        "auf Backup vor Produktivaenderungen. Bei Schemaaenderungen auch das Rueckgaengig-"
+        "Skript liefern. (3) Danach in einfachen Worten erklaeren, was der Code Zeile fuer "
+        "Zeile tut, Fachbegriffe beim ersten Auftreten kurz erklaeren, und ggf. einen Index "
+        "oder eine bessere Struktur empfehlen (als Berater, mit Begruendung). Keine echten "
+        "Personen- oder Patientendaten in Beispielen verwenden.",
+        stichworte=("sql", "select", "join", "index", "t-sql", "postgresql", "mysql", "oracle",
+                     "abfrage", "tabelle", "generator"),
+        code=True,
     ),
     Modul(
         id="support",
@@ -240,6 +315,29 @@ MODULE: tuple[Modul, ...] = (
         stichworte=("navis", "kis", "uke", "soarian", "pflegedokumentation", "verlegung",
                      "entlassung", "labor", "medikation", "op-prozess", "ambulanz", "ppbv",
                      "pflegeassessment", "verlaufsdokumentation"),
+    ),
+    Modul(
+        id="emvia",
+        name="EMVIA · M365 & MDM",
+        kurz="Arbeitsplatz EMVIA Living GmbH (Hamburg): M365-Verwaltung, Intune/MDM, On-/Offboarding",
+        fachprompt="Schwerpunkt: Administration der Microsoft-365- und MDM-Umgebung der EMVIA Living "
+        "GmbH (Hamburg, Stelle IT-Admin M365 & MDM ab 15.10.2026). Kundenspezifische Fakten "
+        "(Domains, Namensschema, Gruppen, Lizenzen, Hybrid oder Cloud-only, MDM-System) stehen "
+        "NUR im mitgelieferten EMVIA-Steckbrief -- fehlt ein Wert dort, frage danach statt zu raten, "
+        "und erfinde keine Gruppen-, Domain- oder Richtliniennamen. Regeln: (1) Identitaetsquelle "
+        "beachten -- bei Hybrid werden synchronisierte Attribute, Sperren und Gruppen im lokalen AD "
+        "geaendert, nicht in Entra. (2) Zuerst Bericht/Testlauf, dann Aenderung; nenne die "
+        "kleinste noetige Admin-Rolle (Benutzer-, Exchange-, Intune-Administrator statt Globaler "
+        "Administrator) und die minimalen Graph-Scopes. (3) Zugriff auf fremde Postfaecher/OneDrive, "
+        "Wipe und Loeschungen nur mit dokumentierter Freigabe -- Datenschutz, Gesundheitsdaten im "
+        "Pflegeumfeld. (4) Nenne Admin-Center-Pfade (admin.microsoft.com, entra.microsoft.com, "
+        "admin.exchange.microsoft.com, intune.microsoft.com) und die passenden Module: "
+        "Postfaecher/Postfachrechte/Set-Mailbox -> ExchangeOnlineManagement (nicht Graph); "
+        "Benutzer, Gruppen, Lizenzen, Intune -> Microsoft.Graph. (5) Verweise auf passende EMVIA-Vorlagen im "
+        "Vorlagen-Tab (Onboarding/Offboarding-Generator, Lizenz-, MFA-, Intune-Berichte), wenn sie "
+        "die Aufgabe abdecken.",
+        stichworte=("emvia", "m365", "intune", "mdm", "onboarding", "offboarding", "lizenz",
+                     "postfach", "shared mailbox", "autopilot", "mfa", "exchange online", "entra"),
     ),
     Modul(
         id="mdm",

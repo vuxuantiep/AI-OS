@@ -1,0 +1,201 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 900" width="1280" height="900" font-family="Segoe UI, system-ui, -apple-system, Arial, sans-serif">
+  <title>Microsoft 365 – Architektur und Zusammenhänge der wichtigsten Dienste</title>
+  <defs>
+    <marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <style>
+      .t  { font-size: 15px; font-weight: 700; fill: #0f172a; }
+      .h  { font-size: 13px; font-weight: 700; fill: #0f172a; }
+      .s  { font-size: 12px; fill: #334155; }
+      .k  { font-size: 11px; fill: #475569; }
+      .lab{ font-size: 12px; font-weight: 600; fill: #1e293b; }
+      .pfeil { stroke: #334155; stroke-width: 2; fill: none; marker-end: url(#pf); }
+      .pfeil2{ stroke: #334155; stroke-width: 2; fill: none; marker-end: url(#pf); marker-start: url(#pf); }
+      .gestr { stroke-dasharray: 6 4; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="900" fill="#ffffff"/>
+  <text x="30" y="38" style="font-size:22px;font-weight:800;fill:#0f172a">Microsoft 365 – Architektur &amp; Zusammenhänge</text>
+  <text x="30" y="58" class="k">Identität (Entra ID) ist das Tor zu allen Diensten · Intune liefert den Gerätezustand · Teams baut auf Exchange + SharePoint auf</text>
+
+  <!-- ============ ON-PREMISES (falls Hybrid) ============ -->
+  <rect x="30" y="75" width="240" height="270" rx="10" fill="#f8fafc" stroke="#64748b" stroke-dasharray="6 4"/>
+  <text x="45" y="98" class="t">Lokal (On-Premises)</text>
+  <text x="45" y="115" class="k">nur bei Hybrid-Identität</text>
+  <rect x="45" y="128" width="210" height="62" rx="8" fill="#fff" stroke="#64748b"/>
+  <text x="58" y="150" class="h">Active Directory</text>
+  <text x="58" y="168" class="s">Benutzer, Gruppen, OUs</text>
+  <text x="58" y="183" class="k">führende Quelle bei Hybrid</text>
+  <rect x="45" y="230" width="210" height="62" rx="8" fill="#fff" stroke="#64748b"/>
+  <text x="58" y="252" class="h">Entra Connect / Cloud Sync</text>
+  <text x="58" y="270" class="s">synchronisiert AD → Entra</text>
+  <text x="58" y="285" class="k">Delta-Sync ca. alle 30 Min</text>
+  <path d="M150,190 L150,228" class="pfeil"/>
+  <text x="45" y="330" class="k">Änderungen an Sync-Konten</text>
+  <text x="45" y="343" class="k" style="font-weight:700">immer im AD, nicht in Entra!</text>
+
+  <!-- ============ BENUTZER & GERÄTE ============ -->
+  <rect x="300" y="75" width="680" height="105" rx="10" fill="#fffbeb" stroke="#d97706"/>
+  <text x="315" y="98" class="t">Benutzer &amp; Geräte</text>
+  <g>
+    <rect x="312" y="110" width="152" height="58" rx="8" fill="#fff" stroke="#d97706"/>
+    <text x="324" y="133" class="h">Windows-PC</text><text x="324" y="152" class="k">Outlook, Teams, OneDrive</text>
+    <rect x="480" y="110" width="152" height="58" rx="8" fill="#fff" stroke="#d97706"/>
+    <text x="492" y="133" class="h">iPhone / iPad</text><text x="492" y="152" class="k">Diensthandy, Apps</text>
+    <rect x="648" y="110" width="152" height="58" rx="8" fill="#fff" stroke="#d97706"/>
+    <text x="660" y="133" class="h">Pflege-Tablet</text><text x="660" y="152" class="k">Android, Kiosk-Modus</text>
+    <rect x="816" y="110" width="152" height="58" rx="8" fill="#fff" stroke="#d97706"/>
+    <text x="828" y="133" class="h">Browser</text><text x="828" y="152" class="k">Outlook Web, Portale</text>
+  </g>
+
+  <!-- ============ INTUNE ============ -->
+  <rect x="1010" y="75" width="240" height="270" rx="10" fill="#f0fdfa" stroke="#0d9488"/>
+  <text x="1025" y="98" class="t">Intune (MDM/MAM)</text>
+  <rect x="1022" y="110" width="216" height="58" rx="8" fill="#fff" stroke="#0d9488"/>
+  <text x="1034" y="132" class="h">Registrierung</text>
+  <text x="1034" y="150" class="k">Autopilot · Apple Business Mgr</text>
+  <text x="1034" y="163" class="k">· Android Enterprise</text>
+  <rect x="1022" y="178" width="216" height="58" rx="8" fill="#fff" stroke="#0d9488"/>
+  <text x="1034" y="200" class="h">Konfiguration &amp; Apps</text>
+  <text x="1034" y="218" class="k">WLAN, Kiosk, BitLocker,</text>
+  <text x="1034" y="231" class="k">Updates, App-Verteilung</text>
+  <rect x="1022" y="246" width="216" height="58" rx="8" fill="#fff" stroke="#0d9488"/>
+  <text x="1034" y="268" class="h">Konformität (Compliance)</text>
+  <text x="1034" y="286" class="k">PIN, Verschlüsselung, OS-Stand</text>
+  <text x="1034" y="299" class="k">→ meldet "konform" an Entra</text>
+  <text x="1025" y="328" class="k">Aktionen: Sync · Retire · Wipe</text>
+
+  <!-- Intune -> Geräte -->
+  <path d="M1008,140 L983,140" class="pfeil"/>
+  <text x="986" y="200" class="lab" transform="rotate(-90 996 200)">Richtlinien</text>
+
+  <!-- ============ ENTRA ID ============ -->
+  <rect x="300" y="215" width="680" height="130" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="315" y="238" class="t">Entra ID – Identität (das „Tor“ zu allem)</text>
+  <g>
+    <rect x="312" y="250" width="152" height="82" rx="8" fill="#fff" stroke="#2563eb"/>
+    <text x="324" y="272" class="h">Identitäten</text>
+    <text x="324" y="290" class="k">Benutzer, Gäste,</text>
+    <text x="324" y="304" class="k">Sicherheits- &amp;</text>
+    <text x="324" y="318" class="k">M365-Gruppen</text>
+    <rect x="480" y="250" width="152" height="82" rx="8" fill="#fff" stroke="#2563eb"/>
+    <text x="492" y="272" class="h">Anmeldung + MFA</text>
+    <text x="492" y="290" class="k">Kennwort, Authenticator,</text>
+    <text x="492" y="304" class="k">SSPR, Zugriffspass</text>
+    <text x="492" y="318" class="k">Anmeldeprotokolle</text>
+    <rect x="648" y="250" width="152" height="82" rx="8" fill="#fff" stroke="#2563eb" stroke-width="2"/>
+    <text x="660" y="272" class="h">Conditional Access</text>
+    <text x="660" y="290" class="k">WER + WELCHES Gerät</text>
+    <text x="660" y="304" class="k">+ WO + Risiko</text>
+    <text x="660" y="318" class="k">→ erlauben / MFA / blocken</text>
+    <rect x="816" y="250" width="152" height="82" rx="8" fill="#fff" stroke="#2563eb"/>
+    <text x="828" y="272" class="h">Lizenzen &amp; Rollen</text>
+    <text x="828" y="290" class="k">Lizenz über Gruppe</text>
+    <text x="828" y="304" class="k">schaltet Dienste frei;</text>
+    <text x="828" y="318" class="k">Admin-Rollen / PIM</text>
+  </g>
+
+  <!-- AD-Sync -> Entra -->
+  <path d="M257,261 L298,261" class="pfeil gestr"/>
+  <text x="262" y="254" class="lab">Sync</text>
+  <!-- Geräte -> Entra (1) -->
+  <path d="M640,170 L640,213" class="pfeil"/>
+  <text x="648" y="198" class="lab">① Anmeldung</text>
+  <!-- Intune -> Entra (2) -->
+  <path d="M1020,290 L983,290" class="pfeil"/>
+  <text x="986" y="360" class="lab">② Gerät konform?</text>
+
+  <!-- ============ WORKLOADS ============ -->
+  <rect x="300" y="395" width="950" height="225" rx="10" fill="#f5f3ff" stroke="#7c3aed"/>
+  <text x="315" y="418" class="t">Dienste (Workloads) – greifen nur mit gültigem Entra-Token zu</text>
+  <path d="M640,347 L640,393" class="pfeil"/>
+  <text x="648" y="376" class="lab">③ Token / Zugriff</text>
+
+  <rect x="310" y="430" width="216" height="118" rx="8" fill="#fff" stroke="#7c3aed"/>
+  <text x="322" y="452" class="h">Exchange Online</text>
+  <text x="322" y="471" class="s">Postfächer &amp; Kalender</text>
+  <text x="322" y="488" class="k">freigegebene Postfächer,</text>
+  <text x="322" y="502" class="k">Verteiler, Ressourcen</text>
+  <text x="322" y="520" class="k">Mailschutz: Defender/EOP</text>
+  <text x="322" y="537" class="k">Admin: admin.exchange…</text>
+
+  <rect x="548" y="430" width="216" height="118" rx="8" fill="#fff" stroke="#7c3aed"/>
+  <text x="560" y="452" class="h">SharePoint Online</text>
+  <text x="560" y="471" class="s">Websites &amp; Bibliotheken</text>
+  <text x="560" y="488" class="k">Abteilungs-/Standortablagen,</text>
+  <text x="560" y="502" class="k">Versionen, Papierkorb 93 T.</text>
+  <text x="560" y="520" class="k">Freigaben intern/extern</text>
+
+  <rect x="786" y="430" width="216" height="118" rx="8" fill="#fff" stroke="#7c3aed"/>
+  <text x="798" y="452" class="h">OneDrive</text>
+  <text x="798" y="471" class="s">persönliche Dateien</text>
+  <text x="798" y="488" class="k">technisch eine SharePoint-</text>
+  <text x="798" y="502" class="k">Website je Benutzer</text>
+  <text x="798" y="520" class="k">Austritt: 30 T. Aufbewahrung</text>
+
+  <rect x="1024" y="430" width="216" height="118" rx="8" fill="#fff" stroke="#7c3aed" stroke-width="2"/>
+  <text x="1036" y="452" class="h">Teams</text>
+  <text x="1036" y="471" class="s">Chat, Meetings, Telefonie</text>
+  <text x="1036" y="488" class="k">Kanal-Dateien → SharePoint</text>
+  <text x="1036" y="502" class="k">Chat-Dateien → OneDrive</text>
+  <text x="1036" y="516" class="k">Kalender/Meetings → Exchange</text>
+  <text x="1036" y="537" class="k">baut auf den Nachbarn auf</text>
+
+  <!-- Teams nutzt Exchange/SharePoint/OneDrive -->
+  <path d="M1022,500 L1004,500" class="pfeil"/>
+  <path d="M1130,550 C1130,575 680,575 656,551" class="pfeil gestr"/>
+  <path d="M1130,550 C1130,590 430,590 418,551" class="pfeil gestr"/>
+
+  <rect x="310" y="592" width="930" height="0" fill="none"/>
+  <text x="322" y="610" class="k" style="font-weight:700">Microsoft-365-Gruppe = EINE Mitgliederliste für Team + SharePoint-Website + Gruppenpostfach/Kalender (gelöscht: 30 Tage wiederherstellbar)</text>
+
+  <!-- ============ SICHERHEIT & COMPLIANCE ============ -->
+  <rect x="300" y="650" width="950" height="105" rx="10" fill="#fef2f2" stroke="#dc2626"/>
+  <text x="315" y="673" class="t">Sicherheit &amp; Compliance – liegt quer über allen Diensten</text>
+  <rect x="312" y="684" width="455" height="60" rx="8" fill="#fff" stroke="#dc2626"/>
+  <text x="324" y="705" class="h">Microsoft Defender (security.microsoft.com)</text>
+  <text x="324" y="723" class="k">Phishing/Spam-Schutz &amp; Quarantäne, Endpoint-Schutz der Geräte,</text>
+  <text x="324" y="737" class="k">Vorfälle &amp; Warnungen, Identitätsrisiken</text>
+  <rect x="783" y="684" width="455" height="60" rx="8" fill="#fff" stroke="#dc2626"/>
+  <text x="795" y="705" class="h">Microsoft Purview (purview.microsoft.com)</text>
+  <text x="795" y="723" class="k">Aufbewahrung &amp; Löschfristen, DLP (Datenabfluss),</text>
+  <text x="795" y="737" class="k">Audit-Protokoll („wer hat was geändert“), eDiscovery</text>
+  <path d="M775,648 L775,622" class="pfeil"/>
+
+  <!-- ============ VERWALTUNG ============ -->
+  <rect x="300" y="785" width="950" height="85" rx="10" fill="#f1f5f9" stroke="#334155"/>
+  <text x="315" y="808" class="t">Verwaltung</text>
+  <text x="315" y="830" class="s">Admin-Center: admin.microsoft.com · entra.microsoft.com · intune.microsoft.com · admin.exchange.microsoft.com</text>
+  <text x="315" y="852" class="s">Automatisierung: Microsoft Graph (eine API für alles) · PowerShell: Microsoft.Graph + ExchangeOnlineManagement</text>
+  <path d="M1200,783 L1200,757" class="pfeil"/>
+  <text x="1110" y="776" class="lab">verwaltet alles</text>
+
+  <!-- ============ LEGENDE: ABLAUF ============ -->
+  <rect x="30" y="395" width="240" height="475" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="45" y="420" class="t">So läuft ein Zugriff ab</text>
+  <text x="45" y="448" class="lab">① Anmeldung</text>
+  <text x="45" y="465" class="k">Benutzer meldet sich an</text>
+  <text x="45" y="479" class="k">(Kennwort + MFA) bei Entra ID.</text>
+  <text x="45" y="507" class="lab">② Gerät konform?</text>
+  <text x="45" y="524" class="k">Conditional Access fragt den</text>
+  <text x="45" y="538" class="k">Gerätezustand aus Intune ab</text>
+  <text x="45" y="552" class="k">(nur bei registrierten Geräten).</text>
+  <text x="45" y="580" class="lab">③ Token / Zugriff</text>
+  <text x="45" y="597" class="k">Passt alles, stellt Entra ein</text>
+  <text x="45" y="611" class="k">Token aus → Outlook, Teams,</text>
+  <text x="45" y="625" class="k">SharePoint öffnen sich.</text>
+  <text x="45" y="656" class="lab">Lizenz = Schalter</text>
+  <text x="45" y="673" class="k">Ohne Lizenz kein Postfach,</text>
+  <text x="45" y="687" class="k">kein Teams, kein Intune.</text>
+  <text x="45" y="701" class="k">UsageLocation (DE) nötig.</text>
+  <text x="45" y="732" class="lab">Fehlersuche – erst hier:</text>
+  <text x="45" y="749" class="k">Entra › Anmeldeprotokolle</text>
+  <text x="45" y="763" class="k">(Fehlercode + welche CA-Regel)</text>
+  <text x="45" y="780" class="k">Intune › Gerät › Konformität</text>
+  <text x="45" y="797" class="k">Exchange › Nachrichten-</text>
+  <text x="45" y="811" class="k">ablaufverfolgung</text>
+  <text x="45" y="840" class="k">Linie gestrichelt =</text>
+  <text x="45" y="854" class="k">Synchronisation / Datenablage</text>
+</svg>

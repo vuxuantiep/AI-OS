@@ -79,6 +79,10 @@ CREATE TABLE IF NOT EXISTS vorlage (
     geaendert TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_vorlage_modul_typ ON vorlage(modul, typ);
+CREATE TABLE IF NOT EXISTS vorlage_paket (
+    id          TEXT PRIMARY KEY,
+    eingespielt TEXT NOT NULL
+);
 """
 
 
@@ -105,6 +109,30 @@ async def vorbereiten() -> None:
             except aiosqlite.OperationalError:
                 pass
         await _vorlagen_erstbefuellen(db)
+        await _vorlagen_pakete_einspielen(db)
+
+
+async def _vorlagen_pakete_einspielen(db: aiosqlite.Connection) -> None:
+    """Spielt fachliche Vorlagen-Pakete (z. B. EMVIA M365) genau EINMAL je
+    Instanz ein -- gemerkt in vorlage_paket. Anders als die Erstbefuellung
+    auch in bereits genutzte Datenbanken (Pi4), aber spaeter geaenderte oder
+    geloeschte Vorlagen kommen bei einem Neustart nicht zurueck. Bereits
+    vorhandene IDs werden nie ueberschrieben (INSERT OR IGNORE)."""
+    from . import paket_emvia_m365, paket_generatoren  # lokal, wie bei der Erstbefuellung
+
+    for paket in (paket_emvia_m365, paket_generatoren):
+        cursor = await db.execute("SELECT 1 FROM vorlage_paket WHERE id = ?", (paket.PAKET_ID,))
+        if await cursor.fetchone():
+            continue
+        jetzt = _jetzt()
+        for v in paket.VORLAGEN:
+            await db.execute(
+                "INSERT OR IGNORE INTO vorlage (id, modul, typ, titel, sprache, inhalt, erstellt, geaendert)"
+                " VALUES (?,?,?,?,?,?,?,?)",
+                (v["id"], v.get("modul", paket.MODUL), v["typ"], v["titel"], v["sprache"], v["inhalt"], jetzt, jetzt),
+            )
+        await db.execute("INSERT INTO vorlage_paket (id, eingespielt) VALUES (?,?)", (paket.PAKET_ID, jetzt))
+        await db.commit()
 
 
 # Die urspruengliche Skriptbibliothek war eine statische, nicht editierbare

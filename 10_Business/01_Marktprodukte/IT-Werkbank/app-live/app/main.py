@@ -212,6 +212,14 @@ async def chat(anfrage: ChatAnfrage) -> dict:
         block += rag.kontext_bauen(web_treffer)
         kontext = f"{kontext}\n\n{block}" if kontext else block
 
+    # Kunden-/Einsatz-Steckbrief (Doku-Vorlage "<modul>-steckbrief", z. B. emvia-steckbrief)
+    # immer mitgeben -- kundenspezifische Fakten sollen nicht vom RAG-Zufall abhaengen.
+    with contextlib.suppress(Exception):
+        steckbrief = await store.vorlage_lesen(f"{anfrage.modul}-steckbrief")
+        if steckbrief and steckbrief.get("inhalt", "").strip():
+            block = f"Kunden-Steckbrief (vom Nutzer gepflegt, massgeblich):\n{steckbrief['inhalt'].strip()}"
+            kontext = f"{block}\n\n{kontext}" if kontext else block
+
     alle_treffer = treffer + web_treffer
     systemprompt = module_katalog.systemprompt(anfrage.modul, kontext)
 
@@ -224,7 +232,8 @@ async def chat(anfrage: ChatAnfrage) -> dict:
     verlauf.append({"role": "user", "content": anfrage.frage})
 
     try:
-        ergebnis = await llm.frage(systemprompt, verlauf)
+        modul = module_katalog.MODUL_INDEX.get(anfrage.modul)
+        ergebnis = await llm.frage(systemprompt, verlauf, code=bool(modul and modul.code))
     except llm.KeinAnbieter as fehler:
         raise HTTPException(503, str(fehler)) from fehler
 

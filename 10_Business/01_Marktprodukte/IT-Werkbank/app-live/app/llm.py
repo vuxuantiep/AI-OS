@@ -235,8 +235,18 @@ def _text_aus_antwort(protokoll: str, daten: dict) -> str:
 # Aufruf mit Fallback
 # ---------------------------------------------------------------------------
 
-async def frage(systemprompt: str, verlauf: list[dict]) -> Ergebnis:
-    """Fragt die Kette durch und gibt die erste brauchbare Antwort zurueck."""
+# Cloudflare Workers AI bietet mit DEMSELBEN Zugang deutlich staerkere Modelle als das
+# 8B-Standardmodell. Das 8B-Modell erfand bei Code-Aufgaben nicht existierende Cmdlets
+# (New-MgGraphClient, Set-MgUserMailbox); Coder-32B und Llama-70B lieferten im Test
+# korrekte Exchange-Befehle in < 2 s. Faellt das Wunschmodell aus (z. B. Tageskontingent),
+# wird im selben Durchlauf das konfigurierte Basismodell versucht.
+CLOUDFLARE_STARK = os.getenv("CLOUDFLARE_STARK_MODELL", "@cf/meta/llama-3.3-70b-instruct-fp8-fast")
+CLOUDFLARE_CODE = os.getenv("CLOUDFLARE_CODE_MODELL", "@cf/qwen/qwen2.5-coder-32b-instruct")
+
+
+async def frage(systemprompt: str, verlauf: list[dict], code: bool = False) -> Ergebnis:
+    """Fragt die Kette durch und gibt die erste brauchbare Antwort zurueck.
+    code=True: bei Cloudflare zuerst das Coder-Modell (Generator-/Skript-Module)."""
     versuche: list[str] = []
     letzter_fehler: Exception | None = None
 
@@ -246,23 +256,29 @@ async def frage(systemprompt: str, verlauf: list[dict]) -> Ergebnis:
             continue
 
         bauer = _anthropic_anfrage if a.protokoll == "anthropic" else _openai_anfrage
-        last, kopf = bauer(a, systemprompt, verlauf)
+        modelle = [a.modell]
+        if a.name == "cloudflare":
+            wunsch = CLOUDFLARE_CODE if code else CLOUDFLARE_STARK
+            modelle = [m for m in (wunsch, a.modell) if m] if wunsch != a.modell else [a.modell]
 
-        try:
-            async with httpx.AsyncClient(timeout=a.zeitlimit) as client:
-                antwort = await client.post(a.url, json=last, headers=kopf, auth=_auth(a))
-                antwort.raise_for_status()
-                text = _text_aus_antwort(a.protokoll, antwort.json())
-            if not text:
-                raise ValueError("leere Antwort")
-            a.freigeben()
-            versuche.append(f"{a.name}: ok")
-            return Ergebnis(text, a.name, a.art, a.modell, versuche)
+        for modell in modelle:
+            last, kopf = bauer(a, systemprompt, verlauf)
+            last["model"] = modell
+            try:
+                async with httpx.AsyncClient(timeout=a.zeitlimit) as client:
+                    antwort = await client.post(a.url, json=last, headers=kopf, auth=_auth(a))
+                    antwort.raise_for_status()
+                    text = _text_aus_antwort(a.protokoll, antwort.json())
+                if not text:
+                    raise ValueError("leere Antwort")
+                a.freigeben()
+                versuche.append(f"{a.name}: ok")
+                return Ergebnis(text, a.name, a.art, modell, versuche)
 
-        except (httpx.HTTPError, KeyError, IndexError, ValueError) as fehler:
-            a.sperren()
-            letzter_fehler = fehler
-            versuche.append(f"{a.name}: {type(fehler).__name__}")
+            except (httpx.HTTPError, KeyError, IndexError, ValueError) as fehler:
+                letzter_fehler = fehler
+                versuche.append(f"{a.name}/{modell.split('/')[-1]}: {type(fehler).__name__}")
+        a.sperren()
 
     raise KeinAnbieter(
         "Kein Anbieter erreichbar. Versuche: " + "; ".join(versuche)

@@ -194,6 +194,9 @@
   tr:last-child td{border-bottom:none}
 
   .feld{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
+  .obRaster{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:14px}
+  .obRaster input{width:100%;box-sizing:border-box}
+  .obRaster .breit{grid-column:1/-1}
   label.lab{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-60);display:block;margin-bottom:4px}
   input[type=text],input[type=number],select{font-family:var(--mono);font-size:14px;padding:9px 11px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
   input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
@@ -295,6 +298,7 @@
       <div class="tabs" role="tablist">
         <button class="tab" role="tab" data-view="chat" aria-selected="true">Assistent</button>
         <button class="tab" role="tab" data-view="netz" aria-selected="false">Netzrechner</button>
+        <button class="tab" role="tab" data-view="onboard" aria-selected="false">On-/Offboarding</button>
         <button class="tab" role="tab" data-view="vorlagen" aria-selected="false">Vorlagen</button>
         <button class="tab" role="tab" data-view="wiki" aria-selected="false">Wiki</button>
         <button class="tab" role="tab" data-view="diagramm" aria-selected="false">Diagramm</button>
@@ -365,6 +369,29 @@
           <button class="primary" id="rechnen">Berechnen</button>
         </div>
         <div id="netzErgebnis"></div>
+      </section>
+
+      <!-- ---------- On-/Offboarding-Generator (EMVIA, rechnet im Browser) ---------- -->
+      <section id="v-onboard" hidden>
+        <p class="kicker">On-/Offboarding · erzeugt ein kopierfertiges Skript aus deinen EMVIA-Vorlagen · kein Modell, keine Daten an den Server</p>
+        <div class="feld">
+          <div>
+            <label class="lab" for="obVorgang">Vorgang</label>
+            <select id="obVorgang">
+              <option value="emvia-skript-onboarding-cloud">Onboarding · Cloud-only</option>
+              <option value="emvia-skript-onboarding-hybrid">Onboarding · Hybrid (lokales AD)</option>
+              <option value="emvia-skript-offboarding">Offboarding</option>
+            </select>
+          </div>
+          <label class="schalter" style="margin-bottom:10px"><input type="checkbox" id="obTestlauf" checked> Testlauf (nichts ändern)</label>
+        </div>
+        <div id="obFelder" class="obRaster"></div>
+        <div class="feld">
+          <button class="primary" id="obErzeugen" type="button">Skript erzeugen</button>
+          <button class="linktext" id="obMerken" type="button">Domain/OU/Gruppen als Standard merken</button>
+        </div>
+        <div id="obVorschau" class="hinweis" hidden></div>
+        <div id="obErgebnis"></div>
       </section>
 
       <!-- ---------- Vorlagen (E-Mail/Skript/Ticket/Doku) ---------- -->
@@ -663,6 +690,8 @@ function modUnterKnopf(m, typInfo){
    vom Backend geliefertes Modul, das hier noch in keiner Gruppe steht,
    faellt nicht raus, sondern wird flach ergaenzt. */
 const MODULGRUPPEN = [
+  { titel: "Meine Einsätze", ids: ["emvia", "navis"] },
+  { titel: "Generatoren", ids: ["gen-powershell", "gen-prompt", "gen-sql"] },
   { titel: "Identität & Sicherheit", ids: ["entra", "sicherheit"] },
   { titel: "Infrastruktur", ids: ["winserver", "hyperv", "container", "iac"] },
   { titel: "Daten & Automatisierung", ids: ["datenbank", "powershell"] },
@@ -792,7 +821,7 @@ async function zustandLaden(){
    ================================================================== */
 /* Chat (v-chat) ist kein Teil der umschaltbaren Ansichten mehr -- er bleibt
    immer sichtbar. Die anderen vier oeffnen gemeinsam als rechte Spalte. */
-const WERKZEUGE = ["netz","vorlagen","wiki","diagramm","technews"];
+const WERKZEUGE = ["netz","onboard","vorlagen","wiki","diagramm","technews"];
 let ansicht = "chat";
 const istSchmal = () => window.matchMedia("(max-width:860px)").matches;
 
@@ -886,7 +915,100 @@ el("drawerHintergrund").onclick = () => menuAnwenden(true);
 // Desktop-Vorliebe (breit/schmal) ist hier nicht sinnvoll übertragbar.
 menuAnwenden(istSchmal() ? true : localStorage.getItem(MENU_KEY) === "1");
 
+/* ---------- On-/Offboarding-Generator ----------
+   Baut aus der (editierbaren) Skript-Vorlage + Formularwerten einen einzigen
+   kopierfertigen Block: die Vorlage wird als Scriptblock eingebettet und mit
+   den Parametern aufgerufen. Alles im Browser, nichts geht an den Server. */
+const OB_FELDER = {
+  "emvia-skript-onboarding-cloud": [
+    ["Vorname","Vorname",1], ["Nachname","Nachname",1], ["Domain","Domain (z. B. firma.de)",1],
+    ["Abteilung","Abteilung"], ["Standort","Standort/Einrichtung"], ["Position","Position"],
+    ["VorgesetzteUpn","Vorgesetzte/r (UPN)"], ["Gruppen","Gruppen (Komma-getrennt)",0,"liste"]],
+  "emvia-skript-onboarding-hybrid": [
+    ["Vorname","Vorname",1], ["Nachname","Nachname",1], ["Domain","UPN-Suffix (Domain)",1],
+    ["ZielOU","Ziel-OU (OU=...,DC=...)",1,"breit"], ["Abteilung","Abteilung"], ["Standort","Standort/Einrichtung"],
+    ["Position","Position"], ["SyncServer","Entra-Connect-Server"], ["ADGruppen","AD-Gruppen (Komma-getrennt)",0,"liste"]],
+  "emvia-skript-offboarding": [
+    ["Upn","Benutzer (UPN)",1], ["VertretungUpn","Vertretung (UPN, nur mit Freigabe)"],
+    ["Abwesenheitstext","Abwesenheitstext",0,"breit"]],
+};
+const OB_MERKEN = ["Domain","ZielOU","SyncServer","Gruppen","ADGruppen"];
+const OB_KEY = "werkbank-emvia-standard";
+function obStandard(){ try{ return JSON.parse(localStorage.getItem(OB_KEY)) || {}; }catch{ return {}; } }
+function obFelderZeigen(){
+  const std = obStandard();
+  const ziel = el("obFelder"); ziel.innerHTML = "";
+  OB_FELDER[el("obVorgang").value].forEach(([name, label, pflicht, art]) => {
+    const d = document.createElement("div");
+    if(art === "breit" || art === "liste") d.className = "breit";
+    const l = document.createElement("label"); l.className = "lab"; l.htmlFor = "ob_" + name;
+    l.textContent = label + (pflicht ? " *" : "");
+    const i = document.createElement("input"); i.type = "text"; i.id = "ob_" + name; i.dataset.name = name;
+    if(art === "liste") i.dataset.liste = "1";
+    if(pflicht) i.dataset.pflicht = "1";
+    if(std[name]) i.value = std[name];
+    i.oninput = obVorschau;
+    d.appendChild(l); d.appendChild(i); ziel.appendChild(d);
+  });
+  el("obErgebnis").innerHTML = ""; obVorschau();
+}
+function obNormalisieren(t){
+  return t.trim().toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")
+    .normalize("NFD").replace(/[̀-ͯ]/g,"")   // wie im Skript: Zoë -> zoe
+    .replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"");
+}
+function obWerte(){
+  const w = {};
+  el("obFelder").querySelectorAll("input").forEach(i => w[i.dataset.name] = i.value.trim());
+  return w;
+}
+function obVorschau(){
+  const w = obWerte(), box = el("obVorschau");
+  if(w.Vorname && w.Nachname && w.Domain){
+    box.hidden = false;
+    box.textContent = "Geplanter Benutzername: " + obNormalisieren(w.Vorname) + "." + obNormalisieren(w.Nachname) + "@" + w.Domain +
+      " — vorher prüfen, ob es den Namen schon gibt (das Skript bricht dann ab).";
+  }else box.hidden = true;
+}
+function psText(s){ return "'" + String(s).replace(/'/g, "''") + "'"; }
+async function obErzeugen(){
+  const id = el("obVorgang").value, w = obWerte(), ziel = el("obErgebnis");
+  const fehlt = [...el("obFelder").querySelectorAll("input[data-pflicht]")].filter(i => !i.value.trim());
+  if(fehlt.length){ ziel.textContent = "Pflichtfelder fehlen: " + fehlt.map(i => i.dataset.name).join(", "); return; }
+  let vorlage;
+  try{ vorlage = await hole("api/vorlagen/" + encodeURIComponent(id)); }
+  catch{ ziel.textContent = "Vorlage '" + id + "' nicht gefunden (im Vorlagen-Tab gelöscht?)."; return; }
+  const aufruf = ["& $Skript"];
+  el("obFelder").querySelectorAll("input").forEach(i => {
+    const v = i.value.trim(); if(!v) return;
+    if(i.dataset.liste){
+      const teile = v.split(",").map(x => x.trim()).filter(Boolean);
+      aufruf.push("-" + i.dataset.name + " @(" + teile.map(psText).join(", ") + ")");
+    }else aufruf.push("-" + i.dataset.name + " " + psText(v));
+  });
+  aufruf.push("-Testlauf " + (el("obTestlauf").checked ? "$true" : "$false"));
+  const code = "# EMVIA · " + el("obVorgang").selectedOptions[0].textContent + " · erzeugt " +
+    new Date().toLocaleString("de-DE") + " (IT-Werkbank)\n" +
+    "# " + (el("obTestlauf").checked ? "TESTLAUF: zeigt nur an, was passieren würde." : "ACHTUNG: führt die Änderungen aus!") + "\n" +
+    "$Skript = {\n" + vorlage.inhalt + "\n}\n\n" + aufruf.join(" `\n    ") + "\n";
+  ziel.innerHTML = "";
+  ziel.appendChild(codeblock(code, "powershell"));
+  const h = document.createElement("p"); h.className = "kicker"; h.style.marginTop = "10px";
+  h.textContent = "Ablauf: erst als Testlauf ausführen, Ausgabe prüfen, dann Haken entfernen und neu erzeugen. Checkliste: Vorlagen-Tab → EMVIA → Doku.";
+  ziel.appendChild(h);
+}
+el("obVorgang").onchange = obFelderZeigen;
+el("obErzeugen").onclick = obErzeugen;
+el("obMerken").onclick = () => {
+  const std = obStandard(), w = obWerte();
+  OB_MERKEN.forEach(k => { if(w[k] !== undefined) std[k] = w[k]; });
+  try{ localStorage.setItem(OB_KEY, JSON.stringify(std)); el("obMerken").textContent = "Gemerkt (nur in diesem Browser)"; }
+  catch{ el("obMerken").textContent = "Speichern im Browser nicht möglich"; }
+  setTimeout(() => el("obMerken").textContent = "Domain/OU/Gruppen als Standard merken", 2000);
+};
+
 function ansichtLaden(){
+  if(ansicht === "onboard" && !el("obFelder").children.length) obFelderZeigen();
   if(ansicht === "vorlagen") vorlagenLaden();
   if(ansicht === "wiki"){ wikiLaden(); scraperVerlaufLaden(); quellenLaden(); }
   if(ansicht === "diagramm") diagrammLaden();
