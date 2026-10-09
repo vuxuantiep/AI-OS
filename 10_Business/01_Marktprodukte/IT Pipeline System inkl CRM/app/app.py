@@ -39,6 +39,8 @@ if sys.stdout and hasattr(sys.stdout, "reconfigure"):
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
+sys.path.insert(0, BASE_DIR)
+import marktradar  # noqa: E402  (liegt neben app.py — bleibt portabel)
 
 PORT = int(os.environ.get("LEADPILOT_PORT", "5330"))
 USER_AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -96,6 +98,9 @@ DEFAULT_CONFIG = {
     "radar_keywords": ["python", "flask", "react", "ki", "ai", "automation",
                        "crm", "dashboard", "chatbot", "rag", "llm", "n8n"],
     "radar_quellen_eigene": [],
+    "radar_min_score": 8,  # Markt-Radar: Mindest-Score für einen Treffer
+    "radar_ba_suchen": [],  # leer = marktradar.BA_SUCHEN_STANDARD
+    "markt_regionen": ["Rostock", "Hamburg"],  # OSM-Branchenzählung
     "mail1_betreff": "Ihre Anfrage ist angekommen — nächste Schritte",
     "mail1_text": ("Hallo {name},\n\nvielen Dank für Ihre Anfrage ({projektart}). "
                    "Ich melde mich innerhalb von 24 Stunden persönlich.\n\n"
@@ -562,47 +567,65 @@ def _feed_items(xml_text):
     return items
 
 
+def _feed_quelle(q):
+    if q["typ"] == "remotive":
+        jobs = json.loads(_http_get(q["url"])).get("jobs", [])
+        items = [{"titel": j.get("title", "")[:250], "url": j.get("url", ""),
+                  "text": re.sub(r"<[^>]+>", " ", j.get("description", ""))[:1500],
+                  "datum": j.get("publication_date", "")[:10]} for j in jobs]
+    else:
+        items = _feed_items(_http_get(q["url"]))
+    for it in items:  # Remote-Börsen: Freelance nur, wenn ausdrücklich so ausgeschrieben
+        it["typ"] = ("freelance" if re.search(r"freelance|contract|contractor|freiberuf",
+                                              it["titel"] + " " + it["text"][:400], re.I) else "bedarfssignal")
+    return items
+
+
 def radar_scan():
+    """Scannt alle Quellen (globale Remote-Börsen + Markt-Radar regional/öffentlich),
+    bewertet nach Zielprofil und schreibt relevante Treffer + Markt-Log."""
     cfg = lade_config()
     radar = lade("radar.json", {"seen": [], "treffer": [], "letzter_scan": None})
     seen = set(radar["seen"])
-    keywords = [k.lower() for k in cfg["radar_keywords"]]
+    markt_log = radar.get("markt_log", [])
     fehler, neue = [], []
-    quellen = RADAR_QUELLEN + [{"name": q.get("name", "eigene"), "typ": "feed", "url": q["url"]}
-                               for q in cfg.get("radar_quellen_eigene", []) if q.get("url")]
-    for q in quellen:
+    quellen = ([(q["name"], (lambda q=q: _feed_quelle(q))) for q in RADAR_QUELLEN]
+               + [(q.get("name", "eigene"), (lambda q=q: _feed_quelle({"typ": "feed", "url": q["url"]})))
+                  for q in cfg.get("radar_quellen_eigene", []) if q.get("url")]
+               + [(name, (lambda f=f: f(cfg))) for name, _, f in marktradar.QUELLEN])
+    for name, holen in quellen:
         try:
-            if q["typ"] == "remotive":
-                jobs = json.loads(_http_get(q["url"])).get("jobs", [])
-                items = [{"titel": j.get("title", "")[:250], "url": j.get("url", ""),
-                          "text": re.sub(r"<[^>]+>", " ", j.get("description", ""))[:1500],
-                          "datum": j.get("publication_date", "")[:10]} for j in jobs]
-            else:
-                items = _feed_items(_http_get(q["url"]))
-            for it in items:
-                if not it["url"] or it["url"] in seen:
-                    continue
-                seen.add(it["url"])
-                text = (it["titel"] + " " + it["text"]).lower()
-                # Wortgrenzen statt Substring — sonst matcht "ai" in "maintain"
-                treffer_kw = [k for k in keywords
-                              if re.search(r"(?<![a-z0-9])" + re.escape(k) + r"(?![a-z0-9])", text)]
-                if not treffer_kw:
-                    continue
-                it["quelle"] = q["name"]
-                it["keywords"] = treffer_kw
-                it["score"] = len(treffer_kw)
-                it["rolle"] = klassifiziere_rolle(text)
-                it["arbeitsort"] = klassifiziere_arbeitsort(text)
-                it["standort"] = extrahiere_standort(it["titel"], it["text"])
-                it["gefunden_am"] = _now()
-                it["id"] = str(uuid.uuid4())
-                neue.append(it)
+            items = holen()
         except Exception as e:
-            fehler.append(f"{q['name']}: {type(e).__name__}")
+            fehler.append(f"{name}: {type(e).__name__}")
+            continue
+        for it in items:
+            # Dedup per URL UND Titel+Firma (die BA spielt dieselbe Stelle unter mehreren Ref.-Nr. aus)
+            dkey = "tf:" + (it["titel"] + "|" + it.get("firma", "")).lower()
+            if not it.get("url") or it["url"] in seen or dkey in seen:
+                continue
+            seen.add(it["url"])
+            seen.add(dkey)
+            if not marktradar.bewerte(it, cfg.get("radar_keywords", []),
+                                      int(cfg.get("radar_min_score", marktradar.MIN_SCORE_STANDARD))):
+                continue
+            text = (it["titel"] + " " + it.get("text", "")).lower()
+            it["quelle"] = name
+            it["rolle"] = klassifiziere_rolle(text)
+            if it.get("arbeitsort", "unbekannt") == "unbekannt":
+                it["arbeitsort"] = klassifiziere_arbeitsort(text)
+            it["standort"] = it.get("standort") or extrahiere_standort(it["titel"], it.get("text", ""))
+            it["gefunden_am"] = _now()
+            it["id"] = str(uuid.uuid4())
+            neue.append(it)
+            # Markt-Log: kompakt, bleibt auch nach "Übernehmen" erhalten (Basis der Marktanalyse)
+            markt_log.append({"t": it["gefunden_am"], "s": it["segmente"], "k": it["keywords"][:6],
+                              "q": name, "y": it.get("typ"), "r": it["region"],
+                              "x": (it["titel"] + " " + it.get("firma", ""))[:200].lower()})
     neue.sort(key=lambda x: -x["score"])
-    radar["seen"] = list(seen)[-8000:]
-    radar["treffer"] = (neue + radar["treffer"])[:300]
+    radar["seen"] = list(seen)[-20000:]
+    radar["treffer"] = sorted(neue + radar["treffer"], key=lambda x: -x.get("score", 0))[:400]
+    radar["markt_log"] = markt_log[-8000:]
     radar["letzter_scan"] = _now()
     speichere("radar.json", radar)
     return {"neue_treffer": len(neue), "fehler": fehler}
@@ -1016,18 +1039,33 @@ def api_radar():
             t["arbeitsort"] = klassifiziere_arbeitsort(t.get("titel", "") + " " + t.get("text", ""))
             t["standort"] = extrahiere_standort(t.get("titel", ""), t.get("text", ""))
             geaendert = True
+        if "segmente" not in t:  # Alt-Treffer nach neuem Zielprofil bewerten
+            t.setdefault("typ", "bedarfssignal")
+            if not marktradar.bewerte(t, lade_config().get("radar_keywords", [])):
+                t.update({"segmente": [], "region": "global"})
+            geaendert = True
     if geaendert:
+        radar["treffer"].sort(key=lambda x: -x.get("score", 0))
         speichere("radar.json", radar)
-    rollen_zaehler, ort_zaehler = {}, {}
+    rollen_zaehler, ort_zaehler, seg_zaehler, typ_zaehler, reg_zaehler = {}, {}, {}, {}, {}
     for t in treffer:
         rollen_zaehler[t["rolle"]] = rollen_zaehler.get(t["rolle"], 0) + 1
         ort_zaehler[t["arbeitsort"]] = ort_zaehler.get(t["arbeitsort"], 0) + 1
+        for s in t.get("segmente", []):
+            seg_zaehler[s] = seg_zaehler.get(s, 0) + 1
+        typ_zaehler[t.get("typ")] = typ_zaehler.get(t.get("typ"), 0) + 1
+        reg_zaehler[t.get("region")] = reg_zaehler.get(t.get("region"), 0) + 1
     rolle_filter = request.args.get("rolle")
     if rolle_filter:
         treffer = [t for t in treffer if t["rolle"] == rolle_filter]
     ort_filter = request.args.get("arbeitsort")
     if ort_filter:
         treffer = [t for t in treffer if t.get("arbeitsort") == ort_filter]
+    for feld, wert in (("segment", request.args.get("segment")), ("typ", request.args.get("typ")),
+                       ("region", request.args.get("region"))):
+        if wert:
+            treffer = [t for t in treffer
+                       if (wert in t.get("segmente", []) if feld == "segment" else t.get(feld) == wert)]
     rollen = ([{"key": p["key"], "name": p["name"], "anzahl": rollen_zaehler.get(p["key"], 0)}
                for p in ROLLEN_PROFILE]
               + [{"key": "sonstiges", "name": "Sonstiges", "anzahl": rollen_zaehler.get("sonstiges", 0)}])
@@ -1036,13 +1074,65 @@ def api_radar():
     return jsonify({"treffer": treffer[:150], "letzter_scan": radar["letzter_scan"],
                     "rollen": [r for r in rollen if r["anzahl"] > 0],
                     "arbeitsorte": [o for o in arbeitsorte if o["anzahl"] > 0],
+                    "segmente": [{"key": s["key"], "name": s["name"], "anzahl": seg_zaehler.get(s["key"], 0)}
+                                 for s in marktradar.SEGMENTE if seg_zaehler.get(s["key"])],
+                    "typen": [{"key": k, "name": v, "anzahl": typ_zaehler.get(k, 0)}
+                              for k, v in marktradar.TYP_LABELS.items() if typ_zaehler.get(k)],
+                    "regionen": [{"key": k, "name": v, "anzahl": reg_zaehler.get(k, 0)}
+                                 for k, v in (("regional", "📍 Regional (MV/HH)"), ("global", "🌍 Überregional/Global"))
+                                 if reg_zaehler.get(k)],
                     "quellen": [q["name"] for q in RADAR_QUELLEN]
+                               + [name for name, _, _ in marktradar.QUELLEN]
                                + [q.get("name", "eigene") for q in lade_config().get("radar_quellen_eigene", [])]})
 
 
 @app.route("/api/radar/scan", methods=["POST"])
 def api_radar_scan():
     return jsonify(radar_scan())
+
+
+# --- Marktanalyse --------------------------------------------------------------------
+
+@app.route("/api/markt")
+def api_markt():
+    """Nachfrage-Report aus dem Markt-Log (Segmente, Keywords, Trends, Produkt-Ideen)."""
+    tage = max(1, min(int(request.args.get("tage", 30)), 365))
+    radar = lade("radar.json", {})
+    return jsonify(marktradar.markt_report(radar.get("markt_log", []), tage))
+
+
+@app.route("/api/branchen")
+def api_branchen():
+    """Branchen-Chancen: OSM-Marktgröße je Region (7 Tage Cache) + Profil + Radar-Signale."""
+    cfg = lade_config()
+    regionen = cfg.get("markt_regionen") or ["Rostock", "Hamburg"]
+    cache = lade("branchen.json", {"stand": None, "osm": {}})
+    veraltet = (not cache["stand"] or request.args.get("refresh")
+                or datetime.fromisoformat(cache["stand"]) < datetime.now() - timedelta(days=7)
+                or set(cache["osm"]) != set(regionen)
+                or (any(v is None for v in cache["osm"].values())  # Teilausfall beim letzten Mal,
+                    and (not cache.get("fehlversuch")  # aber höchstens 1×/Stunde neu versuchen
+                         or datetime.fromisoformat(cache["fehlversuch"]) < datetime.now() - timedelta(hours=1))))
+    fehler = []
+    if veraltet:
+        osm = {}
+        for r in regionen:
+            try:
+                osm[r] = marktradar.osm_zaehlen(r)
+            except Exception as e:
+                osm[r] = cache["osm"].get(r)  # alten Stand behalten
+                fehler.append(f"{r}: {e}")
+        cache = {"stand": _now() if not fehler else cache["stand"] or _now(), "osm": osm,
+                 "fehlversuch": _now() if fehler else None}
+        speichere("branchen.json", cache)
+    report = marktradar.markt_report(lade("radar.json", {}).get("markt_log", []), 90)
+    if not fehler and any(v is None for v in cache["osm"].values()):
+        fehler = ["OpenStreetMap-Server zuletzt nicht erreichbar — neuer Versuch automatisch nach 1 Std. "
+                  "oder per Button"]
+    return jsonify({"stand": cache["stand"], "regionen": regionen, "fehler": fehler,
+                    "branchen": marktradar.branchen_analyse(cache["osm"], report["branchen_signale"]),
+                    "hinweis": "OSM-Zahlen sind Untergrenzen (nicht jede Praxis ist eingetragen) — "
+                               "gut für den Branchen-/Regionsvergleich, nicht als absolute Marktgröße."})
 
 
 @app.route("/api/radar/<treffer_id>/uebernehmen", methods=["POST"])

@@ -14,7 +14,8 @@
 | **Pipeline** | Kanban: Neu → Qualifiziert → Erstgespräch → Angebot → Gewonnen/Verloren (Drag & Drop), Pipeline-Wert |
 | **F3: Trigger-Mails** | Mail 1 = sofortige Eingangsbestätigung bei JEDEM Lead · Mail 2 = genau EINE Buchungs-Erinnerung (systemseitig begrenzt — kein Drip, §7 UWG) · Postausgang-Ansicht, funktioniert auch ohne SMTP |
 | **F2: DSGVO** | Export je Lead (Art. 15), Löschen (Art. 17), Anonymisieren, automatisches Löschkonzept für verlorene Leads (Frist konfigurierbar), Verlaufs-Protokoll |
-| **Lead-Radar** | Scannt öffentliche Projektbörsen (RemoteOK, WeWorkRemotely, Remotive-API + eigene Feeds) nach Keyword-Relevanz, 1 Klick → Lead in Pipeline |
+| **Lead-Radar** | Regional + global: Arbeitsagentur-Jobsuche (MV/HH-Umkreis, bundesweite Spezialthemen, „Selbständigkeit“ = Aufträge), service.bund.de- und TED-EU-Ausschreibungen, Arbeitnow, RemoteOK/WWR/Remotive + eigene Feeds. Bewertung nach Zielprofil (`app/marktradar.py`): Healthcare-IT (KIS/PVS/HL7/FHIR) > IAM / Öffentlich / KI / Integration > KMU-Branchen, + Regionsbonus. Filter nach Segment, Typ (Ausschreibung/Freelance/Stelle) und Region, 1 Klick → Lead in Pipeline |
+| **Marktanalyse** | Nachfrage je Segment/Keyword/Quelle aus dem Markt-Log (7/30/90 Tage), Branchen-Chancen (Praxen, Pflege, Zahnärzte, Physio, Steuerberater, Kanzleien, Handwerk, Apotheken) aus OSM-Betriebszahlen je Region × Experten-Profil, Produkt-Hypothesen als Input fürs Wirtschaftlichkeits-Gate |
 | **Einstellungen** | Mail-Templates, Buchungs-Regeln, Keywords, eigene Radar-Quellen, DSGVO-Frist — alles in der UI |
 | **Design** | Helles Corporate-Theme (Standard, angelehnt an Trace-AI OS/CorporateLLM) + Dunkel-Umschalter in der Sidebar |
 
@@ -31,6 +32,12 @@ Start: `python app/app.py` → http://localhost:5330 · im AI-OS: Produktion-Tab
   eigenen Skills passen — nicht das Scrapen privater Kontaktdaten (DSGVO) und
   keine automatisierte Kaltakquise-Mails (§7 UWG). Deutsche Börsen (freelancermap
   etc.) als eigene Feed-Quellen in den Einstellungen ergänzbar.
+- **Marktanalyse zählt Betriebe, speichert keine Einzeldaten:** Die Branchen-
+  Chancen nutzen nur OpenStreetMap-*Anzahlen* (`out count`) je Region — keine
+  Namen/Adressen von Praxen. Stellenanzeigen dienen als Bedarfssignal; sie sind
+  Angebote von Organisationen, keine Personendaten. OSM-Zahlen sind Untergrenzen.
+- **Ausschreibungen nur mit IT-Bezug:** Kliniken schreiben viel Bau aus — ohne
+  IT-Pflichtbegriff und Bau-Ausschluss landete „Neubau OP-Trakt“ als Healthcare-IT im Radar.
 
 ## Phase B (Gate: erst nach 4 Wochen Echtbetrieb + Nutzen-Nachweis)
 

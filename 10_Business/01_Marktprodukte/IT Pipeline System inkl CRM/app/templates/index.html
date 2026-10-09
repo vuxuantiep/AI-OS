@@ -87,6 +87,19 @@
   .rtreffer a { color: var(--acc); text-decoration: none; }
   .rtreffer .btn { margin-left: auto; flex-shrink: 0; }
 
+  /* Marktanalyse */
+  .mh { font-size: 0.92rem; margin: 18px 0 9px; }
+  .mgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .balken { display: flex; align-items: center; gap: 10px; font-size: 0.82rem; margin-bottom: 6px; }
+  .balken .bn { width: 210px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .balken .bb { flex: 1; background: var(--panel2); border-radius: 6px; height: 14px; overflow: hidden; }
+  .balken .bb i { display: block; height: 100%; background: linear-gradient(90deg, var(--acc), var(--acc2)); }
+  .balken .bz { width: 44px; text-align: right; color: var(--muted); }
+  .bkarte { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 15px; margin-bottom: 8px; }
+  .bkarte .bkopf { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .bkarte .bwerte { color: var(--muted); font-size: 0.74rem; margin-top: 5px; }
+  @media (max-width: 600px) { .balken .bn { width: 120px; } }
+
   /* Modal */
   .overlay { position: fixed; inset: 0; background: rgba(5,10,20,0.6); display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; z-index: 60; overflow-y: auto; }
   .overlay.open { display: flex; }
@@ -126,6 +139,7 @@
   <button class="nav-btn" data-view="zeiten">⏱ <span class="lbl">Zeiten</span></button>
   <button class="nav-btn" data-view="katalog">🧾 <span class="lbl">Katalog</span></button>
   <button class="nav-btn" data-view="radar">📡 <span class="lbl">Lead-Radar</span><span class="nav-badge" id="radar-badge" style="display:none;">0</span></button>
+  <button class="nav-btn" data-view="markt">📊 <span class="lbl">Marktanalyse</span></button>
   <button class="nav-btn" data-view="postausgang">✉️ <span class="lbl">Postausgang</span><span class="nav-badge" id="mail-badge" style="display:none;">0</span></button>
   <button class="nav-btn" data-view="einstellungen">⚙️ <span class="lbl">Einstellungen</span></button>
   <button class="nav-btn" id="theme-toggle" title="Hell/Dunkel umschalten">🌓 <span class="lbl">Theme</span></button>
@@ -241,12 +255,33 @@
       <button class="btn primary" id="btn-radar-scan">📡 Jetzt scannen</button>
       <span class="hint" id="radar-info"></span>
     </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;" id="radar-segmente"></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;" id="radar-typen"></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;" id="radar-rollen"></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="radar-orte"></div>
     <div id="radar-liste"><div class="leer">Lade…</div></div>
   </section>
 
   <!-- Postausgang -->
+  <section class="view" id="view-markt">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+      <select id="markt-tage"><option value="7">7 Tage</option><option value="30" selected>30 Tage</option><option value="90">90 Tage</option></select>
+      <button class="btn" id="btn-branchen-refresh">🗺 Branchenzahlen neu laden</button>
+      <span class="hint" id="markt-info"></span>
+    </div>
+    <h3 class="mh">🏆 Branchen-Chancen (Marktgröße × IT-Abhängigkeit × Lücke)</h3>
+    <div id="markt-branchen"><div class="leer">Lade…</div></div>
+    <h3 class="mh">📈 Nachfrage nach Segment</h3>
+    <div id="markt-segmente"></div>
+    <div class="mgrid">
+      <div><h3 class="mh">🔑 Top-Keywords</h3><div id="markt-keywords"></div></div>
+      <div><h3 class="mh">🧭 Quellen · Typen · Regionen</h3><div id="markt-mix"></div></div>
+    </div>
+    <h3 class="mh">💡 Produkt-Hypothesen aus der Nachfrage</h3>
+    <div id="markt-ideen"></div>
+    <p class="hint" style="margin-top:10px;">Produkt-Hypothesen sind Kandidaten für den Wirtschaftlichkeits-Prüfer — keine Umsetzung ohne CEO-Freigabe.</p>
+  </section>
+
   <section class="view" id="view-postausgang">
     <div class="hint" id="smtp-status" style="margin-bottom:12px;"></div>
     <div id="mail-liste"><div class="leer">Lade…</div></div>
@@ -502,7 +537,7 @@ async function api(pfad, opt) {
 document.querySelectorAll(".nav-btn").forEach(b => b.addEventListener("click", () => zeige(b.dataset.view)));
 const TITEL = { dashboard: "📊 Dashboard", pipeline: "📋 Pipeline", leads: "👥 Leads",
   kunden: "🤝 Kunden", dokumente: "📄 Dokumente", zeiten: "⏱ Zeiterfassung", katalog: "🧾 Leistungskatalog",
-  radar: "📡 Lead-Radar", postausgang: "✉️ Postausgang", einstellungen: "⚙️ Einstellungen" };
+  radar: "📡 Lead-Radar", markt: "📊 Marktanalyse", postausgang: "✉️ Postausgang", einstellungen: "⚙️ Einstellungen" };
 function zeige(name) {
   aktViewName = name;
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
@@ -517,6 +552,7 @@ function zeige(name) {
   if (name === "zeiten") ladeZeiten();
   if (name === "katalog") ladeKatalog();
   if (name === "radar") ladeRadar();
+  if (name === "markt") ladeMarkt();
   if (name === "postausgang") ladeOutbox();
   if (name === "einstellungen") ladeConfig();
 }
@@ -704,12 +740,28 @@ async function dsgvoAufraeumen() {
 
 /* Radar */
 let radarRolle = "", radarOrt = "";
-const ROLLEN_NAMEN = {}, ORT_NAMEN = {};
+const radarF = { segment: "", typ: "", region: "" };
+const ROLLEN_NAMEN = {}, ORT_NAMEN = {}, SEG_NAMEN = {}, TYP_NAMEN = {};
+// Filter-Chips für Segment / Typ+Region (Mehrfach-Dimensionen in einer Zeile)
+function chipZeile(zielId, gruppen) {
+  const el = document.getElementById(zielId);
+  el.innerHTML = gruppen.map(g =>
+    '<button class="btn small' + (radarF[g.feld] === "" ? " primary" : "") + '" data-f="' + g.feld + '" data-v="">' + esc(g.alle) + '</button>' +
+    g.werte.map(w => '<button class="btn small' + (radarF[g.feld] === w.key ? " primary" : "") + '" data-f="' + g.feld +
+      '" data-v="' + w.key + '">' + esc(w.name) + ' (' + w.anzahl + ')</button>').join("")).join('<span style="width:10px"></span>');
+  el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { radarF[b.dataset.f] = b.dataset.v; ladeRadar(); }));
+}
 async function ladeRadar() {
   const filter = [];
   if (radarRolle) filter.push("rolle=" + encodeURIComponent(radarRolle));
   if (radarOrt) filter.push("arbeitsort=" + encodeURIComponent(radarOrt));
+  Object.entries(radarF).forEach(([k, v]) => { if (v) filter.push(k + "=" + encodeURIComponent(v)); });
   const d = await api("api/radar" + (filter.length ? "?" + filter.join("&") : ""));
+  (d.segmente || []).forEach(s => SEG_NAMEN[s.key] = s.name);
+  (d.typen || []).forEach(s => TYP_NAMEN[s.key] = s.name);
+  chipZeile("radar-segmente", [{ feld: "segment", alle: "Alle Segmente", werte: d.segmente || [] }]);
+  chipZeile("radar-typen", [{ feld: "typ", alle: "Alle Typen", werte: d.typen || [] },
+                            { feld: "region", alle: "Regional + Global", werte: d.regionen || [] }]);
   document.getElementById("radar-info").textContent =
     "Quellen: " + d.quellen.join(", ") + (d.letzter_scan ? " · letzter Scan: " + d.letzter_scan.slice(0, 16) : "") +
     " · Auto-Scan täglich 7 Uhr";
@@ -736,6 +788,10 @@ async function ladeRadar() {
   ziel.innerHTML = d.treffer.length ? d.treffer.map(t =>
     '<div class="rtreffer"><div class="score">' + t.score + '</div><div style="min-width:0;">' +
     '<div class="titel">' + esc(t.titel) + '</div>' +
+    '<div class="rmeta">' + (t.typ ? '<span class="tag radar">' + esc(TYP_NAMEN[t.typ] || t.typ) + '</span> ' : '') +
+    (t.region === "regional" ? '<span class="tag calcom">📍 Regional</span> ' : '') +
+    (t.segmente || []).map(s => '<span class="tag">' + esc(SEG_NAMEN[s] || s) + '</span> ').join("") +
+    (t.firma ? '🏢 ' + esc(t.firma) + ' · ' : '') + '</div>' +
     '<div class="rmeta"><span class="tag">' + esc(ROLLEN_NAMEN[t.rolle] || t.rolle || "—") + '</span> ' +
     '<span class="tag">' + esc(ORT_NAMEN[t.arbeitsort] || t.arbeitsort || "❔") + '</span> ' +
     (t.standort ? '📍 ' + esc(t.standort) + ' · ' : '') +
@@ -756,6 +812,43 @@ document.getElementById("btn-radar-scan").addEventListener("click", async () => 
     toast("📡 " + d.neue_treffer + " neue Treffer" + (d.fehler.length ? " · Fehler: " + d.fehler.join(", ") : ""));
     await ladeRadar();
   } finally { b.disabled = false; b.textContent = "📡 Jetzt scannen"; }
+});
+
+/* Marktanalyse */
+function balken(liste, nameFn) {
+  const max = Math.max(1, ...liste.map(x => x.anzahl));
+  return liste.length ? liste.map(x => '<div class="balken"><span class="bn" title="' + esc(nameFn(x)) + '">' + esc(nameFn(x)) +
+    '</span><span class="bb"><i style="width:' + Math.round(100 * x.anzahl / max) + '%"></i></span><span class="bz">' + x.anzahl + '</span></div>').join("")
+    : '<div class="leer">Noch keine Daten — im Lead-Radar „Jetzt scannen“.</div>';
+}
+async function ladeMarkt(refresh) {
+  const tage = document.getElementById("markt-tage").value;
+  const [m, b] = await Promise.all([api("api/markt?tage=" + tage), api("api/branchen" + (refresh ? "?refresh=1" : ""))]);
+  document.getElementById("markt-info").textContent = m.anzahl + " relevante Signale in " + m.zeitraum_tage +
+    " Tagen · Branchenzahlen (OpenStreetMap " + b.regionen.join(" + ") + "): " + (b.stand ? b.stand.slice(0, 10) : "—") +
+    (b.fehler.length ? " · ⚠ " + b.fehler.join("; ") : "");
+  document.getElementById("markt-branchen").innerHTML = b.branchen.map((z, i) =>
+    '<div class="bkarte"><div class="bkopf"><div class="score" style="background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-radius:9px;min-width:42px;text-align:center;padding:6px 0;font-weight:800;">' +
+    z.chancen_score + '</div><b>' + (i + 1) + '. ' + esc(z.name) + '</b><span class="hint">' +
+    Object.entries(z.anzahl).map(([r, n]) => esc(r) + ": " + (n == null ? "?" : n)).join(" · ") +
+    (z.signale ? ' · 📡 ' + z.signale + ' Radar-Signale' : '') + '</span></div>' +
+    '<div class="bwerte">' + esc(z.treiber) + '</div><div class="bwerte">' +
+    Object.entries(z.bewertung).map(([k, v]) => esc(k) + " " + "●".repeat(v) + "○".repeat(5 - v)).join(" · ") + '</div></div>').join("") +
+    '<p class="hint">' + esc(b.hinweis) + '</p>';
+  document.getElementById("markt-segmente").innerHTML = balken(m.segmente, x => x.name);
+  document.getElementById("markt-keywords").innerHTML = balken(m.keywords, x => x.key);
+  const TYPN = { ausschreibung: "📜 Ausschreibung", freelance: "💼 Projekt/Freelance", bedarfssignal: "📈 Stelle", regional: "📍 Regional", global: "🌍 Global" };
+  document.getElementById("markt-mix").innerHTML = balken(m.quellen, x => x.key) + "<br>" +
+    balken(m.typen.concat(m.regionen), x => TYPN[x.key] || x.key);
+  document.getElementById("markt-ideen").innerHTML = m.produkt_ideen.length ? m.produkt_ideen.map(p =>
+    '<div class="bkarte"><b>' + esc(p.titel) + '</b><div class="bwerte">' + esc(p.warum) + '</div></div>').join("")
+    : '<div class="leer">Noch zu wenig Signale für Produkt-Hypothesen (mehr Scans sammeln).</div>';
+}
+document.getElementById("markt-tage").addEventListener("change", () => ladeMarkt());
+document.getElementById("btn-branchen-refresh").addEventListener("click", async () => {
+  const btn = document.getElementById("btn-branchen-refresh");
+  btn.disabled = true; btn.textContent = "⏳ zähle (bis 1 Min)…";
+  try { await ladeMarkt(true); } finally { btn.disabled = false; btn.textContent = "🗺 Branchenzahlen neu laden"; }
 });
 
 /* Postausgang */
