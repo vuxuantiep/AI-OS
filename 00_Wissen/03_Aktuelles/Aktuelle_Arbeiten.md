@@ -6,6 +6,747 @@
 
 ---
 
+## 2026-10-10 — IT-Werkbank: M365 Admin-Betrieb 2026 (Diagramm, Wiki, Vorlagen)
+
+Anlass: Vorbereitung EMVIA-Start. Frage: Was ist neu in M365, und wie löse ich
+Kennwort-/Konto-/Berechtigungs-/VPN-Tickets schneller, automatisiere sie und
+erkenne Probleme proaktiv aus Logs?
+
+**Gebaut**
+- Diagramm `web/m365-admin-betrieb-2026.svg`: ① Eingang/Triage → ② Self-Service →
+  ③ Automatisierung → ④ Admin manuell, ⑤ Logs → Log Analytics → Alarm → Ticket
+  (Rückkopplung = proaktiv), dazu Box „Neu 10/2026“ und Zugang via Entra Private Access.
+- Wiki `wissen/emvia/08`–`11`: Neu in M365, Ticket-Schnellhilfe (Fehlercodes,
+  TAP, Sperren, Berechtigung „woher soll der Zugriff kommen?“, VPN/GSA),
+  Automatisierung (Lifecycle Workflows, Managed Identity, Remediations),
+  Monitoring (KQL, Alarme, Routine, Datenschutz).
+- Paket `app/paket_emvia_betrieb.py` (eigene PAKET_ID `emvia-betrieb-v1`, 11 Vorlagen):
+  Benutzer-Schnelldiagnose, TAP/Sitzungen widerrufen, Berechtigungs-Check,
+  Morgen-Check, ablaufende Secrets, Remediation-Muster, 2× KQL, 2 Tickets, Routine.
+
+**Warum eigenes Paket statt Erweiterung von `paket_emvia_m365`?** Pakete werden je
+Instanz genau einmal eingespielt (Marker in `vorlage_paket`). Neue Einträge im alten
+Paket kämen in bestehenden DBs (lokal, Pi4) nie an → neue PAKET_ID nötig.
+
+**Recherche-Stolpersteine (Stand 10.10.2026)**
+- Seit 01.10.2026 ist EWS in Exchange Online standardmäßig blockiert (endgültig 01.04.2027,
+  MC1227454). Das wird typische „Scanner/Fachanwendung geht plötzlich nicht“-Tickets erzeugen.
+- Seit 01.10.2026 greifen die alten ID-Protection-Risikorichtlinien nicht mehr. Der Ausfall
+  ist still, ohne Fehlermeldung → als CA-Richtlinien nachbauen.
+- Intune-Suite-Funktionen sind seit 07/2026 in E3/E5 (Remote Help in beiden, EPM nur E5).
+- Angekündigte Termine (Passkey-Standard 09/2026, B2B-Passkeys 10/2026) im Wiki bewusst
+  als „angekündigt“ formuliert, weil nicht bestätigt.
+
+**Verifikation:** 6 PowerShell-Skripte mit dem PS-Parser geprüft (0 Fehler), Text-Überlauf im
+SVG per getBBox geprüft, lokaler Container neu gebaut (Vorlagen 27 → 38), Wiki lokal
+eingespielt (12 Seiten). Pi4: noch nicht (Basic-Auth + Rebuild offen).
+
+## 2026-10-09 (2) — IT-Werkbank: EMVIA M365 & MDM + Generator-Module
+
+Anlass: Start als IT-Admin M365 & MDM bei der EMVIA Living GmbH (Hamburg) am
+15.10.2026. Gebaut: Modul `emvia` (Steckbrief automatisch im Chat-Kontext),
+27 Vorlagen (Graph/EXO/Intune-Skripte mit Testlauf, Mails, Tickets, Checklisten),
+Werkzeug „On-/Offboarding“, FAQ-Wiki (`app-live/wissen/emvia`), M365-Architektur-
+diagramm, Module PowerShell-/Prompt-/Datenbank-Generator.
+
+### Stolpersteine (lernen!)
+
+1. **Das Modell ist der Engpass, nicht der Prompt:** Cloudflare `llama-3.1-8b`
+   erfand Cmdlets (`New-MgGraphClient`, `Set-MgUserMailbox`). Mit DEMSELBEN
+   Cloudflare-Zugang laufen `qwen2.5-coder-32b` und `llama-3.3-70b` korrekt in
+   < 2 s → Modellwahl je Modul (`llm.frage(code=True)`), 8B nur noch Fallback.
+2. **Prompts können falsch lenken:** „MSOnline/AzureAD → Graph“ ließ das Modell
+   Postfach-Einstellungen über Graph lösen (geht nicht, das ist Exchange). Lösung:
+   explizite Zuordnung „Postfächer = ExchangeOnlineManagement“.
+3. **Zu viele Rückfragen:** Regel „frage bei fehlenden Angaben“ → kleines Modell
+   fragte bei klaren Aufgaben nach Tenant-ID. Besser: sofort liefern, Annahmen nennen.
+4. **Prompt-Generator schrieb Python-Code**, weil „Codeblock“ im Prompt stand →
+   ausdrücklich „KEIN Programmcode, nur Prompt-Text“ und Überschriften vorgeben.
+5. **Seed-Daten in genutzten DBs:** Die alte Erstbefüllung lief nur bei leerer
+   Tabelle → neue Tabelle `vorlage_paket` merkt sich je Paket „schon eingespielt“.
+6. **Akzente:** „Zoë“ wurde zu „zo“ → erst ä/ö/ü/ß ersetzen, dann Unicode-NFD und
+   Akzentzeichen entfernen (PowerShell `\p{Mn}`, JS `[̀-ͯ]`), in Skript
+   UND Generator identisch.
+7. Generierter Code ist erst „fertig“, wenn er durch den echten PowerShell-Parser
+   gelaufen ist (`[Parser]::ParseFile`), hier: 30/30 ok.
+
+---
+
+## 2026-10-09 — LeadPilot: Markt-Radar (regional + global) + Marktanalyse
+
+CEO-Strategie „Kombi-Modell": Großprojekte Healthcare-IT (KIS/PVS, HL7/FHIR,
+Berechtigungen in Kliniken, öffentlicher Sektor) + lokale KMU (Praxen, Zahnärzte,
+Physio, Pflegedienste, Steuerberater) + eigene Produkte. Auftrag: besserer
+Lead-Generator + Marktrecherche. Umgesetzt im bestehenden LeadPilot (:5330),
+neues Modul `app/marktradar.py`.
+
+**Neue Quellen (alle live getestet):** Arbeitsagentur-Jobsuche `pc/v6` (v4 gibt
+inzwischen 403!) mit Header `X-API-Key: jobboerse-jobsuche`, `angebotsart=2` =
+Selbständigkeit; service.bund.de-RSS (500 Ausschreibungen); TED-API v3 (EU,
+anonym, Expert-Query mit CPV 72*/48*); Arbeitnow. Verworfen: HN-„Freelancer?“-Thread
+(letzter Thread 10/2025, also tot), freelancermap-RSS (404).
+
+**Bewertung:** gewichtete Segmente statt reiner Keyword-Zählung, Titeltreffer
+zählen doppelt, +4 Region MV/HH, +3 Ausschreibung/Freelance, +3 Kombi-Bonus
+Healthcare × (IAM|Integration|KI), Mindest-Score 8.
+
+**Marktanalyse-Tab:** Markt-Log (bleibt auch nach „Übernehmen“) → Segmente,
+Keywords, Wochen-Trend, Produkt-Hypothesen. Branchen-Chancen = OSM-Betriebszahl
+(`out count`, keine Einzeldaten) × Profil (Abhängigkeit, Zahlungsbereitschaft,
+IT-Reife-Lücke, Wettbewerb).
+
+### Stolpersteine (lernen!)
+
+1. **Falsche Treffer nach Bedeutung, nicht nach Syntax:** Kliniken schreiben
+   viel *Bau* aus → „Neubau OP-Trakt“ kam als Healthcare-IT rein. Und die
+   BA-Suche nach „Krankenhausinformationssystem“ liefert auch Pflege-/MFA-Stellen
+   derselben Klinik. Lösung: zwei Schranken: `IT_PFLICHT` + `BAU_AUSSCHLUSS` für
+   Ausschreibungen, `IT_ROLLE` für Stellen (im Titel/Beruf).
+2. **Regex ohne Wortgrenze:** `entra` traf „zentral“, `kommun` traf
+   „Kommunikation“, `administrat` traf „administrative Terminambulanz“. Erst die
+   Top-Keyword-Liste in der UI hat das sichtbar gemacht. **Ergebnisse ansehen,
+   nicht nur zählen.**
+3. **`\b` wurde zu Backspace:** Python-Code per Bash-Heredoc geschrieben, dabei
+   wurde `\\b` → Steuerzeichen 0x08. Die Regex war dann still kaputt (kein
+   Fehler!). Erkannt an `grep -c $'\x08'`. Lehre: Regex-Code nur mit dem
+   Editor-Tool schreiben, nicht über die Shell.
+4. **Öffentliche Overpass-Server sind unzuverlässig** (406/500/504). Eine
+   Sammelabfrage für Hamburg ist zu schwer → eine Abfrage je Branche, drei
+   Spiegel, und eine **Fehlversuch-Sperre (1 h)**, damit nicht jeder Seitenaufruf
+   80 s hängt. Gemessen: 82 s → 0,4 s.
+5. **Zwei Instanzen auf Port 5330:** Windows lässt doppeltes Binden zu; die alte
+   Instanz hat weiter alten Code ausgeliefert. Vor jedem Neustart `netstat` prüfen.
+
+---
+
+## 2026-07-25 (Tag 13) — Hermes-Debugging-Marathon: echte Root Causes gefunden, Multi-Instanz-Architektur etabliert
+
+CEO-Auftrag: "prüfe die hermes und seine konfiguration und mach weiter was
+gestern noch da ist". Wurde zu einem sehr langen Debugging-Tag mit
+mehreren echten, tief verschachtelten Ursachen — am Ende stabile,
+dokumentierte Lösung für beide Hermes-Instanzen.
+
+1. **Windows-Autostart-Race-Condition gefunden**: nach PC-Neustart heute
+   Morgen liefen 3 von 4 Diensten (MCP-Server, Agent-System, LiteLLM) NICHT
+   mehr — Crash mit `WinError 10049` ("Adresse ungültig in diesem
+   Kontext"), weil die Aufgabenplanung ("Bei Anmeldung") sofort beim Login
+   feuert, die Tailscale-Netzwerkschnittstelle aber verzögert hochfährt.
+   **Fix**: `wait_for_bindable()`-Hilfsfunktion in allen drei Skripten
+   (`mcp_server.py`, `agent_system.py`, `litellm_gateway.py`) — wartet bis
+   zu 60s auf die Zieladresse, bevor der Server bindet.
+2. **Ollama-Autostart hatte einen eigenen, subtileren Bug**: ein separater
+   `ollama app.exe`-Elternprozess (Tray-Icon-Manager) respawnt bei jedem
+   Neustartversuch einen neuen `ollama.exe serve`-Kindprozess mit SEINER
+   eigenen (alten) Umgebung — Beenden nur des Kindprozesses wirkungslos.
+   Neuer Autostart-Wrapper `04_Infrastruktur/Runtime/ollama_autostart.py`
+   beendet beide Prozessnamen, bindet an `0.0.0.0`/`::` (deckt lokalen UND
+   Tailscale-Zugriff gleichzeitig ab, statt nur eine spezifische IP).
+3. **Cronjob-Sicherheitsbremse entdeckt**: der gestrige Blog-Cronjob lief
+   pünktlich um 8 Uhr, wurde aber von Hermes' eigenem "config drift"-Schutz
+   gestoppt (Modell hatte sich seit Job-Erstellung geändert) — bewusstes
+   Sicherheitsfeature, kein Bug, aber zeigt: Modell-Wechsel sollten bewusst
+   erfolgen, nicht nebenbei.
+4. **ECHTER Durchbruch beim Tool-Calling-Problem (mehrschichtige Ursache,
+   endlich vollständig aufgeklärt)**:
+   - Kontextfenster 16K → 64K erhöht (Ollama `OLLAMA_CONTEXT_LENGTH`) —
+     nötig, aber allein nicht ausreichend UND macht jede Anfrage langsamer.
+   - Cloudflare Workers AI getestet: schnell, aber "Request payload too
+     large" — Hermes' großer Prompt sprengt das Anfragelimit.
+   - OpenRouter mit falschem Modell-Slug probiert (`anthropic/claude-3.5-
+     haiku` existiert nicht, richtig: `anthropic/claude-haiku-4.5`).
+   - **Der eigentliche Haupttreiber war die schiere PROMPT-GRÖSSE**: 77
+     vorinstallierte Skills bliesen den System-Prompt auf ~20.000 Zeichen
+     auf. `hermes skills opt-out --remove --yes` auf 3 lokale Skills
+     reduziert (System-Prompt von ~20.000 auf 12.559 Zeichen) — spürbare,
+     aber nicht vollständige Verbesserung (Tool-Schemas selbst bleiben mit
+     45,7KB/27 Tools der größere Rest-Posten).
+   - Trotzdem blieben Multi-Schritt-Skill-Aufgaben (Datei lesen → Befehl
+     ausführen → Ergebnis interpretieren) auf JEDEM getesteten Anbieter
+     langsam bis zum Hängenbleiben (>10 Minuten in einem Fall).
+   - **CEO-Fund per eigenem Dashboard-Test**: Modell `nvidia/nemotron-3-
+     super-120b-a12b:free` (OpenRouter, kostenlos, MoE-effizient) läuft
+     "wirklich gut und schnell" — jetzt auf beiden Instanzen aktiv.
+5. **KRITISCHER Konfigurationsfehler auf der PC-Seite gefunden**: die
+   bereits am 10.07. installierte Hermes-Desktop-App (v40.10.2) hatte NIE
+   funktioniert ("gar kein Chat") — Ursache: eine Umgebungsvariable
+   `HERMES_HOME=C:\Users\vuxua\AppData\Local\hermes` leitete auf eine GANZ
+   ANDERE Config um als die, die unter `~/.hermes` sichtbar/editierbar war
+   — dort stand `provider: huggingface` mit **aufgebrauchtem Guthaben**
+   (HTTP 402), seit Monaten unbemerkt. Kein Hermes-Bug, sondern zwei
+   parallele, nie synchronisierte Config-Stände.
+6. **CEO-Entscheidung: Multi-Instanz-Architektur mit getrennten Rollen**
+   (löst die Geschwindigkeits-Spannung strukturell, nicht durch weiteres
+   Tuning): PC-Hermes = interaktiv, AI-OS-fokussiert (eigene `ai-os`-Skill,
+   direkter `host.docker.internal:8000`-Zugriff aufs native AI-OS-Backend);
+   Pi-Hermes = 24/7-Hintergrundarbeiter (Cronjobs, Websuche/Scraping,
+   künftig Messaging-Kanäle) — jede Instanz mit eigenem Gedächtnis/Rolle,
+   kein Versuch mehr, EINE Instanz für alles schnell UND mächtig zu machen.
+7. **PC-Hermes-Desktop-App komplett deinstalliert, durch Docker ersetzt**
+   (CEO-Wunsch: sicherer, sauberer Autostart, isolierte Umgebung wie beim
+   Pi). Kein regulärer Windows-Uninstaller vorhanden (portable Installation)
+   — manuell bereinigt: Prozesse, zwei Verknüpfungen (Startmenü + Desktop),
+   `AppData\Local\hermes`, `AppData\Local\com.nousresearch.hermes.setup`,
+   `~/.hermes` (alter, nie genutzter Config-Stand), `HERMES_HOME`-Variable.
+   Neu aufgesetzt mit `docker-compose.windows.yml` (offiziell im Repo,
+   NousResearch hat Windows-Docker-Desktop-Kompatibilität bereits bedacht:
+   kein `network_mode: host`, explizite Portmappings, `host.docker.internal`
+   statt `127.0.0.1` für Host-Zugriff aus dem Container). **Zwei Stolper
+   dabei**: (a) zwei parallel gestartete `docker compose up`-Prozesse
+   blockierten sich beim Image-Pull gegenseitig — sauber einzeln neu
+   gestartet; (b) Dashboard verweigerte den Start bei `--host 0.0.0.0`
+   ohne Auth-Provider (dieselbe DNS-Rebinding-Schutzlogik wie beim Pi,
+   siehe 24.07.) — behoben mit `dashboard.basic_auth` (Username+Passwort-
+   Hash in config.yaml).
+8. **Alte SSH-Tunnel-Altlast gefunden**: Port 9119 war noch vom gestrigen
+   SSH-Tunnel zur Pi-Instanz belegt, blockierte den neuen PC-Container-
+   Dashboard-Port — Tunnel-Prozess beendet, seitdem kein Tunnel mehr nötig
+   (PC-Dashboard direkt unter `localhost:9119` erreichbar, dank Docker
+   Desktops Portmapping).
+
+**Ergebnis am Sitzungsende**: beide Hermes-Instanzen laufen und antworten
+korrekt (End-to-End getestet, "Hallo" in ~22s über die PC-Docker-Instanz).
+
+**Offen für nächstes Mal**: (1) Discord/Slack-Bot-Tokens (CEO-Aktion),
+(2) Multi-Schritt-Skill-Aufgaben (nicht nur einfache Fragen) auf beiden
+Instanzen nochmal unter reduziertem Skill-Set/mit `nemotron-3` testen —
+war vor dem Modellwechsel der eigentliche Langsamkeits-Explosionspunkt,
+noch nicht nach dem Fix erneut verifiziert, (3) `hermes-agent`-Repo-Klon
+auf dem PC (`C:\Users\vuxua\hermes-agent`) ist nur für den Docker-Build/
+die Compose-Datei da, kein aktiver Arbeitsklon, (4) defekte Pi-SSD-Situation
+weiterhin ungeklärt (Garantie/RMA).
+
+### Nachtrag (selber Tag) — Dashboard-Passwort, Backend-Autostart, Multi-Schritt-Test, Hindsight-Memory
+
+9. **Dashboard-Passwort-Hash-Falle**: CEO trug das Passwort selbst in
+   `config.yaml` ein, aber zunächst als Klartext statt als `scrypt$...`-Hash
+   (`password_hash` erwartet zwingend den Hash, kein Klartext-Fallback-Feld
+   an dieser Config-Position). Symptom war nicht sofort offensichtlich —
+   der Dashboard-Container startete äußerlich unauffällig, aber ein
+   `docker logs`-Check zeigte "Refusing to bind dashboard ... no auth
+   providers are registered" aus vorherigen (kaputten) Start-Zyklen im
+   Log-Puffer. Nach korrektem Hash (CEO hat den `hash_password()`-Befehl
+   selbst ausgeführt) sauberer Start bestätigt, Login-Endpoint-Test mit
+   Falsch-Passwort ergab korrekt `401 Invalid credentials` (Beweis: Auth-
+   Pipeline funktioniert, keine Registrierungs-Fehler mehr).
+10. **AI-OS-Backend war schlicht nicht gestartet** — das erklärte eine
+    vorherige verwirrte/halluzinierte Hermes-Antwort zu "Broki-AI" (Hermes
+    versuchte den `ai-os`-Skill zu nutzen, bekam `Connection refused` von
+    `host.docker.internal:8000`, keine Klartext-Fehlermeldung, driftete
+    stattdessen in Spekulation ab). Backend manuell neu gestartet
+    (`backend/.venv/Scripts/python.exe -m uvicorn app.main:app`, da `uv`
+    nicht mehr im PATH auffindbar war), danach als 5. Aufgabenplanung-
+    Eintrag "AI-OS Backend" verstetigt (neuer Wrapper
+    `04_Infrastruktur/Runtime/backend_autostart.py`, gleiches
+    `wait_for_bindable()`/pythonw-Logdatei-Muster wie die anderen vier).
+    Kill-und-Neustart-über-Task-Test erfolgreich.
+11. **Multi-Schritt-Skill-Test nachgeholt** (Punkt (2) von oben, jetzt
+    verifiziert): `hermes -z "..." --yolo` Einzeiler auf BEIDEN Instanzen
+    mit echten Skill-Ketten (Skill lesen → curl → JSON interpretieren →
+    Antwort formulieren) getestet — PC (`ai-os`-Skill, Backend-Status-
+    Abfrage) und Pi (`ai-os-second-brain`-Skill, Broki-AI-Recherche im
+    Second Brain) liefen beide schnell und korrekt durch, keine Hänger
+    mehr. Der Pi-Test beantwortete nebenbei genau die Frage, an der die
+    PC-Instanz vorher gescheitert war (Broki-AI) — zeigt aber auch: die
+    beiden Instanzen haben unterschiedliches Wissen (PC kennt nur, was im
+    AI-OS-Backend/RAG steckt, nicht das Second-Brain-Wiki direkt).
+12. **Memory-Provider-Analyse + Hindsight lokal eingerichtet** (Ersatz für
+    den beim App-Umzug verlorenen `SUPERMEMORY_API_KEY`): alle drei vom
+    CEO genannten Kandidaten (Honcho, Hindsight, Supermemory — "Poncho"
+    war vermutlich eine Verhörung von Honcho, das schon im alten Pi-
+    Leitfaden als Tier-3-Memory stand) direkt aus dem gebündelten Hermes-
+    Plugin-Code geprüft statt aus dem Gedächtnis geraten. Hindsight ist die
+    einzige Option mit echtem lokalem Modus (`local_embedded`) ohne API-
+    Key/Cloud-Abhängigkeit, nutzt dabei das bestehende Ollama direkt als
+    LLM-Backend — passt zur "00_Wissen IMMER lokal"-Regel. Eingerichtet
+    über direktes Schreiben der Config-Dateien (der interaktive
+    curses-Setup-Wizard ist über `docker exec` nicht scriptbar):
+    `config.yaml` (`memory.provider: hindsight`),
+    `~/.hermes/hindsight/config.json` (`mode: local_embedded`,
+    `llm_provider: ollama`, `llm_model: gemma4`), `.env`
+    (`HINDSIGHT_LLM_API_KEY=ollama`), Paket `hindsight-all` per `uv pip
+    install` in den Container-venv nachinstalliert (~200MB, dauert).
+    **Eigener Stolperstein gefunden+behoben**: erster Versuch mit
+    `llm_base_url: http://host.docker.internal:11434` (ohne `/v1`) ergab
+    `HTTP 404` bei der LLM-Verbindungsprüfung im Daemon-Log — Ollamas
+    OpenAI-kompatibler Endpunkt braucht den `/v1`-Pfad-Suffix (wie schon
+    beim bestehenden `fallback_providers`-Eintrag). Nach Korrektur +
+    Löschen der zwischengecachten Profil-Env-Datei (`~/.hindsight/
+    profiles/hermes.env`, wurde sonst nicht neu geschrieben) + Neustart:
+    Verifizierungs-Session ("Merke dir: mein Name ist Tiep...") und
+    komplett neue Folge-Session ("Wer bin ich?") über zwei getrennte
+    `hermes -z`-Aufrufe bestätigten echtes sessionübergreifendes
+    Gedächtnis funktioniert End-to-End.
+
+**Restlich offen**: Discord/Slack-Bot-Tokens weiterhin CEO-Aktion,
+Pi-SSD-Garantie/RMA weiterhin ungeklärt (fehlende Kaufinfos).
+
+---
+
+## 2026-07-24 (Tag 12) — Pi4-Bootloader-Reparatur (SSD-Korruption), Authentik-Crash-Loop gestoppt
+
+CEO-Ausgangslage: Pi4 (`pi-ki-tiep`) war seit dem 23.07.-Dateisystem-Fund
+("bad block bitmap checksum" auf der externen 2TB-SSD, vertagt) nicht mehr
+zuverlässig erreichbar. Fortsetzung: CEO hat ein frisches Raspberry Pi OS auf
+eine SD-Karte geflasht, um von dort aus die SSD unabhängig zu prüfen — genau
+der am 23.07. als "eigenes, größeres Vorhaben" notierte Reparaturweg.
+
+1. **Zugriffsweg geklärt**: weder Tailscale (Pi zeigte dauerhaft "offline,
+   last seen 13h ago") noch SSH funktionierten zum frischen SD-System — CEO
+   hatte stattdessen eine Remote-Desktop-Sitzung direkt auf den Pi-Bildschirm.
+   Arbeitsmodus: CEO tippt Befehle im Pi-Terminal ein, postet mir die Ausgabe,
+   ich werte aus und gebe den nächsten Befehl vor (kein direkter SSH-Zugriff
+   während dieser Phase).
+2. **Geräte-Umbenennung durch SD-Boot verstanden**: nach dem Boot von der
+   SD-Karte wurde die SD-Karte selbst zu `/dev/sda` (root `/`), die externe
+   SSD zu `/dev/sdb` — `sdb2` (1,9TB, ext4, Label `rootfs`) war dabei NICHT
+   automatisch gemountet, konnte also direkt geprüft werden ohne vorher
+   auszuhängen.
+3. **Diagnose bestätigt exakt den 23.07.-Befund**: `sudo e2fsck -fn /dev/sdb2`
+   zeigte ausschließlich "Group NNNN block bitmap does not match checksum" —
+   keine Inode-/Extent-/Verzeichnisstruktur-Fehler, also reine
+   Speicherplatz-Buchhaltung, keine Dateiinhalt-Korruption.
+4. **Echter Reparaturversuch, aber nicht konvergent**: `sudo e2fsck -fy
+   /dev/sdb2` lief durch (Exit 1 = "repariert"), ein direkt anschließender
+   Lesecheck (`-fn`) zeigte aber wieder Fehler — stabil bei 892 Checksummen-
+   Fehlern über mehrere Wiederholungsrunden hinweg (kein Sinken, kein
+   Steigen). `dmesg` zeigte während der gesamten mehrminütigen Scans KEINE
+   I/O-Fehler (USB/SCSI), `e2fsck`-Version 1.47.2 ist aktuell, Dateisystem-
+   Status laut `tune2fs` "clean", nicht read-only. **Root Cause bleibt
+   ungeklärt** (vermutlich eine Eigenheit der `metadata_csum_seed`-Berechnung
+   bei dieser sehr großen Gruppenzahl, ~15.600 Gruppen bei 2TB) — aber klar
+   abgegrenzt von echter Datenkorruption. **CEO-Entscheidung**: akzeptieren
+   und normal weiternutzen (gleiche Linie wie schon am 23.07.), keine
+   Neuformatierung.
+5. **Bootloader-Fix gefunden, ohne EEPROM-Änderung nötig**: `rpi-eeprom-
+   config` zeigte kein explizites `BOOT_ORDER` → Standardreihenfolge
+   `0xf41` (SD-Karte zuerst, dann USB/SSD als Fallback, dann Schleife). Die
+   SD-Karte hat also nur deshalb dominiert, weil sie einfach zuerst geprüft
+   wird und dabei sofort erfolgreich bootet — kein Hardware- oder
+   Firmware-Defekt. Lösung: SD-Karte bei ausgeschaltetem Pi entfernen, dann
+   fällt der Standard-Bootpfad automatisch auf die (geprüfte) SSD zurück.
+6. **Wichtige Sicherheits-Klarstellung zum Herunterfahren** (CEO fragte
+   besorgt nach, ob ein "kalter Stromstart" nötig sei): das Korruptionsrisiko
+   aus der 23.07.-Analyse betrifft nur den Fall, dass die SSD WÄHREND sie
+   gemountet/beschrieben wird ihren Strom verliert (ihr eigenes, vom Pi
+   unabhängiges Netzteil ist die eigentliche Fehlerquelle). Ein sauberer
+   `sudo shutdown -h now` nach vorherigem `umount` der SSD-Boot-Partition ist
+   dagegen unkritisch — die SSD läuft während des gesamten Vorgangs
+   durchgehend an ihrem eigenen Netzteil weiter, unberührt vom Pi-Neustart.
+   Nach dem Entfernen der SD-Karte und Wiedereinschalten des Pi-eigenen
+   Netzteils bootete das System wieder als `PI-KI-Tiep` (SSD-Installation,
+   `/dev/sda2` als `/`) — per SSH/Tailscale bestätigt.
+7. **Nebenbefund beim Verifizieren: Authentik-Crash-Loop.** Wiederholte
+   "Sie sind nun mit »vethXXXXX« verbunden"-Desktop-Benachrichtigungen
+   entpuppten sich als Symptom, nicht als eigenständiger Bug — der Swarm-
+   Service `security_server`/`security_worker` (Authentik, Teil des
+   `security`-Stacks) crashte alle ~5 Sekunden mit "Secret key missing"
+   und wurde von Docker Swarm sofort durch einen neuen Container ersetzt
+   (jeder Neustart = neues veth-Interface = neue Benachrichtigung). Root
+   Cause: das benötigte Secret lag vermutlich in Swarms Raft-State, der beim
+   Docker-Daemon-Fix vom 23.07. gelöscht wurde (siehe
+   `docker-swarm-backup-23072026`). Passt zur schon am 23.07. offenen Frage,
+   ob Authentik neben dem bereits gewählten Keycloak überhaupt noch gebraucht
+   wird. **Sofortmaßnahme**: `docker service scale security_server=0
+   security_worker=0` — stoppt die Schleife, Service-Definition bleibt für
+   eine spätere, bewusste Entscheidung erhalten. Restlicher `infrastructure`-
+   Stack (ki-memory/Qdrant, ki-cache/Redis, ki-db/Postgres, ki-hindsight-
+   core/-ui) sowie `authentik-db`/`-redis` liefen sauber seit dem Neustart.
+8. **Lehre fürs nächste Mal**: bei "Dateisystemfehler nach `-y`-Fix immer
+   noch da" nicht automatisch von Hardware-Fehlern ausgehen — erst `dmesg`
+   auf tatsächliche I/O-Fehler während des Scans prüfen (hier: keine) und die
+   Fehleranzahl über mehrere Durchläufe vergleichen (stabil vs. steigend vs.
+   sinkend), bevor man auf Kabel/Netzteil/Hardware tippt. Reine Bitmap-
+   Checksummen-Nichtkonvergenz bei sehr großen Dateisystemen scheint eine
+   bekannte, aber nicht weiter aufgeklärte `e2fsprogs`-Eigenheit zu sein.
+
+**Nachtrag, gleicher Tag: Hermes-Setup-Versuch deckt echte, aktive
+SSD-Korruption auf — Punkt 4 muss revidiert werden.**
+
+9. **Hermes-Ordnerstruktur geprüft, Klon intakt**: `~/hermes-agent` (geklont
+   23.07. während der Krise) — `git status` sauber, `git fsck --full` findet
+   keine beschädigten Objekte. Kein Neuklonen nötig. Repo bringt eigene
+   `docker-compose.yml` mit (`network_mode: host`, zwei Services `gateway`+
+   `dashboard`), läuft komplett unabhängig vom Swarm-Stack — die am 23.07.
+   befürchtete Netzwerk-Inkompatibilität war kein Problem, weil Hermes gar
+   nicht in Swarm läuft. `.env` (HERMES_UID/GID) ergänzt, `~/.hermes/SOUL.md`
+   neu angelegt (AI-OS-CTO-Identität nach Hermes' eigener SOUL.md-vs-AGENTS.md-
+   Konvention: Identität/Ton gehört in SOUL.md, Projektwissen in AGENTS.md).
+10. **Docker-Build deckt verstreute Content-Store-Korruption auf**: erste
+    Build-Versuche scheiterten reihenweise mit "invalid character X looking
+    for beginning of value" beim Auflösen von Basis-Images (uv, node) —
+    keine Netzwerk-/Registry-Probleme (curl zu ghcr.io lieferte valides
+    JSON), sondern lokal korrupte Blobs in
+    `/var/lib/containerd/.../blobs/sha256/`. Da jeder Blob nach seinem
+    eigenen SHA256 benannt ist, ließ sich der GESAMTE Content-Store
+    systematisch prüfen (Datei-Hash gegen Dateiname) — Ergebnis: 17 weitere
+    korrupte Blobs, alle mit Zeitstempel exakt im 23.07.-Krisenfenster
+    (16:20-16:36 Uhr). Per `ctr content rm` bzw. direktem `rm` entfernt.
+11. **Docker-Desktop-Fernzugriff eingerichtet**: `docker context create
+    pi-ki-tiep --docker "host=ssh://tiep@pi-ki-tiep..."` funktioniert für die
+    CLI, ABER Docker Desktops GUI-Dashboard unterstützt keine beliebigen
+    Remote-SSH-Contexts (nur die eigenen Desktop-Engines) — echte Lehre für
+    künftige Multi-Host-Wünsche. Stattdessen **Portainer** auf dem Pi
+    deployt (`docker run ... portainer/portainer-ce`, Port 9443) für eine
+    echte grafische Verwaltung der Pi-Container inkl. Swarm-Stacks.
+12. **Eskalation: kompletter Docker-Cache-Reset, weil einzelne Blob-Fixes
+    nicht reichten.** Nach dem 17-Blob-Fund erschien beim nächsten Build
+    ein NEUER Fehlertyp: `docker system df` selbst schlug mit fehlendem
+    Snapshot-Verzeichnis fehl (containerd-Snapshotter, nicht nur Content-
+    Store). CEO-Entscheidung: kompletten Image-/Snapshot-/Content-Cache
+    zurücksetzen (`/var/lib/docker/image`, `/var/lib/docker/overlay2`,
+    `/var/lib/containerd/io.containerd.{snapshotter.v1.overlayfs,
+    content.v1.content,metadata.v1.bolt}` gelöscht — NICHT
+    `/var/lib/docker/volumes`, wo die echten Daten liegen, 1,1GB
+    unberührt). Docker/containerd neu gestartet, Swarm hat die meisten
+    Dienste selbst neu gezogen und wiederhergestellt (`ki-cache`, `ki-db`,
+    `ki-hindsight-core/-ui`, `authentik-db/-redis` wieder 1/1).
+13. **ECHTER Wendepunkt: ein einzelnes Snapshot-Verzeichnis (`3124`) lässt
+    sich weder löschen noch umbenennen — "Bad message" (EBADMSG) bei JEDER
+    Operation**, auch beim reinen `mv` (das nur den Elterneintrag ändert,
+    keinen Lesezugriff auf den Kindinhalt braucht). `debugfs -R stat ...
+    /dev/sda2` verweigert sogar den reinen Lesezugriff mit **derselben**
+    "Block bitmap checksum does not match"-Meldung wie heute Vormittag.
+    **Das widerlegt die Einschätzung aus Punkt 4**: die Bitmap-Checksummen-
+    Fehler sind NICHT rein kosmetisch — sie blockieren echte
+    Dateisystem-Operationen auf betroffenen Inodes/Verzeichnissen. Zusätzlich
+    crashte `ki-memory` (Qdrant) mit Exit 132 (SIGILL) im Crash-Loop —
+    plausibel ein frisch geschriebenes, dabei in einem korrupten Block
+    beschädigtes Binary. **CEO-Entscheidung nach dieser Erkenntnis**: heutige
+    Docker/Hermes-Arbeit einfrieren, stattdessen Vollbackup auf externe SSD
+    (`/media/tiep/Extreme SSD/PI4-Backups/`, exFAT — deshalb `tar`-Archiv
+    statt direktem `rsync`, um Unix-Rechte/Besitzer/Symlinks zu erhalten)
+    von `/home/tiep` (11GB) + `/var/lib/docker/volumes` (1,1GB) gestartet;
+    Neuformatierung der SSD wird danach ernsthaft geplant statt weiter
+    einzelne Symptome zu flicken.
+14. **Lehre, die Punkt 8 korrigiert**: "keine dmesg-I/O-Fehler + Zustand
+    clean" bewies nur, dass der Datenträger selbst nicht *mechanisch*
+    ausfällt (kein USB-Wackelkontakt) — es bewies NICHT, dass die
+    Dateisystemstruktur intakt ist. Erst der Versuch, eine ECHTE Operation
+    (Verzeichnis löschen/umbenennen) auf einem betroffenen Inode
+    durchzuführen, deckte den tatsächlichen Impact auf. Künftig bei
+    "Bitmap-Checksum bleibt nach Reparatur bestehen" nicht vorschnell als
+    kosmetisch einordnen, sondern gezielt eine schreibende Operation auf
+    einer betroffenen Gruppe testen, bevor man sich auf "nur Buchhaltung"
+    verlässt.
+
+**Zweiter Nachtrag, gleicher Tag: Vollbackup erfolgreich, SSD als HARDWARE-
+DEFEKT identifiziert (nicht nur Dateisystem-Korruption), Pi läuft jetzt
+dauerhaft von SD-Karte.**
+
+15. **Vollbackup abgeschlossen und verifiziert**: erster Versuch (`tar` im
+    Hintergrund via `nohup ... &`) starb nach ~13 Minuten lautlos ohne
+    Fehlermeldung (Ursache nicht abschließend geklärt — vermutlich
+    Session-Cleanup trotz `nohup`, da `sudo` involviert war). Neustart mit
+    `sudo setsid nohup ... < /dev/null &` (vollständig von der SSH-Sitzung
+    gelöst, PPID=1) lief sauber durch: 12,00GB, `tar -tf` bestätigt
+    "lesbar", **keine einzige echte `tar:`-Fehlermeldung** — `/home/tiep`
+    und `/var/lib/docker/volumes` sind vollständig fehlerfrei gesichert
+    auf `/media/tiep/Extreme SSD/PI4-Backups/pi4-backup-20260724.tar`.
+    **Lehre**: bei Hintergrundprozessen mit `sudo` künftig immer `setsid`
+    zusätzlich zu `nohup` verwenden und `pgrep`-Status-Checks nicht blind
+    vertrauen (PID-Wiederverwendung führte hier zu falschen "läuft noch"-
+    Meldungen, siehe unten).
+16. **Architektur-Entscheidung, gleicher Tag: SD-Karte wird dauerhaftes
+    Boot-Medium statt Rückkehr zur SSD.** SD-Karte hat sich als zuverlässig
+    erwiesen; die SSD (externe Stromversorgung, wie am 23.07. dokumentiert)
+    bleibt das Risiko. Umsetzung: `sudo hostnamectl set-hostname
+    pi-ki-tiep` (identisch zum alten Namen, damit Broki-AI/Configs/Memory
+    nicht angepasst werden müssen), Tailscale frisch installiert + `tailscale
+    up --ssh` (das frische SD-OS hatte weder Tailscale noch einen SSH-Key
+    hinterlegt) — Alt-Node der toten SSD-Installation bleibt vorerst als
+    "offline" im Tailnet stehen, muss im Adminportal noch aufgeräumt werden.
+    **Neuer SSH-Zugang eingerichtet**: kein lokaler Schlüssel auf dem
+    Windows-Rechner vorhanden gewesen, daher `ssh-keygen` neu erzeugt und
+    manuell in `~/.ssh/authorized_keys` eingetragen (funktioniert stabil
+    über die lokale LAN-IP; Tailscale-SSH-Route blieb aus unbekanntem Grund
+    "idle" ohne Verbindung — nicht weiter verfolgt, LAN-IP reichte).
+17. **ECHTE Ursache endlich isoliert: Hardware-Defekt der SSD, nicht Kabel/
+    Port/Software.** Nach Backup + Architektur-Entscheidung "SSD wird
+    reines Datenlaufwerk" (keine Boot-Partition mehr nötig) wurde die
+    Platte komplett neu partitioniert (GPT statt MBR, ein einzelnes
+    ext4 über die volle 2TB). **Bereits beim Anlegen der GPT-Tabelle**:
+    "Error: The backup GPT table is corrupt, but the primary appears OK" —
+    auf einer GERADE ERST GESCHRIEBENEN Struktur. Nach `mkfs.ext4` (sauber
+    durchgelaufen) scheiterte der ERSTE `e2fsck`/`mount`-Versuch sofort:
+    "Superblock has an invalid journal (inode 8)",
+    `ext4_find_extent: bad header/extent: invalid magic`. **Isolationstest**
+    (CEO-Vorschlag): SSD an einen ANDEREN USB-Port umgesteckt, kompletter
+    Wipe+Neuformatierung wiederholt — **identischer Fehler an identischer
+    Stelle reproduziert.** Das schließt Kabel-/Port-Flackern aus (das würde
+    zufällige Fehlerorte verursachen, nicht denselben Ort zweimal in Folge)
+    und bestätigt einen echten, lokal begrenzten Hardware-Defekt (defekte
+    NAND-Blöcke, vermutlich erschöpfter/beschädigter interner Ersatzbereich
+    der SSD). `smartctl` konnte keine Diagnosedaten liefern (unbekannte USB-
+    SATA-Brücke, VID:PID `048d:1234`, Modell "AL SSD"/"PSSD", unterstützt
+    kein SAT-Passthrough auch nicht mit `-T permissive`).
+18. **CEO-Entscheidung nach diesem Fund**: SSD wird NICHT mehr für aktive
+    Docker-Daten verwendet — SD-Karte (64GB) übernimmt diese Rolle als
+    Hauptspeicher. Die SSD soll nur noch als Backup-Ziel dienen. **Wichtiger
+    offener Einwand von mir dazu**: eine Platte, die nachweislich frisch
+    geschriebene Daten innerhalb von Sekunden korrumpiert, ist auch als
+    reines Backup-Ziel nicht vertrauenswürdig — ein Backup, das man nicht
+    verifizieren kann, ist trügerisch. Empfehlung fürs nächste Mal: falls
+    diese SSD doch für Backups genutzt wird, IMMER mit Checksummen-
+    Verifikation nach dem Schreiben arbeiten, nicht blind vertrauen.
+19. **KRITISCHE SICHERHEITSNOTIZ (CEO, 24.07.2026)**: Es gibt eine DRITTE
+    SSD im Besitz des CEO mit sehr wichtigen Daten, die **NIEMALS
+    formatiert oder sonst wie destruktiv verändert werden darf** — noch
+    keine identifizierenden Merkmale (UUID/Label/Seriennummer) bekannt, da
+    sie bisher nicht am Pi angeschlossen war. **Verbindliche Regel für jede
+    künftige Sitzung**: bevor IRGENDEIN destruktiver Datenträger-Befehl
+    (`wipefs`, `mkfs`, `parted`, `dd` o.ä.) auf dem Pi ausgeführt wird,
+    IMMER zuerst per UUID/Label eindeutig identifizieren welches Gerät das
+    ist, NIEMALS nach Gerätenamen (`/dev/sdX`) blind vertrauen (siehe auch
+    Punkt 17 - Gerätenamen verschieben sich je nach Bootmedium/Portreihenfolge),
+    und explizit beim CEO nachfragen falls Zweifel bestehen, welche Platte
+    gerade angeschlossen ist.
+
+**Dritter Nachtrag, gleicher Tag: Hermes-Agent erfolgreich gebaut und
+gestartet, Tailscale/SSH-Zugriff repariert, Feinkonfiguration begonnen.**
+
+20. **Docker + Portainer auf der SD-Karte installiert** (offizielles
+    Docker-Install-Skript, `usermod -aG docker`), sauber verifiziert
+    (`docker run hello-world`). Portainer als Container deployt (Port 9443).
+21. **Selektive Wiederherstellung aus dem Backup statt Vollrücksicherung**:
+    nur `hermes-agent`-Repo + `.hermes`-Config aus dem `tar`-Archiv
+    zurückgespielt (nicht die vollen 11GB inkl. Alt-Ballast). **Dabei echte
+    stille Datenkorruption im Backup entdeckt**: 4 Dateien im
+    `hermes-agent`-Repo (u.a. `contributors/emails/fanyu@moonshot.cn`)
+    hatten nach dem Zurückspielen verfälschten Inhalt bei IDENTISCHER
+    Dateigröße (`git diff` zeigte Binärmüll statt "FuryMartin") — der
+    Ursprung liegt darin, dass das Backup noch lief, WÄHREND der Pi von der
+    (später als hardwaredefekt identifizierten) SSD gebootet war; `tar`
+    kopierte den bereits vorhandenen stillen Datenverfall unbemerkt mit
+    (ein Lesefehler wäre aufgefallen, verfälschte-aber-lesbare Bytes nicht).
+    **Sauber behoben** über Git selbst: `git fsck --full` bestätigte eine
+    intakte Objekt-Datenbank, `git checkout -- .` stellte alle 4 Dateien aus
+    dem korrekten Git-Store wieder her — Git-Repos sind damit gegen genau
+    diese Art Backup-Korruption selbstheilend, andere (Nicht-Git-)Dateien
+    aus dem Backup bleiben ein Restrisiko und wurden nur stichprobenartig
+    (nicht vollständig) auf Lesbarkeit geprüft.
+22. **Hermes-Docker-Build erfolgreich** (auf der sauberen SD-Karte, keine
+    Korruption mehr) — Image `hermes-agent:latest`, 3,83GB, `docker compose
+    up -d` startet `hermes` (Gateway) + `hermes-dashboard` sauber, s6-
+    supervidiert, stabil (mehrfach über Minuten ohne Neustart geprüft).
+    Das war das eigentliche Ziel seit dem 23.07.
+23. **Tailscale-SSH-Rätsel gelöst: war nie ein Firewall-/Routing-Problem,
+    sondern eine fehlerhafte Windows-WinHTTP-Proxy-Einstellung.** `iptables`
+    auf dem Pi zeigte bereits akzeptierten Traffic auf `tailscale0`
+    (326 Pakete durch die ACCEPT-Regel), `sshd` lauschte korrekt auf
+    `0.0.0.0:22` — das Problem lag komplett auf der Windows-Seite. Ein
+    `Test-NetConnection` in PowerShell (umgeht Proxy-Einstellungen)
+    funktionierte sofort; `curl`/`ssh` mit `HTTPS_PROXY=`/`HTTP_PROXY=`
+    (bzw. PowerShells Äquivalent) leer gesetzt liefen danach ebenfalls
+    sauber durch. **Lehre**: bei "Tailscale ping funktioniert, aber TCP-
+    Verbindungen (SSH/HTTPS) timen aus" zuerst lokale Windows-Proxy-
+    Umgebungsvariablen prüfen/leeren, bevor man Firewall/ACLs auf der
+    Gegenseite verdächtigt.
+24. **`tailscale serve` ausprobiert, dann wieder verworfen** — technisch
+    funktioniert der Reverse-Proxy (HTTPS auf Port 443 → `localhost:9119`),
+    aber Hermes' Dashboard hat einen bewussten Host-Header-Schutz gegen
+    DNS-Rebinding (GHSA-ppp5-vxwm-4cf7): bei Loopback-Bind werden NUR
+    Loopback-Host-Header akzeptiert, der von `tailscale serve`
+    durchgereichte Original-Hostname wird als "Invalid Host header"
+    abgelehnt. Es gibt im Code keinen Mechanismus für eine Zusatz-
+    Allowlist (nur loopback-only ODER 0.0.0.0 mit Auth-Pflicht). **Der vom
+    Entwickler vorgesehene Weg ist der SSH-Tunnel**
+    (`ssh -L 9119:localhost:9119 tiep@pi-ki-tiep.tailed32d1.ts.net`) — der
+    erscheint dem Dashboard als Loopback-Verbindung und besteht den Host-
+    Check automatisch. Funktioniert jetzt auch über Tailscale (nicht nur
+    LAN), seit das Proxy-Problem (Punkt 23) behoben ist — echter
+    Remote-Zugriff von unterwegs damit möglich.
+25. **Tailscale-Hostname endgültig bereinigt**: alte tote SSD-Installation
+    im Adminportal gelöscht, neue SD-Installation von `pi-ki-tiep-1` auf
+    `pi-ki-tiep` umbenannt (zweistufig: `sudo tailscale set --hostname`
+    ändert nur den selbstgemeldeten OS-Hostnamen, der tatsächliche
+    Tailnet-DNS-Name muss zusätzlich im Adminportal umbenannt werden, sonst
+    bleibt die `-1`-Endung bestehen).
+26. **Deutsche Sprache für feste Systemtexte konfiguriert**
+    (`display.language: "de"` in `~/.hermes/config.yaml`) — laut Code-
+    Kommentar betrifft das NUR feste UI-Strings (Freigabe-Abfragen, ein
+    paar Gateway-Befehlsantworten), NICHT die eigentlichen Agenten-
+    Antworten (die passen sich als LLM ohnehin der Gesprächssprache an).
+27. **Feinkonfiguration nach CEO-geteiltem Leitfaden begonnen** (Tina Huang,
+    lonelyoctopus.com, "Wie man Hermes Agent richtig einrichtet"): deckt
+    sich weitgehend mit dem 23.07.-Plan. Tier-4-Speicher (Second Brain)
+    soll wie damals entschieden an AI-OS' EIGENES `00_Wissen/09_Wiki`
+    andocken, nicht an ein separates Obsidian-Vault — technisch aber nicht
+    trivial, da Hermes im Container auf dem Pi läuft, das Wiki aber auf dem
+    Windows-PC liegt. Lösung: AI-OS' eigener MCP-Server (`search_knowledge`-
+    Tool, Port 5001) statt Datei-Spiegelung — Hermes unterstützt MCP nativ.
+    MCP-Server war nicht gestartet, gerade neu gestartet, Verbindungsaufbau
+    zu Hermes noch im Gange (Fortsetzung folgt).
+
+**Vierter Nachtrag, gleicher Tag (spätabends): Performance-Realitätscheck,
+Provider-Fallback umgestellt, drei neue Skills + Cronjob live.**
+
+28. **Echter Performance-Test lokaler Pi-Inferenz: zu langsam für
+    Interaktivität.** `qwen2.5:3b` direkt auf dem Pi4 (CPU-only) gemessen:
+    **~1,76 Tokens/Sekunde** (61 Tokens in 34,6s reiner Rechenzeit). CEO-
+    Sorge dazu war berechtigt — für echtes Chatten unbrauchbar (100-200
+    Tokens würden 1-2 Minuten dauern). **Root Cause der ursprünglichen
+    24/7-Vision-Frage**: nicht die Pi-CPU als Orchestrator (die reicht für
+    Hermes' Agent-Loop/Cron/Gateway locker), sondern reine LLM-Inferenz auf
+    Pi-CPU ist der Flaschenhals.
+29. **Architektur-Entscheidung: Hermes nutzt jetzt AI-OS' bestehenden
+    LiteLLM-Gateway (Port 4000) statt eigener/lokaler Pi-Inferenz.**
+    LiteLLM hat die Fallback-Kette (PC-Ollama → Cloudflare/OpenRouter/etc.)
+    schon fertig gebaut — sinnvoller, Hermes daran andocken zu lassen als
+    eine zweite Fallback-Logik in Hermes selbst nachzubauen. `~/.hermes/
+    config.yaml` zeigt jetzt auf `http://100.124.54.34:4000/v1` (Modell
+    `llama3`). End-to-End getestet: echte Antwort in 34s (inkl. Hermes-
+    eigenem CLI-Start-Overhead), LiteLLM routete automatisch auf Cloudflare
+    Workers AI.
+30. **Drei Windows-Dienste mussten für Pi-Erreichbarkeit von `127.0.0.1`
+    auf die Tailscale-Interface-IP (`100.124.54.34`) umgestellt werden** —
+    gleiches Muster wie schon beim MCP-Server (Punkt 27): `OLLAMA_HOST`
+    (User-Umgebungsvariable, `setx` — WICHTIG: eine bereits laufende
+    PowerShell-Sitzung liest `setx`-Änderungen NICHT automatisch nach, `
+    $env:VAR` zusätzlich in der aktuellen Sitzung setzen, bevor der neue
+    Prozess gestartet wird), `litellm_gateway.py` (neue `LITELLM_BIND_HOST`-
+    Variable, Code vorher hart auf `127.0.0.1` verdrahtet) und
+    `agent_system.py` (neue `AGENT_BIND_HOST`-Variable, gleiche Änderung).
+    **Lehre zum Hintergrund-Start auf Windows**: `Start-Process
+    -WindowStyle Hidden` mit `-RedirectStandardOutput` lieferte wiederholt
+    leere Logs und keine Portbindung (Ursache nicht abschließend geklärt) —
+    zuverlässig funktionierte stattdessen `nohup ... &` über die Bash-Tool-
+    Umgebung (Git Bash). **Zweite Lehre**: `netstat -ano | grep` lieferte in
+    dieser Windows/Git-Bash-Kombination wiederholt falsche/leere Ergebnisse
+    trotz tatsächlich lauschendem Port — `Get-NetTCPConnection` (PowerShell)
+    bzw. direktes `curl` gegen den Port sind die zuverlässigeren Checks.
+31. **Kritischer, selbst gefundener Konfigurationsfehler: Hermes lief die
+    ganze Zeit mit FALSCHEN Einstellungen.** `sudo docker compose up`
+    löste `~` in `docker-compose.yml` als `/root` statt `/home/tiep` auf —
+    der Container nutzte `/root/.hermes` (von Hermes selbst automatisch mit
+    Default-SOUL.md/Default-config.yaml befüllt), NICHT unsere sorgfältig
+    vorbereiteten Dateien unter `/home/tiep/.hermes`. Gefunden beim
+    Debuggen, warum eine neu angelegte Skill-Datei im Container nicht
+    sichtbar war (Zeitstempel/Eigentümer im Container passten nicht zum
+    Host-Verzeichnis). **Fix**: `docker compose` OHNE `sudo` ausführen (User
+    ist bereits in der `docker`-Gruppe) — danach löst sich `~` korrekt auf.
+    **Lehre**: bei Docker-Compose-Setups mit `~` im Volume-Pfad IMMER genau
+    prüfen, als welcher User der Compose-Befehl tatsächlich läuft.
+32. **Drei neue Hermes-Skills gebaut** (alle unter `~/.hermes/skills/`,
+    sofort als "local"/"enabled" erkannt):
+    - `ai-os-second-brain` — durchsucht `00_Wissen` per HTTP gegen den
+      MCP-Server (`/mcp/knowledge/<query>`)
+    - `ai-os-agent-team` — delegiert Aufgaben an die 10 lokalen AI-OS-
+      Agenten (`/orchestrate`, `/execute` auf Port 5300)
+    - `blog-research` — recherchiert täglich vuxuantiep.de + Web-Quellen,
+      schreibt einen vollständigen deutschen Artikel-Entwurf, speichert ihn
+      NUR als Entwurf (nie direkt ins vuxuantiep.de-Repo, CEO-Entscheidung)
+33. **Neuer `/mcp/save-draft`-Endpunkt** in `mcp_server.py` ergänzt (POST
+    `{title, content, source}` → schreibt Markdown mit Frontmatter nach
+    `00_Wissen/03_Aktuelles/Blog-Entwuerfe/`, Dateiname aus Titel-Slug,
+    doppelt gegen Path Traversal abgesichert). Live getestet, funktioniert.
+34. **Täglicher Cronjob eingerichtet** (`hermes cron create '0 8 * * *' ...
+    --skill blog-research --deliver origin`) — Scheduler bestätigt aktiv
+    (Ticker-Heartbeat läuft), nächster Lauf 25.07.2026 08:00 UTC.
+35. **CTO-Rolle/Discord-Slack-Integration**: CEO-Wunsch bestätigt (Hermes
+    soll als CTO-Kontaktpunkt Aufträge über Discord/Slack entgegennehmen
+    und ans Agententeam delegieren) — **bewusst vertagt**, weil das
+    CEO-seitig eine Bot-App-Registrierung (Discord Developer Portal bzw.
+    Slack API) mit eigenem Token braucht, die niemand für ihn übernehmen
+    kann.
+
+**Fünfter Nachtrag, gleicher Tag (Sitzungsende): Autostart dauerhaft
+eingerichtet, Discord/Slack-Anforderungen geklärt, echtes Tool-Calling-
+Problem NICHT gelöst, kritische Architektur-Dopplung entdeckt.**
+
+36. **Windows-Hintergrunddienste dauerhaft per Aufgabenplanung eingerichtet**
+    (überleben jetzt PC-Neustart): bestehende Aufgabe "AI-OS LiteLLM
+    Gateway" wiederverwendet (Action auf `cmd.exe /c set
+    LITELLM_BIND_HOST=... && pythonw.exe ...` umgestellt, da die reine
+    `setx`-Registry-Variable von der bereits laufenden Sitzung nicht
+    übernommen wurde), zwei neue Aufgaben "AI-OS MCP Server" und "AI-OS
+    Agent System" nach demselben Muster angelegt (Trigger "Bei Anmeldung",
+    `pythonw.exe`, 3× Neustart bei Fehler, 2min Abstand). **Echter Bug
+    dabei gefunden und behoben**: beide Skripte prüften direkt beim Start
+    `sys.stdout.encoding` — unter `pythonw.exe` (kein Konsolenfenster) ist
+    `sys.stdout` aber `None`, das ließ beide Skripte sofort mit Exit-Code 1
+    abstürzen. Fix: bei `sys.stdout is None` in eine Logdatei
+    (`%TEMP%\ai_os_mcp_server.log` bzw. `..._agent_system.log`) umleiten
+    statt auf echte Konsolen-Streams zu vertrauen. Alle vier Dienste (MCP,
+    Agent-System, LiteLLM, Ollama) danach einzeln vom Pi aus verifiziert.
+37. **Discord/Slack-Integrationsanforderungen dokumentiert** (CEO hat
+    Accounts, aber noch keine Bot-Tokens): Discord braucht nur
+    `DISCORD_BOT_TOKEN` (Developer Portal) + eigene User-ID; Slack braucht
+    `SLACK_BOT_TOKEN` (xoxb-, mit 12 spezifischen Scopes) UND
+    `SLACK_APP_TOKEN` (xapp-, Socket Mode, `connections:write`) UND
+    aktivierte Event Subscriptions — deutlich aufwendiger. CEO hat das für
+    eine künftige Sitzung vertagt (Token-Beschaffung ist CEO-Aktion).
+38. **Tool-Calling-Debugging, mehrstufig, NICHT final gelöst.** Der
+    CEO-Test im Dashboard (siehe Screenshot) zeigte: Hermes BEHAUPTET, die
+    `ai-os-second-brain`-Skill genutzt zu haben, liefert aber komplett
+    erfundene Informationen (Broki-AI als "Finanz-KI-Plattform" — falsch,
+    tatsächlich eine Wiki-Browser-Extension). Ursachenkette, mehrfach
+    korrigiert:
+    - `llama3` (erstes Modell) hat laut Ollamas eigenen Metadaten NUR
+      `"completion"`, kein `"tools"` — Modell kann grundsätzlich nicht
+      tool-callen.
+    - Umstieg auf `mistral`/`gemma4` (haben `"tools"`) half nicht sofort —
+      **eigentliches Konfigurationsschema war falsch**: `providers:` als
+      eigener Dict-Block (mein Entwurf) ist kein gültiges Hermes-Schema.
+      Laut Doku muss ein eigener Endpunkt direkt unter `model:` stehen:
+      `provider: custom`, `base_url:`, `api_key:` — keine separate
+      `providers:`-Sektion.
+    - Nach Korrektur: Anfragen an "mistral"/"llama3" über den LiteLLM-
+      Gateway landeten (Antwort-Feld `model`) tatsächlich bei
+      `cloudflare/@cf/meta/llama-3.1-8b-instruct` — LiteLLMs eigene
+      Fallback-Kette (`workers-ai` vor `openrouter-free`/
+      `huggingface-llama`) hat lokales PC-Ollama gar nicht direkt erreicht.
+      Cloudflares Modell sagt selbst explizit "I'm not capable of using
+      external tools".
+    - Direkt gegen PC-Ollama (ohne LiteLLM-Umweg, `http://100.124.54.34:
+      11434/v1`) getestet: `mistral` liefert bei einer echten
+      Tool-Definition eine LEERE Antwort ohne `tool_calls`. `gemma4`
+      dagegen liefert bei `tool_choice:"required"` auf API-Ebene einen
+      ECHTEN, korrekten `tool_calls`-Response — das Modell selbst kann es
+      also grundsätzlich.
+    - Trotzdem: der volle Hermes-Agent-Lauf mit `gemma4` scheitert
+      weiterhin — die finale Testantwort bestand aus dem Modell, das über
+      seine EIGENEN System-Prompt-Regeln sinniert, statt den angeforderten
+      Bash-Befehl auszuführen. **Root Cause bleibt ungeklärt** — vermutlich
+      eine Inkompatibilität zwischen Hermes' System-Prompt-/Tool-Schema-
+      Format und diesem lokalen Ollama-Modell, nicht mehr durch einfaches
+      Ausprobieren lösbar.
+    - `openrouter-free`-Modell in LiteLLMs Config ist zudem selbst
+      veraltet/tot (404, "unavailable for free" — will man ohnehin mal
+      beheben, unabhängig vom Tool-Calling-Thema).
+39. **KRITISCHE ARCHITEKTUR-DOPPLUNG ENTDECKT, ungeklärt.** CEO zeigte
+    einen Dashboard-Kachel-Screenshot: AI-OS hat bereits eine EIGENE
+    "Hermes / AI Engineering Platform" (FastAPI-Backend, Port 8000,
+    `backend/app/agents/hermes.py`, RAG+Qdrant+Multi-Agent-Fundament,
+    eigene Chat-UI unter `/ui`). Dokument `docs/Hermes-Pi4-Tailscale-
+    Setup.md` (Stand **10.07.2026**, Roadmap-Status "✅ umgesetzt")
+    beschreibt EXAKT die heute gebaute Zielarchitektur (Hermes+Backend
+    24/7 auf dem Pi, LLM-Aufrufe per Tailscale zum Laptop-Ollama) — nur
+    mit dem AI-OS-EIGENEN, schlankeren Hermes, NICHT mit Nous Researchs
+    Hermes Agent. **Das Dokument erwähnt sogar explizit**, dass man sich
+    am 10.07. bewusst GEGEN das Docker-basierte "Hermes Desktop"-Sidecar-
+    Produkt entschieden hatte, zugunsten der nativen Backend-Integration —
+    genau das, was heute den ganzen Tag gebaut wurde. **Nicht geklärt**:
+    ob der CEO das heute bewusst nochmal anders wollte (Nous Researchs
+    Hermes Agent ist deutlich funktionsreicher: 77 Skills, Cron,
+    Multi-Platform-Messaging, eigenes Dashboard) oder ob hier unbeabsichtigt
+    Doppelarbeit entstanden ist. **Bewusst nicht heute Nacht entschieden**
+    — braucht einen Vergleich beider Systeme mit frischem Kopf.
+
+**Offen für nächstes Mal**: (1) **Architektur-Entscheidung**: AI-OS'
+eigener nativer Hermes (Port 8000, bereits vorhanden laut Roadmap) vs.
+heute installiertes Nous-Research-"Hermes Agent" (Pi, Docker) — beide,
+eins ablösen, oder bewusst getrennte Rollen? (2) Tool-Calling-Problem bei
+Nous-Research-Hermes weiter debuggen (Prompt-Format-Kompatibilität mit
+lokalen Ollama-Modellen) — bis geklärt sind die drei neuen Skills technisch
+nicht zuverlässig nutzbar, (3) Discord- ODER Slack-Bot-Token besorgen
+(CEO-Aktion), (4) Vorstellungs-Text für Hermes (`user.md`) vom CEO selbst,
+(5) ersten Blog-Research-Cronjob-Lauf morgen früh verifizieren (könnte am
+Tool-Calling-Problem scheitern, siehe Punkt 2), (6) defekte SSD-Situation
+klären (Garantie/RMA), (7) `openrouter-free`-Modell-Slug in
+`litellm_config.yaml` ist veraltet, reparieren.
+
+---
+
 ## 2026-07-23 (Tag 11) — Broki AI Backend: Ollama-Pivot, dann echter wllama-Bug endlich gelöst
 
 CEO-Ausgangsfrage: "Chat Nachricht reagiert noch garnicht, bzw. LLM keinen

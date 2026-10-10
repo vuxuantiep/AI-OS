@@ -1,0 +1,244 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 950" width="1400" height="950" font-family="Segoe UI, system-ui, -apple-system, Arial, sans-serif">
+  <title>Microsoft 365 – Admin-Betrieb 2026: Tickets, Self-Service, Automatisierung, Monitoring und Zugang ohne klassisches VPN</title>
+  <defs>
+    <marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <marker id="pfr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+    </marker>
+    <style>
+      .t  { font-size: 15px; font-weight: 700; fill: #0f172a; }
+      .h  { font-size: 13px; font-weight: 700; fill: #0f172a; }
+      .s  { font-size: 12px; fill: #334155; }
+      .k  { font-size: 11px; fill: #475569; }
+      .kb { font-size: 11px; fill: #0f172a; font-weight: 700; }
+      .lab{ font-size: 12px; font-weight: 600; fill: #1e293b; }
+      .pfeil { stroke: #334155; stroke-width: 2; fill: none; marker-end: url(#pf); }
+      .alarm { stroke: #dc2626; stroke-width: 2.5; fill: none; marker-end: url(#pfr); stroke-dasharray: 7 4; }
+    </style>
+  </defs>
+
+  <rect width="1400" height="950" fill="#ffffff"/>
+  <text x="30" y="38" style="font-size:22px;font-weight:800;fill:#0f172a">Microsoft 365 – Admin-Betrieb 2026: Tickets schneller lösen, automatisieren, proaktiv erkennen</text>
+  <text x="30" y="60" class="k">Ticket → zuerst Self-Service ② → dann Automatisierung ③ → nur der Rest manuell ④ · Logs zentral sammeln ⑤ → Alarm, bevor jemand anruft</text>
+
+  <!-- ================= ① EINGANG & TRIAGE ================= -->
+  <rect x="30" y="78" width="1060" height="122" rx="10" fill="#fffbeb" stroke="#d97706"/>
+  <text x="45" y="99" class="t">① Eingang &amp; Triage</text>
+  <rect x="42" y="108" width="256" height="80" rx="8" fill="#fff" stroke="#d97706"/>
+  <text x="54" y="129" class="h">Mitarbeitende / Pflegekraft</text>
+  <text x="54" y="148" class="k">meldet per Teams-Chat,</text>
+  <text x="54" y="162" class="k">Telefon oder Mail</text>
+  <rect x="310" y="108" width="256" height="80" rx="8" fill="#fff" stroke="#d97706"/>
+  <text x="322" y="129" class="h">Helpdesk-Agent (Copilot Studio)</text>
+  <text x="322" y="148" class="k">beantwortet FAQ aus Wiki-Artikeln</text>
+  <text x="322" y="162" class="k">(Kennwort, MFA, Postfach, Drucker)</text>
+  <text x="322" y="176" class="k">→ nur Ungelöstes wird ein Ticket</text>
+  <rect x="578" y="108" width="256" height="80" rx="8" fill="#fff" stroke="#d97706"/>
+  <text x="590" y="129" class="h">Ticketsystem</text>
+  <text x="590" y="148" class="k">Pflicht-Kategorie: Kennwort · Konto ·</text>
+  <text x="590" y="162" class="k">Berechtigung · Gerät · VPN/Zugang · Mail</text>
+  <text x="590" y="176" class="k">+ UPN + Fehlermeldung/Screenshot</text>
+  <rect x="846" y="108" width="232" height="80" rx="8" fill="#fff" stroke="#d97706" stroke-width="2"/>
+  <text x="858" y="129" class="h">Triage-Regel</text>
+  <text x="858" y="148" class="k">Kann der Nutzer es selbst? → ②</text>
+  <text x="858" y="162" class="k">Standardfall mit Ablauf? → ③</text>
+  <text x="858" y="176" class="k">Einzelfall / Störung? → ④</text>
+  <path d="M299,148 L308,148" class="pfeil"/>
+  <path d="M567,148 L576,148" class="pfeil"/>
+  <path d="M835,148 L844,148" class="pfeil"/>
+
+  <!-- Pfeile Triage -> Bahnen -->
+  <path d="M200,201 L200,238" class="pfeil"/>
+  <path d="M560,201 L560,238" class="pfeil"/>
+  <path d="M920,201 L920,238" class="pfeil"/>
+
+  <!-- ================= ② SELF-SERVICE ================= -->
+  <rect x="30" y="240" width="340" height="362" rx="10" fill="#eff6ff" stroke="#2563eb"/>
+  <text x="45" y="262" class="t">② Self-Service – 0 Admin-Minuten</text>
+
+  <rect x="42" y="274" width="316" height="58" rx="8" fill="#fff" stroke="#2563eb"/>
+  <text x="54" y="292" class="h">Kennwort selbst zurücksetzen (SSPR)</text>
+  <text x="54" y="308" class="k">aka.ms/sspr · Hybrid: Kennwortrückschreiben an</text>
+  <text x="54" y="322" class="k">häufigstes Ticket – komplett ohne IT lösbar</text>
+
+  <rect x="42" y="338" width="316" height="58" rx="8" fill="#fff" stroke="#2563eb"/>
+  <text x="54" y="356" class="h">Sicherheitsinfos selbst pflegen</text>
+  <text x="54" y="372" class="k">aka.ms/mysecurityinfo · Passkey / Authenticator</text>
+  <text x="54" y="386" class="k">neues Handy: mit TAP selbst neu registrieren</text>
+
+  <rect x="42" y="402" width="316" height="58" rx="8" fill="#fff" stroke="#2563eb"/>
+  <text x="54" y="420" class="h">Zugriff beantragen: My Access</text>
+  <text x="54" y="436" class="k">Zugriffspaket = Gruppen + Team + SharePoint + Apps</text>
+  <text x="54" y="450" class="k">Leitung genehmigt, Zugriff läuft ab (P2/Governance)</text>
+
+  <rect x="42" y="466" width="316" height="58" rx="8" fill="#fff" stroke="#2563eb"/>
+  <text x="54" y="484" class="h">Gruppenbesitzer pflegen Mitglieder</text>
+  <text x="54" y="500" class="k">Stations-/Teamleitung = Besitzer der M365-Gruppe</text>
+  <text x="54" y="514" class="k">→ kein Ticket für „bitte XY ins Team aufnehmen“</text>
+
+  <rect x="42" y="530" width="316" height="58" rx="8" fill="#fff" stroke="#2563eb"/>
+  <text x="54" y="548" class="h">Unternehmensportal (Intune)</text>
+  <text x="54" y="564" class="k">Apps selbst installieren, Gerät synchronisieren,</text>
+  <text x="54" y="578" class="k">Konformität selbst prüfen („Einstellungen prüfen“)</text>
+
+  <!-- ================= ③ AUTOMATISIERUNG ================= -->
+  <rect x="390" y="240" width="340" height="362" rx="10" fill="#f5f3ff" stroke="#7c3aed"/>
+  <text x="405" y="262" class="t">③ Automatisierung – einmal bauen</text>
+
+  <rect x="402" y="274" width="316" height="58" rx="8" fill="#fff" stroke="#7c3aed"/>
+  <text x="414" y="292" class="h">Lifecycle Workflows (Ein-/Um-/Austritt)</text>
+  <text x="414" y="308" class="k">Eintrittsdatum → TAP an Leitung, Gruppen, Mail;</text>
+  <text x="414" y="322" class="k">Austritt → sperren, Gruppen raus (ID Governance)</text>
+
+  <rect x="402" y="338" width="316" height="58" rx="8" fill="#fff" stroke="#7c3aed"/>
+  <text x="414" y="356" class="h">Dynamische Gruppen + Lizenz über Gruppe</text>
+  <text x="414" y="372" class="k">Abteilung/Standort-Attribut → Gruppen, Lizenzen,</text>
+  <text x="414" y="386" class="k">Teams, Intune-Apps automatisch (Entra ID P1)</text>
+
+  <rect x="402" y="402" width="316" height="58" rx="8" fill="#fff" stroke="#7c3aed"/>
+  <text x="414" y="420" class="h">Runbook: Azure Automation + Graph</text>
+  <text x="414" y="436" class="k">Formular/Ticket → Power Automate → Runbook</text>
+  <text x="414" y="450" class="k">Managed Identity statt Kennwort im Skript</text>
+
+  <rect x="402" y="466" width="316" height="58" rx="8" fill="#fff" stroke="#7c3aed"/>
+  <text x="414" y="484" class="h">Intune Remediations (Korrekturskripte)</text>
+  <text x="414" y="500" class="k">Skriptpaar erkennt + behebt am Gerät (Druck-</text>
+  <text x="414" y="514" class="k">warteschlange, Teams-Cache, Speicher voll)</text>
+
+  <rect x="402" y="530" width="316" height="58" rx="8" fill="#fff" stroke="#7c3aed"/>
+  <text x="414" y="548" class="h">Geplante Berichte (Werkbank-Skripte)</text>
+  <text x="414" y="564" class="k">MFA-Lücken, inaktive Konten, freie Lizenzen,</text>
+  <text x="414" y="578" class="k">ablaufende Secrets → wöchentlich in Teams-Kanal</text>
+
+  <!-- ================= ④ ADMIN SCHNELL ================= -->
+  <rect x="750" y="240" width="340" height="362" rx="10" fill="#f0fdfa" stroke="#0d9488"/>
+  <text x="765" y="262" class="t">④ Admin – schnell &amp; sicher lösen</text>
+
+  <rect x="762" y="274" width="316" height="58" rx="8" fill="#fff" stroke="#0d9488"/>
+  <text x="774" y="292" class="h">Konto &amp; Kennwort</text>
+  <text x="774" y="308" class="k">Anmeldeprotokoll → Fehlercode (50053, 53003 …)</text>
+  <text x="774" y="322" class="k">TAP ausstellen · Sitzungen widerrufen · entsperren</text>
+
+  <rect x="762" y="338" width="316" height="58" rx="8" fill="#fff" stroke="#0d9488"/>
+  <text x="774" y="356" class="h">Berechtigungen</text>
+  <text x="774" y="372" class="k">Woher kommt der Zugriff: Gruppe? direkt? geerbt?</text>
+  <text x="774" y="386" class="k">Postfach · SharePoint-Website · Team-Mitglied</text>
+
+  <rect x="762" y="402" width="316" height="58" rx="8" fill="#fff" stroke="#0d9488"/>
+  <text x="774" y="420" class="h">Remote Help (Intune)</text>
+  <text x="774" y="436" class="k">Fernhilfe mit Rollen + Protokoll, ohne Fremdtool</text>
+  <text x="774" y="450" class="k">seit 07/2026 in M365 E3/E5 enthalten</text>
+
+  <rect x="762" y="466" width="316" height="58" rx="8" fill="#fff" stroke="#0d9488"/>
+  <text x="774" y="484" class="h">PIM: Admin-Rolle nur bei Bedarf</text>
+  <text x="774" y="500" class="k">Just-in-Time, befristet, mit Begründung (P2)</text>
+  <text x="774" y="514" class="k">Alltagskonto ≠ Admin-Konto</text>
+
+  <rect x="762" y="530" width="316" height="58" rx="8" fill="#fff" stroke="#0d9488"/>
+  <text x="774" y="548" class="h">Copilot-Agenten (Security Copilot, E5)</text>
+  <text x="774" y="564" class="k">CA-Optimierung, Intune-Richtlinien, Vorschläge –</text>
+  <text x="774" y="578" class="k">jede Aktion braucht Admin-Freigabe</text>
+
+  <!-- ================= NEU 2025/26 ================= -->
+  <rect x="1110" y="78" width="260" height="424" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <text x="1125" y="99" class="t">Neu &amp; wichtig (Stand 10/2026)</text>
+  <text x="1125" y="124" class="kb">Intune Suite in E3/E5 (ab 07/2026)</text>
+  <text x="1125" y="139" class="k">E3: Remote Help, Adv. Analytics, Tunnel</text>
+  <text x="1125" y="153" class="k">E5: + EPM, Cloud PKI, Enterprise Apps</text>
+  <text x="1125" y="176" class="kb">Security Copilot in M365 E5</text>
+  <text x="1125" y="191" class="k">inkl. Entra- und Intune-Agenten</text>
+  <text x="1125" y="214" class="kb">Passkeys = Standard-Anmeldung</text>
+  <text x="1125" y="229" class="k">Authenticator-Passkey / FIDO2-Schlüssel</text>
+  <text x="1125" y="252" class="kb">EWS in Exchange Online blockiert</text>
+  <text x="1125" y="267" class="k">seit 01.10.2026, endgültig 01.04.2027</text>
+  <text x="1125" y="281" class="k">→ Apps/Skripte auf Graph umstellen</text>
+  <text x="1125" y="304" class="kb">ID-Protection-Altrichtlinien aus</text>
+  <text x="1125" y="319" class="k">seit 01.10.2026 → Risiko in CA abbilden</text>
+  <text x="1125" y="342" class="kb">Tenant Governance (GA 09/2026)</text>
+  <text x="1125" y="357" class="k">Konfig-Drift gegen Baseline erkennen</text>
+  <text x="1125" y="380" class="kb">Intune: gestaffelte Bereitstellung</text>
+  <text x="1125" y="395" class="k">Apps/Richtlinien in Ringen (Preview)</text>
+  <text x="1125" y="418" class="kb">Abgeschaltet / ersetzt</text>
+  <text x="1125" y="433" class="k">MSOnline + AzureAD → Microsoft.Graph</text>
+  <text x="1125" y="447" class="k">Get-MessageTrace → Get-MessageTraceV2</text>
+  <text x="1125" y="461" class="k">Windows 10 ohne Support (seit 10/2025)</text>
+  <text x="1125" y="487" class="k" style="font-style:italic">Details: Wiki „Neu in M365 2026“</text>
+
+  <!-- ================= ZUGANG / VPN ================= -->
+  <rect x="1110" y="520" width="260" height="370" rx="10" fill="#fff7ed" stroke="#ea580c"/>
+  <text x="1125" y="541" class="t">Zugang ins interne Netz</text>
+  <text x="1125" y="557" class="k">VPN neu gedacht: Zero Trust (ZTNA)</text>
+  <rect x="1122" y="568" width="236" height="34" rx="7" fill="#fff" stroke="#ea580c"/>
+  <text x="1132" y="590" class="lab">Gerät + Global-Secure-Access-Client</text>
+  <rect x="1122" y="616" width="236" height="34" rx="7" fill="#fff" stroke="#2563eb"/>
+  <text x="1132" y="638" class="lab">Entra: MFA + CA + Gerät konform?</text>
+  <rect x="1122" y="664" width="236" height="34" rx="7" fill="#fff" stroke="#ea580c"/>
+  <text x="1132" y="686" class="lab">Entra Private Access (je App)</text>
+  <rect x="1122" y="712" width="236" height="34" rx="7" fill="#fff" stroke="#ea580c"/>
+  <text x="1132" y="734" class="lab">Private Network Connector (intern)</text>
+  <text x="1132" y="764" class="k">→ Fileserver · Pflegedoku · RDP · Drucker</text>
+  <path d="M1240,603 L1240,614" class="pfeil"/>
+  <path d="M1240,651 L1240,662" class="pfeil"/>
+  <path d="M1240,699 L1240,710" class="pfeil"/>
+  <path d="M1240,747 L1240,753" class="pfeil"/>
+  <text x="1125" y="790" class="kb">Ticket „VPN geht nicht“ – Reihenfolge:</text>
+  <text x="1125" y="806" class="k">1. GSA-Client: Status + Diagnose-Export</text>
+  <text x="1125" y="820" class="k">2. Anmeldeprotokoll: welche CA-Regel?</text>
+  <text x="1125" y="834" class="k">3. Connector aktiv? App-Segment/DNS?</text>
+  <text x="1125" y="848" class="k">4. Traffic-Logs (GSA) / Gerät konform?</text>
+  <text x="1125" y="872" class="k">Klassisches VPN: Profil + Zertifikat per</text>
+  <text x="1125" y="885" class="k">Intune verteilen, Logs am VPN-Gateway</text>
+
+  <!-- ================= ⑤ LOGS & MONITORING ================= -->
+  <rect x="30" y="630" width="1060" height="260" rx="10" fill="#f8fafc" stroke="#475569"/>
+  <text x="45" y="653" class="t">⑤ Logs &amp; Telemetrie → proaktiv erkennen (Monitoring)</text>
+
+  <g>
+    <rect x="42"  y="666" width="152" height="28" rx="6" fill="#fff" stroke="#2563eb"/><text x="50"  y="684" class="k">Entra Anmelde-/Audit-Log</text>
+    <rect x="202" y="666" width="152" height="28" rx="6" fill="#fff" stroke="#0d9488"/><text x="210" y="684" class="k">Intune Konformität/Analytics</text>
+    <rect x="42"  y="700" width="152" height="28" rx="6" fill="#fff" stroke="#7c3aed"/><text x="50"  y="718" class="k">Exchange Nachrichtenablauf</text>
+    <rect x="202" y="700" width="152" height="28" rx="6" fill="#fff" stroke="#dc2626"/><text x="210" y="718" class="k">Defender XDR Vorfälle</text>
+    <rect x="42"  y="734" width="152" height="28" rx="6" fill="#fff" stroke="#dc2626"/><text x="50"  y="752" class="k">Purview Audit („wer was“)</text>
+    <rect x="202" y="734" width="152" height="28" rx="6" fill="#fff" stroke="#ea580c"/><text x="210" y="752" class="k">Global Secure Access Traffic</text>
+    <rect x="42"  y="768" width="152" height="28" rx="6" fill="#fff" stroke="#475569"/><text x="50"  y="786" class="k">Windows-Ereignisse (AMA)</text>
+    <rect x="202" y="768" width="152" height="28" rx="6" fill="#fff" stroke="#475569"/><text x="210" y="786" class="k">M365-Dienstintegrität</text>
+  </g>
+  <text x="45" y="822" class="k">Entra hält Anmeldeprotokolle nur 30 Tage (P1/P2)</text>
+  <text x="45" y="836" class="k">→ Diagnoseeinstellung an Log Analytics senden.</text>
+  <text x="45" y="858" class="kb">Erst lesen, dann handeln: Fehlercode, Zeit, Gerät,</text>
+  <text x="45" y="872" class="kb">IP/Ort, CA-Ergebnis – steht alles im Log.</text>
+
+  <path d="M356,731 L386,731" class="pfeil"/>
+  <rect x="390" y="666" width="270" height="130" rx="8" fill="#fff" stroke="#475569" stroke-width="2"/>
+  <text x="402" y="688" class="h">Log Analytics Workspace</text>
+  <text x="402" y="707" class="k">zentrale Ablage aller Logs, Abfrage mit KQL</text>
+  <text x="402" y="722" class="k">Aufbewahrung frei wählbar</text>
+  <text x="402" y="737" class="k">Kosten je GB → nur nötige Tabellen senden</text>
+  <text x="402" y="758" class="kb">Workbooks = fertige Dashboards</text>
+  <text x="402" y="773" class="k">Anmeldungen, CA-Wirkung, Konformität</text>
+  <text x="402" y="788" class="k">(Sentinel optional für SOC/Vorfälle)</text>
+
+  <path d="M662,731 L688,731" class="pfeil"/>
+  <rect x="692" y="666" width="386" height="212" rx="8" fill="#fff" stroke="#dc2626" stroke-width="2"/>
+  <text x="704" y="688" class="h">Alarmregeln (Azure Monitor) – Beispiele</text>
+  <text x="704" y="708" class="k">• Konto gesperrt (50053) ≥ 3× in 1 h → Ticket an IT</text>
+  <text x="704" y="724" class="k">• viele MFA-Ablehnungen / Anmeldung aus dem Ausland</text>
+  <text x="704" y="740" class="k">• Gerät &gt; 7 Tage nicht konform oder nicht synchronisiert</text>
+  <text x="704" y="756" class="k">• App-Secret / Zertifikat läuft in 30 Tagen ab</text>
+  <text x="704" y="772" class="k">• weniger als 5 freie Lizenzen einer SKU</text>
+  <text x="704" y="788" class="k">• neue Weiterleitung oder Regel nach extern</text>
+  <text x="704" y="804" class="k">• Microsoft-Störung betrifft Exchange/Teams</text>
+  <text x="704" y="826" class="kb">→ Teams-Kanal „IT-Alarm“ + Ticket automatisch</text>
+  <text x="704" y="842" class="k">Ziel: Problem ist bekannt, bevor der erste Anruf kommt –</text>
+  <text x="704" y="856" class="k">bei Microsoft-Störung gleich Info an alle Standorte.</text>
+
+  <!-- Rückkopplung Alarm -> Ticket (proaktiv) -->
+  <path d="M1079,720 L1100,720 L1100,150 L1093,150" class="alarm"/>
+  <text x="1106" y="560" class="lab" style="fill:#dc2626;font-size:11px" transform="rotate(-90 1106 560)">Alarm → Ticket (proaktiv)</text>
+
+  <!-- Fußzeile -->
+  <text x="30" y="918" class="k">Lizenz je Funktion vor Umsetzung gegen den EMVIA-Bestand prüfen: Entra ID P1 (Business Premium/E3) · P2 (E5) · ID Governance (Zusatz) · Azure-Abo für Log Analytics/Automation.</text>
+  <text x="30" y="934" class="k">Stand 10.10.2026 · Quellen: Microsoft Learn, Tech Community, Message Center MC1227454 (EWS) · Ergänzt das Grunddiagramm „M365-Architektur“ (Identität, Geräte, Dienste).</text>
+</svg>

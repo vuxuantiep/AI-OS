@@ -2,6 +2,10 @@
 
 ![Microsoft 365 – Architektur und Zusammenhänge](m365-architektur.svg)
 
+Das zweite Bild zeigt den Admin-Betrieb 2026: wie Tickets über Self-Service und Automatisierung schneller gelöst werden, wie Logs zentral gesammelt und Alarme ausgelöst werden, und den Netzzugang über Entra Private Access statt klassischem VPN. Details stehen auf den Seiten „Neu in M365“, „Ticket-Schnellhilfe“, „Automatisierung“ und „Monitoring“.
+
+![Microsoft 365 – Admin-Betrieb 2026](m365-admin-betrieb-2026.svg)
+
 ## Wie ist Microsoft 365 aufgebaut?
 Es gibt fünf Schichten:
 1. Identität: Entra ID
