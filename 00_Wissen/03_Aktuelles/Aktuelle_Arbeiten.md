@@ -6,6 +6,28 @@
 
 ---
 
+## 2026-10-12 — EMVIA: Planung KI-Assistenten-Familie (Copilot Studio)
+
+**Was:** Planungspaket `00_Wissen/03_Aktuelles/Active/EMVIA-KI-Assistenten/` für den Start am 15.10.:
+Gesamtplan mit Mermaid-Architektur (Admin-Cockpit als Orchestrator + 6 Fach-Agenten: Ticket,
+Monitoring/Verfügbarkeit, Sicherheit, Automatisierung JML, Helpdesk, Kommunikation), Fahrplan in
+5 Phasen, Kosten, Datenschutz/Betriebsrat, Kennzahlen; Instructions-Texte je Agent (RKZFE);
+Infosammlung Woche 1 (rexx, Ticketsystem, MDM, Fachanwendungen, Copilot-Lizenzen).
+
+**Warum so geschnitten:**
+- **Flows vor Agenten:** Health-Checks, SLA-Uhr, Ablaufwarnungen laufen als Power Automate *ohne KI*
+  (keine Copilot Credits). Die KI kommt erst beim Zusammenfassen/Bewerten/Formulieren dazu —
+  autonome Auslöser kosten Credits pro Ausführung, auch ohne Nutzer.
+- **rexx = Quelle der Wahrheit für Ein-/Austritte** → späterer Auslöser für JML über Entra
+  API-gesteuerte Bereitstellung (Entra P1). Ob rexx eine Schnittstelle hat, ist offen.
+- **Zwei Zielgruppen trennen:** Mitarbeitende (Helpdesk, nur geprüfte Artikel) vs. IT-Team (Cockpit).
+
+**Stolpersteine / offen:** Ticketsystem- und MDM-Produkt unbekannt; Apple-MDM-Push-Zertifikat als
+erstes in die Ablaufüberwachung; Security Copilot ggf. schon über E5 vorhanden → dann nicht nachbauen.
+Kostenzahlen stammen aus Drittquellen, vor dem Pitch offiziell prüfen.
+
+---
+
 ## 2026-10-10 — IT-Werkbank: M365 Admin-Betrieb 2026 (Diagramm, Wiki, Vorlagen)
 
 Anlass: Vorbereitung EMVIA-Start. Frage: Was ist neu in M365, und wie löse ich
