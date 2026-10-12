@@ -1,0 +1,9 @@
+[Unit]
+Description=Finanz-Erinnerung am 01.06. und 01.12. um 08:00
+
+[Timer]
+OnCalendar=*-06,12-01 08:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

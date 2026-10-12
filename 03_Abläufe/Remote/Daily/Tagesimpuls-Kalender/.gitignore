@@ -1,0 +1,4 @@
+.env
+export/*.ics
+daten/alarm.wav
+__pycache__/

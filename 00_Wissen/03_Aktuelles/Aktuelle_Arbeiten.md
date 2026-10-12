@@ -6,6 +6,29 @@
 
 ---
 
+## 2026-10-12 (2) — Tagesimpuls & Kalender-Wecker für den Raspberry Pi 4
+
+**Was:** `03_Abläufe/Remote/Daily/Tagesimpuls-Kalender/` – Python-Dienst mit systemd-Timern:
+07:00 Morgen-Push (Termine + Sprichwort/Wortwahl-Tausch/EQ-Übung/Affirmation/Witz, DE + VI),
+minütlicher Kalender-Wecker (ntfy-Push mit Ton, Wecker-Termine Priorität 5 + Ton am Pi),
+01.06./01.12. Finanz-/Steuer-Erinnerung mit Buttons zu WISO, Finanzplan (Drive), ELSTER.
+Ziel des CEO: EQ, Umgang mit Menschen und positive Wortwahl täglich trainieren.
+
+**Warum so:**
+- Google Calendar kann selbst nur stille Pop-ups/E-Mails → Ton/Wecker über **ntfy** (Priorität 5 =
+  Dauer-Alarm in der Android-App). Wecker-Kennzeichen direkt im Kalender: ⏰ im Titel oder Farbe Tomate.
+- **Service-Account** statt OAuth: Pi ist kopflos, kein ablaufendes Refresh-Token.
+- Inhalte **kuratiert** in `inhalte.json` statt LLM: vietnamesische Texte müssen stimmen, Pi4 hat kein gutes Modell.
+- Rotation **zustandslos** (jährlich gemischte Reihenfolge, Tag-des-Jahres-Index).
+- ntfy per **JSON-POST**: HTTP-Header sind Latin-1 → Vietnamesisch/Emoji im Titel würden brechen.
+
+**Stolpersteine:** Claude-Kalender-Connector hatte nur Leserechte (create_event abgelehnt) → Termine legt der
+Pi selbst an (`finanztermine-anlegen`, idempotent über extendedProperties) + .ics zum Sofort-Import.
+Finanz-Excel lag nicht im Drive des verbundenen Kontos (ai.tiepvu@) → Link vom CEO, nur in `.env`/.ics (gitignored).
+ICS: Kommas/Semikolons escapen. `.gitattributes eol=lf`, sonst bricht `install_pi.sh` nach Windows-Checkout.
+
+---
+
 ## 2026-10-12 — EMVIA: Planung KI-Assistenten-Familie (Copilot Studio)
 
 **Was:** Planungspaket `00_Wissen/03_Aktuelles/Active/EMVIA-KI-Assistenten/` für den Start am 15.10.:

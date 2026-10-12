@@ -1,0 +1,9 @@
+[Unit]
+Description=Kalender-Wecker jede Minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target

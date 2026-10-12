@@ -1,0 +1,10 @@
+[Unit]
+Description=Finanz- und Steuer-Erinnerung (01.06./01.12.)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=%i
+WorkingDirectory=/opt/tagesimpuls
+ExecStart=/opt/tagesimpuls/.venv/bin/python -m tagesimpuls finanz
