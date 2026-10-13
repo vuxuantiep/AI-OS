@@ -6,6 +6,27 @@
 
 ---
 
+## 2026-10-13 — Profit-Intelligence (Amazon-Arbitrage): Konzept + Wirtschaftlichkeits-Gate
+
+**Was:** `10_Business/01_Marktprodukte/Profit-Intelligence Amazon-Arbitrage/` – Produktplan
+(README), Mermaid-Architektur (`Plannung/Architektur.md`) und Gate-Dokument
+`wirtschaftlichkeit-profit-intelligence.md`. Noch **kein Code** – Status WARTET_AUF_FREIGABE.
+
+**Warum so:** Der Ursprungsvorschlag (n8n + neues FastAPI + Streamlit + Postgres) hätte
+Parallel-Infrastruktur gebaut; im AI-OS gibt es `backend/` (:8000), Node-RED, LiteLLM und
+das Dashboard schon → Plan auf Bestand umgebogen.
+
+**Lern-Highlights:**
+- Profit Engine = deterministischer `Decimal`-Kern, LLM nur für Bericht/Datenlücken.
+- Jede Zahl braucht eine Datenklasse (BEOBACHTET/OFFIZIELL/GESCHAETZT/UNBEKANNT).
+- Gate-Ergebnis: Die Software verdient selbst nichts – Geld kommt nur aus Handelsmarge.
+  Basis ≈ 242 €/Monat bei ≈ 9 €/h → erst 4 Wochen manueller Test (max. 500 € Ware),
+  Software nur bei bestandenem Meilenstein.
+- Modul B (Seller-Growth / „Schwungrad"-Werbung von Fischer & Habel) geparkt: Anbieter-
+  Fallstudien sind keine Planungsgrundlage, Umsatz ≠ Gewinn.
+
+---
+
 ## 2026-10-12 (2) — Tagesimpuls & Kalender-Wecker für den Raspberry Pi 4
 
 **Was:** `03_Abläufe/Remote/Daily/Tagesimpuls-Kalender/` – Python-Dienst mit systemd-Timern:
