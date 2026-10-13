@@ -7,6 +7,7 @@ tags: [emvia, copilot-studio, ki-agent, ticketsystem, monitoring, referenz, wich
 
 # Erster Agent: „IT-Leitstand" — Schritt für Schritt
 
+> Bilddiagramme: `Diagramme/Bauplan-Agent1-IT-Leitstand.png` · `Diagramme/Architektur-M365-Integration.png`
 > Baut auf [[Project_EMVIA-KI-Assistenten]] (Gesamtplan), [[Agenten-Anweisungen]] (Prompts)
 > und [[Infosammlung-Woche-1]] auf. Diese Datei beantwortet nur: **Wie fange ich konkret an?**
 

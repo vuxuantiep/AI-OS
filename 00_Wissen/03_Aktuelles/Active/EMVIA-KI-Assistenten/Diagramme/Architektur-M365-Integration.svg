@@ -1,0 +1,183 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1130" viewBox="0 0 1800 1130" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+    <marker id="arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/></marker>
+    <marker id="arB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker>
+    <style>
+      .h{font-size:19px;font-weight:700;fill:#0f172a}
+      .t{font-size:16px;font-weight:700;fill:#0f172a}
+      .s{font-size:13.5px;fill:#334155}
+      .x{font-size:12px;fill:#64748b}
+      .lb{font-size:12px;font-weight:600;fill:#0f172a}
+      .ln{stroke:#334155;stroke-width:2.2;fill:none;marker-end:url(#ar)}
+      .bi{stroke:#334155;stroke-width:2.2;fill:none;marker-end:url(#ar);marker-start:url(#ar)}
+      .al{stroke:#dc2626;stroke-width:2.4;fill:none;marker-end:url(#arR)}
+      .rd{stroke:#2563eb;stroke-width:2.2;fill:none;marker-end:url(#arB)}
+      .bg{fill:#fff;stroke:none}
+    </style>
+  </defs>
+  <rect width="1800" height="1130" fill="#f8fafc"/>
+  <text x="30" y="48" font-size="28" font-weight="800" fill="#0f172a">KI-Agent „IT-Leitstand" in der Microsoft-365-Infrastruktur — Verbindungen &amp; Kommunikation</text>
+  <text x="30" y="78" class="s">EMVIA · Copilot Studio + Power Automate + Microsoft Graph · v1 nur lesend · Stand 13.10.2026</text>
+
+  <!-- Entra ID -->
+  <rect x="30" y="98" width="1740" height="92" rx="14" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+  <text x="50" y="128" class="h">🔐 Microsoft Entra ID — Identität &amp; Rechte (gilt für alles darunter)</text>
+  <text x="50" y="158" class="s">Anmeldung (SSO) der Nutzer · Sicherheitsgruppe „IT-Team" · App-Registrierung „IT-Leitstand-Reader" (Zertifikat, nur Leserechte) · Conditional Access / MFA</text>
+  <text x="50" y="178" class="x">Graph-Berechtigungen (Anwendung): ServiceHealth.Read.All · DeviceManagementManagedDevices.Read.All · Application.Read.All · AuditLog.Read.All — keine Schreibrechte</text>
+
+  <!-- Nutzer -->
+  <rect x="30" y="215" width="300" height="640" rx="14" fill="#faf5ff" stroke="#a855f7" stroke-width="2"/>
+  <text x="50" y="245" class="h">👥 Microsoft Teams</text>
+  <rect x="48" y="262" width="264" height="120" rx="10" fill="#fff" stroke="#a855f7" stroke-width="2"/>
+  <text x="62" y="288" class="t">IT-Team (Chat mit Agent)</text>
+  <text x="62" y="314" class="s">„Ist alles grün?"</text>
+  <text x="62" y="336" class="s">„Fasse Ticket 1003 zusammen"</text>
+  <text x="62" y="358" class="s">„Wie richte ich LAPS ein?"</text>
+
+  <rect x="48" y="402" width="264" height="150" rx="10" fill="#fff" stroke="#dc2626" stroke-width="2.5"/>
+  <text x="62" y="428" class="t">Kanal „IT-Leitstand"</text>
+  <text x="62" y="454" class="s">• Alarm-Karten (Rot/Gelb)</text>
+  <text x="62" y="478" class="s">• Morgenbericht 07:00</text>
+  <text x="62" y="502" class="s">• Ablauf-Warnungen</text>
+  <text x="62" y="526" class="s">  (Zertifikate, Secrets)</text>
+  <text x="62" y="545" class="x">kommt OHNE Frage = proaktiv</text>
+
+  <rect x="48" y="572" width="264" height="120" rx="10" fill="#fff" stroke="#a855f7" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="62" y="598" class="t">Später: Mitarbeitende</text>
+  <text x="62" y="624" class="s">Helpdesk-Agent (Agent 5)</text>
+  <text x="62" y="646" class="s">auf Pflege-Tablet / Teams</text>
+  <text x="62" y="668" class="s">+ Störungshinweis</text>
+
+  <rect x="48" y="712" width="264" height="125" rx="10" fill="#fff" stroke="#a855f7" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="62" y="738" class="t">Später: Genehmigungen</text>
+  <text x="62" y="764" class="s">Power Automate Approvals</text>
+  <text x="62" y="786" class="s">in Teams/Outlook für</text>
+  <text x="62" y="808" class="s">schreibende Aktionen (JML)</text>
+
+  <!-- Umgebung -->
+  <rect x="370" y="215" width="720" height="640" rx="14" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+  <text x="390" y="245" class="h">⚙️ Power Platform · Umgebung „IT-Agenten" (DLP-Richtlinie)</text>
+
+  <rect x="395" y="262" width="670" height="300" rx="12" fill="#fff" stroke="#15803d" stroke-width="3"/>
+  <text x="415" y="292" class="t">🤖 Copilot Studio · Agent „IT-Leitstand"</text>
+  <rect x="415" y="308" width="300" height="108" rx="8" fill="#dcfce7"/>
+  <text x="430" y="332" class="lb">Anweisungen (RKZFE)</text>
+  <text x="430" y="354" class="s">Rolle, Kategorien, P1–P4,</text>
+  <text x="430" y="374" class="s">Grenzen: nur lesen, keine</text>
+  <text x="430" y="394" class="s">Personal-/Bewohnerdaten</text>
+  <rect x="735" y="308" width="310" height="108" rx="8" fill="#dcfce7"/>
+  <text x="750" y="332" class="lb">Generative Orchestrierung</text>
+  <text x="750" y="354" class="s">wählt je Frage: Wissen</text>
+  <text x="750" y="374" class="s">oder Tool — anhand der</text>
+  <text x="750" y="394" class="s">Tool-Beschreibungen</text>
+  <rect x="415" y="430" width="200" height="115" rx="8" fill="#eff6ff"/>
+  <text x="430" y="454" class="lb">Wissen (A)</text>
+  <text x="430" y="476" class="s">SharePoint</text>
+  <text x="430" y="496" class="s">„IT-Wissen"</text>
+  <text x="430" y="520" class="x">mit Nutzerrechten</text>
+  <rect x="630" y="430" width="200" height="115" rx="8" fill="#eff6ff"/>
+  <text x="645" y="454" class="lb">Tool: Ticket lesen (B)</text>
+  <text x="645" y="476" class="s">Konnektor zum</text>
+  <text x="645" y="496" class="s">Ticketsystem</text>
+  <text x="645" y="520" class="x">nur Lese-Aktionen</text>
+  <rect x="845" y="430" width="200" height="115" rx="8" fill="#eff6ff"/>
+  <text x="860" y="454" class="lb">Tool: Lage abfragen (C)</text>
+  <text x="860" y="476" class="s">Agent-Flow liest</text>
+  <text x="860" y="496" class="s">Liste „Lage"</text>
+  <text x="860" y="520" class="x">→ Ampel-Antwort</text>
+
+  <rect x="395" y="585" width="670" height="250" rx="12" fill="#fff" stroke="#0891b2" stroke-width="2.5"/>
+  <text x="415" y="615" class="t">🔁 Power Automate — Flows OHNE KI (zeitgesteuert)</text>
+  <rect x="415" y="632" width="310" height="185" rx="8" fill="#ecfeff"/>
+  <text x="430" y="656" class="lb">Flow „Health-Check" · alle 15 min</text>
+  <text x="430" y="680" class="s">1. Graph: M365-Dienststatus</text>
+  <text x="430" y="702" class="s">2. HTTP: Fachanwendungen</text>
+  <text x="430" y="724" class="s">3. Graph: Secrets/Zertifikate</text>
+  <text x="430" y="746" class="s">4. Ticket-Häufung zählen</text>
+  <text x="430" y="770" class="s">→ in Liste „Lage" schreiben</text>
+  <text x="430" y="792" class="s">→ NUR bei Auffälligkeit Alarm</text>
+  <rect x="740" y="632" width="305" height="185" rx="8" fill="#ecfeff"/>
+  <text x="755" y="656" class="lb">Flow „Morgenbericht" · 07:00</text>
+  <text x="755" y="680" class="s">1. Liste „Lage" + offene</text>
+  <text x="755" y="702" class="s">   P1/P2-Tickets lesen</text>
+  <text x="755" y="724" class="s">2. KI-Zusammenfassung</text>
+  <text x="755" y="746" class="s">   (einziger KI-Schritt)</text>
+  <text x="755" y="770" class="s">3. Ampelbericht als</text>
+  <text x="755" y="792" class="s">   Karte in den Kanal</text>
+
+  <!-- Datenquellen -->
+  <rect x="1130" y="215" width="640" height="640" rx="14" fill="#fff7ed" stroke="#fb923c" stroke-width="2"/>
+  <text x="1150" y="245" class="h">📦 Datenquellen in M365 / EMVIA (v1: nur lesen)</text>
+
+  <rect x="1148" y="262" width="604" height="105" rx="10" fill="#fff" stroke="#f97316" stroke-width="2"/>
+  <text x="1164" y="288" class="t">SharePoint Online</text>
+  <text x="1164" y="314" class="s">• Seite/Bibliothek „IT-Wissen" — Runbooks, Hilfeartikel (Wiki)</text>
+  <text x="1164" y="338" class="s">• Liste „Lage" — Ergebnisse der Health-Checks (Verlauf)</text>
+  <text x="1164" y="358" class="x">Zugriff des Agenten mit den Rechten des fragenden Nutzers</text>
+
+  <rect x="1148" y="382" width="604" height="85" rx="10" fill="#fff" stroke="#f97316" stroke-width="2"/>
+  <text x="1164" y="408" class="t">Ticketsystem (Produkt in Woche 1 klären)</text>
+  <text x="1164" y="434" class="s">fertiger Konnektor · eigene REST-API · oder IT-Postfach (Exchange)</text>
+  <text x="1164" y="456" class="x">Übung: SharePoint-Liste „Tickets" aus tickets-beispiel.csv</text>
+
+  <rect x="1148" y="482" width="604" height="200" rx="10" fill="#fff" stroke="#f97316" stroke-width="2"/>
+  <text x="1164" y="508" class="t">Microsoft Graph API</text>
+  <text x="1164" y="536" class="s">• Service Health — Exchange, Teams, SharePoint, Intune, Entra</text>
+  <text x="1164" y="562" class="s">• Intune — nicht konforme Geräte, &gt; 14 Tage ohne Sync</text>
+  <text x="1164" y="588" class="s">• Entra — App-Secrets/Zertifikate mit Ablaufdatum</text>
+  <text x="1164" y="614" class="s">• Apple-MDM-Push-Zertifikat · ABM/VPP-Token (jährlich!)</text>
+  <text x="1164" y="640" class="s">• Anmeldeprotokolle — gesperrte Konten, CA-Blockaden</text>
+  <text x="1164" y="666" class="x">über App-Registrierung „IT-Leitstand-Reader" (Zertifikat)</text>
+
+  <rect x="1148" y="697" width="290" height="140" rx="10" fill="#fff" stroke="#f97316" stroke-width="2"/>
+  <text x="1164" y="723" class="t">Fachanwendungen</text>
+  <text x="1164" y="749" class="s">Pflegedoku, Dienstplan,</text>
+  <text x="1164" y="771" class="s">Abrechnung (Liste klären)</text>
+  <text x="1164" y="795" class="s">HTTP-Status + Antwortzeit</text>
+  <text x="1164" y="821" class="x">ggf. Gateway im EMVIA-Netz</text>
+
+  <rect x="1458" y="697" width="294" height="140" rx="10" fill="#fff" stroke="#f97316" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="1474" y="723" class="t">Später</text>
+  <text x="1474" y="749" class="s">Defender XDR / Secure Score</text>
+  <text x="1474" y="771" class="s">Log Analytics (KQL)</text>
+  <text x="1474" y="795" class="s">rexx HR (Ein-/Austritte)</text>
+  <text x="1474" y="821" class="x">nur nach Freigabe</text>
+
+  <!-- Governance -->
+  <rect x="30" y="880" width="1740" height="130" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+  <text x="50" y="910" class="h">🛡️ Steuerung &amp; Nachweis (Governance)</text>
+  <text x="50" y="942" class="s"><tspan font-weight="700">Power Platform Admin Center:</tspan> DLP, Umgebungszugriff, Analysen, Verbrauch Copilot Credits</text>
+  <text x="50" y="968" class="s"><tspan font-weight="700">Microsoft Purview:</tspan> Audit-Log der Agenten-Nutzung, Aufbewahrung</text>
+  <text x="50" y="994" class="s"><tspan font-weight="700">Azure:</tspan> Budget-Alarm für Credits</text>
+  <text x="930" y="942" class="s"><tspan font-weight="700">Datenschutz:</tspan> VVT-Eintrag, keine Art.-9-Daten, Datenresidenz geprüft</text>
+  <text x="930" y="968" class="s"><tspan font-weight="700">Betriebsrat:</tspan> Zweckbindung „IT-Betrieb, keine Leistungskontrolle"</text>
+  <text x="930" y="994" class="s"><tspan font-weight="700">EU-KI-Verordnung:</tspan> Hinweis „Ich bin ein KI-Assistent"</text>
+
+  <!-- Legende -->
+  <g>
+    <line x1="50" y1="1060" x2="110" y2="1060" class="bi"/>
+    <text x="122" y="1065" class="s">Frage / Antwort (Chat)</text>
+    <line x1="330" y1="1060" x2="390" y2="1060" class="rd"/>
+    <text x="402" y="1065" class="s">Daten lesen (Konnektor / Graph, nur lesen)</text>
+    <line x1="740" y1="1060" x2="800" y2="1060" class="al"/>
+    <text x="812" y="1065" class="s">proaktiver Alarm / Bericht (ohne Frage)</text>
+    <text x="1130" y="1065" class="x">Grundsatz: Flow prüft und alarmiert · KI erklärt und formuliert · Mensch entscheidet</text>
+  </g>
+
+  <!-- Verbindungen -->
+  <path class="bi" d="M312,322 L395,322"/>
+  <rect x="318" y="296" width="72" height="18" rx="4" class="bg"/><text x="322" y="309" class="lb">Chat</text>
+  <path class="al" d="M415,725 L345,725 L345,477 L312,477"/>
+  <path class="al" d="M892,817 L892,845 L340,845 L340,500 L312,500"/>
+  <path class="rd" d="M515,545 L515,568 L1110,568 L1110,300 L1148,300"/>
+  <path class="rd" d="M730,545 L730,575 L1118,575 L1118,420 L1148,420"/>
+  <path class="ln" d="M945,545 L945,585"/>
+  <path class="rd" d="M1045,700 L1125,700 L1125,560 L1148,560"/>
+  <path class="rd" d="M1045,760 L1135,760 L1135,767 L1148,767"/>
+  <path class="ln" d="M1045,780 L1100,780 L1100,338 L1148,338"/>
+  <text x="1150" y="878" class="x"> </text>
+  <path class="ln" d="M700,190 L700,215"/>
+  <path class="ln" d="M180,190 L180,215"/>
+  <path class="ln" d="M1450,190 L1450,215"/>
+</svg>

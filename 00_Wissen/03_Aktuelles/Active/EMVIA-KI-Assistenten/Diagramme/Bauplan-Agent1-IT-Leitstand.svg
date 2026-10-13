@@ -1,0 +1,184 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1060" viewBox="0 0 1800 1060" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+    <style>
+      .h{font-size:20px;font-weight:700;fill:#0f172a}
+      .t{font-size:16px;font-weight:700;fill:#0f172a}
+      .s{font-size:13.5px;fill:#334155}
+      .x{font-size:12px;fill:#64748b}
+      .w{font-size:13px;font-weight:700;fill:#fff}
+      .ln{stroke:#334155;stroke-width:2.4;fill:none;marker-end:url(#ar)}
+    </style>
+  </defs>
+  <rect width="1800" height="1060" fill="#f8fafc"/>
+  <text x="30" y="48" font-size="28" font-weight="800" fill="#0f172a">Bauplan erster KI-Agent „IT-Leitstand" — EMVIA (Copilot Studio)</text>
+  <text x="30" y="78" class="s">Ein Agent · drei Fähigkeiten (Wiki · Ticket · proaktives Monitoring) · nur IT-Team · nur lesen · Stand 13.10.2026</text>
+
+  <!-- Zeitstrahl -->
+  <text x="30" y="122" class="h">① Zeitplan</text>
+  <line x1="40" y1="178" x2="1760" y2="178" stroke="#94a3b8" stroke-width="4"/>
+  <g>
+    <rect x="40" y="140" width="270" height="76" rx="12" fill="#7c3aed"/>
+    <text x="56" y="168" class="w">JETZT (vor 15.10.)</text>
+    <text x="56" y="192" class="w" font-weight="400">Übung im privaten Test-Tenant</text>
+    <text x="56" y="208" class="w" font-weight="400" font-size="12">mit erfundenen Tickets</text>
+
+    <rect x="330" y="140" width="270" height="76" rx="12" fill="#2563eb"/>
+    <text x="346" y="168" class="w">Woche 1–2</text>
+    <text x="346" y="192" class="w" font-weight="400">Ankommen · Infosammlung</text>
+    <text x="346" y="208" class="w" font-weight="400" font-size="12">Vorher-Werte messen!</text>
+
+    <rect x="620" y="140" width="270" height="76" rx="12" fill="#0891b2"/>
+    <text x="636" y="168" class="w">Woche 3–4</text>
+    <text x="636" y="192" class="w" font-weight="400">Monitoring OHNE KI</text>
+    <text x="636" y="208" class="w" font-weight="400" font-size="12">Ablauf-Alarme · Wiki starten</text>
+
+    <rect x="910" y="140" width="270" height="76" rx="12" fill="#d97706"/>
+    <text x="926" y="168" class="w">Woche 5 · Freigabe</text>
+    <text x="926" y="192" class="w" font-weight="400">Pitch IT-Leitung</text>
+    <text x="926" y="208" class="w" font-weight="400" font-size="12">Datenschutz · Betriebsrat</text>
+
+    <rect x="1200" y="140" width="270" height="76" rx="12" fill="#16a34a"/>
+    <text x="1216" y="168" class="w">Woche 6–9 · Pilot</text>
+    <text x="1216" y="192" class="w" font-weight="400">Agent A+B+C für IT-Team</text>
+    <text x="1216" y="208" class="w" font-weight="400" font-size="12">Messwerte sammeln</text>
+
+    <rect x="1490" y="140" width="270" height="76" rx="12" fill="#475569"/>
+    <text x="1506" y="168" class="w">ab Woche 10</text>
+    <text x="1506" y="192" class="w" font-weight="400">Auswertung → Ausbau</text>
+    <text x="1506" y="208" class="w" font-weight="400" font-size="12">Helpdesk · Orchestrator · JML</text>
+  </g>
+
+  <!-- Bauschritte -->
+  <text x="30" y="270" class="h">② Bauschritte in Copilot Studio (jede Stufe einzeln testen)</text>
+
+  <g>
+    <rect x="30" y="290" width="235" height="250" rx="12" fill="#fff" stroke="#64748b" stroke-width="2"/>
+    <circle cx="58" cy="320" r="17" fill="#334155"/><text x="58" y="326" class="w" text-anchor="middle">1</text>
+    <text x="84" y="326" class="t">Umgebung</text>
+    <text x="46" y="360" class="s">Power Platform Admin</text>
+    <text x="46" y="380" class="s">Center: „IT-Agenten"</text>
+    <text x="46" y="404" class="s">• DLP: nur nötige</text>
+    <text x="46" y="424" class="s">  Konnektoren</text>
+    <text x="46" y="448" class="s">• Zugriff: Gruppe</text>
+    <text x="46" y="468" class="s">  „IT-Team"</text>
+    <text x="46" y="520" class="x">✔ Nicht Standardumgebung</text>
+
+    <rect x="285" y="290" width="235" height="250" rx="12" fill="#fff" stroke="#64748b" stroke-width="2"/>
+    <circle cx="313" cy="320" r="17" fill="#334155"/><text x="313" y="326" class="w" text-anchor="middle">2</text>
+    <text x="339" y="326" class="t">Agent anlegen</text>
+    <text x="301" y="360" class="s">„IT-Leitstand", Deutsch</text>
+    <text x="301" y="384" class="s">• Anweisungen (RKZFE)</text>
+    <text x="301" y="408" class="s">• generative</text>
+    <text x="301" y="428" class="s">  Orchestrierung an</text>
+    <text x="301" y="452" class="s">• Anmeldung mit</text>
+    <text x="301" y="472" class="s">  Microsoft (Entra)</text>
+    <text x="301" y="520" class="x">✔ Websuche aus</text>
+
+    <rect x="540" y="290" width="235" height="250" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2.5"/>
+    <circle cx="568" cy="320" r="17" fill="#2563eb"/><text x="568" y="326" class="w" text-anchor="middle">3</text>
+    <text x="594" y="326" class="t">A · Wiki</text>
+    <text x="556" y="360" class="s">Wissen → SharePoint</text>
+    <text x="556" y="380" class="s">„IT-Wissen"</text>
+    <text x="556" y="404" class="s">• Runbooks: Symptom →</text>
+    <text x="556" y="424" class="s">  Ursache → Lösung</text>
+    <text x="556" y="448" class="s">• Antwort mit Quelle</text>
+    <text x="556" y="520" class="x">✔ Test: 10 Testfragen</text>
+
+    <rect x="795" y="290" width="235" height="250" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2.5"/>
+    <circle cx="823" cy="320" r="17" fill="#2563eb"/><text x="823" y="326" class="w" text-anchor="middle">4</text>
+    <text x="849" y="326" class="t">B · Ticket</text>
+    <text x="811" y="360" class="s">Tool → Konnektor</text>
+    <text x="811" y="380" class="s">Ticketsystem (lesen)</text>
+    <text x="811" y="404" class="s">• Kategorie, P1–P4</text>
+    <text x="811" y="428" class="s">• Rückfragen</text>
+    <text x="811" y="452" class="s">• Antwortentwurf</text>
+    <text x="811" y="476" class="s">• Häufung erkennen</text>
+    <text x="811" y="520" class="x">✔ Test: 3× WLAN Haus Nord</text>
+
+    <rect x="1050" y="290" width="235" height="250" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2.5"/>
+    <circle cx="1078" cy="320" r="17" fill="#2563eb"/><text x="1078" y="326" class="w" text-anchor="middle">5</text>
+    <text x="1104" y="326" class="t">C · Monitoring</text>
+    <text x="1066" y="360" class="s">Flow alle 15 min, ohne KI:</text>
+    <text x="1066" y="384" class="s">• M365-Dienststatus</text>
+    <text x="1066" y="408" class="s">• Fachanwendungen</text>
+    <text x="1066" y="432" class="s">• Ablauf Zertifikate</text>
+    <text x="1066" y="456" class="s">• Ticket-Häufung</text>
+    <text x="1066" y="480" class="s">Morgenbericht 07:00</text>
+    <text x="1066" y="520" class="x">✔ Nur Auffälliges melden</text>
+
+    <rect x="1305" y="290" width="215" height="250" rx="12" fill="#fff" stroke="#64748b" stroke-width="2"/>
+    <circle cx="1333" cy="320" r="17" fill="#334155"/><text x="1333" y="326" class="w" text-anchor="middle">6</text>
+    <text x="1359" y="326" class="t">Teams</text>
+    <text x="1321" y="360" class="s">Kanal: Teams</text>
+    <text x="1321" y="380" class="s">nur Gruppe IT-Team</text>
+    <text x="1321" y="404" class="s">• Hinweis: „Ich bin</text>
+    <text x="1321" y="424" class="s">  ein KI-Assistent,</text>
+    <text x="1321" y="444" class="s">  ich lese nur."</text>
+    <text x="1321" y="520" class="x">✔ KI-Transparenz</text>
+
+    <rect x="1540" y="290" width="230" height="250" rx="12" fill="#fff" stroke="#64748b" stroke-width="2"/>
+    <circle cx="1568" cy="320" r="17" fill="#334155"/><text x="1568" y="326" class="w" text-anchor="middle">7</text>
+    <text x="1594" y="326" class="t">Messen</text>
+    <text x="1556" y="360" class="s">• Analysen in</text>
+    <text x="1556" y="380" class="s">  Copilot Studio</text>
+    <text x="1556" y="404" class="s">• Credits / Monat</text>
+    <text x="1556" y="428" class="s">• Erstreaktionszeit</text>
+    <text x="1556" y="452" class="s">• Störung vor Anruf</text>
+    <text x="1556" y="476" class="s">  erkannt</text>
+    <text x="1556" y="520" class="x">✔ Vorher vs. Nachher</text>
+
+    <path class="ln" d="M265,415 L285,415"/>
+    <path class="ln" d="M520,415 L540,415"/>
+    <path class="ln" d="M775,415 L795,415"/>
+    <path class="ln" d="M1030,415 L1050,415"/>
+    <path class="ln" d="M1285,415 L1305,415"/>
+    <path class="ln" d="M1520,415 L1540,415"/>
+  </g>
+
+  <!-- Regeln -->
+  <text x="30" y="595" class="h">③ Grundregeln</text>
+  <g>
+    <rect x="30" y="612" width="420" height="110" rx="12" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
+    <text x="48" y="642" class="t">Flow alarmiert · KI erklärt</text>
+    <text x="48" y="668" class="s">Prüfen und Melden ohne KI (billig, zuverlässig).</text>
+    <text x="48" y="690" class="s">KI nur zum Zusammenfassen und Formulieren.</text>
+    <text x="48" y="710" class="x">spart Copilot Credits</text>
+
+    <rect x="470" y="612" width="420" height="110" rx="12" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
+    <text x="488" y="642" class="t">Lesen vor Handeln</text>
+    <text x="488" y="668" class="s">v1 hat KEINE schreibenden Aktionen.</text>
+    <text x="488" y="690" class="s">Später nur mit Genehmigung in Teams.</text>
+    <text x="488" y="710" class="x">Mensch entscheidet</text>
+
+    <rect x="910" y="612" width="420" height="110" rx="12" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
+    <text x="928" y="642" class="t">Erst Daten, dann KI</text>
+    <text x="928" y="668" class="s">Wiki und Flows zuerst sauber aufbauen —</text>
+    <text x="928" y="690" class="s">sonst nur gut formulierte Vermutungen.</text>
+    <text x="928" y="710" class="x">Reihenfolge A → B → C</text>
+
+    <rect x="1350" y="612" width="420" height="110" rx="12" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
+    <text x="1368" y="642" class="t">EMVIA erst nach Freigabe</text>
+    <text x="1368" y="668" class="s">Üben im eigenen Test-Tenant.</text>
+    <text x="1368" y="690" class="s">Im EMVIA-Tenant nur mit OK der IT-Leitung.</text>
+    <text x="1368" y="710" class="x">Probezeit: erst zuhören</text>
+  </g>
+
+  <!-- Checkliste -->
+  <text x="30" y="775" class="h">④ Checkliste „Rechte und Datenschutz sauber gelöst" = Referenz-Nachweis</text>
+  <g class="s">
+    <rect x="30" y="792" width="1740" height="240" rx="14" fill="#f0fdf4" stroke="#4ade80" stroke-width="2"/>
+    <text x="54" y="828">R1  Eigene Umgebung mit DLP-Richtlinie</text>
+    <text x="54" y="862">R2  Agent nur für Gruppe „IT-Team"</text>
+    <text x="54" y="896">R3  Anmeldung über Microsoft, Wissen respektiert SharePoint-Rechte</text>
+    <text x="54" y="930">R4  App-Registrierung: nur Leserechte, Zertifikat, Ablauf überwacht</text>
+    <text x="54" y="964">R5  Keine schreibenden Aktionen in v1</text>
+    <text x="54" y="998">R6  Keine Personal-/Bewohnerdaten (Art. 9 DSGVO)</text>
+    <text x="930" y="828">R7  Datenschutzbeauftragte/r informiert, Eintrag im VVT</text>
+    <text x="930" y="862">R8  Betriebsrat: Zweck „IT-Betrieb, keine Leistungskontrolle"</text>
+    <text x="930" y="896">R9  KI-Transparenz für Nutzer (EU-KI-Verordnung)</text>
+    <text x="930" y="930">R10 Aufbewahrung der Protokolle + Datenresidenz geprüft</text>
+    <text x="930" y="964">R11 Kosten: Budget-Alarm, Credits je Monat dokumentiert</text>
+    <text x="930" y="998" class="x">Details: Bauanleitung-Agent1-IT-Leitstand.md, Abschnitt 4</text>
+  </g>
+</svg>
