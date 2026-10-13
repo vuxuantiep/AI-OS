@@ -24,6 +24,12 @@ das Dashboard schon → Plan auf Bestand umgebogen.
   Software nur bei bestandenem Meilenstein.
 - Modul B (Seller-Growth / „Schwungrad"-Werbung von Fischer & Habel) geparkt: Anbieter-
   Fallstudien sind keine Planungsgrundlage, Umsatz ≠ Gewinn.
+- **Nachtrag:** CEO-Freigabe erteilt (GO_MIT_AUFLAGEN), Fokus Plattform-APIs (SP-API inkl.
+  Listings Restrictions für Ungating, Keepa, eBay Browse, Kaufland/Otto). Architektur-Bild
+  `Plannung/Architektur-Modul6.svg/.png` – PNG ohne Zusatztool über Chrome headless
+  (`chrome --headless=new --screenshot=... datei.svg`) gerendert.
+- KI-Assistenten-Werbung recherchiert (ChatGPT Ads Self-Serve in DE seit Ende Aug. 2026,
+  Google AI Mode nur Tests, Perplexity ohne Ads) → in Trace-AI-Commerce-README für Modul 3/7.
 
 ---
 

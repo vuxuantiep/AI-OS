@@ -1,0 +1,215 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1100" viewBox="0 0 1800 1100" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <marker id="arG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#15803d"/>
+    </marker>
+    <style>
+      .h{font-size:19px;font-weight:700;fill:#0f172a}
+      .t{font-size:16px;font-weight:700;fill:#0f172a}
+      .s{font-size:13.5px;fill:#334155}
+      .x{font-size:12px;fill:#64748b}
+      .tag{font-size:11px;font-weight:700;fill:#fff}
+      .ln{stroke:#334155;stroke-width:2.2;fill:none;marker-end:url(#ar)}
+      .lnG{stroke:#15803d;stroke-width:2.2;fill:none;stroke-dasharray:7 5;marker-end:url(#arG)}
+    </style>
+  </defs>
+
+  <rect width="1800" height="1100" fill="#f8fafc"/>
+  <text x="30" y="48" font-size="28" font-weight="800" fill="#0f172a">Trace AI Commerce · Modul 6 „Profit-Intelligence" — Einkaufskalkulation Amazon-Arbitrage</text>
+  <text x="30" y="78" class="s">Architektur v1 · Stand 13.10.2026 · CEO-Freigabe erteilt · Daten nur über offizielle Plattform-APIs · Kauf nie automatisch</text>
+
+  <!-- ================= Spalte 1: Plattform-APIs ================= -->
+  <rect x="30" y="105" width="360" height="810" rx="14" fill="#fff7ed" stroke="#fb923c" stroke-width="2"/>
+  <text x="50" y="135" class="h">① Plattform-APIs (Eingang)</text>
+
+  <rect x="48" y="150" width="324" height="255" rx="10" fill="#fff" stroke="#f97316" stroke-width="2"/>
+  <text x="62" y="176" class="t">Amazon SP-API (read-only)</text>
+  <rect x="290" y="161" width="72" height="20" rx="10" fill="#2563eb"/><text x="326" y="175" class="tag" text-anchor="middle">OFFIZIELL</text>
+  <text x="62" y="204" class="s">• Catalog Items — ASIN ↔ EAN/GTIN, Kategorie</text>
+  <text x="62" y="232" class="s">• Product Pricing — Buy-Box, Angebote, Preise</text>
+  <text x="62" y="260" class="s">• Product Fees — Gebühren-Schätzung je ASIN</text>
+  <text x="62" y="288" class="s">• Listings Restrictions — darf ich verkaufen?</text>
+  <text x="62" y="316" class="s">• FBA Inbound Eligibility — FBA-fähig?</text>
+  <text x="62" y="344" class="s">• Reports / Finances — Ist-Verkäufe, Gebühren</text>
+  <text x="62" y="378" class="x">Voraussetzung: Pro-Konto + Developer-Profil</text>
+  <text x="62" y="395" class="x">(Login with Amazon, Rollen „Pricing", „Product Listing")</text>
+
+  <rect x="48" y="420" width="324" height="95" rx="10" fill="#fff" stroke="#f97316" stroke-width="2"/>
+  <text x="62" y="446" class="t">Keepa API</text>
+  <rect x="280" y="431" width="82" height="20" rx="10" fill="#d97706"/><text x="321" y="445" class="tag" text-anchor="middle">GESCHÄTZT</text>
+  <text x="62" y="474" class="s">• Preis- &amp; Verkaufsrang-Historie (BSR)</text>
+  <text x="62" y="500" class="s">• Abverkaufs-Indikator, Angebotsverlauf</text>
+
+  <rect x="48" y="530" width="324" height="160" rx="10" fill="#fff" stroke="#f97316" stroke-width="2"/>
+  <text x="62" y="556" class="t">Sourcing-Plattformen</text>
+  <rect x="268" y="541" width="94" height="20" rx="10" fill="#0d9488"/><text x="315" y="555" class="tag" text-anchor="middle">BEOBACHTET</text>
+  <text x="62" y="584" class="s">• eBay Browse API — Einkaufsangebote</text>
+  <text x="62" y="612" class="s">• Kaufland / Otto Marketplace API</text>
+  <text x="62" y="640" class="s">• Affiliate-Produktfeeds (z. B. Awin)</text>
+  <text x="62" y="668" class="s">• Großhandels-Preislisten (CSV/Feed)</text>
+
+  <rect x="48" y="705" width="324" height="85" rx="10" fill="#fff" stroke="#f97316" stroke-width="2"/>
+  <text x="62" y="731" class="t">Manuell / CSV</text>
+  <text x="62" y="757" class="s">• Lieferantenangebote, Retail-Funde</text>
+  <text x="62" y="779" class="s">• mit Rechnung/Beleg als Nachweis</text>
+
+  <rect x="48" y="805" width="324" height="90" rx="10" fill="#fff" stroke="#f97316" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="62" y="831" class="t">Später: TikTok Shop Partner API</text>
+  <text x="62" y="857" class="s">• Provision ~9 % als datierte Regel</text>
+  <text x="62" y="879" class="s">• kein Scraping (Plattform-AGB)</text>
+
+  <!-- ================= Spalte 2: Connector ================= -->
+  <rect x="420" y="105" width="290" height="810" rx="14" fill="#eff6ff" stroke="#60a5fa" stroke-width="2"/>
+  <text x="440" y="135" class="h">② Connector-Schicht</text>
+
+  <rect x="436" y="150" width="258" height="110" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="450" y="176" class="t">Adapter je Plattform</text>
+  <text x="450" y="202" class="s">SP-API-Client · Keepa-Client</text>
+  <text x="450" y="224" class="s">eBay/Kaufland/Otto-Client</text>
+  <text x="450" y="246" class="s">Feed- &amp; CSV-Parser</text>
+
+  <rect x="436" y="275" width="258" height="85" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="450" y="301" class="t">Rate-Limit · Retry · Cache</text>
+  <text x="450" y="327" class="s">Token-Bucket je API, Backoff</text>
+  <text x="450" y="349" class="s">Antwort-Cache mit Ablaufzeit</text>
+
+  <rect x="436" y="375" width="258" height="110" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="450" y="401" class="t">Quellen-Stempel</text>
+  <text x="450" y="427" class="s">Datenklasse (OFFIZIELL / GESCHÄTZT</text>
+  <text x="450" y="449" class="s">/ BEOBACHTET / UNBEKANNT)</text>
+  <text x="450" y="471" class="s">+ Zeitstempel + TTL + Quelle</text>
+
+  <rect x="436" y="500" width="258" height="110" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="450" y="526" class="t">Normalisierung</text>
+  <text x="450" y="552" class="s">EAN/GTIN ↔ ASIN-Matching</text>
+  <text x="450" y="574" class="s">Brutto/Netto, USt, Währung</text>
+  <text x="450" y="596" class="s">Einheiten / Bundle-Größen</text>
+
+  <rect x="436" y="625" width="258" height="85" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="450" y="651" class="t">Secrets</text>
+  <text x="450" y="677" class="s">zentrale .env: LWA-Token,</text>
+  <text x="450" y="699" class="s">Keepa-/eBay-Keys — nie im Prompt</text>
+
+  <rect x="436" y="725" width="258" height="170" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="450" y="751" class="t">Sicherheitsgrenze</text>
+  <text x="450" y="777" class="s">• nur Lese-Scopes</text>
+  <text x="450" y="801" class="s">• keine Bestell-/Listing-Calls</text>
+  <text x="450" y="825" class="s">• Produkttexte = Daten,</text>
+  <text x="450" y="847" class="s">  nie Anweisungen (Injection)</text>
+  <text x="450" y="871" class="s">• Abruf-Log → audit_events</text>
+
+  <!-- ================= Spalte 3: Kern ================= -->
+  <rect x="740" y="105" width="560" height="60" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+  <text x="760" y="132" class="t">Scheduler: Node-RED / Backend-Job</text>
+  <text x="760" y="153" class="s">Watchlist täglich neu abrufen · Preisalarm · CSV-Import</text>
+
+  <rect x="740" y="180" width="560" height="735" rx="14" fill="#f0fdf4" stroke="#4ade80" stroke-width="2"/>
+  <text x="760" y="210" class="h">③ Modul profit_intelligence — backend/ FastAPI :8000</text>
+
+  <rect x="770" y="225" width="500" height="68" rx="10" fill="#fff" stroke="#22c55e" stroke-width="2"/>
+  <text x="786" y="252" class="t">1 · Discovery &amp; Matching</text>
+  <text x="786" y="278" class="s">Kandidat anlegen, Dubletten verhindern, Angebot ↔ ASIN verknüpfen</text>
+
+  <rect x="770" y="308" width="500" height="68" rx="10" fill="#fff" stroke="#22c55e" stroke-width="2"/>
+  <text x="786" y="335" class="t">2 · Market Research</text>
+  <text x="786" y="361" class="s">Buy-Box, Verkäuferanzahl, Preis-/BSR-Trend — jede Zahl mit Quelle + Alter</text>
+
+  <rect x="770" y="391" width="500" height="128" rx="10" fill="#dcfce7" stroke="#15803d" stroke-width="3"/>
+  <text x="786" y="418" class="t">3 · Profit Engine  (Python Decimal, deterministisch, kein LLM)</text>
+  <text x="786" y="444" class="s">Nettoerlös = Brutto / (1 + USt) · Deckungsbeitrag je Stück</text>
+  <text x="786" y="466" class="s">− Ware − Amazon-Gebühren − FBA/Versand − Prep − Retourenrisiko</text>
+  <text x="786" y="488" class="s">ROI auf Warenkapital · Mindestverkaufspreis · Break-even</text>
+  <text x="786" y="510" class="s">3 Szenarien: optimistisch / Basis / Stress (Preis −10 %, Gebühren ↑)</text>
+
+  <rect x="770" y="534" width="500" height="90" rx="10" fill="#fff" stroke="#22c55e" stroke-width="2"/>
+  <text x="786" y="561" class="t">4 · Risk &amp; Compliance  (harte Ausschlussregeln)</text>
+  <text x="786" y="587" class="s">Verkaufssperre/Marke · Stress-DB &lt; 0 · Nachweis fehlt · GPSR</text>
+  <text x="786" y="611" class="s">Datenqualität-Score: veraltet / geschätzt / fehlend → blockiert</text>
+
+  <rect x="770" y="639" width="500" height="68" rx="10" fill="#fff" stroke="#22c55e" stroke-width="2"/>
+  <text x="786" y="666" class="t">5 · Decision Assistant</text>
+  <text x="786" y="692" class="s">Bericht + Datenlücken → „prüfen / beobachten / zur Freigabe"</text>
+
+  <rect x="770" y="722" width="500" height="173" rx="10" fill="#fff" stroke="#64748b" stroke-width="2"/>
+  <text x="786" y="749" class="t">Datenbank (Geld = NUMERIC)</text>
+  <text x="786" y="775" class="s">products · marketplace_listings · observations (historisch)</text>
+  <text x="786" y="799" class="s">supplier_offers · cost_profiles (datierte Gebührenregeln)</text>
+  <text x="786" y="823" class="s">profit_runs (rule_version) · purchase_decisions (unveränderlich)</text>
+  <text x="786" y="847" class="s">audit_events · data_sources (Herkunft, Zweck, Ablauf)</text>
+  <text x="786" y="875" class="x">jede Entscheidung mit damaligem Datenstand reproduzierbar</text>
+
+  <!-- ================= Spalte 4: Ausgabe ================= -->
+  <rect x="1330" y="105" width="440" height="810" rx="14" fill="#faf5ff" stroke="#c084fc" stroke-width="2"/>
+  <text x="1350" y="135" class="h">④ Entscheidung &amp; Rückkopplung</text>
+
+  <rect x="1348" y="150" width="404" height="140" rx="10" fill="#fff" stroke="#a855f7" stroke-width="2"/>
+  <text x="1364" y="177" class="t">Dashboard :5000 · Tab „Profit-Intelligence"</text>
+  <text x="1364" y="205" class="s">• Produktvergleich mit Ranking (Teilwerte sichtbar)</text>
+  <text x="1364" y="231" class="s">• Detailkalkulation je Szenario</text>
+  <text x="1364" y="257" class="s">• Ampel Datenqualität + fehlende Infos</text>
+  <text x="1364" y="279" class="s">• Kapital im Risiko je geplanter Menge</text>
+
+  <rect x="1348" y="315" width="404" height="140" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="3"/>
+  <text x="1364" y="342" class="t">CEO-Freigabe (Human in the Loop)</text>
+  <text x="1364" y="370" class="s">• Menge + Begründung → purchase_decisions</text>
+  <text x="1364" y="396" class="s">• System bestellt NIE selbst</text>
+  <text x="1364" y="422" class="s">• Einkauf erfolgt manuell beim Lieferanten</text>
+  <text x="1364" y="444" class="x">gesperrt bei veralteten / fehlenden Daten</text>
+
+  <rect x="1348" y="480" width="404" height="120" rx="10" fill="#fff" stroke="#a855f7" stroke-width="2"/>
+  <text x="1364" y="507" class="t">Ist-Rückführung</text>
+  <text x="1364" y="535" class="s">SP-API Reports/Finances: echte Verkaufspreise,</text>
+  <text x="1364" y="559" class="s">Gebühren, Retouren, Lagerdauer</text>
+  <text x="1364" y="583" class="s">→ Stress-Annahmen kalibrieren (Prognose vs. Ist)</text>
+
+  <rect x="1348" y="625" width="404" height="95" rx="10" fill="#fff" stroke="#a855f7" stroke-width="2"/>
+  <text x="1364" y="652" class="t">LiteLLM :4000</text>
+  <text x="1364" y="678" class="s">nur für Bericht/Datenlücken — lokal (Ollama)</text>
+  <text x="1364" y="700" class="s">oder Cloud; nie für Rechenwerte</text>
+
+  <rect x="1348" y="745" width="404" height="150" rx="10" fill="#fff" stroke="#a855f7" stroke-width="2"/>
+  <text x="1364" y="772" class="t">Benachrichtigung</text>
+  <text x="1364" y="800" class="s">• ntfy-Push: neuer Kandidat zur Freigabe</text>
+  <text x="1364" y="826" class="s">• Preisalarm: Buy-Box fällt unter Mindestpreis</text>
+  <text x="1364" y="852" class="s">• Fehler: API-Limit, Token abgelaufen</text>
+  <text x="1364" y="878" class="x">Fehler werden gemeldet, nie still übersprungen</text>
+
+  <!-- ================= Pfeile ================= -->
+  <path class="ln" d="M372,275 L436,205"/>
+  <path class="ln" d="M372,467 L436,215"/>
+  <path class="ln" d="M372,610 L436,225"/>
+  <path class="ln" d="M372,747 L436,235"/>
+  <path class="ln" d="M694,205 L770,259"/>
+  <path class="ln" d="M1020,165 L1020,180"/>
+  <path class="ln" d="M1020,293 L1020,308"/>
+  <path class="ln" d="M1020,376 L1020,391"/>
+  <path class="ln" d="M1020,519 L1020,534"/>
+  <path class="ln" d="M1020,624 L1020,639"/>
+  <path class="ln" d="M1270,672 L1348,672"/>
+  <path class="ln" d="M1270,805 L1310,805 L1310,220 L1348,220"/>
+  <path class="ln" d="M1550,290 L1550,315"/>
+  <path class="ln" d="M1348,400 L1290,400 L1290,860 L1270,860"/>
+  <path class="lnG" d="M1348,540 L1300,540 L1300,455 L1270,455"/>
+  <text x="1170" y="1000" class="x"> </text>
+
+  <!-- ================= Leitplanken ================= -->
+  <rect x="30" y="935" width="1740" height="140" rx="14" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="50" y="966" class="h">Leitplanken (Gate-Auflagen, CEO-Freigabe 13.10.2026)</text>
+  <g class="s">
+    <rect x="50" y="985" width="400" height="72" rx="10" fill="#f1f5f9"/>
+    <text x="66" y="1013" class="t">A1/A2 Praxistest zuerst</text>
+    <text x="66" y="1039">max. 500 € Ware · Meilenstein vor Ausbau</text>
+    <rect x="470" y="985" width="400" height="72" rx="10" fill="#f1f5f9"/>
+    <text x="486" y="1013" class="t">A3 Zeitdeckel</text>
+    <text x="486" y="1039">≤ 5 h/Woche (EMVIA hat Vorrang)</text>
+    <rect x="890" y="985" width="420" height="72" rx="10" fill="#f1f5f9"/>
+    <text x="906" y="1013" class="t">A4 Recht/Steuer vor 1. Einkauf</text>
+    <text x="906" y="1039">Gewerbe · USt · LUCID · GPSR</text>
+    <rect x="1330" y="985" width="420" height="72" rx="10" fill="#f1f5f9"/>
+    <text x="1346" y="1013" class="t">A5/A6 Kosten &amp; Stack</text>
+    <text x="1346" y="1039">Abos ≤ 20 €/Mon. · nur AI-OS-Bestand</text>
+  </g>
+</svg>

@@ -1,7 +1,10 @@
 # Wirtschaftlichkeitsprüfung: Trace AI Commerce – Modul Profit-Intelligence (Amazon-Arbitrage)
 
 > Erstellt vom [[../../../wirtschaftlichkeits-pruefer-agent|Wirtschaftlichkeits-Prüfer]] am 13.10.2026.
-> **Status: WARTET_AUF_FREIGABE** — Umsetzung (Code, Einkäufe, Konten) erst nach CEO-Freigabe.
+> **Status: FREIGEGEBEN** — CEO-Freigabe erteilt am 13.10.2026 (GO_MIT_AUFLAGEN, A1–A6 gelten).
+> CEO-Zusatz bei Freigabe: Fokus auf Modul 6 (Einkaufskalkulation Amazon-Arbitrage),
+> Daten über die **APIs der Online-Handelsplattformen** beziehen (SP-API, Keepa, eBay, Kaufland/Otto).
+> Architektur-Bild: [[Plannung/Architektur-Modul6.png]]
 > Produktplan: [[README|Profit-Intelligence]] · Architektur: [[Plannung/Architektur|Diagramm]]
 
 ## Management-Summary (5 Sätze)
@@ -108,7 +111,7 @@ Konservativ nie · Basis > 12 Monate · Optimistisch ~Monat 6.
   "top_risiken": ["Zeit ab EMVIA-Start", "Kontosperrung/Markenbeschwerden", "Steuer/GPSR/VerpackG", "BSR-Absatz nur Schätzung", "Build-vs-Buy"],
   "empfehlung": "GO_MIT_AUFLAGEN",
   "auflagen": ["A1 Phase 0 manuell max 500 EUR", "A2 Meilenstein vor Software-Bau", "A3 max 5 h/Woche", "A4 Recht/Steuer vor Einkauf", "A5 keine Abos/Kurse > 20 EUR", "A6 im bestehenden backend/ bauen"],
-  "status": "WARTET_AUF_FREIGABE"
+  "status": "FREIGEGEBEN_2026-10-13"
 }
 ```
 

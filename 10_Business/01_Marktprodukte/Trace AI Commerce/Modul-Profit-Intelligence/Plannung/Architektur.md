@@ -1,6 +1,7 @@
 # Architektur — Profit-Intelligence (Stand 13.10.2026, Konzept)
 
 > Pflicht-Diagramm (CEO-Anweisung 17.07.2026). Bei jeder Änderung mitpflegen.
+> Bilddiagramm: ![Modul 6](Architektur-Modul6.png) (Quelle: `Architektur-Modul6.svg`, PNG per Chrome headless gerendert)
 
 ## Komponenten
 

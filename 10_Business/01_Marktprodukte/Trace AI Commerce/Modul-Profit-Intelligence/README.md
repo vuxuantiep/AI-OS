@@ -1,9 +1,11 @@
 # Trace AI Commerce – Modul Profit-Intelligence (Product Research & Einkaufskalkulation)
 
 > Modul von [[../README|Trace AI Commerce]] (Arbeitstitel auch „Replenish-System"). Angelegt 13.10.2026.
-> **Status: KONZEPT** — Umsetzung erst nach CEO-Freigabe der
-> [[wirtschaftlichkeit-profit-intelligence|Wirtschaftlichkeitsprüfung]] (Pflicht-Gate).
-> Architektur: [[Plannung/Architektur|Architekturdiagramm]]
+> **Status: FREIGEGEBEN 13.10.2026** (GO_MIT_AUFLAGEN) — siehe
+> [[wirtschaftlichkeit-profit-intelligence|Wirtschaftlichkeitsprüfung]].
+> Architektur: [[Plannung/Architektur|Mermaid]] · Bild: `Plannung/Architektur-Modul6.png` (Quelle `.svg`)
+
+![Architektur Modul 6](Plannung/Architektur-Modul6.png)
 
 ## Kernidee in einem Satz
 
@@ -26,6 +28,24 @@ gefährlicher als eine Tabelle.
 | 3 Szenarien (optimistisch / Basis / Stress) | Mehrere Marktplätze gleichzeitig |
 | Datenqualität getrennt von Profitabilität bewerten | Eigener LLM-Server / teure SaaS |
 | Freigabe + Audit (Entscheidung reproduzierbar) | Änderungen am Verkäuferkonto |
+
+## Plattform-APIs (CEO-Vorgabe: Daten über offizielle APIs)
+
+| API | Liefert | Datenklasse | Voraussetzung / Kosten (vor Start prüfen) |
+|---|---|---|---|
+| **Amazon SP-API** – Catalog Items | ASIN ↔ EAN/GTIN, Kategorie, Maße | OFFIZIELL | Pro-Konto + Developer-Profil, LWA-Token |
+| SP-API – Product Pricing | Buy-Box, Angebote, Preise | OFFIZIELL | Rolle „Pricing" |
+| SP-API – Product Fees | Gebühren-Schätzung je ASIN/Preis | OFFIZIELL (Schätzung!) | Amazon: Ist-Gebühr kann abweichen |
+| SP-API – Listings Restrictions | Darf ich diese ASIN verkaufen? (Ungating) | OFFIZIELL | Rolle „Product Listing" |
+| SP-API – FBA Inbound Eligibility | FBA-fähig? | OFFIZIELL | — |
+| SP-API – Reports / Finances | Ist-Verkäufe, echte Gebühren, Retouren | OFFIZIELL | erst nach ersten Verkäufen |
+| **Keepa API** | Preis- & BSR-Historie, Angebotsverlauf | GESCHAETZT | kostenpflichtiges Token-Abo (A5 beachten) |
+| **eBay Browse API** | Einkaufsangebote (Sourcing) | BEOBACHTET | kostenloser Developer-Key |
+| **Kaufland / Otto Marketplace API** | Preise anderer Kanäle | BEOBACHTET | Händlerkonto nötig – Zugang prüfen |
+| Affiliate-Feeds (z. B. Awin) | Händler-Produktpreise | BEOBACHTET | Publisher-Konto |
+| TikTok Shop Partner API | später: Shop-/Produktdaten | OFFIZIELL | Partner-Zugang, kein Scraping |
+
+Alle Zugriffe **read-only**; keine Bestell- oder Listing-Endpunkte. Keys nur in der zentralen `.env`.
 
 ## Datenklassen (Pflicht für jede Kennzahl)
 

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Trace AI Commerce v2</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			margin: 0;
+			padding: 0;
+		}
+		
+		#header {
+			background-color: #333;
+			color: #fff;
+			padding: 10px;
+			text-align: center;
+		}
+		
+		#content {
+			max-width: 800px;
+			margin: 40px auto;
+			padding: 20px;
+			border: 1px solid #ddd;
+			border-radius: 10px;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		}
+		
+		#footer {
+			background-color: #333;
+			color: #fff;
+			padding: 10px;
+			text-align: center;
+			clear: both;
+		}
+		
+		.button {
+			background-color: #4CAF50;
+			color: #fff;
+			border: none;
+			padding: 10px 20px;
+			font-size: 16px;
+			cursor: pointer;
+		}
+		
+		.button:hover {
+			background-color: #3e8e41;
+		}
+	</style>
+</head>
+<body><div style="position:fixed;top:8px;right:8px;z-index:99999;background:rgba(17,17,17,0.85);color:#fff;padding:4px 12px;border-radius:14px;font:600 12px sans-serif;">🏭 Prototyp v2 · ord_20260706_221950</div>
+	<header id="header">
+		<h1>🧪 Prototyp — KI-Fabrik Testumgebung</h1>
+	</header>
+	<main id="content">
+		<h2>Funktionen</h2>
+		<section>
+			<button class="button" onclick="leadAutomation()">Lead Automation</button>
+			<button class="button" onclick="marketingAIVO()">Marketing & AIVO</button>
+			<button class="button" onclick="avatarService()">Avatar Service</button>
+		</section>
+		
+		<h2>Beispieldaten</h2>
+		<ul>
+			<li><strong>Firma:</strong> KI-Fabrik GmbH</li>
+			<li><strong>Kontakt:</strong> [info@ki-fabrik.de](mailto:info@ki-fabrik.de)</li>
+			<li><strong>Sitz:</strong> Berlin, Deutschland</li>
+		</ul>
+		
+		<h2>Zustand</h2>
+		<p id="status"></p>
+	</main>
+	
+	<script>
+		function leadAutomation() {
+			document.getElementById("status").innerHTML = "Lead Automation aktiviert";
+		}
+		
+		function marketingAIVO() {
+			document.getElementById("status").innerHTML = "Marketing & AIVO aktiviert";
+		}
+		
+		function avatarService() {
+			document.getElementById("status").innerHTML = "Avatar Service aktiviert";
+		}
+	</script>
+</body>
+</html>
