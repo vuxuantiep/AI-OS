@@ -8,7 +8,7 @@
 
 ## 2026-10-13 — Profit-Intelligence (Amazon-Arbitrage): Konzept + Wirtschaftlichkeits-Gate
 
-**Was:** `10_Business/01_Marktprodukte/Profit-Intelligence Amazon-Arbitrage/` – Produktplan
+**Was:** `10_Business/01_Marktprodukte/Trace AI Commerce/Modul-Profit-Intelligence/` (nachträglich als Modul 6 unter Trace AI Commerce eingeordnet, das bisher nur als KI-Fabrik-Auftrag existierte) – Produktplan
 (README), Mermaid-Architektur (`Plannung/Architektur.md`) und Gate-Dokument
 `wirtschaftlichkeit-profit-intelligence.md`. Noch **kein Code** – Status WARTET_AUF_FREIGABE.
 

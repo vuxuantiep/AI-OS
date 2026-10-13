@@ -1,6 +1,6 @@
-# Wirtschaftlichkeitsprüfung: Profit-Intelligence (Amazon-Arbitrage)
+# Wirtschaftlichkeitsprüfung: Trace AI Commerce – Modul Profit-Intelligence (Amazon-Arbitrage)
 
-> Erstellt vom [[../../wirtschaftlichkeits-pruefer-agent|Wirtschaftlichkeits-Prüfer]] am 13.10.2026.
+> Erstellt vom [[../../../wirtschaftlichkeits-pruefer-agent|Wirtschaftlichkeits-Prüfer]] am 13.10.2026.
 > **Status: WARTET_AUF_FREIGABE** — Umsetzung (Code, Einkäufe, Konten) erst nach CEO-Freigabe.
 > Produktplan: [[README|Profit-Intelligence]] · Architektur: [[Plannung/Architektur|Diagramm]]
 

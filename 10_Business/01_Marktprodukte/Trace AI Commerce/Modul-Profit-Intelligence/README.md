@@ -1,6 +1,6 @@
-# Profit-Intelligence — Product Research & Einkaufskalkulation (Amazon-Arbitrage)
+# Trace AI Commerce – Modul Profit-Intelligence (Product Research & Einkaufskalkulation)
 
-> Arbeitstitel (auch „Replenish-System"). Angelegt 13.10.2026.
+> Modul von [[../README|Trace AI Commerce]] (Arbeitstitel auch „Replenish-System"). Angelegt 13.10.2026.
 > **Status: KONZEPT** — Umsetzung erst nach CEO-Freigabe der
 > [[wirtschaftlichkeit-profit-intelligence|Wirtschaftlichkeitsprüfung]] (Pflicht-Gate).
 > Architektur: [[Plannung/Architektur|Architekturdiagramm]]
