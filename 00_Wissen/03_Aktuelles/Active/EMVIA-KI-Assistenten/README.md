@@ -15,6 +15,7 @@
 | `Uebung/tickets-beispiel.csv` | 10 erfundene Tickets für die Übung im Test-Tenant |
 | `Diagramme/Bauplan-Agent1-IT-Leitstand.png` (+ `.svg`) | Bilddiagramm: Zeitplan, Bauschritte 1–7, Regeln, Checkliste |
 | `Diagramme/Architektur-M365-Integration.png` (+ `.svg`) | Bilddiagramm: Verbindung des Agenten mit Entra, Teams, SharePoint, Graph, Ticketsystem |
+| `../EMVIA-Admin-Dashboard/EMVIA-M365-IAM-Dashboard.html` | IAM/IGA-Admin-Dashboard (13 Bereiche, Checklisten, PowerShell-Befehle, Portal-Links) – im Browser öffnen |
 
 ## Nachbar-Ordner `../EMVIA-Helpdesk-Agent/` (Agent 5 für Mitarbeitende)
 

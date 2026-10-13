@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EMVIA – M365 IAM/IGA Admin Dashboard</title>
+<style>
+    :root {
+        --bg:#f4f4f4; --card:#ffffff; --text:#1f2937; --muted:#6b7280; --line:#e5e7eb;
+        --brand:#0078d4; --brand-dark:#005a9e; --code:#0f172a; --codetext:#e2e8f0;
+        --ok:#107c10; --warn:#c19c00; --bad:#d13438; --chip:#eef6fc;
+    }
+    :root[data-theme="dark"] {
+        --bg:#111827; --card:#1f2937; --text:#e5e7eb; --muted:#9ca3af; --line:#374151;
+        --brand:#3a96dd; --brand-dark:#2b88d8; --code:#0b1220; --codetext:#e2e8f0; --chip:#1e3a5f;
+    }
+    * { box-sizing:border-box; }
+    body { font-family: "Segoe UI", Arial, sans-serif; background:var(--bg); color:var(--text); margin:0; padding:0; }
+    .header { background:var(--brand); color:white; padding:25px 16px; text-align:center; }
+    .header h1 { margin:0 0 6px; font-size:1.7rem; }
+    .header p { margin:0; opacity:.9; }
+    .toolbar { position:sticky; top:0; z-index:10; background:var(--card); border-bottom:1px solid var(--line);
+               display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 5%; }
+    .toolbar input { flex:1; min-width:200px; padding:9px 12px; border:1px solid var(--line); border-radius:6px;
+                     background:var(--bg); color:var(--text); font-size:15px; }
+    .toolbar button { padding:9px 14px; border:1px solid var(--line); border-radius:6px; background:var(--bg);
+                      color:var(--text); cursor:pointer; font-weight:600; }
+    nav.toc { display:flex; flex-wrap:wrap; gap:6px; padding:8px 5% 0; }
+    nav.toc a { font-size:13px; text-decoration:none; color:var(--brand); background:var(--chip);
+                padding:4px 10px; border-radius:12px; }
+    .container { width:90%; max-width:1300px; margin:20px auto; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(380px, 1fr)); gap:20px; }
+    .card { background:var(--card); padding:20px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1); scroll-margin-top:70px; }
+    .card.wide { grid-column:1 / -1; }
+    .photo { width:110px; height:110px; background:var(--brand); color:#fff; border-radius:50%; margin:auto;
+             display:flex; align-items:center; justify-content:center; font-size:38px; font-weight:700; }
+    h2 { color:var(--brand); margin-top:0; }
+    h3 { font-size:1rem; margin:16px 0 6px; }
+    ul { line-height:1.7; padding-left:20px; }
+    .muted { color:var(--muted); font-size:13px; }
+    .btn { display:inline-block; padding:10px 15px; margin:4px; background:var(--brand); color:white;
+           border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px; }
+    .btn:hover { background:var(--brand-dark); }
+    .btn.alt { background:transparent; color:var(--brand); border:1px solid var(--brand); }
+    .check { list-style:none; padding-left:0; }
+    .check li { display:flex; gap:8px; align-items:flex-start; }
+    .check input { margin-top:6px; width:16px; height:16px; accent-color:var(--brand); }
+    .check li.done span { text-decoration:line-through; color:var(--muted); }
+    .progress { height:8px; background:var(--line); border-radius:4px; overflow:hidden; margin:6px 0 12px; }
+    .progress > div { height:100%; background:var(--ok); width:0; transition:width .3s; }
+    details { margin-top:10px; border:1px solid var(--line); border-radius:8px; padding:8px 12px; }
+    summary { cursor:pointer; font-weight:600; }
+    pre { background:var(--code); color:var(--codetext); padding:12px; border-radius:6px; overflow-x:auto;
+          font-size:13px; line-height:1.5; position:relative; white-space:pre; }
+    .copy { position:absolute; top:6px; right:6px; font-size:11px; padding:3px 8px; border:0; border-radius:4px;
+            background:#334155; color:#fff; cursor:pointer; }
+    .warn { border-left:4px solid var(--warn); background:rgba(193,156,0,.08); padding:8px 12px; border-radius:4px; font-size:14px; }
+    .bad { border-left:4px solid var(--bad); background:rgba(209,52,56,.08); padding:8px 12px; border-radius:4px; font-size:14px; }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    th, td { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+    th { color:var(--muted); font-weight:600; }
+    .lifecycle { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+    .lifecycle span { background:var(--chip); color:var(--brand); padding:8px 12px; border-radius:6px; font-weight:600; font-size:14px; }
+    .lifecycle b { color:var(--muted); }
+    .hidden-by-search { display:none !important; }
+    footer { text-align:center; color:var(--muted); font-size:12px; padding:20px; }
+    @media (max-width:600px) { .grid { grid-template-columns:1fr; } .container { width:100%; padding:0 16px; } }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>EMVIA – Microsoft 365 IAM/IGA Admin Dashboard</h1>
+    <p>Identitäten • Sicherheit • Compliance • Zero Trust</p>
+</div>
+
+<div class="toolbar">
+    <input id="search" type="search" placeholder="Suchen … (z. B. PIM, Offboarding, LAPS, Zertifikat)">
+    <button id="theme" type="button">🌙 Dunkel</button>
+    <button id="reset" type="button" title="Alle Haken zurücksetzen">↺ Haken zurücksetzen</button>
+</div>
+<nav class="toc">
+    <a href="#s1">1 Identitäten</a><a href="#s2">2 Authentifizierung</a><a href="#s3">3 Autorisierung</a>
+    <a href="#s4">4 Provisionierung</a><a href="#s5">5 Offboarding</a><a href="#s6">6 Rezertifizierung</a>
+    <a href="#s7">7 Schutz &amp; Erkennung</a><a href="#s8">8 Governance</a><a href="#s9">9 Intune</a>
+    <a href="#s10">10 Ablaufwarnungen</a><a href="#s11">11 Notfall</a><a href="#s12">12 KI-Agent</a><a href="#s13">13 Routinen</a>
+</nav>
+
+<div class="container">
+
+    <!-- Profil + Lebenszyklus -->
+    <div class="grid">
+        <div class="card">
+            <div class="photo">VT</div>
+            <h2 style="text-align:center;margin-top:12px">Admin-Profil</h2>
+            <p><strong>Name:</strong> Vu Xuan Tiep</p>
+            <p><strong>Rolle:</strong> IT Administrator – Microsoft 365 &amp; MDM</p>
+            <p><strong>Bereiche:</strong> Entra ID, Intune, Security, Compliance, Identity Governance</p>
+            <p><strong>Start:</strong> 15.10.2026</p>
+            <p class="muted">Arbeitsprinzip: Lesen vor Handeln · Least Privilege · jede Änderung mit Ticket</p>
+        </div>
+
+        <div class="card">
+            <h2>🔄 IAM/IGA-Lebenszyklus</h2>
+            <div class="lifecycle">
+                <span>Identität</span><b>→</b><span>Anmeldung</span><b>→</b><span>Rechte</span><b>→</b>
+                <span>Joiner</span><b>→</b><span>Mover</span><b>→</b><span>Leaver</span><b>→</b><span>Rezertifizierung</span>
+            </div>
+            <h3>Gesamtfortschritt Checklisten</h3>
+            <div class="progress"><div id="total-bar"></div></div>
+            <p class="muted" id="total-text">0 von 0 erledigt</p>
+            <p class="muted">Haken werden nur in diesem Browser gespeichert (localStorage), nicht im Tenant.</p>
+        </div>
+    </div>
+
+    <!-- Schnellzugriff -->
+    <div class="card" style="margin-top:20px">
+        <h2>🔗 Schnellzugriff – Admin-Portale</h2>
+        <a class="btn" href="https://entra.microsoft.com" target="_blank" rel="noopener">Microsoft Entra Admin Center</a>
+        <a class="btn" href="https://intune.microsoft.com" target="_blank" rel="noopener">Intune Admin Center</a>
+        <a class="btn" href="https://purview.microsoft.com" target="_blank" rel="noopener">Microsoft Purview</a>
+        <a class="btn" href="https://security.microsoft.com" target="_blank" rel="noopener">Microsoft Defender</a>
+        <a class="btn" href="https://admin.microsoft.com" target="_blank" rel="noopener">M365 Admin Center</a>
+        <a class="btn" href="https://admin.exchange.microsoft.com" target="_blank" rel="noopener">Exchange Admin Center</a>
+        <a class="btn" href="https://admin.teams.microsoft.com" target="_blank" rel="noopener">Teams Admin Center</a>
+        <a class="btn" href="https://portal.azure.com" target="_blank" rel="noopener">Azure-Portal</a>
+        <a class="btn" href="https://admin.powerplatform.microsoft.com" target="_blank" rel="noopener">Power Platform Admin</a>
+        <a class="btn" href="https://copilotstudio.microsoft.com" target="_blank" rel="noopener">Copilot Studio</a>
+        <a class="btn alt" href="https://admin.microsoft.com/#/servicehealth" target="_blank" rel="noopener">Service Health</a>
+        <a class="btn alt" href="https://admin.microsoft.com/#/MessageCenter" target="_blank" rel="noopener">Message Center</a>
+        <a class="btn alt" href="https://business.apple.com" target="_blank" rel="noopener">Apple Business Manager</a>
+        <p class="muted">Hinweis: Das frühere „Azure AD Portal" (aad.portal.azure.com) ist durch das Entra Admin Center ersetzt.
+            Tiefe Links in die Portale ändert Microsoft gelegentlich – führt ein Knopf ins Leere, landet man im jeweiligen Portal und navigiert von dort.</p>
+    </div>
+
+    <div class="grid" style="margin-top:20px">
+
+    <!-- 1 Identitäten -->
+    <div class="card" id="s1">
+        <h2>1. Identitäten – Entra ID</h2>
+        <ul>
+            <li>Benutzer: Cloud-only vs. Hybrid (synchronisiert)</li>
+            <li>Service Principals &amp; Managed Identities</li>
+            <li>Gruppen: Security / Microsoft 365 / Dynamisch</li>
+            <li>Geräte: Entra joined, Hybrid joined, Registered</li>
+            <li>Gastkonten (B2B) und externe Zusammenarbeit</li>
+        </ul>
+        <h3>Was du tun musst:</h3>
+        <ul class="check" data-list="s1">
+            <li><input type="checkbox"><span>Identitäten prüfen &amp; verwalten (deaktivierte, inaktive, Gäste)</span></li>
+            <li><input type="checkbox"><span>Gruppen sauber strukturieren (Namensschema je Einrichtung/Funktion)</span></li>
+            <li><input type="checkbox"><span>Gerätestatus verstehen (Intune + Entra abgleichen)</span></li>
+            <li><input type="checkbox"><span>Synchronisation klären: Entra Connect oder Cloud Sync? Fehler prüfen</span></li>
+            <li><input type="checkbox"><span>Anzahl Konten ohne Anmeldung &gt; 90 Tage dokumentieren</span></li>
+        </ul>
+        <div class="progress"><div></div></div>
+        <a class="btn" href="https://entra.microsoft.com/#view/Microsoft_AAD_UsersAndTenants/UserManagementMenuBlade/~/AllUsers" target="_blank" rel="noopener">Benutzer öffnen</a>
+        <a class="btn" href="https://entra.microsoft.com/#view/Microsoft_AAD_IAM/GroupsManagementMenuBlade/~/AllGroups" target="_blank" rel="noopener">Gruppen öffnen</a>
+        <a class="btn" href="https://entra.microsoft.com/#view/Microsoft_AAD_Devices/DevicesMenuBlade/~/Devices" target="_blank" rel="noopener">Geräte öffnen</a>
+        <details><summary>PowerShell (Microsoft Graph, nur lesen)</summary>
+<pre>Connect-MgGraph -Scopes "User.Read.All","Group.Read.All","Device.Read.All","AuditLog.Read.All"
+
+# Cloud-only vs. synchronisiert
+Get-MgUser -All -Property DisplayName,UserPrincipalName,OnPremisesSyncEnabled,AccountEnabled |
+  Select-Object DisplayName,UserPrincipalName,OnPremisesSyncEnabled,AccountEnabled
+
+# Inaktive Konten (> 90 Tage, benötigt Entra ID P1)
+$grenze = (Get-Date).AddDays(-90)
+Get-MgUser -All -Property UserPrincipalName,SignInActivity |
+  Where-Object { $_.SignInActivity.LastSignInDateTime -lt $grenze } |
+  Select-Object UserPrincipalName,@{n='LetzteAnmeldung';e={$_.SignInActivity.LastSignInDateTime}}</pre>
+        </details>
+    </div>
+
+    <!-- 2 Authentifizierung -->
+    <div class="card" id="s2">
+        <h2>2. Authentifizierung – MFA, Passwordless, CA</h2>
+        <ul>
+            <li>MFA erzwingen (über Conditional Access, nicht pro Benutzer)</li>
+            <li>Passwordless aktivieren (FIDO2, Passkeys, Authenticator)</li>
+            <li>Temporary Access Pass (TAP) für Onboarding</li>
+            <li>Self-Service Password Reset (SSPR)</li>
+            <li>Token-Flows verstehen (Refresh-Token, Sitzungsdauer)</li>
+        </ul>
+        <ul class="check" data-list="s2">
+            <li><input type="checkbox"><span>Benutzer ohne registrierte MFA ermitteln</span></li>
+            <li><input type="checkbox"><span>Legacy-Authentifizierung blockiert?</span></li>
+            <li><input type="checkbox"><span>TAP-Richtlinie für neue Mitarbeitende geprüft</span></li>
+            <li><input type="checkbox"><span>Lösung für geteilte Pflege-Tablets/Schichtgeräte geklärt</span></li>
+        </ul>
+        <div class="progress"><div></div></div>
+        <a class="btn" href="https://entra.microsoft.com/#view/Microsoft_AAD_IAM/AuthenticationMethodsMenuBlade/~/AdminAuthMethods" target="_blank" rel="noopener">MFA &amp; Passwordless</a>
+        <a class="btn" href="https://entra.microsoft.com/#view/Microsoft_AAD_ConditionalAccess/ConditionalAccessBlade/~/Policies" target="_blank" rel="noopener">Conditional Access</a>
+        <a class="btn" href="https://entra.microsoft.com/#view/Microsoft_AAD_IAM/IdentityProtectionMenuBlade/~/RiskyUsers" target="_blank" rel="noopener">Risky Users</a>
+        <details><summary>PowerShell (nur lesen)</summary>
+<pre>Connect-MgGraph -Scopes "AuditLog.Read.All","UserAuthenticationMethod.Read.All","Policy.Read.All"
+
+# Wer hat KEINE MFA registriert?
+Get-MgReportAuthenticationMethodUserRegistrationDetail -All |
+  Where-Object { -not $_.IsMfaRegistered } |
+  Select-Object UserPrincipalName,IsMfaCapable,MethodsRegistered
+
+# Conditional-Access-Richtlinien und Status
+Get-MgIdentityConditionalAccessPolicy | Select-Object DisplayName,State</pre>
+        </details>
+    </div>
+
+    <!-- 3 Autorisierung -->
+    <div class="card" id="s3">
+        <h2>3. Autorisierung – RBAC, PIM, Conditional Access</h2>
+        <ul>
+            <li>RBAC-Rollenmodell (Entra-Rollen, Intune-Rollen, Exchange-Rollen)</li>
+            <li>PIM: Adminrechte nur „just in time" mit Begründung</li>
+            <li>Administrative Units je Einrichtung/Region</li>
+            <li>App-Berechtigungen &amp; Graph-Scopes (Enterprise Apps, Consent)</li>
+        </ul>
+        <ul class="check" data-list="s3">
+            <li><input type="checkbox"><span>Wer ist Global Administrator? (Ziel: 2–4 Personen + Notfallkonten)</span></li>
+            <li><input type="checkbox"><span>Dauerhafte Adminrollen → PIM berechtigt (eligible)</span></li>
+            <li><input type="checkbox"><span>Benutzer-Consent für Apps eingeschränkt?</span></li>
+            <li><input type="checkbox"><span>Apps mit hohen Graph-Rechten (z. B. *.ReadWrite.All) gelistet</span></li>
+        </ul>
+        <div class="progress"><div></div></div>
+        <a class="btn" href="https://entra.microsoft.com/#view/Microsoft_AAD_IAM/RolesManagementMenuBlade/~/AllRoles" target="_blank" rel="noopener">Rollen anzeigen</a>
+        <a class="btn" href="https://entra.microsoft.com/#view/Microsoft_Azure_PIMCommon/CommonMenuBlade/~/quickStart" target="_blank" rel="noopener">PIM</a>
+        <a class="btn" href="https://entra.microsoft.com/#view/Microsoft_AAD_IAM/StartboardApplicationsMenuBlade/~/AppAppsPreview" target="_blank" rel="noopener">Enterprise Apps</a>
+        <details><summary>PowerShell (nur lesen)</summary>
+<pre>Connect-MgGraph -Scopes "RoleManagement.Read.Directory","Directory.Read.All"
+
+# Alle aktiven Rollen mit Mitgliedern
+Get-MgDirectoryRole | ForEach-Object {
+  $rolle = $_
+  Get-MgDirectoryRoleMember -DirectoryRoleId $rolle.Id |
+    Select-Object @{n='Rolle';e={$rolle.DisplayName}},
+                  @{n='Mitglied';e={$_.AdditionalProperties.userPrincipalName ?? $_.AdditionalProperties.displayName}}
+}</pre>
+        <p class="muted">Der Operator <code>??</code> benötigt PowerShell 7.</p>
+        </details>
+    </div>
+
+    <!-- 4 Provisionierung -->
+    <div class="card" id="s4">
+        <h2>4. Provisionierung – Joiner/Mover/Leaver</h2>
+        <ul>
+            <li>Group-based Licensing (Lizenz über Gruppe, nie einzeln)</li>
+            <li>Dynamische Gruppen (z. B. nach Abteilung/Einrichtung)</li>
+            <li>SCIM-Provisionierung in SaaS-Apps</li>
+            <li>HR-gesteuerte Bereitstellung (rexx → Entra Inbound Provisioning)</li>
+            <li>Lifecycle Workflows (Entra ID Governance)</li>
+            <li>Automatische App-Zuweisung über Gruppen</li>
+        </ul>
+        <ul class="check" data-list="s4">
+            <li><input type="checkbox"><span>Ist-Prozess Eintritt aufgeschrieben (wer meldet, wann, wie)</span></li>
+            <li><input type="checkbox"><span>UPN-/Namensschema dokumentiert</span></li>
+            <li><input type="checkbox"><span>Lizenzbestand und freie Lizenzen geprüft</span></li>
+            <li><input type="checkbox"><span>rexx-Schnittstelle (CSV/API) bei HR erfragt</span></li>
+        </ul>
+        <div class="progress"><div></div></div>
+        <a class="btn" href="https://admin.microsoft.com/#/licenses" target="_blank" rel="noopener">Lizenzen</a>
+        <a class="btn" href="https://entra.microsoft.com/#view/Microsoft_AAD_ERM/DashboardBlade/~/GettingStarted" target="_blank" rel="noopener">Identity Governance</a>
+        <details><summary>PowerShell (nur lesen)</summary>
+<pre>Connect-MgGraph -Scopes "Organization.Read.All","Group.Read.All"
+
+# Lizenzbestand: gekauft vs. verbraucht
+Get-MgSubscribedSku | Select-Object SkuPartNumber,ConsumedUnits,
+  @{n='Gekauft';e={$_.PrepaidUnits.Enabled}},
+  @{n='Frei';e={$_.PrepaidUnits.Enabled - $_.ConsumedUnits}}
+
+# Gruppen mit Lizenzzuweisung
+Get-MgGroup -All -Property DisplayName,AssignedLicenses |
+  Where-Object { $_.AssignedLicenses.Count -gt 0 } | Select-Object DisplayName</pre>
+        </details>
+    </div>
+
+    <!-- 5 De-Provisionierung -->
+    <div class="card" id="s5">
+        <h2>5. De-Provisionierung – Offboarding</h2>
+        <ol style="line-height:1.7;padding-left:20px">
+            <li>Anmeldung sperren (Account deaktivieren)</li>
+            <li>Sitzungen beenden (Refresh-Tokens widerrufen)</li>
+            <li>Postfach → freigegebenes Postfach + Zugriff für Vorgesetzte</li>
+            <li>OneDrive-Daten an Vorgesetzte übergeben / Aufbewahrung</li>
+            <li>Gerät: Intune Wipe bzw. Retire (Firmen- vs. Privatgerät!)</li>
+            <li>Gruppen &amp; Rollen entfernen</li>
+            <li>Lizenzen nach Frist entfernen</li>
+            <li>Protokoll ins Ticket</li>
+        </ol>
+        <div class="warn">Schreibende Befehle – nur mit Ticket/Freigabe und nach Vier-Augen-Prinzip ausführen.</div>
+        <a class="btn" href="https://entra.microsoft.com/#view/Microsoft_AAD_UsersAndTenants/UserManagementMenuBlade/~/AllUsers" target="_blank" rel="noopener">Benutzer Offboarding</a>
+        <a class="btn" href="https://intune.microsoft.com/#view/Microsoft_Intune_DeviceSettings/DevicesMenu/~/allDevices" target="_blank" rel="noopener">Intune Geräte</a>
+        <details><summary>PowerShell (SCHREIBEND)</summary>
+<pre>$upn = "vorname.nachname@emvia.example"   # anpassen
+Connect-MgGraph -Scopes "User.ReadWrite.All","Directory.AccessAsUser.All"
+
+Update-MgUser -UserId $upn -AccountEnabled:$false     # 1. sperren
+Revoke-MgUserSignInSession -UserId $upn               # 2. Sitzungen beenden
+
+# 3. Postfach umwandeln (Exchange Online Modul)
+Connect-ExchangeOnline
+Set-Mailbox -Identity $upn -Type Shared
+Add-MailboxPermission -Identity $upn -User "vorgesetzt@emvia.example" -AccessRights FullAccess
+
+# 7. Lizenz entfernen (SkuId aus Get-MgSubscribedSku)
+# Set-MgUserLicense -UserId $upn -AddLicenses @() -RemoveLicenses @("&lt;SkuId&gt;")</pre>
+        </details>
+    </div>
+
+    <!-- 6 Rezertifizierung -->
+    <div class="card" id="s6">
+        <h2>6. Rezertifizierung – Access Reviews</h2>
+        <ul>
+            <li>Gruppen prüfen (Mitgliedschaften, Besitzer)</li>
+            <li>Rollen rezertifizieren (vor allem privilegierte)</li>
+            <li>App-Zugriffe kontrollieren</li>
+            <li>Gastkonten regelmäßig bestätigen lassen</li>
+            <li>Entitlement Management (Zugriffspakete)</li>
+        </ul>
+        <ul class="check" data-list="s6">
+            <li><input type="checkbox"><span>Lizenz für Access Reviews vorhanden? (Entra ID P2 / ID Governance)</span></li>
+            <li><input type="checkbox"><span>Quartals-Review für Adminrollen eingerichtet</span></li>
+            <li><input type="checkbox"><span>Review für Gastkonten eingerichtet</span></li>
+        </ul>
+        <div class="progress"><div></div></div>
+        <a class="btn" href="https://entra.microsoft.com/#view/Microsoft_AAD_ERM/DashboardBlade/~/Controls" target="_blank" rel="noopener">Access Reviews</a>
+        <details><summary>PowerShell (nur lesen)</summary>
+<pre>Connect-MgGraph -Scopes "AccessReview.Read.All"
+Get-MgIdentityGovernanceAccessReviewDefinition | Select-Object DisplayName,Status,CreatedDateTime</pre>
+        </details>
+    </div>
+
+    <!-- 7 Schutz & Erkennung (fehlte) -->
+    <div class="card" id="s7">
+        <h2>7. Schutz &amp; Erkennung – Identity Protection, Defender</h2>
+        <ul>
+            <li>Risky Users &amp; Risky Sign-ins (Identity Protection)</li>
+            <li>Risikobasierte CA-Richtlinien (Anmelde- und Benutzerrisiko)</li>
+            <li>Defender XDR: Vorfälle, Warnungen, Secure Score</li>
+            <li>Defender for Office 365: Phishing, Quarantäne, sichere Links</li>
+            <li>Benannte Standorte (Netze der Einrichtungen)</li>
+        </ul>
+        <ul class="check" data-list="s7">
+            <li><input type="checkbox"><span>Secure Score notiert (Ausgangswert für spätere Referenz)</span></li>
+            <li><input type="checkbox"><span>Offene Defender-Vorfälle durchgesehen</span></li>
+            <li><input type="checkbox"><span>Meldeweg „verdächtige Mail" für Mitarbeitende bekannt</span></li>
+            <li><input type="checkbox"><span>Prüfen, ob Security Copilot verfügbar ist (Lizenz)</span></li>
+        </ul>
+        <div class="progress"><div></div></div>
+        <a class="btn" href="https://security.microsoft.com/incidents" target="_blank" rel="noopener">Vorfälle</a>
+        <a class="btn" href="https://security.microsoft.com/securescore" target="_blank" rel="noopener">Secure Score</a>
+        <a class="btn" href="https://security.microsoft.com/quarantine" target="_blank" rel="noopener">Quarantäne</a>
+        <details><summary>PowerShell (nur lesen, benötigt Entra ID P2)</summary>
+<pre>Connect-MgGraph -Scopes "IdentityRiskyUser.Read.All"
+Get-MgRiskyUser -Filter "riskState eq 'atRisk'" |
+  Select-Object UserPrincipalName,RiskLevel,RiskLastUpdatedDateTime</pre>
+        </details>
+    </div>
+
+    <!-- 8 Governance -->
+    <div class="card" id="s8">
+        <h2>8. Governance &amp; Audit – Purview</h2>
+        <ul>
+            <li>Audit-Logs (Unified Audit Log)</li>
+            <li>Anmeldeprotokolle (Sign-in Logs)</li>
+            <li>Risk Events</li>
+            <li>Vertraulichkeitsbezeichnungen (Sensitivity Labels)</li>
+            <li>Aufbewahrungsrichtlinien &amp; DLP</li>
+            <li>Besonders schutzwürdige Daten (Art. 9 DSGVO, Pflege/Gesundheit)</li>
+        </ul>
+        <ul class="check" data-list="s8">
+            <li><input type="checkbox"><span>Audit-Log aktiviert und Aufbewahrungsdauer bekannt</span></li>
+            <li><input type="checkbox"><span>Ansprechpartner Datenschutz bekannt</span></li>
+            <li><input type="checkbox"><span>Bestehende Labels/DLP-Regeln dokumentiert</span></li>
+        </ul>
+        <div class="progress"><div></div></div>
+        <a class="btn" href="https://purview.microsoft.com" target="_blank" rel="noopener">Purview öffnen</a>
+        <a class="btn" href="https://entra.microsoft.com/#view/Microsoft_AAD_IAM/SignInEventsV3Blade" target="_blank" rel="noopener">Sign-in Logs</a>
+        <details><summary>PowerShell (nur lesen)</summary>
+<pre>Connect-ExchangeOnline
+# Audit-Ereignisse der letzten 24 Stunden
+Search-UnifiedAuditLog -StartDate (Get-Date).AddDays(-1) -EndDate (Get-Date) -ResultSize 100 |
+  Select-Object CreationDate,UserIds,Operations</pre>
+        </details>
+    </div>
+
+    <!-- 9 Intune -->
+    <div class="card" id="s9">
+        <h2>9. Geräte &amp; Kontext – Intune</h2>
+        <ul>
+            <li>Compliance-Richtlinien</li>
+            <li>Konfigurationsprofile &amp; Einstellungskatalog</li>
+            <li>App-Schutzrichtlinien (MAM) für Diensthandys</li>
+            <li>Conditional Access: konformes Gerät verlangen</li>
+            <li>Windows LAPS &amp; BitLocker-Schlüssel</li>
+            <li>Apple: ADE/ABM, Push-Zertifikat, VPP-Token</li>
+            <li>Geteilte Geräte (Shared Device Mode) für Pflege-Tablets</li>
+        </ul>
+        <ul class="check" data-list="s9">
+            <li><input type="checkbox"><span>Anzahl Geräte je Plattform notiert</span></li>
+            <li><input type="checkbox"><span>Nicht konforme Geräte &amp; Ursachen geprüft</span></li>
+            <li><input type="checkbox"><span>Geräte &gt; 14 Tage ohne Synchronisation gelistet</span></li>
+            <li><input type="checkbox"><span>Intune-Konfiguration gesichert (Export)</span></li>
+        </ul>
+        <div class="progress"><div></div></div>
+        <a class="btn" href="https://intune.microsoft.com/#view/Microsoft_Intune_DeviceSettings/DevicesMenu/~/allDevices" target="_blank" rel="noopener">Intune Geräte</a>
+        <a class="btn" href="https://intune.microsoft.com/#view/Microsoft_Intune_DeviceSettings/DevicesMenu/~/compliance" target="_blank" rel="noopener">Compliance Policies</a>
+        <details><summary>PowerShell (nur lesen)</summary>
+<pre>Connect-MgGraph -Scopes "DeviceManagementManagedDevices.Read.All"
+
+# Nicht konforme Geräte
+Get-MgDeviceManagementManagedDevice -All -Filter "complianceState eq 'noncompliant'" |
+  Select-Object DeviceName,UserPrincipalName,OperatingSystem,LastSyncDateTime
+
+# Seit > 14 Tagen nicht synchronisiert
+$grenze = (Get-Date).AddDays(-14)
+Get-MgDeviceManagementManagedDevice -All |
+  Where-Object { $_.LastSyncDateTime -lt $grenze } |
+  Select-Object DeviceName,UserPrincipalName,LastSyncDateTime</pre>
+        </details>
+    </div>
+
+    <!-- 10 Ablaufwarnungen -->
+    <div class="card" id="s10">
+        <h2>10. Ablaufwarnungen – Zertifikate, Secrets, Tokens</h2>
+        <div class="bad">Läuft das <strong>Apple-MDM-Push-Zertifikat</strong> ab, sind alle iPhones/iPads nicht mehr verwaltbar.
+            Erneuern (nicht neu erstellen!) mit derselben Apple-ID.</div>
+        <table style="margin-top:10px">
+            <tr><th>Objekt</th><th>Laufzeit</th><th>Wo prüfen</th></tr>
+            <tr><td>Apple-MDM-Push-Zertifikat</td><td>1 Jahr</td><td>Intune › Geräte › iOS/iPadOS-Registrierung</td></tr>
+            <tr><td>ADE-Token (Apple Business Manager)</td><td>1 Jahr</td><td>Intune › Registrierungsprogramm-Token</td></tr>
+            <tr><td>VPP-Token (Apps &amp; Bücher)</td><td>1 Jahr</td><td>Intune › Mandantenverwaltung › Connectors</td></tr>
+            <tr><td>App-Secrets &amp; Zertifikate</td><td>je App</td><td>Entra › App-Registrierungen</td></tr>
+            <tr><td>Domains / SSL-Zertifikate</td><td>je Anbieter</td><td>Registrar / Webserver</td></tr>
+        </table>
+        <ul class="check" data-list="s10" style="margin-top:10px">
+            <li><input type="checkbox"><span>Ablaufdaten aller Apple-Tokens notiert + Kalender-Erinnerung (−30 Tage)</span></li>
+            <li><input type="checkbox"><span>Wer besitzt die Apple-ID für das Push-Zertifikat? (dokumentiert)</span></li>
+            <li><input type="checkbox"><span>App-Secrets &lt; 30 Tage ermittelt</span></li>
+        </ul>
+        <div class="progress"><div></div></div>
+        <a class="btn" href="https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank" rel="noopener">App-Registrierungen</a>
+        <details><summary>PowerShell (nur lesen) – ablaufende Secrets</summary>
+<pre>Connect-MgGraph -Scopes "Application.Read.All"
+$grenze = (Get-Date).AddDays(30)
+Get-MgApplication -All -Property DisplayName,PasswordCredentials,KeyCredentials | ForEach-Object {
+  $app = $_
+  foreach ($c in @($app.PasswordCredentials) + @($app.KeyCredentials)) {
+    if ($c.EndDateTime -and $c.EndDateTime -lt $grenze) {
+      [pscustomobject]@{ App = $app.DisplayName; Ablauf = $c.EndDateTime }
+    }
+  }
+} | Sort-Object Ablauf</pre>
+        </details>
+    </div>
+
+    <!-- 11 Notfall -->
+    <div class="card" id="s11">
+        <h2>11. Notfall – Break-Glass &amp; Störung</h2>
+        <ul>
+            <li>2 Notfallkonten (cloud-only, *.onmicrosoft.com, Global Admin)</li>
+            <li>Von Conditional Access ausgenommen, aber mit FIDO2-Schlüssel</li>
+            <li>Anmeldung an Notfallkonten löst sofort einen Alarm aus</li>
+            <li>Zugangsdaten versiegelt (Tresor), Test halbjährlich</li>
+        </ul>
+        <ul class="check" data-list="s11">
+            <li><input type="checkbox"><span>Notfallkonten vorhanden und dokumentiert?</span></li>
+            <li><input type="checkbox"><span>Alarm bei Anmeldung eingerichtet?</span></li>
+            <li><input type="checkbox"><span>Notfallplan / Eskalationskette bekannt (IT-Leitung, Dienstleister)</span></li>
+            <li><input type="checkbox"><span>Vorlage Störungsmeldung an Einrichtungen vorhanden</span></li>
+        </ul>
+        <div class="progress"><div></div></div>
+        <a class="btn" href="https://admin.microsoft.com/#/servicehealth" target="_blank" rel="noopener">Service Health</a>
+        <a class="btn alt" href="https://status.cloud.microsoft" target="_blank" rel="noopener">Microsoft-Statusseite</a>
+    </div>
+
+    <!-- 12 KI-Agent -->
+    <div class="card" id="s12">
+        <h2>12. KI-Agent „IT-Leitstand" – Copilot Studio</h2>
+        <p>Erster Agent nur für das IT-Team: <strong>Wiki</strong> (Antworten aus „IT-Wissen" mit Quelle) ·
+            <strong>Ticket</strong> (lesen, Priorität, Antwortentwurf) · <strong>Monitoring</strong> (Flow ohne KI alle 15 min, Alarm in Teams).</p>
+        <ul class="check" data-list="s12">
+            <li><input type="checkbox"><span>Übung im privaten Test-Tenant abgeschlossen</span></li>
+            <li><input type="checkbox"><span>Ticketsystem &amp; Copilot-Studio-Lizenz bei EMVIA geklärt</span></li>
+            <li><input type="checkbox"><span>Vorher-Werte gemessen (Erstreaktion, Störungen)</span></li>
+            <li><input type="checkbox"><span>Freigabe IT-Leitung + Datenschutz + Betriebsrat</span></li>
+            <li><input type="checkbox"><span>Checkliste R1–R11 erfüllt</span></li>
+        </ul>
+        <div class="progress"><div></div></div>
+        <a class="btn" href="https://copilotstudio.microsoft.com" target="_blank" rel="noopener">Copilot Studio</a>
+        <a class="btn" href="https://admin.powerplatform.microsoft.com" target="_blank" rel="noopener">Power Platform Admin</a>
+        <p class="muted">Bauanleitung: <code>00_Wissen/03_Aktuelles/Active/EMVIA-KI-Assistenten/Bauanleitung-Agent1-IT-Leitstand.md</code></p>
+    </div>
+
+    <!-- 13 Routinen -->
+    <div class="card wide" id="s13">
+        <h2>13. Routinen – täglich, wöchentlich, monatlich</h2>
+        <table>
+            <tr><th>Rhythmus</th><th>Aufgabe</th><th>Bereich</th></tr>
+            <tr><td>Täglich</td><td>Service Health &amp; Message Center lesen · offene P1/P2-Tickets · Defender-Vorfälle</td><td>7 · 11</td></tr>
+            <tr><td>Täglich</td><td>Nicht konforme Geräte, fehlgeschlagene Registrierungen</td><td>9</td></tr>
+            <tr><td>Wöchentlich</td><td>Riskante Anmeldungen · Konten ohne MFA · neue Gastkonten · Secure Score</td><td>2 · 7</td></tr>
+            <tr><td>Wöchentlich</td><td>Ablaufdaten (Zertifikate, Secrets, Apple-Tokens)</td><td>10</td></tr>
+            <tr><td>Monatlich</td><td>Lizenzbericht (freie/ungenutzte Lizenzen) · inaktive Konten &gt; 90 Tage · leere Gruppen</td><td>1 · 4</td></tr>
+            <tr><td>Monatlich</td><td>Intune-Konfiguration sichern · Adminrollen-Übersicht</td><td>3 · 9</td></tr>
+            <tr><td>Quartalsweise</td><td>Access Reviews Adminrollen &amp; Gäste · Notfallkonten testen</td><td>6 · 11</td></tr>
+        </table>
+    </div>
+
+    </div>
+</div>
+
+<footer>EMVIA – M365 IAM/IGA Admin Dashboard · persönliche Arbeitshilfe · enthält keine Kunden-, Personal- oder Bewohnerdaten · Stand 13.10.2026</footer>
+
+<script>
+(function () {
+    var KEY = "emvia-iam-dashboard-v1";
+    var state = {};
+    try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { state = {}; }
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+    // Theme
+    var root = document.documentElement, themeBtn = document.getElementById("theme");
+    function applyTheme(t) {
+        root.setAttribute("data-theme", t);
+        themeBtn.textContent = t === "dark" ? "☀️ Hell" : "🌙 Dunkel";
+    }
+    applyTheme(state.theme || "light");
+    themeBtn.addEventListener("click", function () {
+        state.theme = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        applyTheme(state.theme); save();
+    });
+
+    // Checklisten
+    var lists = document.querySelectorAll("ul.check");
+    function updateProgress() {
+        var total = 0, done = 0;
+        lists.forEach(function (ul) {
+            var boxes = ul.querySelectorAll("input[type=checkbox]");
+            var d = 0;
+            boxes.forEach(function (b) { if (b.checked) d++; b.parentNode.classList.toggle("done", b.checked); });
+            total += boxes.length; done += d;
+            var bar = ul.nextElementSibling;
+            if (bar && bar.classList.contains("progress")) {
+                bar.firstElementChild.style.width = (boxes.length ? (100 * d / boxes.length) : 0) + "%";
+            }
+        });
+        document.getElementById("total-bar").style.width = (total ? (100 * done / total) : 0) + "%";
+        document.getElementById("total-text").textContent = done + " von " + total + " erledigt";
+    }
+    lists.forEach(function (ul) {
+        var id = ul.getAttribute("data-list");
+        ul.querySelectorAll("input[type=checkbox]").forEach(function (b, i) {
+            var k = id + "-" + i;
+            b.checked = !!state[k];
+            b.addEventListener("change", function () { state[k] = b.checked; save(); updateProgress(); });
+        });
+    });
+    document.getElementById("reset").addEventListener("click", function () {
+        if (!confirm("Alle Haken zurücksetzen?")) return;
+        Object.keys(state).forEach(function (k) { if (k !== "theme") delete state[k]; });
+        document.querySelectorAll("ul.check input").forEach(function (b) { b.checked = false; });
+        save(); updateProgress();
+    });
+    updateProgress();
+
+    // Kopieren-Knöpfe
+    document.querySelectorAll("pre").forEach(function (pre) {
+        var btn = document.createElement("button");
+        btn.className = "copy"; btn.type = "button"; btn.textContent = "Kopieren";
+        btn.addEventListener("click", function () {
+            var text = pre.innerText.replace(/Kopieren$|Kopiert ✔$/, "").trim();
+            var done = function () { btn.textContent = "Kopiert ✔"; setTimeout(function () { btn.textContent = "Kopieren"; }, 1500); };
+            if (navigator.clipboard) { navigator.clipboard.writeText(text).then(done, function () {}); }
+        });
+        pre.appendChild(btn);
+    });
+
+    // Suche
+    var cards = document.querySelectorAll(".container .card");
+    document.getElementById("search").addEventListener("input", function (e) {
+        var q = e.target.value.trim().toLowerCase();
+        cards.forEach(function (c) {
+            var hit = !q || c.textContent.toLowerCase().indexOf(q) !== -1;
+            c.classList.toggle("hidden-by-search", !hit);
+            if (hit && q) c.querySelectorAll("details").forEach(function (d) {
+                if (d.textContent.toLowerCase().indexOf(q) !== -1) d.open = true;
+            });
+        });
+    });
+})();
+</script>
+</body>
+</html>
