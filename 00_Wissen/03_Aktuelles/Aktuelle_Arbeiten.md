@@ -6,6 +6,25 @@
 
 ---
 
+## 2026-10-13 (2) — EMVIA: Bauanleitung erster Agent „IT-Leitstand" (Copilot Studio)
+
+**Was:** `00_Wissen/03_Aktuelles/Active/EMVIA-KI-Assistenten/Bauanleitung-Agent1-IT-Leitstand.md`
++ Übungsdaten `Uebung/tickets-beispiel.csv` (10 erfundene Tickets, davon 3 WLAN-Tickets Haus Nord als Häufungstest).
+
+**Warum so:** Aus der 6-Agenten-Familie zuerst EIN Agent für das IT-Team mit drei Fähigkeiten
+(Wiki, Ticket lesen, Monitoring). Alarmieren macht ein Power-Automate-Flow ohne KI (billig, zuverlässig),
+die KI fasst nur zusammen. Geübt wird vorher in einem privaten Test-Tenant, im EMVIA-Tenant erst nach Freigabe.
+
+**Lern-Highlights:**
+- Tool-Beschreibungen steuern die generative Orchestrierung – unklare Beschreibung = Tool wird nie benutzt.
+- „Rechte und Datenschutz sauber gelöst" als nachweisbare Checkliste R1–R11 (DLP, Sicherheitsgruppe,
+  Least Privilege, VVT, Betriebsrat, KI-Transparenz) – das ist später der Referenz-Beleg.
+- Ohne Vorher-Messwerte (Woche 1–4) gibt es keine Referenz.
+- Positionierungs-Entscheidung des Tages: KI-Commerce nur Nebenexperiment, Profil = KI-Einführung
+  im M365-Betrieb + Governance.
+
+---
+
 ## 2026-10-13 — Profit-Intelligence (Amazon-Arbitrage): Konzept + Wirtschaftlichkeits-Gate
 
 **Was:** `10_Business/01_Marktprodukte/Trace AI Commerce/Modul-Profit-Intelligence/` (nachträglich als Modul 6 unter Trace AI Commerce eingeordnet, das bisher nur als KI-Fabrik-Auftrag existierte) – Produktplan

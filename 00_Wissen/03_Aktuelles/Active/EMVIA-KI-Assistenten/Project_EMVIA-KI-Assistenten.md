@@ -14,7 +14,7 @@ tags: [emvia, copilot-studio, ki-agent, m365, mdm, ticketsystem, rexx, wichtig]
 > unterstützen und E-Mails/Kommunikation professionell formulieren.
 >
 > Verwandt: [[Project_EMVIA-Helpdesk-Agent]] (= Agent 5 dieser Familie, bereits ausgearbeitet) ·
-> [[Agenten-Anweisungen]] · [[Infosammlung-Woche-1]] · IT-Werkbank-Modul „EMVIA · M365 & MDM“
+> [[Agenten-Anweisungen]] · [[Infosammlung-Woche-1]] · **Start: [[Bauanleitung-Agent1-IT-Leitstand]]** · IT-Werkbank-Modul „EMVIA · M365 & MDM“
 > (Wiki `emvia/09-ticket-schnellhilfe`, `10-automatisierung`, `11-monitoring-logs-proaktiv`).
 
 ---
