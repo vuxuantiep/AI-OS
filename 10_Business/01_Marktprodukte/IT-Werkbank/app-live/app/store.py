@@ -118,9 +118,12 @@ async def _vorlagen_pakete_einspielen(db: aiosqlite.Connection) -> None:
     auch in bereits genutzte Datenbanken (Pi4), aber spaeter geaenderte oder
     geloeschte Vorlagen kommen bei einem Neustart nicht zurueck. Bereits
     vorhandene IDs werden nie ueberschrieben (INSERT OR IGNORE)."""
-    from . import paket_emvia_betrieb, paket_emvia_endpoint, paket_emvia_m365, paket_generatoren  # lokal, wie bei der Erstbefuellung
+    from . import (  # lokal, wie bei der Erstbefuellung
+        paket_datenbank_sql_betrieb, paket_emvia_betrieb, paket_emvia_endpoint, paket_emvia_m365, paket_generatoren,
+    )
 
-    for paket in (paket_emvia_m365, paket_emvia_betrieb, paket_emvia_endpoint, paket_generatoren):
+    for paket in (paket_emvia_m365, paket_emvia_betrieb, paket_emvia_endpoint, paket_generatoren,
+                  paket_datenbank_sql_betrieb):
         cursor = await db.execute("SELECT 1 FROM vorlage_paket WHERE id = ?", (paket.PAKET_ID,))
         if await cursor.fetchone():
             continue
