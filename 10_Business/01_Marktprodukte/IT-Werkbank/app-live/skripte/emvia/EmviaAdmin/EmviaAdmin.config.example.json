@@ -1,0 +1,18 @@
+{
+  "_hinweis": "Kopieren nach EmviaAdmin.config.json und ausfuellen. NUR Strukturdaten - keine Kennwoerter, Tokens oder Tenant-Secrets!",
+  "UpnDomain": "emvia.de",
+  "MailDomain": "emvia.de",
+  "RoutingDomain": "<tenant>.mail.onmicrosoft.com",
+  "BenutzerBasisOU": "OU=Einrichtungen,DC=<domaene>,DC=<tld>",
+  "EinrichtungsOUs": {
+    "0350": "OU=Benutzer,OU=0350,OU=Einrichtungen,DC=<domaene>,DC=<tld>"
+  },
+  "EinrichtungsGruppenMuster": "G_{0}",
+  "FremdpersonalOU": "",
+  "FremdpersonalMaxTage": 365,
+  "FunktionspostfachOU": "OU=Funktionspostfaecher,DC=<domaene>,DC=<tld>",
+  "AustrittOU": "OU=Ausgetreten,DC=<domaene>,DC=<tld>",
+  "AustrittAufbewahrungTage": 90,
+  "PostfachStandard": "Remote",
+  "ProtokollPfad": "C:\\EmviaAdmin\\Protokoll\\aenderungen.csv"
+}

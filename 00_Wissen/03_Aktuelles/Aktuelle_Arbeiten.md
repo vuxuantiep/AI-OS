@@ -6,6 +6,28 @@
 
 ---
 
+## 2026-10-18 — EMVIA: PowerShell-Modul „EmviaAdmin“ für die Benutzerverwaltung (Abnahme M1)
+
+**Was:** `10_Business/01_Marktprodukte/IT-Werkbank/app-live/skripte/emvia/EmviaAdmin/` (psm1 + psd1 + config-Beispiel),
+20 Befehle: Neuanlage (inkl. Fremdpersonal mit Ablaufdatum), Änderung/Einrichtungswechsel, Austritt (sperren, Gruppen
+sichern+entfernen, ausblenden, verschieben), Löschen erst nach Frist, Kennwort-Reset/Entsperren/Sperrquelle (Event 4740),
+Gruppenrechte, Funktionspostfach + Vollzugriff/Senden als/im Auftrag, MFA-Reset mit TAP, Lizenz, CSV-Protokoll.
+Lernseite `wissen/emvia/13-benutzerverwaltung-ad-exchange.md`, Werkbank-Paket `paket_emvia_benutzerverwaltung.py`.
+
+**Warum so:** Aufbau direkt entlang der M1-Checkliste aus dem Einarbeitungsplan. Drei Regeln stecken im Code statt im Kopf:
+`-WhatIf` über `SupportsShouldProcess` (PowerShell-Standard statt eigenem `$Testlauf`), `-Ticket` Pflicht bei jeder Änderung
+(Protokoll = Nachweis „vollständig dokumentiert“), und `-Pruefweg`/`-Nachweis` Pflicht beim Kennwort- und MFA-Reset
+(Funktionspostfach EL oder Rückruf an bekannte Durchwahl). Die Regel lässt sich nicht vergessen.
+
+**Stolpersteine:**
+- Der Ursprungsbefehl hatte `(Exchange Management Shell)` hinter `Enable-Mailbox`. PowerShell wertet das als Ausdruck → Fehler.
+  Bei Hybrid ist außerdem `Enable-RemoteMailbox` richtig, nicht `Enable-Mailbox`.
+- Den `??`-Operator gibt es erst ab PS 7. Die Exchange Management Shell läuft unter 5.1, deshalb ersetzt. Geparst mit beiden Versionen.
+- Das Docker-Image kopierte nur `app/ web/ wiki/` → `COPY skripte ./skripte` ergänzt, damit das Paket die psm1 lesen kann (eine Quelle).
+- Offen: echter Test gegen AD/Exchange erst bei EMVIA (OUs, Rollengruppen-Namen, Hybrid ja/nein in die config.json eintragen).
+
+---
+
 ## 2026-10-13 (2) — EMVIA: Bauanleitung erster Agent „IT-Leitstand" (Copilot Studio)
 
 **Was:** `00_Wissen/03_Aktuelles/Active/EMVIA-KI-Assistenten/Bauanleitung-Agent1-IT-Leitstand.md`
