@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 730" width="1280" height="730" font-family="Segoe UI, system-ui, -apple-system, Arial, sans-serif">
+<title>Zusammenspiel: Was macht Windows, was macht Citrix?</title>
+<defs><marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><style>.t{font-size:15px;font-weight:700;fill:#0f172a}.h{font-size:13px;font-weight:700;fill:#0f172a}.s{font-size:12px;fill:#334155}.k{font-size:11px;fill:#475569}.lab{font-size:11px;font-weight:600;fill:#1e293b}.pfeil{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#pf)}.zwei{marker-start:url(#pf)}.gestr{stroke-dasharray:6 4}</style></defs>
+<rect width="1280" height="730" fill="#ffffff"/>
+<text x="30" y="38" style="font-size:22px;font-weight:800;fill:#0f172a">Zusammenspiel: Was macht Windows, was macht Citrix?</text>
+<text x="30" y="58" class="k">Ein Sitzungs-Host als Schichtmodell: unten Microsoft, darüber Citrix. Fällt eine untere Schicht aus, hilft keine Einstellung darüber</text>
+<text x="180" y="92" class="t" text-anchor="start">Schicht auf dem Server</text>
+<text x="690" y="92" class="t" text-anchor="start">Wer sie liefert</text>
+<text x="860" y="92" class="t" text-anchor="start">Wer sie verwaltet / womit</text>
+<rect x="180" y="105" width="480" height="56" rx="8" fill="#ecfdf5" stroke="#059669"/>
+<text x="192" y="125" class="h">Anwendungen</text>
+<text x="192" y="142" class="s">Office, Fachsoftware, Browser</text>
+<text x="690" y="138" class="s" text-anchor="start">Software-Hersteller</text>
+<text x="860" y="138" class="s" text-anchor="start">Golden Image, Patchplan</text>
+<rect x="180" y="167" width="480" height="56" rx="8" fill="#fff7ed" stroke="#ea580c"/>
+<text x="192" y="187" class="h">Benutzerprofil</text>
+<text x="192" y="204" class="s">FSLogix-Container pro Benutzer</text>
+<text x="690" y="200" class="s" text-anchor="start">Microsoft</text>
+<text x="860" y="200" class="s" text-anchor="start">GPO, Fileserver</text>
+<rect x="180" y="229" width="480" height="56" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="192" y="249" class="h">HDX-Protokoll</text>
+<text x="192" y="266" class="s">Bild, Ton, Drucker, USB zum Endgerät</text>
+<text x="690" y="262" class="s" text-anchor="start">Citrix</text>
+<text x="860" y="262" class="s" text-anchor="start">Citrix-Richtlinien in Studio</text>
+<rect x="180" y="291" width="480" height="56" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="192" y="311" class="h">Citrix VDA</text>
+<text x="192" y="328" class="s">Registrierung, Sitzungsübergabe</text>
+<text x="690" y="324" class="s" text-anchor="start">Citrix</text>
+<text x="860" y="324" class="s" text-anchor="start">Studio, Director</text>
+<rect x="180" y="353" width="480" height="56" rx="8" fill="#fff7ed" stroke="#ea580c"/>
+<text x="192" y="373" class="h">RDSH-Rolle</text>
+<text x="192" y="390" class="s">erlaubt mehrere Sitzungen gleichzeitig</text>
+<text x="690" y="386" class="s" text-anchor="start">Microsoft</text>
+<text x="860" y="386" class="s" text-anchor="start">Server-Manager, RDS-Lizenzserver</text>
+<rect x="180" y="415" width="480" height="56" rx="8" fill="#fff7ed" stroke="#ea580c"/>
+<text x="192" y="435" class="h">Windows Server 2022</text>
+<text x="192" y="452" class="s">Dienste, Sicherheit, TLS 1.3, Updates</text>
+<text x="690" y="448" class="s" text-anchor="start">Microsoft</text>
+<text x="860" y="448" class="s" text-anchor="start">GPO, Windows Admin Center, WSUS</text>
+<rect x="180" y="477" width="480" height="56" rx="8" fill="#f8fafc" stroke="#64748b"/>
+<text x="192" y="497" class="h">VM / Hardware</text>
+<text x="192" y="514" class="s">CPU, RAM, Speicher, Netz</text>
+<text x="690" y="510" class="s" text-anchor="start">Hypervisor</text>
+<text x="860" y="510" class="s" text-anchor="start">Infrastruktur-Team oder Dienstleister</text>
+<path class="pfeil" d="M150,540 L150,110"/>
+<text x="30" y="300" class="lab" text-anchor="start">Reihenfolge beim</text>
+<text x="30" y="315" class="lab" text-anchor="start">Bauen und bei der</text>
+<text x="30" y="330" class="lab" text-anchor="start">Fehlersuche:</text>
+<text x="30" y="345" class="lab" text-anchor="start">von unten nach oben</text>
+<rect x="30" y="560" width="1220" height="150" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-dasharray="6 4"/>
+<text x="44" y="583" class="t">Drei Lizenzen, die alle gleichzeitig nötig sind</text>
+<rect x="45" y="600" width="385" height="95" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="57" y="620" class="h">Windows Server</text>
+<text x="57" y="637" class="s">pro Server: Betriebssystem-Lizenz plus</text>
+<text x="57" y="652" class="s">Windows Server CAL je Benutzer oder Gerät</text>
+<rect x="442" y="600" width="385" height="95" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="454" y="620" class="h">Microsoft RDS CAL</text>
+<text x="454" y="637" class="s">je Benutzer oder Gerät, für jede RDSH-Sitzung.</text>
+<text x="454" y="652" class="s">Auch dann, wenn alle nur über Citrix arbeiten</text>
+<rect x="839" y="600" width="396" height="95" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="851" y="620" class="h">Citrix-Lizenz</text>
+<text x="851" y="637" class="s">liegt auf dem Citrix-Lizenzserver.</text>
+<text x="851" y="652" class="s">Modell (Concurrent, User/Device, Abo) laut Vertrag</text>
+</svg>

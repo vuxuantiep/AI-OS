@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 620" width="1280" height="620" font-family="Segoe UI, system-ui, -apple-system, Arial, sans-serif">
+<title>Citrix Studio: Vom Golden Image zum Benutzer</title>
+<defs><marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><style>.t{font-size:15px;font-weight:700;fill:#0f172a}.h{font-size:13px;font-weight:700;fill:#0f172a}.s{font-size:12px;fill:#334155}.k{font-size:11px;fill:#475569}.lab{font-size:11px;font-weight:600;fill:#1e293b}.pfeil{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#pf)}.zwei{marker-start:url(#pf)}.gestr{stroke-dasharray:6 4}</style></defs>
+<rect width="1280" height="620" fill="#ffffff"/>
+<text x="30" y="38" style="font-size:22px;font-weight:800;fill:#0f172a">Citrix Studio: Vom Golden Image zum Benutzer</text>
+<text x="30" y="58" class="k">Vier Begriffe genügen: Image, Maschinenkatalog, Bereitstellungsgruppe, Richtlinie</text>
+<rect x="30" y="180" width="220" height="150" rx="8" fill="#fff7ed" stroke="#ea580c"/>
+<text x="42" y="200" class="h">Golden Image</text>
+<text x="42" y="217" class="s">Windows Server 2022</text>
+<text x="42" y="232" class="s">RDSH, VDA, Apps, FSLogix</text>
+<text x="42" y="247" class="s">mit Citrix Optimizer</text>
+<text x="42" y="262" class="s">verschlankt, dann</text>
+<text x="42" y="277" class="s">heruntergefahren</text>
+<rect x="310" y="180" width="220" height="150" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="322" y="200" class="h">Maschinenkatalog</text>
+<text x="322" y="217" class="s">Was? Ein Satz gleicher</text>
+<text x="322" y="232" class="s">Server, per MCS oder PVS</text>
+<text x="322" y="247" class="s">geklont</text>
+<text x="322" y="262" class="s">Typ: Multi-Session-OS</text>
+<rect x="590" y="180" width="220" height="150" rx="8" fill="#f5f3ff" stroke="#7c3aed"/>
+<text x="602" y="200" class="h">Bereitstellungsgruppe</text>
+<text x="602" y="217" class="s">Wer und wann? Weist</text>
+<text x="602" y="232" class="s">Server und Apps Benutzern</text>
+<text x="602" y="247" class="s">zu, regelt Neustarts und</text>
+<text x="602" y="262" class="s">Wartungsmodus</text>
+<rect x="870" y="180" width="180" height="150" rx="8" fill="#ecfdf5" stroke="#059669"/>
+<text x="882" y="200" class="h">Veröffentlichung</text>
+<text x="882" y="217" class="s">ganzer Desktop oder</text>
+<text x="882" y="232" class="s">einzelne Anwendung</text>
+<rect x="1090" y="180" width="160" height="150" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="1102" y="200" class="h">AD-Gruppen</text>
+<text x="1102" y="217" class="s">Benutzer nie einzeln</text>
+<text x="1102" y="232" class="s">zuweisen, immer</text>
+<text x="1102" y="247" class="s">über Gruppen</text>
+<path class="pfeil" d="M250,255 L310,255"/>
+<text x="280.0" y="245" class="lab" text-anchor="middle">klonen</text>
+<path class="pfeil" d="M530,255 L590,255"/>
+<text x="560.0" y="245" class="lab" text-anchor="middle">zuordnen</text>
+<path class="pfeil" d="M810,255 L870,255"/>
+<text x="840.0" y="245" class="lab" text-anchor="middle"></text>
+<path class="pfeil" d="M1050,255 L1090,255"/>
+<text x="1070.0" y="245" class="lab" text-anchor="middle"></text>
+<rect x="310" y="85" width="740" height="62" rx="8" fill="#f5f3ff" stroke="#7c3aed"/>
+<text x="322" y="105" class="h">Citrix-Richtlinien (Policies)</text>
+<text x="322" y="122" class="s">gelten für die Sitzung: Bandbreite, Drucker, Zwischenablage, USB, Audio. Windows-Einstellungen bleiben bei der GPO</text>
+<path class="pfeil" d="M680,147 L680,180"/>
+<rect x="30" y="360" width="1220" height="235" rx="10" fill="#f8fafc" stroke="#64748b" stroke-dasharray="6 4"/>
+<text x="44" y="383" class="t">Image-Update: der wichtigste Routineablauf</text>
+<rect x="50" y="410" width="175" height="90" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="62" y="430" class="h">Kopie / Snapshot</text>
+<text x="62" y="447" class="s">Rückweg sichern</text>
+<circle cx="210" cy="410" r="12" fill="#2563eb"/>
+<text x="210" y="414" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">1</text>
+<path class="pfeil" d="M225,455 L250,455"/>
+<rect x="250" y="410" width="175" height="90" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="262" y="430" class="h">Änderung</text>
+<text x="262" y="447" class="s">Patch oder Software</text>
+<text x="262" y="462" class="s">ins Image</text>
+<circle cx="410" cy="410" r="12" fill="#2563eb"/>
+<text x="410" y="414" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">2</text>
+<path class="pfeil" d="M425,455 L450,455"/>
+<rect x="450" y="410" width="175" height="90" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="462" y="430" class="h">Versiegeln</text>
+<text x="462" y="447" class="s">Optimizer, Dienste</text>
+<text x="462" y="462" class="s">prüfen, herunterfahren</text>
+<circle cx="610" cy="410" r="12" fill="#2563eb"/>
+<text x="610" y="414" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">3</text>
+<path class="pfeil" d="M625,455 L650,455"/>
+<rect x="650" y="410" width="175" height="90" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="662" y="430" class="h">Test</text>
+<text x="662" y="447" class="s">Katalog auf Test-</text>
+<text x="662" y="462" class="s">server ausrollen</text>
+<circle cx="810" cy="410" r="12" fill="#2563eb"/>
+<text x="810" y="414" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">4</text>
+<path class="pfeil" d="M825,455 L850,455"/>
+<rect x="850" y="410" width="175" height="90" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="862" y="430" class="h">Rollout</text>
+<text x="862" y="447" class="s">Update im Katalog,</text>
+<text x="862" y="462" class="s">Neustart nach Plan</text>
+<circle cx="1010" cy="410" r="12" fill="#2563eb"/>
+<text x="1010" y="414" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">5</text>
+<path class="pfeil" d="M1025,455 L1050,455"/>
+<rect x="1050" y="410" width="175" height="90" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="1062" y="430" class="h">Rückfall</text>
+<text x="1062" y="447" class="s">altes Image bleibt</text>
+<text x="1062" y="462" class="s">bis alles läuft</text>
+<circle cx="1210" cy="410" r="12" fill="#2563eb"/>
+<text x="1210" y="414" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">6</text>
+<text x="50" y="530" class="s" text-anchor="start">Nie an einem einzelnen Klon nachbessern: Beim nächsten Neustart ist die Änderung weg, und die Server laufen auseinander.</text>
+<text x="50" y="550" class="s" text-anchor="start">Zuerst Wartungsmodus setzen, wenn Server außerhalb des Plans neu starten müssen, und die Anwender vorher informieren.</text>
+</svg>

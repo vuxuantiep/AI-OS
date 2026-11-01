@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 780" width="1280" height="780" font-family="Segoe UI, system-ui, -apple-system, Arial, sans-serif">
+<title>Server ist „Unregistered“: Fehlersuche Schritt für Schritt</title>
+<defs><marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><style>.t{font-size:15px;font-weight:700;fill:#0f172a}.h{font-size:13px;font-weight:700;fill:#0f172a}.s{font-size:12px;fill:#334155}.k{font-size:11px;fill:#475569}.lab{font-size:11px;font-weight:600;fill:#1e293b}.pfeil{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#pf)}.zwei{marker-start:url(#pf)}.gestr{stroke-dasharray:6 4}</style></defs>
+<rect width="1280" height="780" fill="#ffffff"/>
+<text x="30" y="38" style="font-size:22px;font-weight:800;fill:#0f172a">Server ist „Unregistered“: Fehlersuche Schritt für Schritt</text>
+<text x="30" y="58" class="k">Von oben nach unten prüfen. Die erste Antwort „Nein“ führt meist zur Ursache</text>
+<rect x="40" y="80" width="460" height="44" rx="8" fill="#fef2f2" stroke="#dc2626"/>
+<text x="52" y="100" class="h">Director / Studio zeigt: Unregistered</text>
+<rect x="40" y="150" width="620" height="66" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="52" y="170" class="h">Läuft die VM, hat sie Netz und DNS?</text>
+<text x="52" y="187" class="s">Test-NetConnection &lt;controller-fqdn&gt; -Port 80</text>
+<circle cx="40" cy="150" r="12" fill="#2563eb"/>
+<text x="40" y="154" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">1</text>
+<rect x="790" y="150" width="450" height="66" rx="8" fill="#fef2f2" stroke="#dc2626"/>
+<text x="802" y="170" class="h">Nein</text>
+<text x="802" y="187" class="s">Hypervisor, Netzwerk und DNS prüfen</text>
+<path class="pfeil" d="M660,183 L790,183"/>
+<path class="pfeil" d="M350,216 L350,230"/>
+<text x="362" y="227" class="lab" text-anchor="start">Ja</text>
+<rect x="40" y="230" width="620" height="66" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="52" y="250" class="h">Ist die Domänenbeziehung gesund?</text>
+<text x="52" y="267" class="s">Test-ComputerSecureChannel</text>
+<circle cx="40" cy="230" r="12" fill="#2563eb"/>
+<text x="40" y="234" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">2</text>
+<rect x="790" y="230" width="450" height="66" rx="8" fill="#fef2f2" stroke="#dc2626"/>
+<text x="802" y="250" class="h">Nein</text>
+<text x="802" y="267" class="s">Maschinenkonto reparieren, bei MCS Katalog prüfen</text>
+<path class="pfeil" d="M660,263 L790,263"/>
+<path class="pfeil" d="M350,296 L350,310"/>
+<text x="362" y="307" class="lab" text-anchor="start">Ja</text>
+<rect x="40" y="310" width="620" height="66" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="52" y="330" class="h">Läuft der Citrix Desktop Service?</text>
+<text x="52" y="347" class="s">Get-Service BrokerAgent, TermService</text>
+<circle cx="40" cy="310" r="12" fill="#2563eb"/>
+<text x="40" y="314" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">3</text>
+<rect x="790" y="310" width="450" height="66" rx="8" fill="#fef2f2" stroke="#dc2626"/>
+<text x="802" y="330" class="h">Nein</text>
+<text x="802" y="347" class="s">Dienst starten, Ereignisprotokoll lesen</text>
+<path class="pfeil" d="M660,343 L790,343"/>
+<path class="pfeil" d="M350,376 L350,390"/>
+<text x="362" y="387" class="lab" text-anchor="start">Ja</text>
+<rect x="40" y="390" width="620" height="66" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="52" y="410" class="h">Stimmt die Uhrzeit (max. 5 Minuten Abweichung)?</text>
+<text x="52" y="427" class="s">w32tm /query /status</text>
+<circle cx="40" cy="390" r="12" fill="#2563eb"/>
+<text x="40" y="394" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">4</text>
+<rect x="790" y="390" width="450" height="66" rx="8" fill="#fef2f2" stroke="#dc2626"/>
+<text x="802" y="410" class="h">Nein</text>
+<text x="802" y="427" class="s">Zeitquelle korrigieren</text>
+<path class="pfeil" d="M660,423 L790,423"/>
+<path class="pfeil" d="M350,456 L350,470"/>
+<text x="362" y="467" class="lab" text-anchor="start">Ja</text>
+<rect x="40" y="470" width="620" height="66" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="52" y="490" class="h">Stehen alle Controller in ListOfDDCs (FQDN)?</text>
+<text x="52" y="507" class="s">HKLM\SOFTWARE\Citrix\VirtualDesktopAgent</text>
+<circle cx="40" cy="470" r="12" fill="#2563eb"/>
+<text x="40" y="474" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">5</text>
+<rect x="790" y="470" width="450" height="66" rx="8" fill="#fef2f2" stroke="#dc2626"/>
+<text x="802" y="490" class="h">Nein</text>
+<text x="802" y="507" class="s">Eintrag oder Richtlinie korrigieren</text>
+<path class="pfeil" d="M660,503 L790,503"/>
+<path class="pfeil" d="M350,536 L350,550"/>
+<text x="362" y="547" class="lab" text-anchor="start">Ja</text>
+<rect x="40" y="550" width="620" height="66" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="52" y="570" class="h">Controller auf Port 80 oder 443 erreichbar?</text>
+<text x="52" y="587" class="s">Test-NetConnection &lt;controller-fqdn&gt; -Port 80</text>
+<circle cx="40" cy="550" r="12" fill="#2563eb"/>
+<text x="40" y="554" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">6</text>
+<rect x="790" y="550" width="450" height="66" rx="8" fill="#fef2f2" stroke="#dc2626"/>
+<text x="802" y="570" class="h">Nein</text>
+<text x="802" y="587" class="s">Firewall-Regel prüfen, Dienstleister melden</text>
+<path class="pfeil" d="M660,583 L790,583"/>
+<path class="pfeil" d="M350,616 L350,630"/>
+<text x="362" y="627" class="lab" text-anchor="start">Ja</text>
+<rect x="40" y="630" width="620" height="66" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="52" y="650" class="h">Passen VDA-Version und Funktionsebene?</text>
+<text x="52" y="667" class="s">Studio: Katalog, Funktionsebene</text>
+<circle cx="40" cy="630" r="12" fill="#2563eb"/>
+<text x="40" y="634" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">7</text>
+<rect x="790" y="630" width="450" height="66" rx="8" fill="#fef2f2" stroke="#dc2626"/>
+<text x="802" y="650" class="h">Nein</text>
+<text x="802" y="667" class="s">VDA aktualisieren oder Stufe anpassen</text>
+<path class="pfeil" d="M660,663 L790,663"/>
+<path class="pfeil" d="M350,696 L350,710"/>
+<text x="362" y="707" class="lab" text-anchor="start">Ja</text>
+<rect x="40" y="710" width="1200" height="56" rx="8" fill="#ecfdf5" stroke="#059669"/>
+<text x="52" y="730" class="h">Alles Ja, weiter Unregistered:</text>
+<text x="52" y="747" class="s">Ereignisprotokoll Anwendung, Quelle Citrix Desktop Service (u. a. 1017, 1022, 1221) lesen und mit Server, Uhrzeit und Fehlertext eskalieren</text>
+</svg>

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" font-family="Segoe UI, system-ui, -apple-system, Arial, sans-serif">
+<title>Vom Klick bis zur Sitzung: So startet eine Anwendung</title>
+<defs><marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><style>.t{font-size:15px;font-weight:700;fill:#0f172a}.h{font-size:13px;font-weight:700;fill:#0f172a}.s{font-size:12px;fill:#334155}.k{font-size:11px;fill:#475569}.lab{font-size:11px;font-weight:600;fill:#1e293b}.pfeil{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#pf)}.zwei{marker-start:url(#pf)}.gestr{stroke-dasharray:6 4}</style></defs>
+<rect width="1280" height="640" fill="#ffffff"/>
+<text x="30" y="38" style="font-size:22px;font-weight:800;fill:#0f172a">Vom Klick bis zur Sitzung: So startet eine Anwendung</text>
+<text x="30" y="58" class="k">Wer die acht Schritte kennt, weiß bei jeder Störung, an welcher Stelle er suchen muss</text>
+<rect x="30" y="75" width="200" height="36" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="42" y="95" class="h">Anwender</text>
+<path class="pfeil gestr" d="M130,111 L130,615"/>
+<rect x="250" y="75" width="200" height="36" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="262" y="95" class="h">Gateway</text>
+<path class="pfeil gestr" d="M350,111 L350,615"/>
+<rect x="470" y="75" width="200" height="36" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="482" y="95" class="h">StoreFront</text>
+<path class="pfeil gestr" d="M570,111 L570,615"/>
+<rect x="700" y="75" width="200" height="36" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="712" y="95" class="h">Delivery Controller</text>
+<path class="pfeil gestr" d="M800,111 L800,615"/>
+<rect x="980" y="75" width="200" height="36" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="992" y="95" class="h">Windows Server 2022 + VDA</text>
+<path class="pfeil gestr" d="M1080,111 L1080,615"/>
+<path class="pfeil" d="M130,157 L350,157"/>
+<rect x="120.25" y="128" width="239.5" height="24" rx="5" fill="#fff" stroke="#cbd5e1"/>
+<circle cx="120.25" cy="140" r="12" fill="#2563eb"/>
+<text x="120.25" y="144" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">1</text>
+<text x="246.0" y="145" class="s" text-anchor="middle">Anmeldung von außen: Kennwort + MFA</text>
+<path class="pfeil" d="M350,217 L570,217"/>
+<rect x="340.25" y="188" width="239.5" height="24" rx="5" fill="#fff" stroke="#cbd5e1"/>
+<circle cx="340.25" cy="200" r="12" fill="#2563eb"/>
+<text x="340.25" y="204" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">2</text>
+<text x="466.0" y="205" class="s" text-anchor="middle">Gateway reicht die Anmeldung weiter</text>
+<path class="pfeil" d="M570,277 L800,277"/>
+<rect x="539.25" y="248" width="291.5" height="24" rx="5" fill="#fff" stroke="#cbd5e1"/>
+<circle cx="539.25" cy="260" r="12" fill="#2563eb"/>
+<text x="539.25" y="264" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">3</text>
+<text x="691.0" y="265" class="s" text-anchor="middle">StoreFront fragt: Was darf dieser Benutzer?</text>
+<path class="pfeil" d="M800,337 L130,337"/>
+<rect x="335.5" y="308" width="259.0" height="24" rx="5" fill="#fff" stroke="#cbd5e1"/>
+<circle cx="335.5" cy="320" r="12" fill="#2563eb"/>
+<text x="335.5" y="324" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">4</text>
+<text x="471.0" y="325" class="s" text-anchor="middle">Anwender sieht seine Apps und Desktops</text>
+<path class="pfeil" d="M130,397 L800,397"/>
+<rect x="299.75" y="368" width="330.5" height="24" rx="5" fill="#fff" stroke="#cbd5e1"/>
+<circle cx="299.75" cy="380" r="12" fill="#2563eb"/>
+<text x="299.75" y="384" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">5</text>
+<text x="471.0" y="385" class="s" text-anchor="middle">Klick: Controller wählt den Server mit wenig Last</text>
+<path class="pfeil" d="M800,457 L1080,457"/>
+<rect x="781.25" y="428" width="317.5" height="24" rx="5" fill="#fff" stroke="#cbd5e1"/>
+<circle cx="781.25" cy="440" r="12" fill="#2563eb"/>
+<text x="781.25" y="444" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">6</text>
+<text x="946.0" y="445" class="s" text-anchor="middle">Controller bereitet die Sitzung auf dem VDA vor</text>
+<path class="pfeil" d="M130,517 L1080,517"/>
+<rect x="449.5" y="488" width="311.0" height="24" rx="5" fill="#fff" stroke="#cbd5e1"/>
+<circle cx="449.5" cy="500" r="12" fill="#2563eb"/>
+<text x="449.5" y="504" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">7</text>
+<text x="611.0" y="505" class="s" text-anchor="middle">Endgerät verbindet sich per HDX mit dem Server</text>
+<rect x="790" y="551" width="280" height="28" rx="6" fill="#ecfdf5" stroke="#059669"/>
+<circle cx="770" cy="565" r="12" fill="#2563eb"/>
+<text x="770" y="569" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#fff">8</text>
+<text x="800" y="569" class="s" text-anchor="start">Windows meldet an: GPO, FSLogix-Profil, Skripte</text>
+</svg>

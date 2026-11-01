@@ -136,6 +136,21 @@ MODULE: tuple[Modul, ...] = (
         stichworte=("ad", "dns", "dhcp", "gpo", "wsus", "dfs"),
     ),
     Modul(
+        id="citrix",
+        name="Citrix & Terminalserver",
+        kurz="Citrix Virtual Apps and Desktops auf Windows Server 2022: Studio, Director, VDA, FSLogix, Fehlersuche",
+        fachprompt="Schwerpunkt: Betrieb von Citrix Virtual Apps and Desktops auf Windows Server 2022 "
+        "(Multi-Session/RDSH). Trenne klar, was Windows leistet und was Citrix leistet, und pruefe bei "
+        "Fehlern von unten nach oben: VM, Netz, DNS, Domaene, Dienste, VDA, Citrix-Konfiguration. Der "
+        "VDA-Dienst heisst Citrix Desktop Service (BrokerAgent), der Windows-Dienst Remotedesktopdienste "
+        "(TermService). Aenderungen dauerhaft nur im Golden Image, nie am einzelnen Klon. Vor Arbeiten "
+        "Wartungsmodus und Rueckweg nennen. Zuerst lesende Befehle (Get-BrokerMachine, Get-BrokerSession), "
+        "dann Aenderungen. Lizenzmodell und Versionen nicht raten, sondern nach dem Vertrag bzw. der "
+        "installierten Version fragen.",
+        stichworte=("citrix", "cvad", "vda", "studio", "director", "storefront", "netscaler", "fslogix",
+                     "terminalserver", "rdsh", "unregistered", "hdx", "mcs", "pvs"),
+    ),
+    Modul(
         id="hyperv",
         name="Hyper-V Cluster",
         kurz="Failover-Cluster, Livemigration, Storage, Replikation",

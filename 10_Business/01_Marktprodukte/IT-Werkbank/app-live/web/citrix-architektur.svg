@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 790" width="1280" height="790" font-family="Segoe UI, system-ui, -apple-system, Arial, sans-serif">
+<title>Citrix Virtual Apps and Desktops auf Windows Server 2022 – Architektur</title>
+<defs><marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><style>.t{font-size:15px;font-weight:700;fill:#0f172a}.h{font-size:13px;font-weight:700;fill:#0f172a}.s{font-size:12px;fill:#334155}.k{font-size:11px;fill:#475569}.lab{font-size:11px;font-weight:600;fill:#1e293b}.pfeil{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#pf)}.zwei{marker-start:url(#pf)}.gestr{stroke-dasharray:6 4}</style></defs>
+<rect width="1280" height="790" fill="#ffffff"/>
+<text x="30" y="38" style="font-size:22px;font-weight:800;fill:#0f172a">Citrix Virtual Apps and Desktops auf Windows Server 2022 – Architektur</text>
+<text x="30" y="58" class="k">Der Anwender arbeitet nie am Endgerät: Die Anwendung läuft auf dem Server, nur Bild, Ton und Eingaben gehen über HDX</text>
+<rect x="30" y="75" width="200" height="440" rx="10" fill="#f8fafc" stroke="#64748b" stroke-dasharray="6 4"/>
+<text x="44" y="98" class="t">1 Endgerät</text>
+<text x="44" y="115" class="k">beim Anwender</text>
+<rect x="45" y="125" width="170" height="70" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="57" y="145" class="h">Thin Client</text>
+<text x="57" y="162" class="s">keine lokalen Apps</text>
+<text x="57" y="177" class="s">nur Citrix-Zugang</text>
+<rect x="45" y="210" width="170" height="70" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="57" y="230" class="h">PC / Notebook</text>
+<text x="57" y="247" class="s">Citrix Workspace App</text>
+<text x="57" y="262" class="s">installiert</text>
+<rect x="45" y="295" width="170" height="70" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="57" y="315" class="h">Homeoffice</text>
+<text x="57" y="332" class="s">über das Internet,</text>
+<text x="57" y="347" class="s">mit MFA</text>
+<rect x="270" y="75" width="220" height="440" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-dasharray="6 4"/>
+<text x="284" y="98" class="t">2 Zugang</text>
+<text x="284" y="115" class="k">wer darf rein, was sieht er</text>
+<rect x="285" y="125" width="190" height="105" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="297" y="145" class="h">Citrix Gateway</text>
+<text x="297" y="162" class="s">(NetScaler), steht in der</text>
+<text x="297" y="177" class="s">DMZ. Nur für Zugriff von</text>
+<text x="297" y="192" class="s">außen: Anmeldung, MFA,</text>
+<text x="297" y="207" class="s">HDX-Proxy</text>
+<rect x="285" y="265" width="190" height="105" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+<text x="297" y="285" class="h">StoreFront</text>
+<text x="297" y="302" class="s">zeigt die App- und</text>
+<text x="297" y="317" class="s">Desktop-Liste, nimmt die</text>
+<text x="297" y="332" class="s">Anmeldung an, fragt den</text>
+<text x="297" y="347" class="s">Controller</text>
+<rect x="530" y="75" width="270" height="440" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-dasharray="6 4"/>
+<text x="544" y="98" class="t">3 Steuerung</text>
+<text x="544" y="115" class="k">das Gehirn der Site</text>
+<rect x="545" y="125" width="240" height="90" rx="8" fill="#f5f3ff" stroke="#7c3aed"/>
+<text x="557" y="145" class="h">Delivery Controller</text>
+<text x="557" y="162" class="s">Broker: wählt den Server und</text>
+<text x="557" y="177" class="s">verwaltet die Registrierung</text>
+<text x="557" y="192" class="s">der VDAs</text>
+<rect x="545" y="228" width="115" height="72" rx="8" fill="#f5f3ff" stroke="#7c3aed"/>
+<text x="557" y="248" class="h">Site-DB</text>
+<text x="557" y="265" class="s">SQL Server:</text>
+<text x="557" y="280" class="s">Konfiguration</text>
+<rect x="670" y="228" width="115" height="72" rx="8" fill="#f5f3ff" stroke="#7c3aed"/>
+<text x="682" y="248" class="h">Lizenzserver</text>
+<text x="682" y="265" class="s">Citrix-</text>
+<text x="682" y="280" class="s">Lizenzen</text>
+<rect x="545" y="313" width="240" height="72" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="557" y="333" class="h">Studio / Web Studio</text>
+<text x="557" y="350" class="s">Verwalten: Kataloge, Gruppen,</text>
+<text x="557" y="365" class="s">Richtlinien</text>
+<rect x="545" y="398" width="240" height="72" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="557" y="418" class="h">Director</text>
+<text x="557" y="435" class="s">Überwachen: Anmeldezeiten,</text>
+<text x="557" y="450" class="s">Sitzungen, Spiegeln</text>
+<rect x="840" y="75" width="410" height="440" rx="10" fill="#ecfdf5" stroke="#059669" stroke-dasharray="6 4"/>
+<text x="854" y="98" class="t">4 Sitzungs-Hosts</text>
+<text x="854" y="115" class="k">viele gleiche Server aus einem Golden Image</text>
+<rect x="855" y="125" width="380" height="190" rx="8" fill="#ecfdf5" stroke="#059669"/>
+<text x="867" y="145" class="h">Windows Server 2022 (Multi-Session)</text>
+<text x="867" y="162" class="s">Windows Server + Rolle RDSH</text>
+<text x="867" y="177" class="s">Citrix VDA: meldet sich beim Controller, liefert HDX</text>
+<text x="867" y="192" class="s">Dienst: Citrix Desktop Service (BrokerAgent)</text>
+<text x="867" y="207" class="s">Dienst: Remotedesktopdienste (TermService)</text>
+<text x="867" y="222" class="s">Anwendungen: im Image installiert</text>
+<text x="867" y="237" class="s">FSLogix: hängt das Profil beim Anmelden ein</text>
+<text x="867" y="252" class="s">Citrix Optimizer: Image verschlankt</text>
+<rect x="855" y="330" width="185" height="62" rx="8" fill="#ecfdf5" stroke="#059669"/>
+<text x="867" y="350" class="h">Server 2</text>
+<text x="867" y="367" class="s">gleiches Image</text>
+<rect x="1050" y="330" width="185" height="62" rx="8" fill="#ecfdf5" stroke="#059669"/>
+<text x="1062" y="350" class="h">Server 3 … n</text>
+<text x="1062" y="367" class="s">Controller verteilt Last</text>
+<rect x="855" y="405" width="380" height="95" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="867" y="425" class="h">Provisionierung</text>
+<text x="867" y="442" class="s">MCS oder PVS klont die Server aus dem Golden Image.</text>
+<text x="867" y="457" class="s">Neustart = sauberer Stand, Änderungen nur am Image.</text>
+<rect x="30" y="535" width="1220" height="130" rx="10" fill="#fff7ed" stroke="#ea580c" stroke-dasharray="6 4"/>
+<text x="44" y="558" class="t">5 Microsoft-Basis</text>
+<text x="44" y="575" class="k">ohne sie läuft nichts: Citrix setzt auf Windows auf</text>
+<rect x="45" y="580" width="230" height="75" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="57" y="600" class="h">Active Directory + DNS</text>
+<text x="57" y="617" class="s">Anmeldung, Maschinenkonten,</text>
+<text x="57" y="632" class="s">Controller finden</text>
+<rect x="285" y="580" width="230" height="75" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="297" y="600" class="h">Gruppenrichtlinien</text>
+<text x="297" y="617" class="s">Windows-Einstellungen,</text>
+<text x="297" y="632" class="s">Optimierung, FSLogix</text>
+<rect x="525" y="580" width="230" height="75" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="537" y="600" class="h">Fileserver</text>
+<text x="537" y="617" class="s">Profil-Container (VHDX),</text>
+<text x="537" y="632" class="s">Laufwerke, Ordner</text>
+<rect x="765" y="580" width="230" height="75" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="777" y="600" class="h">RDS-Lizenzserver</text>
+<text x="777" y="617" class="s">RDS-CALs: zusätzlich</text>
+<text x="777" y="632" class="s">zu den Citrix-Lizenzen</text>
+<rect x="1005" y="580" width="230" height="75" rx="8" fill="#ffffff" stroke="#64748b"/>
+<text x="1017" y="600" class="h">Hypervisor / Speicher</text>
+<text x="1017" y="617" class="s">VMs, Snapshots,</text>
+<text x="1017" y="632" class="s">Golden Image</text>
+<path class="pfeil" d="M215,160 L262,160 L262,312 L285,312"/>
+<path class="pfeil gestr" d="M215,330 L285,190"/>
+<path class="pfeil" d="M475,318 L545,170"/>
+<text x="495" y="260" class="lab" text-anchor="start">XML</text>
+<path class="pfeil zwei" d="M665,215 L605,228"/>
+<path class="pfeil zwei" d="M665,215 L725,228"/>
+<path class="pfeil zwei" d="M785,170 L855,170"/>
+<text x="792" y="155" class="lab" text-anchor="start">80/443</text>
+<path class="pfeil zwei" d="M130,365 L130,500 L820,500 L820,345 L855,345"/>
+<text x="240" y="494" class="lab" text-anchor="start">HDX/ICA 1494, Session Reliability 2598 (TCP, bei EDT auch UDP), über Gateway: 443</text>
+<text x="30" y="690" class="h" text-anchor="start">So liest du das Bild</text>
+<text x="30" y="710" class="s" text-anchor="start">Anmelden (StoreFront) und Arbeiten (HDX) sind zwei getrennte Wege. Fällt der Controller aus, laufen offene Sitzungen meist weiter – neue Starts scheitern.</text>
+<text x="30" y="730" class="s" text-anchor="start">Gestrichelter Pfeil: Weg von außen über das Gateway. Durchgezogener Pfeil unten: die eigentliche Arbeitssitzung zwischen Endgerät und Server.</text>
+<text x="30" y="750" class="k" text-anchor="start">Ports laut Citrix-Dokumentation (Stand 11/2026), im eigenen Netz gegen die Firewall-Freigaben prüfen.</text>
+</svg>
