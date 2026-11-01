@@ -2316,5 +2316,18 @@ End-to-End mit echtem Ollama getestet: Dokument hochgeladen, gefragt
 
 ---
 
+## 01.11.2026: Citrix-Modul in der IT-Werkbank
+
+**Was:** Neues Modul „Citrix & Terminalserver“ mit vier Wiki-Seiten und fünf SVG-Diagrammen (Architektur, Zusammenspiel Windows/Citrix, Sitzungsablauf, Studio/Image, Fehlerbaum Unregistered).
+
+**Warum so:** Eine Anleitung wird für die Fehlersuche erst nützlich, wenn sie den Weg einer Sitzung zeigt. Dann lässt sich jedes Symptom einem Schritt zuordnen.
+
+**Stolpersteine:**
+- Eingefügte KI-Texte prüfen: Der Dienst heißt Citrix Desktop Service (`BrokerAgent`), „Desktop Courier“ gibt es nicht.
+- Vor dem Veröffentlichen die Einstufung der Quelle lesen. Die Werkbank-Seite läuft ohne Login, das Repo ist öffentlich. Vertrauliches bleibt deshalb in `wissen-intern/` (gitignoriert).
+- `git subtree push` scheiterte, weil Tailscale abgemeldet war. Die Meldung „access rights“ war hier irreführend.
+
+---
+
 *Regel: Dieses Journal wird am Ende jedes Arbeitstages von Claude aktualisiert.*
-*Zuletzt aktualisiert: 2026-07-16*
+*Zuletzt aktualisiert: 2026-11-01*
