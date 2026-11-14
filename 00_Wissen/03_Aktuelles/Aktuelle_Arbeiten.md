@@ -6,6 +6,29 @@
 
 ---
 
+## 2026-11-14 — TRACE Enterprise Lab: Doku gesichtet, eine Planung daraus gemacht
+
+**Was:** `00_Wissen/02_Projekte/Projects/M365 und KI Copilot mit Powerautomate/` —
+`Project_TRACE-Enterprise-Lab.md` (Bauplan: Architektur als Mermaid, VM-/Netzplan, Lizenzen,
+10 Phasen mit Abnahmekriterium, Runbook-Schema, Ausbaustufen) und `Doku-Review_TRACE-Lab.md`
+(Widersprüche und Lücken der Ursprungsnotizen).
+
+**Warum:** Im Ordner lagen nur ein OneNote-Notizbuch mit zwei Seiten und eine Word-Datei. Die Seiten
+enthielten drei unaufgelöste Entwürfe (64 GB vs. 32 GB, `trace.lab` vs. `TRACE.LOCAL`, 4 vs. 12 Wochen,
+Power Automate vs. n8n). Ohne eine einzige gültige Fassung kann man nicht anfangen zu bauen.
+
+**Stolpersteine / Gelerntes:**
+- OneNote per COM geht **nicht** aus PowerShell 7 (`GetHierarchy` → „Unexpected HRESULT"). Mit
+  `powershell.exe` (5.1) und Enum-Cast `[Microsoft.Office.Interop.OneNote.HierarchyScope]4` klappt es.
+- Power Automate läuft in der Cloud und erreicht kein privates Lab-Netz → Zammad braucht HTTPS-Tunnel
+  oder Datengateway. Stand in der Notiz falsch (`http://<Zammad-IP>`).
+- AD-Domäne als Subdomain einer eigenen Domain wählen, dann passt der UPN lokal und in der Cloud.
+- Testlizenzen erst aktivieren, wenn die Phase dran ist – die Uhr läuft ab Aktivierung.
+
+**Offen:** Hardware-Daten des Mini-PC, Domainwahl, Startdatum (siehe Abschnitt 10 im Plan).
+
+---
+
 ## 2026-10-18 — EMVIA: PowerShell-Modul „EmviaAdmin“ für die Benutzerverwaltung (Abnahme M1)
 
 **Was:** `10_Business/01_Marktprodukte/IT-Werkbank/app-live/skripte/emvia/EmviaAdmin/` (psm1 + psd1 + config-Beispiel),
