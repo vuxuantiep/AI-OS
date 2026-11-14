@@ -148,7 +148,7 @@ Jede Phase hat ein **Abnahmekriterium** (kann ich es vorführen?) und ein **Refe
 | # | Phase | Dauer | Abnahme | Referenz-Ergebnis |
 |---|---|---|---|---|
 | 0 | Fundament: Host, Hyper-V, vSwitch + NAT, Ordner, Prüfpunkt-Regel | ½ Wo. | VM im Lab-Netz kommt ins Internet, Heimnetz unverändert | Runbook „Lab-Host aufsetzen" |
-| 1 | Active Directory: DC01, DNS, DHCP, OUs, 5 Benutzer, Gruppen, GPO (Kennwort, Bildschirmsperre), W11-01 in Domäne | 1½ Wo. | neuer Benutzer → Gruppe → Anmeldung am Client klappt | Runbook „Domäne + Benutzeranlage", PowerShell-Skript Benutzeranlage |
+| 1 | Active Directory: DC01, DNS, DHCP, OUs, 5 Benutzer, Gruppen, Kennwortrichtlinie der Domäne, GPO Bildschirmsperre, W11-01 in Domäne | 1½ Wo. | neuer Benutzer → Gruppe → Anmeldung am Client klappt | Runbook „Domäne + Benutzeranlage", PowerShell-Skript Benutzeranlage |
 | 2 | Tenant & Entra ID: Testversion, eigene Domain verifizieren, Notfall-Adminkonto, MFA, Rollen, Gruppen, Lizenzzuweisung, Exchange/SharePoint-Grundlagen | 1 Wo. | Cloud-Benutzer mit MFA meldet sich an, hat Postfach | Runbook „Tenant-Grundabsicherung" |
 | 3 | Hybrid Identity: SRV01, Entra Connect Sync, OU-Filter, UPN prüfen, Dateifreigaben mit Gruppenrechten | 1 Wo. | AD-Benutzer erscheint in Entra ID und meldet sich mit gleichem UPN an | Runbook „Sync einrichten + Fehlerbilder" |
 | 4 | Intune Grundlagen: automatische MDM-Registrierung, Gerätegruppen, Compliance (BitLocker, Firewall, Defender), Konfigurationsprofile, Update-Ringe | 2 Wo. | Gerät zeigt „konform", Richtlinie nachweisbar angekommen | Runbook „Compliance + Baseline" |
@@ -232,8 +232,8 @@ in die IT-Werkbank übernommen werden.
 
 | Phase | Status | Begonnen | Abgenommen | Runbook |
 |---|---|---|---|---|
-| 0 Fundament | offen | | | |
-| 1 Active Directory | offen | | | |
+| 0 Fundament | offen | | | [[Phase-0_Fundament]] (Entwurf) |
+| 1 Active Directory | offen | | | [[Phase-1_Active-Directory]] (Entwurf) |
 | 2 Tenant & Entra ID | offen | | | |
 | 3 Hybrid Identity | offen | | | |
 | 4 Intune | offen | | | |
