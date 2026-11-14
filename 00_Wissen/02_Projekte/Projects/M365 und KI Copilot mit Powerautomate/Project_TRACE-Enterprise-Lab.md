@@ -12,6 +12,10 @@
 **Schwerpunkt (festgelegt am 14.11.2026): M365-Administration mit Entra ID, Conditional Access und Intune.**
 Alles andere ist Erweiterung und kommt erst danach.
 
+**Zielrichtung danach: Identity Security / IAM-Automatisierung.** Der Kern ist das Fundament,
+die Spezialisierung (Phasen S1–S3) baut darauf auf: Governance (IGA, PIM), Automatisierung über
+Schnittstellen (Graph, SCIM, Python) und die Absicherung von KI-Agenten und Maschinen-Identitäten.
+
 Eine kleine Firma („TRACE GmbH") als Übungsumgebung, an der ich den kompletten
 Mitarbeiter-Lebenszyklus in der Microsoft-Cloud selbst durchspiele: Konto anlegen →
 Lizenz und Rollen → Gerät bereitstellen → Zugriff absichern → Konto sauber stilllegen.
@@ -142,7 +146,10 @@ Pilotgruppe `SG-Pilot-CA` für neue Richtlinien.
 | Power Automate (Premium), Copilot Studio | Testversion | begrenzt | erst 9 |
 
 - **Die Testversion deckt nur den ersten Monat.** Der Kern dauert rund 12 Wochen – danach eine **monatlich** kündbare Business-Premium-Lizenz für 1–2 Benutzer einplanen, kein Jahresvertrag.
-- **Grenze von Business Premium:** Entra ID **P1**. Risikobasierte Richtlinien und PIM (zeitlich begrenzte Adminrechte) brauchen **P2** – dafür bei Bedarf einen Monat die P2-Testversion dazunehmen.
+- **Grenze von Business Premium:** Entra ID **P1**. Für die Spezialisierung braucht es mehr:
+  - **S1:** PIM, Zugriffsüberprüfungen und risikobasierte Richtlinien brauchen **Entra ID P2**; Lebenszyklus-Workflows und erweiterte Berechtigungsverwaltung die Zusatzlizenz **Entra ID Governance**.
+  - **S3:** Conditional Access für Workload-Identitäten braucht **Workload Identities Premium**; verwaltete Identitäten brauchen ein Azure-Abonnement (kostenloses Testguthaben reicht).
+  - Für alle gibt es Testversionen – erst zu Beginn der jeweiligen Phase aktivieren und den genauen Lizenzzuschnitt dann bei Microsoft prüfen, er ändert sich häufig.
 - Das **Microsoft 365 Developer Program** (kostenlose E5-Sandbox) gibt es nur noch für bestimmte Berechtigte. Prüfen, nicht einplanen.
 - Laufzeiten und Preise vor dem Start im deutschen Microsoft-Checkout gegenprüfen – das sind Planungswerte.
 
@@ -164,6 +171,23 @@ Jede Phase hat ein **Abnahmekriterium** (kann ich es vorführen?) und ein **Refe
 | 6 | PowerShell & Graph | 2 Wo. | Eintritt / Wechsel / Austritt als Skripte, Berichte (Lizenzen, MFA-Stand, Gerätekonformität), **Kern-Abschluss**: eine Phase nur nach eigenem Runbook wiederholen | ein Befehl legt Mitarbeiter komplett an; ein Befehl legt ihn sauber still |
 
 Referenz-Ergebnis jeder Phase: ein Runbook nach dem Schema in Abschnitt 8.
+
+### Spezialisierung: Identity Security & IAM-Automatisierung (rund 9 Wochen, nach dem Kern)
+
+Baut auf dem Kern auf – ohne sicheres Entra ID und Conditional Access bleibt das hier Theorie.
+
+| # | Phase | Dauer | Inhalt | Abnahme |
+|---|---|---|---|---|
+| S1 | Governance (IGA + PIM) | 3 Wo. | PIM: Adminrollen nur auf Anforderung, zeitlich begrenzt, mit Genehmigung und Begründung · Zugriffsüberprüfungen (regelmäßige Rezertifizierung von Gruppen und Rollen) · Berechtigungsverwaltung mit Zugriffspaketen (Antrag → Genehmigung → Ablauf) · Lebenszyklus-Workflows für Eintritt/Austritt · Funktionstrennung · Nachweise aus den Protokollen · Zuordnung: welche Lab-Einstellung belegt welche Anforderung aus NIS2/DORA (Zugriffskontrolle, geringstes Recht, Protokollierung, Überprüfung) | kein Konto ist dauerhaft Globaler Admin; eine Überprüfung entzieht einem Benutzer nachweisbar ein Recht; ein Zugriffspaket läuft von selbst ab |
+| S2 | Automatisierung & Schnittstellen | 3 Wo. | Graph direkt per REST (nicht nur über Cmdlets) · App-Registrierung, delegierte vs. Anwendungsberechtigung, Zertifikat statt Geheimnis · dasselbe in **Python** · **SCIM**: automatische Benutzerbereitstellung von Entra ID in eine Fremdanwendung (Testendpunkt), Attributzuordnung, Bereitstellungsprotokoll · API-gesteuerte Bereitstellung aus einer „Personalquelle" (CSV als HR-Ersatz) | Zeile in der Personal-CSV → Benutzer entsteht in Entra ID → erscheint per SCIM in der Zielanwendung; Austritt entfernt ihn dort wieder |
+| S3 | Maschinen-Identitäten & KI-Agenten | 3 Wo. | App-Registrierung vs. Dienstprinzipal vs. verwaltete Identität · Bestandsaufnahme: welche Apps haben welche Rechte, wem gehören sie, wann laufen Geheimnisse ab · Verbundanmeldung ohne Geheimnis (GitHub Actions → Entra ID per OIDC) · geringstes Recht bei Graph-Berechtigungen, Zustimmung der Benutzer einschränken · Conditional Access für Workload-Identitäten · Identität und Rechte von KI-Agenten (Copilot Studio, eigener Agent aus dem AI-OS): eigene Identität je Agent, enger Rechteumfang, Protokoll, menschliche Freigabe | Bericht über alle Apps mit Rechten, Besitzer und Ablaufdatum; eine Pipeline meldet sich ohne gespeichertes Geheimnis an; ein Agent kann nachweisbar nur das, was er soll |
+
+Reihenfolge: S1 → S2 → S3. S3 hängt eng mit Phase 9 (Copilot-Studio-Agent) zusammen und lässt sich mit ihr verbinden.
+
+Einordnung: „Klick-Admins werden ersetzt" ist zugespitzt – die Portale bleiben, und wer sie nicht
+versteht, automatisiert das Falsche. Die Richtung stimmt aber: Gefragt ist, wer Verwaltung,
+Governance und Automatisierung zusammenbringt. NIS2/DORA sind hier als Lernbezug gedacht, keine
+Rechtsberatung – die konkreten Pflichten hängen vom jeweiligen Unternehmen ab.
 
 ### Erweiterung (einzeln, nach dem Kern)
 
@@ -234,7 +258,7 @@ in die IT-Werkbank übernommen werden.
 | Stufe | Inhalt | Voraussetzung |
 |---|---|---|
 | A – Mobilgeräte | Android/iOS in Intune, App-Schutzrichtlinien ohne Geräteregistrierung | Testgerät |
-| B – Entra ID P2 | risikobasierte Richtlinien, PIM, Zugriffsüberprüfungen | P2-Testversion |
+| B – Zweiter Identitätsanbieter | Keycloak als Vergleich und als SCIM-/OIDC-Gegenstelle | S2 |
 | C – VDI | RDS-Sitzungshost + FSLogix-Profile | 64 GB RAM empfohlen |
 | D – Citrix / Workspace ONE | zweites Bereitstellungs- bzw. Verwaltungssystem | Testlizenzen |
 | E – Sicherheitsüberwachung | Wazuh auf LNX01 | mehr RAM |
@@ -259,6 +283,9 @@ in die IT-Werkbank übernommen werden.
 | 4 Autopilot & Apps | offen | | | |
 | 5 Conditional Access | offen | | | |
 | 6 PowerShell & Graph | offen | | | |
+| S1 Governance (IGA + PIM) | offen | | | |
+| S2 Automatisierung & Schnittstellen | offen | | | |
+| S3 Maschinen-Identitäten & KI-Agenten | offen | | | |
 | 7 Active Directory (Erw.) | offen | | | [[Phase-7_Active-Directory]] (Entwurf) |
 | 8 Hybrid Identity (Erw.) | offen | | | |
 | 9 Helpdesk-Automatisierung (Erw.) | offen | | | |

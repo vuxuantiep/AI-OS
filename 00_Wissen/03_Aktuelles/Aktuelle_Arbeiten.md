@@ -31,6 +31,10 @@ Schwerpunkt festgelegt: **M365-Admin mit Entra ID, Conditional Access, Intune**.
 Helpdesk-Automatisierung sind jetzt Erweiterung (Phasen 7–9). Lernpunkt: Kennwortregeln wirken nur
 auf Domänenebene, nicht als GPO an einer OU.
 
+**Nachtrag 2:** Zielrichtung Identity Security / IAM-Automatisierung als eigene Spur S1–S3 ergänzt
+(Governance mit PIM und Zugriffsüberprüfungen · Graph/SCIM/Python · Maschinen-Identitäten und
+KI-Agenten). Baut auf dem Kern auf, braucht Entra ID P2 bzw. Governance-Lizenz als Test.
+
 **Offen:** Hardware-Daten des Mini-PC, Domainwahl, Startdatum (siehe Abschnitt 10 im Plan).
 
 ---
