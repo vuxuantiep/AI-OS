@@ -25,6 +25,12 @@ Power Automate vs. n8n). Ohne eine einzige gültige Fassung kann man nicht anfan
 - AD-Domäne als Subdomain einer eigenen Domain wählen, dann passt der UPN lokal und in der Cloud.
 - Testlizenzen erst aktivieren, wenn die Phase dran ist – die Uhr läuft ab Aktivierung.
 
+**Nachtrag (gleicher Tag):** Runbooks Phase 0 (Lab-Host) und Active Directory geschrieben. Danach
+Schwerpunkt festgelegt: **M365-Admin mit Entra ID, Conditional Access, Intune**. Plan deshalb auf
+„Cloud zuerst" umgestellt (Kern = Phasen 0–6, reine Entra-Join-Geräte); lokales AD, Hybrid und
+Helpdesk-Automatisierung sind jetzt Erweiterung (Phasen 7–9). Lernpunkt: Kennwortregeln wirken nur
+auf Domänenebene, nicht als GPO an einer OU.
+
 **Offen:** Hardware-Daten des Mini-PC, Domainwahl, Startdatum (siehe Abschnitt 10 im Plan).
 
 ---

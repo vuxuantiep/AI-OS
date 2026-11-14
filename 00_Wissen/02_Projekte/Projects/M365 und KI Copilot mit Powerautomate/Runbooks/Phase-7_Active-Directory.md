@@ -1,4 +1,4 @@
-# Runbook Phase 1: Active Directory
+# Runbook Phase 7: Active Directory (Erweiterung)
 
 Teil von [[Project_TRACE-Enterprise-Lab]] · Vorher: [[Phase-0_Fundament]] · Status: **Entwurf, noch nicht selbst durchgeführt**
 
@@ -249,5 +249,5 @@ Eigene Fälle:
 
 - Benutzeranlage mit OU, Gruppe und Startkennwort ist das tägliche Brot im Benutzer-Support.
 - „Erst DNS prüfen" löst den größten Teil aller Anmelde- und Domänenprobleme.
-- Die saubere OU-Struktur zahlt sich in Phase 3 aus: Dort wird gezielt nur `OU=TRACE` in die Cloud synchronisiert.
-- Aus Schritt 3.7 wird in Phase 7 das Eintritts-Skript.
+- Die saubere OU-Struktur zahlt sich in Phase 8 aus: Dort wird gezielt nur `OU=TRACE` in die Cloud synchronisiert.
+- Aus Schritt 3.7 lässt sich das Eintritts-Skript aus Phase 6 um das lokale AD erweitern.

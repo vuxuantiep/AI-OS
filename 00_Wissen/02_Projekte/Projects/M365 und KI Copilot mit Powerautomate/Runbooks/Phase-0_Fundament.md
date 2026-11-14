@@ -64,6 +64,11 @@ brauchen VMs eine feste Adresse.
 
 ### 3.5 Erste VM anlegen (Muster für alle weiteren)
 
+> Im Kern (Cloud-Schwerpunkt) ist die erste VM **`LAB-W11-01`**: 8 GB RAM, 4 Kerne,
+> 100 GB, Windows-11-ISO, dazu Schritt 3.6. Das Beispiel unten zeigt `LAB-DC01`, der
+> erst in Phase 7 gebraucht wird – die Befehle sind dieselben, nur Name und Werte ändern.
+> In der Windows-11-VM feste Adresse setzen: `10.10.10.101`, Gateway `10.10.10.1`, DNS `9.9.9.9`.
+
 ```powershell
 # Generation 2 = UEFI + Secure Boot (Pflicht für Windows 11, sinnvoll für Server)
 New-VM -Name "LAB-DC01" -Generation 2 -MemoryStartupBytes 4GB `
