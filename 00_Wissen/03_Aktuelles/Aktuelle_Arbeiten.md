@@ -6,6 +6,23 @@
 
 ---
 
+## 2026-11-14 (2) — Local AI Studio: Architekturbild und Programmablaufplan
+
+**Was:** Eine HTML-Seite mit zwei Zeichnungen zum Projekt `ai-studio-local`:
+`00_Wissen/02_Projekte/Projects/local-ai-studio/Project_Local-AI-Studio_Diagramme.html`.
+Bild 1 zeigt, wer mit wem spricht (Browser → Express-Server → Gemini API). Bild 2 ist der
+Programmablaufplan für „Nachricht senden".
+
+**Warum so:** Die Zeichnungen sind als SVG direkt in der HTML-Datei, ohne fremde Bibliothek.
+Die Seite funktioniert damit auch ohne Internet und in hellem wie dunklem Design.
+Farbe = Ort, an dem ein Schritt läuft (Browser, eigener Server, Google).
+
+**Stolpersteine / gelernt:**
+- Ein PAP zwingt zum genauen Lesen: Dabei fiel auf, dass ein fehlender API-Schlüssel im Chat
+  stumm bleibt. Der Server antwortet mit 401 als JSON, der Browser erwartet aber einen Strom.
+- Die README nennt die App „offline", jede Antwort kommt aber aus dem Internet (Gemini).
+- Die `.env` mit dem Schlüssel ist durch `.gitignore` geschützt (mit `git check-ignore -v` geprüft).
+
 ## 2026-11-14 — TRACE Enterprise Lab: Doku gesichtet, eine Planung daraus gemacht
 
 **Was:** `00_Wissen/02_Projekte/Projects/M365 und KI Copilot mit Powerautomate/` —

@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local AI Studio – Diagramme</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --ink:#1b2230; --muted:#5b6678; --line:#7a8598; --rand:#d5dae3;
+    --browser:#dcebff; --browser-r:#3b78d8;
+    --server:#fff0cf;  --server-r:#b7791f;
+    --extern:#ebe0ff;  --extern-r:#7a4fd0;
+    --neutral:#e9ecf1; --neutral-r:#7a8598;
+    --warn:#ffe1dc;    --warn-r:#c2412d;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12151b; --card:#1a1f28; --ink:#e8ecf3; --muted:#a3adbd; --line:#8d98ab; --rand:#2e3643;
+      --browser:#1d3352; --browser-r:#6ea4f2;
+      --server:#3f3216;  --server-r:#e0aa4a;
+      --extern:#2f2450;  --extern-r:#a98bf0;
+      --neutral:#262c37; --neutral-r:#8d98ab;
+      --warn:#48211c;    --warn-r:#f08a78;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12151b; --card:#1a1f28; --ink:#e8ecf3; --muted:#a3adbd; --line:#8d98ab; --rand:#2e3643;
+    --browser:#1d3352; --browser-r:#6ea4f2;
+    --server:#3f3216;  --server-r:#e0aa4a;
+    --extern:#2f2450;  --extern-r:#a98bf0;
+    --neutral:#262c37; --neutral-r:#8d98ab;
+    --warn:#48211c;    --warn-r:#f08a78;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:1000px;margin:0 auto;padding:28px 16px 56px}
+  h1{font-size:1.7rem;margin:0 0 4px}
+  h2{font-size:1.2rem;margin:0 0 4px}
+  p{margin:0 0 12px}
+  .unter{color:var(--muted);margin-bottom:24px}
+  section{background:var(--card);border:1px solid var(--rand);border-radius:12px;padding:20px;margin-bottom:20px}
+  .bild{overflow-x:auto}
+  svg{display:block;width:100%;height:auto;min-width:640px}
+  svg text{fill:var(--ink);font:13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  svg .klein{font-size:11.5px;fill:var(--muted)}
+  svg .kopf{font-weight:600;font-size:14px}
+  svg .mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+  .browser{fill:var(--browser);stroke:var(--browser-r)}
+  .server{fill:var(--server);stroke:var(--server-r)}
+  .extern{fill:var(--extern);stroke:var(--extern-r)}
+  .neutral{fill:var(--neutral);stroke:var(--neutral-r)}
+  .warn{fill:var(--warn);stroke:var(--warn-r)}
+  .innen{fill:var(--card);stroke:var(--rand)}
+  .form{stroke-width:1.5}
+  .pfeil{fill:none;stroke:var(--line);stroke-width:1.5}
+  .spitze{fill:var(--line)}
+  .legende{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.9rem;color:var(--muted);margin:12px 0 0}
+  .legende span{display:inline-flex;align-items:center;gap:6px}
+  .legende i{width:14px;height:14px;border-radius:3px;border:1.5px solid;display:inline-block}
+  table{border-collapse:collapse;width:100%;font-size:.93rem}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rand);vertical-align:top}
+  th{color:var(--muted);font-weight:600}
+  code{font-family:ui-monospace,Consolas,monospace;font-size:.9em}
+  .tabelle{overflow-x:auto}
+  ul{margin:0;padding-left:20px}
+  li{margin-bottom:6px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Local AI Studio</h1>
+  <p class="unter">Architekturbild und Programmablaufplan (PAP) · Quelle: <code>ai-studio-local/server.js</code> und <code>public/index.html</code> · Stand 14.11.2026</p>
+
+  <section>
+    <h2>1. Architektur: Wer spricht mit wem?</h2>
+    <p>Die App besteht aus zwei Dateien. Der Browser zeigt die Oberfläche, ein kleiner Express-Server hält den API-Schlüssel und reicht Anfragen an Google Gemini weiter.</p>
+    <div class="bild">
+    <svg viewBox="-10 0 980 440" role="img" aria-label="Architektur: Browser, Express-Server und Gemini API">
+      <defs>
+        <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path class="spitze" d="M0 0 L10 5 L0 10 z"/>
+        </marker>
+      </defs>
+
+      <!-- Browser -->
+      <rect class="browser form" x="0" y="20" width="250" height="400" rx="10"/>
+      <text class="kopf" x="125" y="46" text-anchor="middle">Browser</text>
+      <text class="klein" x="125" y="63" text-anchor="middle">public/index.html</text>
+      <rect class="innen" x="16" y="80" width="218" height="190" rx="6"/>
+      <text class="kopf" x="28" y="102">Oberfläche</text>
+      <text x="28" y="126">Chat mit Antwortstrom</text>
+      <text x="28" y="148">Modellwahl</text>
+      <text x="28" y="170">Systemprompt und Vorlagen</text>
+      <text x="28" y="192">Werkzeuge: Suche, Bild</text>
+      <text x="28" y="214">Regler: Temperatur, Top-P</text>
+      <text x="28" y="236">Export: JSON, Markdown, HTML</text>
+      <rect class="innen" x="16" y="286" width="218" height="116" rx="6"/>
+      <text class="kopf" x="28" y="308">localStorage</text>
+      <text x="28" y="332">Chat-Verlauf (höchstens 50)</text>
+      <text x="28" y="354">gewähltes Modell</text>
+      <text class="klein" x="28" y="384">bleibt nur in diesem Browser</text>
+
+      <!-- Server -->
+      <rect class="server form" x="355" y="20" width="250" height="400" rx="10"/>
+      <text class="kopf" x="480" y="46" text-anchor="middle">Express-Server</text>
+      <text class="klein" x="480" y="63" text-anchor="middle">server.js · Port 8080</text>
+      <g class="mono">
+        <rect class="innen" x="371" y="80"  width="218" height="30" rx="5"/><text x="381" y="100">GET  /api/status</text>
+        <rect class="innen" x="371" y="116" width="218" height="30" rx="5"/><text x="381" y="136">POST /api/key</text>
+        <rect class="innen" x="371" y="152" width="218" height="30" rx="5"/><text x="381" y="172">GET  /api/models</text>
+        <rect class="innen" x="371" y="188" width="218" height="30" rx="5"/><text x="381" y="208">POST /api/chat   (Strom)</text>
+        <rect class="innen" x="371" y="224" width="218" height="30" rx="5"/><text x="381" y="244">POST /api/tokens</text>
+        <rect class="innen" x="371" y="260" width="218" height="30" rx="5"/><text x="381" y="280">POST /api/image</text>
+      </g>
+      <rect class="warn form" x="371" y="322" width="218" height="80" rx="6"/>
+      <text class="kopf" x="383" y="346">.env</text>
+      <text class="mono" x="383" y="368">GEMINI_API_KEY</text>
+      <text class="klein" x="383" y="388">geheim, verlässt den Server nicht</text>
+      <path class="pfeil" d="M480 290 V322" marker-end="url(#p1)" marker-start="url(#p1)"/>
+
+      <!-- Gemini -->
+      <rect class="extern form" x="710" y="20" width="250" height="400" rx="10"/>
+      <text class="kopf" x="835" y="46" text-anchor="middle">Google Gemini API</text>
+      <text class="klein" x="835" y="63" text-anchor="middle">Internet · über @google/genai</text>
+      <rect class="innen" x="726" y="80" width="218" height="58" rx="6"/>
+      <text class="mono" x="738" y="103">generateContentStream</text>
+      <text class="klein" x="738" y="123">Chat-Antwort in Stücken</text>
+      <rect class="innen" x="726" y="150" width="218" height="58" rx="6"/>
+      <text class="mono" x="738" y="173">countTokens</text>
+      <text class="klein" x="738" y="193">Zähler unter dem Eingabefeld</text>
+      <rect class="innen" x="726" y="220" width="218" height="58" rx="6"/>
+      <text class="mono" x="738" y="243">generateContent</text>
+      <text class="klein" x="738" y="263">Bild-Erzeugung</text>
+      <rect class="innen" x="726" y="290" width="218" height="58" rx="6"/>
+      <text class="mono" x="738" y="313">googleSearch</text>
+      <text class="klein" x="738" y="333">Werkzeug „Suche" im Chat</text>
+
+      <!-- Verbindungen -->
+      <text class="klein" x="302" y="152" text-anchor="middle">fetch /api/…</text>
+      <path class="pfeil" d="M250 162 H355" marker-end="url(#p1)"/>
+      <path class="pfeil" d="M355 212 H250" marker-end="url(#p1)"/>
+      <text class="klein" x="302" y="230" text-anchor="middle">Antwortstrom</text>
+      <text class="klein" x="302" y="245" text-anchor="middle">text · done · error</text>
+
+      <text class="klein" x="657" y="152" text-anchor="middle">HTTPS</text>
+      <path class="pfeil" d="M605 162 H710" marker-end="url(#p1)"/>
+      <path class="pfeil" d="M710 212 H605" marker-end="url(#p1)"/>
+      <text class="klein" x="657" y="230" text-anchor="middle">Antwort</text>
+    </svg>
+    </div>
+    <div class="legende">
+      <span><i style="background:var(--browser);border-color:var(--browser-r)"></i>läuft im Browser</span>
+      <span><i style="background:var(--server);border-color:var(--server-r)"></i>läuft auf dem eigenen Rechner</span>
+      <span><i style="background:var(--extern);border-color:var(--extern-r)"></i>läuft bei Google</span>
+      <span><i style="background:var(--warn);border-color:var(--warn-r)"></i>Geheimnis</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Programmablaufplan: Eine Nachricht senden</h2>
+    <p>Der Ablauf von <code>sendMessage()</code> und <code>streamResponse()</code> im Browser sowie <code>/api/chat</code> auf dem Server. Rauten sind Entscheidungen, abgerundete Formen sind Start und Ende.</p>
+    <div class="bild">
+    <svg viewBox="0 0 900 1190" role="img" aria-label="Programmablaufplan Nachricht senden">
+      <defs>
+        <marker id="p2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path class="spitze" d="M0 0 L10 5 L0 10 z"/>
+        </marker>
+      </defs>
+
+      <!-- Start -->
+      <rect class="neutral form" x="350" y="20" width="200" height="40" rx="20"/>
+      <text x="450" y="45" text-anchor="middle">Start: Enter oder Senden</text>
+      <path class="pfeil" d="M450 60 V80" marker-end="url(#p2)"/>
+
+      <!-- D1 -->
+      <path class="browser form" d="M450 80 L570 120 L450 160 L330 120 Z"/>
+      <text x="450" y="116" text-anchor="middle">Läuft schon</text>
+      <text x="450" y="133" text-anchor="middle">eine Antwort?</text>
+      <text class="klein" x="590" y="112">ja</text>
+      <path class="pfeil" d="M570 120 H660" marker-end="url(#p2)"/>
+      <rect class="browser form" x="660" y="96" width="200" height="48" rx="6"/>
+      <text x="760" y="125" text-anchor="middle">Strom abbrechen</text>
+      <path class="pfeil" d="M760 144 V180" marker-end="url(#p2)"/>
+      <rect class="neutral form" x="700" y="180" width="120" height="40" rx="20"/>
+      <text x="760" y="205" text-anchor="middle">Ende</text>
+      <text class="klein" x="460" y="180">nein</text>
+      <path class="pfeil" d="M450 160 V190" marker-end="url(#p2)"/>
+
+      <!-- D2 -->
+      <path class="browser form" d="M450 190 L570 230 L450 270 L330 230 Z"/>
+      <text x="450" y="235" text-anchor="middle">Eingabe leer?</text>
+      <text class="klein" x="590" y="248">ja</text>
+      <path class="pfeil" d="M570 230 H760 V220" marker-end="url(#p2)"/>
+      <text class="klein" x="460" y="288">nein</text>
+      <path class="pfeil" d="M450 270 V306" marker-end="url(#p2)"/>
+
+      <!-- P1 -->
+      <rect class="browser form" x="330" y="306" width="240" height="52" rx="6"/>
+      <text x="450" y="328" text-anchor="middle">Chat anlegen, falls keiner offen ist</text>
+      <text x="450" y="346" text-anchor="middle">Nachricht anhängen, Titel setzen</text>
+      <path class="pfeil" d="M450 358 V386" marker-end="url(#p2)"/>
+
+      <!-- P2 -->
+      <rect class="browser form" x="330" y="386" width="240" height="48" rx="6"/>
+      <text x="450" y="415" text-anchor="middle">Platzhalter „tippt …" anzeigen</text>
+      <path class="pfeil" d="M450 434 V470" marker-end="url(#p2)"/>
+
+      <!-- D3 -->
+      <path class="browser form" d="M450 470 L570 510 L450 550 L330 510 Z"/>
+      <text x="450" y="506" text-anchor="middle">Bild-Werkzeug</text>
+      <text x="450" y="523" text-anchor="middle">aktiv?</text>
+      <text class="klein" x="590" y="502">ja</text>
+      <path class="pfeil" d="M570 510 H660" marker-end="url(#p2)"/>
+      <path class="server form" d="M672 486 H860 L848 534 H660 Z"/>
+      <text x="760" y="515" text-anchor="middle">POST /api/image</text>
+      <path class="pfeil" d="M760 534 V562" marker-end="url(#p2)"/>
+      <rect class="browser form" x="660" y="562" width="200" height="52" rx="6"/>
+      <text x="760" y="584" text-anchor="middle">Bild anzeigen,</text>
+      <text x="760" y="602" text-anchor="middle">sonst Text oder Hinweis</text>
+      <path class="pfeil" d="M760 614 V636 H880 V1075 H570" marker-end="url(#p2)"/>
+      <text class="klein" x="460" y="568">nein</text>
+      <path class="pfeil" d="M450 550 V586" marker-end="url(#p2)"/>
+
+      <!-- IO chat -->
+      <path class="server form" d="M342 586 H570 L558 634 H330 Z"/>
+      <text x="450" y="607" text-anchor="middle">POST /api/chat</text>
+      <text class="klein" x="450" y="624" text-anchor="middle">Modell, Verlauf, Systemprompt, Regler</text>
+      <path class="pfeil" d="M450 634 V670" marker-end="url(#p2)"/>
+
+      <!-- D4 -->
+      <path class="server form" d="M450 670 L570 710 L450 750 L330 710 Z"/>
+      <text x="450" y="706" text-anchor="middle">API-Schlüssel</text>
+      <text x="450" y="723" text-anchor="middle">vorhanden?</text>
+      <text class="klein" x="284" y="702">nein</text>
+      <path class="pfeil" d="M330 710 H250" marker-end="url(#p2)"/>
+      <rect class="warn form" x="50" y="684" width="200" height="52" rx="6"/>
+      <text x="150" y="706" text-anchor="middle">Antwort 401</text>
+      <text class="klein" x="150" y="724" text-anchor="middle">erscheint nicht im Chat</text>
+      <path class="pfeil" d="M150 736 V770 H24 V1075 H330" marker-end="url(#p2)"/>
+      <text class="klein" x="460" y="768">ja</text>
+      <path class="pfeil" d="M450 750 V776" marker-end="url(#p2)"/>
+
+      <!-- P3 -->
+      <rect class="extern form" x="330" y="776" width="240" height="48" rx="6"/>
+      <text x="450" y="797" text-anchor="middle">Gemini erzeugt die Antwort</text>
+      <text class="klein" x="450" y="814" text-anchor="middle">generateContentStream</text>
+      <path class="pfeil" d="M450 824 V860" marker-end="url(#p2)"/>
+
+      <!-- D5 -->
+      <path class="browser form" d="M450 860 L570 900 L450 940 L330 900 Z"/>
+      <text x="450" y="896" text-anchor="middle">Nächstes Ereignis</text>
+      <text x="450" y="913" text-anchor="middle">im Strom?</text>
+
+      <text class="klein" x="276" y="892">text</text>
+      <path class="pfeil" d="M330 900 H240" marker-end="url(#p2)"/>
+      <rect class="browser form" x="60" y="874" width="180" height="52" rx="6"/>
+      <text x="150" y="896" text-anchor="middle">Text anhängen,</text>
+      <text x="150" y="914" text-anchor="middle">neu darstellen</text>
+      <path class="pfeil" d="M150 874 V842 H450" marker-end="url(#p2)"/>
+
+      <text class="klein" x="578" y="892">error</text>
+      <path class="pfeil" d="M570 900 H620" marker-end="url(#p2)"/>
+      <rect class="warn form" x="620" y="874" width="170" height="52" rx="6"/>
+      <text x="705" y="896" text-anchor="middle">Fehlermeldung</text>
+      <text x="705" y="914" text-anchor="middle">in der Sprechblase</text>
+      <path class="pfeil" d="M705 926 V1075 H570" marker-end="url(#p2)"/>
+
+      <text class="klein" x="460" y="958">done</text>
+      <path class="pfeil" d="M450 940 V966" marker-end="url(#p2)"/>
+
+      <!-- P4 -->
+      <rect class="browser form" x="330" y="966" width="240" height="52" rx="6"/>
+      <text x="450" y="988" text-anchor="middle">Token-Zahl und Dauer anzeigen,</text>
+      <text x="450" y="1006" text-anchor="middle">Code einfärben</text>
+      <path class="pfeil" d="M450 1018 V1049" marker-end="url(#p2)"/>
+
+      <!-- P5 -->
+      <rect class="browser form" x="330" y="1049" width="240" height="52" rx="6"/>
+      <text x="450" y="1071" text-anchor="middle">Senden-Knopf zurücksetzen,</text>
+      <text x="450" y="1089" text-anchor="middle">Chats in localStorage speichern</text>
+      <path class="pfeil" d="M450 1101 V1130" marker-end="url(#p2)"/>
+
+      <!-- Ende -->
+      <rect class="neutral form" x="390" y="1130" width="120" height="40" rx="20"/>
+      <text x="450" y="1155" text-anchor="middle">Ende</text>
+    </svg>
+    </div>
+    <div class="legende">
+      <span><i style="background:var(--browser);border-color:var(--browser-r)"></i>Schritt im Browser</span>
+      <span><i style="background:var(--server);border-color:var(--server-r)"></i>Schritt auf dem Server</span>
+      <span><i style="background:var(--extern);border-color:var(--extern-r)"></i>Schritt bei Google</span>
+      <span><i style="background:var(--warn);border-color:var(--warn-r)"></i>Fehlerfall</span>
+      <span>Schräges Kästchen = Anfrage an den Server</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Schnittstellen des Servers</h2>
+    <div class="tabelle">
+    <table>
+      <tr><th>Aufruf</th><th>Zweck</th><th>Antwort</th></tr>
+      <tr><td><code>GET /api/status</code></td><td>Ist ein Schlüssel gesetzt?</td><td><code>hasKey</code> und die ersten 8 Zeichen</td></tr>
+      <tr><td><code>POST /api/key</code></td><td>Schlüssel speichern</td><td>schreibt ihn in <code>.env</code></td></tr>
+      <tr><td><code>GET /api/models</code></td><td>Modelle für die Auswahl</td><td>feste Liste mit vier Modellen</td></tr>
+      <tr><td><code>POST /api/chat</code></td><td>Chat-Antwort</td><td>Strom aus <code>text</code>, <code>done</code>, <code>error</code></td></tr>
+      <tr><td><code>POST /api/tokens</code></td><td>Tokens der Eingabe zählen</td><td><code>count</code></td></tr>
+      <tr><td><code>POST /api/image</code></td><td>Bild erzeugen</td><td>Bild als Data-URL oder Text</td></tr>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. Beim Lesen aufgefallen</h2>
+    <ul>
+      <li><strong>Fehlender Schlüssel bleibt stumm.</strong> <code>/api/chat</code> antwortet dann mit 401 als JSON. Der Browser erwartet aber einen Strom und zeigt nichts an, die Sprechblase bleibt auf „tippt …" stehen.</li>
+      <li><strong>Die Modellliste ist fest eingetragen.</strong> Neue oder abgeschaltete Gemini-Modelle erscheinen erst nach einer Änderung in <code>server.js</code>. Das gilt auch für das Bildmodell.</li>
+      <li><strong>„Offline" stimmt nicht.</strong> Die README nennt die App offline-fähig. Jede Antwort kommt aber von der Gemini API im Internet.</li>
+      <li><strong>Kein Zugriffsschutz.</strong> Wer den Port 8080 erreicht, kann den Schlüssel überschreiben und auf dessen Kosten chatten. Für den eigenen Rechner ist das in Ordnung, für ein Netzwerk nicht.</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>
