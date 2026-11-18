@@ -5,6 +5,13 @@
 > - v2: [[../../KI-Fabrik-Auftraege/ord_20260706_221950_Trace_AI_Commerce_v2|ord_20260706_221950]] (06.07.2026, im Sprint Review vom CEO abgenommen)
 > - Klickbarer Prototyp v2: `../../KI-Fabrik-Auftraege/Prototypen/ord_20260706_221950.html`
 
+> **Infrastruktur/Hardware:** [[Plannung/TRACE_AI_Bauplan_v2|TRACE AI Bauplan v2]] (18.11.2026):
+> korrigierte und zusammengeführte Architektur zum BOSGAME-VTA-439-Bauplan (PDF vom 17.11.).
+> 12 Korrekturen, Mermaid-Diagramm, 4 offene CEO-Entscheidungen.
+> **Leitbild seit 18.11.2026:** TRACE Commerce ist eine von vier Produktlinien der Plattform
+> „TRACE AI – One Platform. Many Lives." (IT · Care · Commerce · Vision auf gemeinsamem TRACE AI Core),
+> Priorität 3 nach TRACE IT und TRACE Care. Siehe Abschnitt 0 im Bauplan.
+
 ## Zielgruppe
 
 Onlinehändler · Content-Creator · Online-Kurs-Anbieter
