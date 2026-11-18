@@ -54,6 +54,10 @@ venv/
 
 # Private Notizen (falls du private Dinge nicht teilen willst)
 00_Wissen/01_Persönlich/Personal/Private/
+00_Wissen/01_Persönlich/Personal/*.pdf
+00_Wissen/01_Persönlich/Personal/*.docx
+00_Wissen/01_Persönlich/Personal/*.html
+00_Wissen/01_Persönlich/Personal/_cv-quelle/
 
 # Claude-spezifisch (falls nötig)
 .claude/
