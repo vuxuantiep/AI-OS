@@ -29,6 +29,7 @@ Geld als zehn optimistische Businesspläne.
 - Wer fragt aktiv danach? (Foren-Fragen, Reddit, Kommentare unter Konkurrenz-Content)
 - Konkurrenzanalyse: Wer bedient den Bedarf schon, wie gut, welche Lücke bleibt?
 - Zahlungsbereitschaft: Zahlt die Zielgruppe für so etwas nachweislich irgendwo Geld?
+- **Realer Bedarf aus Zielgruppen-Diskussionen (Pflicht):** In Foren, Communities, Gruppen und Chats suchen, in denen die Zielgruppe selbst schreibt (z. B. DATEV-Community, Fachforen, Reddit, LinkedIn-/Facebook-Gruppen, Branchenportale). Mindestens 3 belegte, aktuelle Aussagen aus dem Alltag der Zielgruppe mit Link und Datum. Ohne solche Belege wird der Marktbedarf auf höchstens 5/10 gedeckelt.
 
 ### 2. Einnahmequellen-Inventar (vollständig, mit Reifezeit)
 Für JEDE Quelle angeben: Voraussetzungen (z. B. YouTube-Partnerprogramm: 1.000 Abos
@@ -85,5 +86,11 @@ Zusätzlich eine **Management-Summary in 5 Sätzen** (Klartext, keine Schönfär
 3. **Arbeitszeit ist Kostenfaktor Nr. 1.** Ein „Gewinn" von 300 €/Monat bei 30 h/Woche ist ein Verlustgeschäft — immer €/h ausweisen.
 4. **Die Empfehlung ersetzt NICHT die Freigabe:** Status bleibt `WARTET_AUF_FREIGABE`, bis der CEO explizit freigibt. Erst danach darf die Umsetzung (Phase 1+) starten. Konzeptarbeit/Planung ist vom Gate ausgenommen.
 5. **Nachprüfung:** 3 Monate nach Start Prognose vs. Ist vergleichen und das Dokument aktualisieren — daraus lernen die nächsten Prüfungen.
+6. **Datenaktualität prüfen (seit 24.11.2026):**
+   - Jede Quelle bekommt Datum bzw. Erhebungsjahr und den Status **aktuell** (aus den letzten 24 Monaten) oder **Archiv**.
+   - Archivdaten dürfen nicht als heutige Marktlage dargestellt werden.
+   - Bei der Recherche gezielt nach aktuellen Daten suchen, mit dem Jahr in der Suchanfrage.
+   - Annahmen über Zielgruppen, etwa Sprache, Verhalten oder Anteil an der Kundschaft, ausdrücklich als „Annahme – im Gespräch prüfen" kennzeichnen.
+   - Anlass: Eine rund 10 Jahre alte Annahme über vietnamesische Kanzlei-Mandanten wurde vom CEO als realitätsfern korrigiert.
 
 #wichtig #wirtschaftlichkeit #gate
