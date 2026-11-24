@@ -38,7 +38,7 @@
 - **Pflicht:** Anbindung an die Telematikinfrastruktur seit **1. Juli 2025** verpflichtend (§ 341 Abs. 8 / § 360 Abs. 8 SGB V) – laut DAK sind rund **70 % von ~32.000 Einrichtungen** noch nicht angebunden (Erhebungsdatum unklar). → Die Branche **muss** digitalisieren.
 - **Förderung:** § 8 Abs. 8 SGB XI – Pflegekasse zahlt **40 % bis 12.000 € je Einrichtung** für Digitalisierungsmaßnahmen, laut vdek/Paritätischem bis **2030** (aktuelle GKV-Richtlinie prüfen). → Dein Preis wird für den Kunden **um 40 % günstiger**. Starkes Verkaufsargument, gerade bei knappen Budgets.
 - **IAM-Schmerz sehr hoch:** hohe Fluktuation, Teilzeit, Aushilfen, geteilte Tablets/Smartphones in der Tour → Ein- und Austritte, Passwortchaos, ehemalige Mitarbeitende mit Zugriff. Genau der Joiner-Mover-Leaver-Prozess aus deinem IAM-Lab.
-- **KI-Schmerz hoch:** Dokumentationslast, Übergabeberichte, **Sprachbarriere** – viele ausländische Pflegekräfte und Azubis, darunter viele aus **Vietnam**. Du sprichst Vietnamesisch → **echtes Alleinstellungsmerkmal**.
+- **KI-Schmerz hoch:** Dokumentationslast, Übergabeberichte, **Sprachbarriere** – viele ausländische Pflegekräfte und Azubis, darunter viele aus **Vietnam**. *(Korrektur 24.11.: ungeprüfte Annahme – ob Sprache in Pflegediensten heute noch ein echtes Problem ist, wird im Gespräch geprüft, nicht beworben.)*
 - **Souveränität:** Gesundheitsdaten (Art. 9 DSGVO) → lokale KI ist kein Luxus, sondern Pflicht.
 - **Dein Innenblick:** Gesundheitswesen (CGM Turbomed in Praxen, NAVIS-KIS am UKE) → Fachbegriffe, Abläufe, TI-Umfeld sind dir vertraut.
 - **Hürden:** Leitung ist überlastet und schwer erreichbar; Pflegesoftware-Anbieter (oft Cloud) setzen den Rahmen; Budget knapp (Förderung gleicht aus).
@@ -79,10 +79,10 @@
 ### USP-Satz (lange Variante mit „ohne")
 > Ich helfe ambulanten Pflegediensten, neue Pflegekräfte am ersten Tag sicher arbeitsfähig zu machen und Berichte in der halben Zeit zu schreiben – mit KI und Zugangsverwaltung, die im eigenen Haus laufen, **ohne dass Patientendaten in eine fremde Cloud gehen** und mit 40 % Förderung durch die Pflegekasse.
 
-Wettbewerber-Check: Ein generischer IT-Dienstleister kann „Gesundheitswesen-Erfahrung + Vietnamesisch + lokale KI + IAM" nicht wortgleich behaupten. ✅
+Wettbewerber-Check: Ein generischer IT-Dienstleister kann „Gesundheitswesen-Erfahrung + Pflegesoftware-Wissen + lokale KI + IAM" nicht wortgleich behaupten. ✅
 
 ### Elevator-Pitch (2 Sätze)
-> Ich helfe ambulanten Pflegediensten, Ein- und Austritte von Mitarbeitenden in Minuten statt Tagen zu erledigen und Pflegeberichte schneller zu schreiben. Mit einer KI, die bei Ihnen im Haus läuft und auch Vietnamesisch und andere Sprachen kann – gefördert zu 40 % über § 8 Abs. 8 SGB XI.
+> Ich helfe ambulanten Pflegediensten, Ein- und Austritte von Mitarbeitenden in Minuten statt Tagen zu erledigen und Pflegeberichte schneller zu schreiben. Mit einer KI, die bei Ihnen im Haus läuft – gefördert zu 40 % über § 8 Abs. 8 SGB XI.
 
 ### Headline (Website / LinkedIn)
 - **Vorher:** „IT Infrastructure, IAM & AI Automation"
@@ -101,7 +101,7 @@ Wettbewerber-Check: Ein generischer IT-Dienstleister kann „Gesundheitswesen-Er
 | Stufe | Inhalt | Preis netto (Annahme) |
 |---|---|---|
 | **Pflege-Digital-Check „in a Day"** | Zugänge/Konten, Geräte, Datenflüsse, Schatten-KI, TI-Stand (nur Bestandsaufnahme), förderfähige Maßnahmen nach § 8 Abs. 8 SGB XI → Ampelbericht + Maßnahmen- und Kostenaufstellung für den Förderantrag | 690 € |
-| **Pflege-Arbeitsplatz-Box** | Keycloak-Zugangsverwaltung mit MFA für Büro + Tablets, Ein-/Austritt-Ablauf, lokale KI (Berichtsentwürfe, Übersetzung DE↔VI u. a., QM-Handbuch-Suche), Protokollierung, 2 Schulungen | 3.900 € + Hardware; **förderfähig prüfen** → Kunde zahlt effektiv ≈ 60 % |
+| **Pflege-Arbeitsplatz-Box** | Keycloak-Zugangsverwaltung mit MFA für Büro + Tablets, Ein-/Austritt-Ablauf, lokale KI (Berichtsentwürfe, QM-Handbuch-Suche; Übersetzung nur falls im Gespräch nachgefragt), Protokollierung, 2 Schulungen | 3.900 € + Hardware; **förderfähig prüfen** → Kunde zahlt effektiv ≈ 60 % |
 | **Betrieb** | Updates, Backup, Monitoring, **Ein-/Austritte von Mitarbeitenden inklusive** (bis X pro Monat) | 249 €/Monat |
 
 Grenzen: KI schreibt **Entwürfe**, die Pflegefachkraft prüft und zeichnet; keine Diagnose-/Therapievorschläge (sonst Medizinprodukte-Thema); TI-Konnektor/Pflegesoftware bleiben beim jeweiligen Anbieter.
@@ -118,7 +118,7 @@ Grenzen: KI schreibt **Entwürfe**, die Pflegefachkraft prüft und zeichnet; kei
 - [ ] Hauptsegment Pflege bestätigen (oder bei Kanzleien bleiben)
 - [ ] Gate neu rechnen: Pflege-Preise mit Förderung, längere Erreichbarkeit der Leitung → [[wirtschaftlichkeit-souveraene-ki-iam]] aktualisieren
 - [ ] Förderfähigkeit der Box-Bausteine an der aktuellen GKV-Richtlinie/Orientierungshilfe prüfen
-- [ ] Vietnamesisch-Übersetzungsqualität lokaler Modelle testen (Demo-Kernstück)
+- [ ] ~~Vietnamesisch-Übersetzung als Demo-Kernstück~~ (Korrektur 24.11.: entfällt; Demo-Kernstück = Zugangsverwaltung + Berichts-/Briefentwürfe)
 
 ## 8. CEO-Entscheidung 24.11.2026: Ein Kern, zwei Editionen
 
@@ -131,19 +131,21 @@ Grenzen: KI schreibt **Entwürfe**, die Pflegefachkraft prüft und zeichnet; kei
 
 Anwaltskanzlei und Onlinehändler bleiben **draußen**.
 
+> ⚠️ **Korrektur CEO 24.11.2026 (Realitätscheck):** Vietnamesische Mandanten sind in typischen Kanzleien nur **≈ 10–30 %** der Mandanten und sprechen heute **gut Deutsch**. Eine „Sprachbarriere" als Verkaufsargument ist veraltet (Stand vor ~10 Jahren). Daher: **kein Übersetzungs-/VI-Onboarding-Produkt** für Kanzleien. Die vietnamesische Community bleibt nur ein **Vertrauens- und Akquisekanal** (Empfehlungen, Netzwerk), kein Produktmerkmal. Die Abschnitte 8.1–8.3 und 8.5 sind entsprechend neu gefasst. Auch in der Pflege ist „Vietnamesisch" nur noch eine **ungeprüfte Annahme** und wird im Gespräch getestet, nicht beworben.
+
 ### 8.1 Wie zwei Segmente trotzdem „1 Mensch · 1 Lösung" bleiben
 
 Die ITBG-Warnung („mehrere Zielgruppen = zu breit") gilt für die **Botschaft**, nicht für die Technik. Deshalb:
 
 | Ebene | Gemeinsam | Getrennt |
 |---|---|---|
-| Technik (≈ 80 %) | Keycloak-Zugangsverwaltung, lokale KI, Übersetzung DE↔VI, Backup, Monitoring, Betrieb | – |
+| Technik (≈ 80 %) | Keycloak-Zugangsverwaltung, lokale KI, Backup, Monitoring, Betrieb | – |
 | Branchenwissen | – | **DATEV** vs. **Pflegesoftware + TI-Pflege** |
 | Botschaft | Absender TRACE IT / vuxuantiep.de | **zwei Leistungsseiten**, zwei Headlines, nie gemischt |
 | Akquise | – | zwei getrennte 30er-Listen |
 
-**Gemeinsamer roter Faden:** *„Vertrauliche Daten bleiben im Haus – und niemand fällt durch die Sprachbarriere."*
-In beiden Branchen ist die vietnamesische Community der Hebel: **Mandanten** (Kanzlei) und **Pflegekräfte/Azubis** (Pflege).
+**Gemeinsamer roter Faden:** *„Vertrauliche Daten bleiben im Haus – und Ihr Team schafft die aktuellen Pflichtthemen ohne Zusatzpersonal."*
+Beide Branchen haben **Fachkräftemangel** und **aktuelle Digitalpflichten** (Kanzlei: E-Rechnung bei Mandanten, Pflege: TI-Anbindung). Genau dort entlasten Zugangsverwaltung + lokale KI.
 
 ### 8.2 Nicht austauschbar = Kombination aus vier Bausteinen
 
@@ -152,27 +154,34 @@ In beiden Branchen ist die vietnamesische Community der Hebel: **Mandanten** (Ka
 | Branchensoftware | ja (DATEV-Systempartner, Pflegesoftware-Support gibt es viele) | **DATEV** (Unternehmen online, Belegbilder-Workflow, Kassenarchiv, SmartLogin, DATEVconnect-Schnittstellen) | **Pflegesoftware** (verbreitete Systeme in Hamburg ermitteln, 2 davon tief lernen) + TI-Pflege (SMC-B, KIM) |
 | Lokale, souveräne KI | ja (KI-Agenturen) | Mandantenbriefe, Bescheid-Erklärungen | Berichtsentwürfe, QM-Handbuch-Suche |
 | Zugangsverwaltung (IAM) | ja (Systemhäuser) | Mitarbeiter-SSO/MFA, Austritte | hohe Fluktuation, geteilte Tablets |
-| **Vietnamesisch** | selten | Mandanten verstehen ihre Steuer | Pflegekräfte verstehen Dokumentation |
+| Aktuelle Pflichtthemen umsetzen | teils | E-Rechnung-Pflicht der Mandanten (Empfang seit 2025, Ausstellung ab 2027/2028), GoBD-Archiv | TI-Pflicht seit 07/2025, Förderung § 8 Abs. 8 SGB XI |
 | **Alle vier zusammen** | **nein** ✅ | | |
 
-### 8.3 Kanzlei-Edition (Steuerkanzleien mit vietnamesischen Mandanten)
+Die vietnamesische Community ist **kein** fünfter Baustein im Produkt, sondern ein **Vertrauenskanal** für die Akquise (Empfehlungen über Unternehmer und Kanzleien, die du kennst).
 
-**Zielgruppe:** Steuerkanzleien in Hamburg + Umland (3–20 Mitarbeitende) mit **vielen vietnamesischen Einzelhandels-/Gastro-Mandanten** oder dem Wunsch, diese Gruppe zu gewinnen.
+### 8.3 Kanzlei-Edition (DATEV-Steuerkanzleien) – neu gefasst nach Korrektur
 
-**Schmerz der Kanzlei (in ihren Worten):** „Belege kommen im Schuhkarton", „Mandant versteht den Bescheid nicht und ruft dreimal an", „Kassennachschau – Mandant hat keine Ahnung von TSE", „Mitarbeitende nutzen heimlich ChatGPT".
+**Zielgruppe:** DATEV-Steuerkanzleien in Hamburg + Umland (3–20 Mitarbeitende), Mandantenmix aus Kleinunternehmen, Handel, Gastro, Handwerk. Kanzleien, die dich über die vietnamesische Community kennen, sind der **erste Akquisekanal**, nicht die Zielgruppe.
 
-**Headline:** „DATEV-Kanzleien: Vietnamesische Mandanten digital und verständlich betreuen – mit KI, die Ihre Kanzlei nie verlässt"
+**Schmerz der Kanzlei 2026/27 (zu prüfen im Gespräch):**
+- **Fachkräftemangel:** Steuerfachangestellte fehlen, Routinearbeit frisst Zeit.
+- **E-Rechnung:** Alle Unternehmen müssen seit 01.01.2025 E-Rechnungen empfangen können, bei mehr als 800.000 € Vorjahresumsatz ab 01.01.2027 auch ausstellen, ab 01.01.2028 alle (B2B). Die Mandanten fragen die Kanzlei, die Kanzlei hat keine Zeit für Technik-Einrichtung.
+- **Schatten-KI:** Mitarbeitende nutzen ChatGPT mit Mandantendaten (§ 203 StGB).
+- **IT-Sicherheit/Zugänge:** Austritte, MFA, Cyberversicherung fragt nach.
+
+**Headline:** „DATEV-Kanzleien: Mehr Mandanten schaffen ohne mehr Personal – mit KI, die Ihre Kanzlei nie verlässt"
 
 | Stufe | Inhalt | Preis netto (Annahme) |
 |---|---|---|
 | Kanzlei-Check „in a Day" | KI-/Datenabfluss, Konten/MFA, DATEV-Digitalisierungsgrad der Mandanten (Belegfluss) | 690 € |
-| **VI-Mandanten-Onboarding-Paket** | Anleitungen auf Vietnamesisch für DATEV-Belegupload/Kassenarchiv, Vorlagen für Belegnachforderungen und Bescheid-Erklärungen DE/VI, 1 Mandanten-Infoabend (VI) | 990 € je Kanzlei |
-| Kanzlei-KI-Box | Zugangsverwaltung + lokale KI (Briefe, Übersetzung, interne Arbeitshilfen), keine DATEV-Mandantendaten im MVP | 3.900 € + Hardware |
+| **Mandanten-Digital-Setup** (Kanzlei vermittelt, du richtest ein) | Technische Einrichtung beim Mandanten: E-Rechnung empfangen/ausstellen, Belegfluss in DATEV Unternehmen online, GoBD-gerechte Ablage. Festpreis, Ergebnis in 1 Tag | 490 € je Mandant (zahlt der Mandant) |
+| Kanzlei-KI-Box | Zugangsverwaltung + lokale KI (Mandantenbriefe, Zusammenfassungen, interne Arbeitshilfen), keine DATEV-Mandantendaten im MVP | 3.900 € + Hardware |
 | Betrieb | Updates, Modelle, Ein-/Austritte | 249 €/Monat |
 
-Kanzlei als **Multiplikator:** Eine Kanzlei bringt Zugang zu dutzenden vietnamesischen Kleinunternehmern – später evtl. eigenes Angebot (z. B. Kassen-/TSE-Einrichtung) **nur** in Absprache mit der Kanzlei, nie an ihr vorbei.
+Kanzlei als **Multiplikator:** Eine Kanzlei hat dutzende bis hunderte Mandanten, die zur E-Rechnung technische Hilfe brauchen. Die Kanzlei entlastet sich, indem sie an dich verweist, du lieferst Festpreis-Setups. Nie an der Kanzlei vorbei verkaufen.
+Hinweis: Gastro und Einzelhandel mit Endkunden (B2C) müssen keine E-Rechnungen **ausstellen**, aber Lieferantenrechnungen **empfangen** können. Für B2C-Mandanten ist das Setup deshalb kleiner.
 
-Grenzen: **keine Steuerberatung**, keine Buchhaltung (Steuerberatungsgesetz!). Du lieferst Technik, Prozesse und Übersetzung – die Kanzlei berät.
+Grenzen: **keine Steuerberatung**, keine Buchhaltung (Steuerberatungsgesetz!). Du lieferst Technik und Prozesse, die Kanzlei berät.
 
 ### 8.4 Pflege-Edition (unverändert aus Abschnitt 5)
 
@@ -185,7 +194,7 @@ Abgrenzung gegen die vielen Pflege-IT-Anbieter: **keine** eigene Pflegesoftware,
 |---|---|---|
 | 1–2 | Eigenen DATEV-Stand aufschreiben (was kann ich belegbar?) → Referenzsatz für die Website | Welche Pflegesoftware nutzen Hamburger Pflegedienste? (bei 10 Diensten fragen) |
 | 3–4 | DATEV-Belegworkflow + Kassenarchiv online durchspielen; prüfen: DATEV-Systempartner/Marketplace-Partner (Voraussetzungen, Kosten) | Top-2-Systeme: Demo/Handbuch, Partnerprogramme der Hersteller anfragen |
-| 5–8 | GoBD, Kassensicherungsverordnung (TSE) auf Laienniveau auf Vietnamesisch erklären können | TI-Pflege (SMC-B, KIM, eHBA) und Förderrichtlinie § 8 Abs. 8 SGB XI sicher erklären können |
+| 5–8 | E-Rechnung (Formate XRechnung/ZUGFeRD, Empfang in DATEV) und GoBD-Ablage technisch sicher einrichten können; 1 Muster-Setup im Lab | TI-Pflege (SMC-B, KIM, eHBA) und Förderrichtlinie § 8 Abs. 8 SGB XI sicher erklären können |
 
 ### 8.6 Zeit- und Entscheidungsregel
 - **Wochen 1–12:** beide Editionen parallel validieren, Zeit **50/50**, je **eine** 30er-Liste, je 5 Kontakte/Woche.

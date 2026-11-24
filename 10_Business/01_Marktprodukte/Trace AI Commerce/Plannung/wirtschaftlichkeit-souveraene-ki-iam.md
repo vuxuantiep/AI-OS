@@ -8,36 +8,36 @@
 
 ## ⚠️ Nachtrag 24.11.2026: Zwei Editionen (Kanzlei + Pflege)
 
-CEO-Entscheidung: Steuerkanzleien (mit vietnamesischen Mandanten, DATEV) **und** Pflegedienste parallel, gemeinsamer Technik-Kern. Siehe [[kundengruppen-positionierung]] Abschnitt 8.
-Neu: **VI-Mandanten-Onboarding-Paket** (990 €/Kanzlei). Pflege-Box ist zu 40 % förderfähig (§ 8 Abs. 8 SGB XI, bis 12.000 €) – der Listenpreis bleibt gleich, der Kunde zahlt effektiv weniger. Gerechnet wird mit dem Listenpreis.
+CEO-Entscheidung: DATEV-Steuerkanzleien **und** Pflegedienste parallel, gemeinsamer Technik-Kern. Siehe [[kundengruppen-positionierung]] Abschnitt 8.
+~~VI-Mandanten-Onboarding-Paket~~ → **korrigiert 24.11.:** ersetzt durch **Mandanten-Digital-Setup** (E-Rechnung/Belegfluss, 490 € je Mandant, von der Kanzlei vermittelt). Grund: vietnamesische Mandanten sind nur ≈ 10–30 % und sprechen gut Deutsch, eine Sprachbarriere ist kein tragfähiges Verkaufsargument. Pflege-Box ist zu 40 % förderfähig (§ 8 Abs. 8 SGB XI, bis 12.000 €) – der Listenpreis bleibt gleich, der Kunde zahlt effektiv weniger. Gerechnet wird mit dem Listenpreis.
 
 | | Konservativ (P70) | Basis (P50) | Optimistisch (P20) |
 |---|---|---|---|
 | Checks (Kanzlei + Pflege) | 5 | 9 (5 + 4) | 14 |
 | Boxen | 1 | 3 (2 Kanzlei + 1 Pflege) | 6 |
-| VI-Onboarding-Pakete | 1 | 3 | 6 |
+| Mandanten-Digital-Setups | 2 | 6 | 12 |
 | Betriebs-Kundenmonate | 4 | 15 | 33 |
 | Tagessätze | 4 | 6 | 12 |
 | Umsatz Checks (690 €) | 3.450 € | 6.210 € | 9.660 € |
 | Umsatz Boxen (3.900 €) | 3.900 € | 11.700 € | 23.400 € |
-| Umsatz VI-Onboarding (990 €) | 990 € | 2.970 € | 5.940 € |
+| Umsatz Mandanten-Digital-Setup (490 €) | 980 € | 2.940 € | 5.880 € |
 | Umsatz Betrieb (249 €/Mo) | 996 € | 3.735 € | 8.217 € |
 | Umsatz Tagessätze (760 €) | 3.040 € | 4.560 € | 9.120 € |
-| **Umsatz** | **12.376 €** | **29.175 €** | **56.337 €** |
+| **Umsatz** | **12.366 €** | **29.145 €** | **56.277 €** |
 | − einmalig (Demo, Rechtsberatung, 2 Leistungsseiten, Branchen-Lernmaterial) | −1.300 € | −1.300 € | −1.300 € |
 | − laufend (12 × 250 €) | −3.000 € | −3.000 € | −3.000 € |
-| **Ergebnis vor Steuern** | **8.076 €** | **24.875 €** | **52.037 €** |
+| **Ergebnis vor Steuern** | **8.066 €** | **24.845 €** | **51.977 €** |
 | Abo-Einnahmen Monat 12 | 249 €/Mo | 747 €/Mo | 1.494 €/Mo |
-| abrechenbare Stunden (Check 8 h, Box 30 h, VI-Paket 10 h, Betrieb 3 h/Mo, Tag 8 h) | ≈ 142 h | ≈ 285 h | ≈ 547 h |
+| abrechenbare Stunden (Check 8 h, Box 30 h, Mandanten-Setup 4 h, Betrieb 3 h/Mo, Tag 8 h) | ≈ 140 h | ≈ 279 h | ≈ 535 h |
 
-**Einordnung:** Gegenüber „nur Kanzlei" (Basis 23.235 €) nur **≈ +1.600 €** Ergebnis. Der eigentliche Vorteil ist die **Risikostreuung**: Bricht ein Segment ein, trägt das andere. Der Preis dafür ist **doppelte Akquise und doppeltes Branchenlernen**. Deshalb die Entscheidungsregel an Tag 90 (Gewinner-Edition bekommt 70 % der Zeit).
+**Einordnung:** Gegenüber „nur Kanzlei" (Basis 23.235 €) nur **≈ +1.600 €** Ergebnis. Die Mandanten-Setups sind niedrig angesetzt (6 im Basis-Szenario). Weil die E-Rechnung-Pflicht 2027/2028 jeden B2B-Mandanten trifft, liegt hier das größte **Aufwärtspotenzial** – vorausgesetzt, Kanzleien vermitteln wirklich. Der eigentliche Vorteil ist die **Risikostreuung**: Bricht ein Segment ein, trägt das andere. Der Preis dafür ist **doppelte Akquise und doppeltes Branchenlernen**. Deshalb die Entscheidungsregel an Tag 90 (Gewinner-Edition bekommt 70 % der Zeit).
 
 **Zusätzliche Risiken:**
-- **R8 Steuerberatungsgesetz:** Im VI-Onboarding nur Technik, Prozesse und Übersetzung, **keine** steuerliche Erklärung im Einzelfall. Die Kanzlei bleibt der Berater.
+- **R8 Steuerberatungsgesetz:** Im Mandanten-Setup nur Technik und Prozesse, **keine** steuerliche Erklärung im Einzelfall. Die Kanzlei bleibt der Berater.
 - **R9 Verzettelung:** Zwei Leistungsseiten, zwei Listen, zwei Lernpfade. Gegenmittel: gemeinsamer Technik-Kern, fester Wochenplan, Tag-90-Regel.
-- **R10 Übersetzungsqualität DE↔VI** lokaler Modelle ist ungetestet. Sie ist das Kernstück beider Demos und wird **vor** dem ersten Angebot getestet.
+- **R10 Annahmen ohne Kundengespräch:** Die erste Fassung enthielt eine veraltete Sprachbarriere-Annahme (vom CEO korrigiert). Jede Kernannahme (E-Rechnung-Hilfebedarf, Fachkräftemangel, Schatten-KI) wird in den ersten 10 Gesprächen je Edition geprüft, bevor Preise festgeschrieben werden.
 
-**Zusätzliche Auflagen:** K7 Tag-90-Entscheidung · K8 Vietnamesisch-Qualitätstest vor Demo · K9 Abgrenzung zum Steuerberatungsgesetz in der Leistungsbeschreibung.
+**Zusätzliche Auflagen:** K7 Tag-90-Entscheidung · K8 Kernannahmen in 10 Gesprächen je Edition prüfen · K9 Abgrenzung zum Steuerberatungsgesetz in der Leistungsbeschreibung.
 Empfehlung bleibt **GO_MIT_AUFLAGEN**, Status **WARTET_AUF_FREIGABE**.
 
 ## Management-Summary (ursprünglich, nur Kanzlei)

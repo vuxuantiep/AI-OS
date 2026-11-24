@@ -58,7 +58,7 @@ Hinweis: Die Kanzlei-Positionierung lässt sich später ohne Umbau auf andere **
 | Extra (Tagessatz) | Neue Anwendungsfälle, Anbindung weiterer Dokumentquellen | 760 €/Tag |
 
 ### Was die KI tut – und was nicht
-- **Ja:** Mandantenbriefe/E-Mails entwerfen, Bescheide/Schriftverkehr zusammenfassen, interne Arbeitshilfen durchsuchen, Protokolle, Übersetzungen (z. B. Vietnamesisch für Mandanten).
+- **Ja:** Mandantenbriefe/E-Mails entwerfen, Bescheide/Schriftverkehr zusammenfassen, interne Arbeitshilfen durchsuchen, Protokolle.
 - **Nein:** keine steuerliche Beratung, keine automatische Bearbeitung in DATEV. DATEV wird **ergänzt, nicht ersetzt**.
 - Lokale Modelle (≈ 24 GB GPU) sind gut für Text und Zusammenfassung, aber schwächer bei rechtlichem Schlussfolgern → ehrlich so verkaufen.
 
@@ -87,7 +87,7 @@ Grundsätze: alles Open Source (Keycloak, Open WebUI, Ollama, LiteLLM, Qdrant/Ch
 1. **Inhalt statt Kaltakquise:** Leistungsseite + Blogartikel auf vuxuantiep.de („ChatGPT in der Steuerkanzlei – was erlaubt ist"), Live-Demo auf dem eigenen Gerät.
 2. **Kanzlei-IT-Betreuer und DATEV-Systempartner als Partner** – sie bieten oft keine lokale KI an. Du lieferst die Box, sie betreuen weiter die übrige IT.
 3. **Steuerberaterkammer/-verband Hamburg:** Vortrag oder Webinar zu KI und Berufsgeheimnis.
-4. **Vietnamesisch sprechende Kanzleien und Mandanten** als zweisprachiger Bonus.
+4. **Vietnamesische Community als Vertrauenskanal** (Empfehlungen), kein Sprach-Produkt – Mandanten sprechen gut Deutsch (Korrektur 24.11.).
 5. **Öffentlicher Sektor (ab Monat 9):** gezielt 3–5 openDesk-/Keycloak-Integratoren als Subunternehmer anschreiben; Referenz = eigene Kanzlei-Installationen + Lab.
 
 ## 5. 90-Tage-Plan
