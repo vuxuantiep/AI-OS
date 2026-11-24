@@ -1,6 +1,7 @@
 # Productized Service: Souveräne Open-Source-Infrastruktur mit IAM + KI
 
 > Erstellt 24.11.2026 · Status: **KONZEPT** (Gate: [[wirtschaftlichkeit-souveraene-ki-iam]], wartet auf CEO-Freigabe)
+> ⛔ **ABGELÖST 24.11.2026** durch [[productized-service-pflicht-digitalisierung]]. Die lokale KI-Box ist durch die Nachprüfung widerlegt (DATEV Copilot, KI in der Pflegesoftware).
 > ⚠️ **24.11.2026:** Zielgruppen-Analyse [[kundengruppen-positionierung]] empfiehlt **Pflegedienste statt Steuerkanzleien** als Hauptsegment (Kanzleien = Folgesegment). Entscheidung CEO offen.
 > Löst [[productized-service-praxis-it-check]] als Hauptrichtung ab (dort zurückgestellt, Bausteine wiederverwendbar).
 

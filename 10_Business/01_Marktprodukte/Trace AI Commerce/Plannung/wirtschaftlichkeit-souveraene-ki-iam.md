@@ -6,6 +6,14 @@
 
 #wirtschaftlichkeit #gate #trace-it
 
+## ⛔ Nachprüfung 24.11.2026 (Datenaktualität): Zahlen unten sind überholt
+
+Die Nachprüfung ([[kundengruppen-positionierung]] Abschnitt 9) hat ergeben:
+- **DATEV Copilot** (seit Mai 2026, kostenfreie Lizenz) und die **KI-Module der Pflegesoftware** machen die „lokale KI-Box" als Kernprodukt in beiden Branchen schwer verkäuflich.
+- Die Box-Umsätze (Basis 3 × 3.900 €) sind in dieser Form nicht haltbar.
+- Der neue Bedarf liegt bei Einführung und Betrieb der Pflicht-Digitalisierung in der Branchensoftware: DATEV-KI und E-Rechnung bzw. TI, KIM und elektronische Abrechnung ab 01.12.2026.
+- **Neuberechnung erst nach Angebotsumbau und den ersten 10 Gesprächen je Edition.** Status bleibt WARTET_AUF_FREIGABE; die Empfehlung ist bis dahin ausgesetzt.
+
 ## ⚠️ Nachtrag 24.11.2026: Zwei Editionen (Kanzlei + Pflege)
 
 CEO-Entscheidung: DATEV-Steuerkanzleien **und** Pflegedienste parallel, gemeinsamer Technik-Kern. Siehe [[kundengruppen-positionierung]] Abschnitt 8.
