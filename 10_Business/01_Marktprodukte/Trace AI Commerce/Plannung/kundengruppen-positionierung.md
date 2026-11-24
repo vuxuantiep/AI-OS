@@ -123,7 +123,7 @@ Grenzen: KI schreibt **Entwürfe**, die Pflegefachkraft prüft und zeichnet; kei
 ## 8. CEO-Entscheidung 24.11.2026: Ein Kern, zwei Editionen
 
 **Entscheidung:** Pflegedienste **und** Steuerkanzleien. Begründung des CEO:
-- DATEV-Wissen ist vorhanden und sicher.
+- ~~DATEV-Wissen ist vorhanden und sicher.~~ **Korrektur CEO 24.11.2026:** Das DATEV-Wissen wird erst aufgebaut. Bis es belegbar ist, wird es nicht öffentlich beworben; der Kanzlei-Reiter auf der Website ist ausgeblendet. Der Lernplan steht in 8.5.
 - In der Nische „lokale KI + DATEV + Vietnamesisch" gibt es wenig Konkurrenz.
 - Viele **vietnamesische Einzelhändler** (Imbisse, Asia-Märkte, Nagelstudios, Blumenläden) brauchen eine Steuerkanzlei, die sie versteht.
 - In der Pflege-IT gibt es viele Anbieter (Pflegesoftware-Hersteller, TI-Dienstleister).
