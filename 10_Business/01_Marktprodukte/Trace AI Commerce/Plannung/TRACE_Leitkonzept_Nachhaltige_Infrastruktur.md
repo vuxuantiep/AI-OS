@@ -1,6 +1,6 @@
 # TRACE Leitkonzept: Nachhaltige, anbieterunabhängige Infrastruktur
 
-> Entwurf v0.1 · 24.11.2026 · Status: **KONZEPT, zur Diskussion mit dem CEO**
+> Entwurf v0.2 · 24.11.2026, ergänzt 25.11.2026 (Abschnitt 1a) · Status: **KONZEPT, zur Diskussion mit dem CEO**
 > Übergeordnet zu [[TRACE_AI_Gesamtarchitektur]], [[TRACE_AI_Bauplan_v2]], [[productized-service-pflicht-digitalisierung]], [[kundengruppen-positionierung]], [[bewertung-datev-it-admin-und-datev-ki]].
 > Konzeptarbeit ist vom Wirtschaftlichkeits-Gate ausgenommen. **Jedes neue Produkt daraus braucht vor der Umsetzung sein eigenes Gate** (CLAUDE.md Regel 4).
 > Quellen: abgerufen am 24.11.2026, Typ in Klammern (Regel 6).
@@ -17,6 +17,24 @@
 - Die Beispiele von heute zeigen es: DATEV zieht ab Herbst 2026 in die Cloud, der DATEV Copilot ist plötzlich kostenlos, und die Pflegesoftware bringt eigene KI mit.
 - **Der Wert für den Kunden** liegt nicht im Werkzeug. Er liegt darin, dass Abläufe laufen, Daten sicher sind, Zugänge stimmen und das Team geschult ist. Und darin, dass er einen Werkzeugwechsel überlebt.
 - **Der Wert für TRACE** liegt in wiederverwendbaren Bausteinen: Checklisten, Skripte, Vorlagen, Schulungen, Betriebsabläufe. Sie stecken in jedem Productized Service und werden mit jedem Kunden besser.
+
+## 1a. Verkaufe Ergebnisse und Verantwortung (Ergänzung 25.11.2026)
+
+> **Wenn jeder eine KI in der Hand hat, verkaufen wir nicht Texte oder Code, sondern Ergebnisse und Verantwortung.**
+
+Der Satz entstand bei der Planung des Heimservers ([[2026-11-25_N5-Pro-Nutzungskonzept]]) und **bestätigt den Productized-Service-Ansatz**:
+
+| Wird durch KI billig | Bleibt knapp, darauf baut TRACE |
+|---|---|
+| Texte, einfacher Code, Übersetzungen | **Verantwortung und Haftung:** jemand steht dafür ein |
+| Standard-Recherche, allgemeines Wissen | **Anbindung an echte Systeme:** Turbomed, NAVIS, DATEV, TI, Netz, Backup |
+| Einzelne Werkzeuge und Modelle | **Eigene Daten und Zusammenhänge:** Prüflisten, Branchenwissen, Verlaufsdaten |
+| | **Vertrauen und Datenhoheit** (Grundsätze G3, G5) |
+| | **Die physische Welt:** Hardware, Einsatz vor Ort, Schulung |
+| | **Urteilsvermögen:** aus vielen KI-Vorschlägen das Richtige auswählen |
+| | **Beziehungen:** Empfehlungen und Abo-Kunden |
+
+**Folge für die Angebote:** Jeder Productized Service verspricht ein **Ergebnis mit Verantwortung**, z. B. „Ihre Praxis-IT läuft sicher, wir stehen dafür ein, Ihre Daten bleiben bei Ihnen.“ KI und Automatisierung sind **unser Werkzeug** und machen das Versprechen bezahlbar. Sie sind nicht das Produkt.
 
 ## 2. Sieben Grundsätze der Anbieterunabhängigkeit
 
