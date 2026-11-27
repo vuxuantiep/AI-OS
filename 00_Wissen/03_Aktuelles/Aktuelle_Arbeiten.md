@@ -6,6 +6,24 @@
 
 ---
 
+## 2026-11-27 — Gesamtarchitektur mit IAM, IGA und Audit (Bilddiagramm)
+
+**Was:** HTML-Seite mit zwei handgezeichneten SVG-Diagrammen:
+`04_Infrastruktur/Dokumentation/Architektur/AI-OS_Homelab_Gesamtarchitektur.html`.
+Bild 1 zeigt das ganze Homelab: Zugänge, Netz, acht Schichten auf dem Laptop, Pi4, Cloud-LLMs, GitHub
+und den geplanten N5 Pro. Bild 2 zeigt den Ablauf Join/Move/Leave mit Audit-Spur bis in den CISO
+Assistant. Dazu eine Lückentabelle und drei Phasen.
+
+**Gelernt:**
+- Keycloak läuft hier noch als **26.1.1** (gestoppt), aktuell ist 26.8.2. Seit 26.6 gibt es eigene
+  Lebenszyklus-Workflows, seit 26.8 ist SCIM offiziell unterstützt. Für echtes IGA (Rollenmodell,
+  Rezertifizierung, Funktionstrennung) reicht das aber nicht, dafür ist midPoint da.
+- **Move ist der heikle Fall:** Wird die alte Rolle nicht entfernt, sammeln sich Rechte an. Genau
+  das prüfen Auditoren.
+- midPoint und Wazuh sind zu schwer für den Laptop (RAM-Guard), deshalb erst auf dem N5 Pro.
+
+---
+
 ## 2026-11-27 — Homelab-Wissen: Open Source, Proxmox VE, OPNsense
 
 **Was:** Neue Notiz [[2026-11-27_Homelab-Open-Source-Proxmox-OPNsense]] mit fünf Kapiteln:

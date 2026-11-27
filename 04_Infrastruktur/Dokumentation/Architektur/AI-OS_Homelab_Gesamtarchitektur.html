@@ -1,0 +1,382 @@
+<title>AI-OS Homelab Architektur</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap">
+<style>
+/* Layout: technisches Planblatt - Kopf, zwei große Figuren, dazwischen Entscheidungstabellen. */
+:root {
+  --bg: #f4f6f6;
+  --paper: #ffffff;
+  --fg: #172026;
+  --muted: #5b6870;
+  --line: #c9d2d6;
+  --band: #eaeff0;
+  --band-id: #fbf1e3;
+  --accent: #a4500f;
+  --accent-tint: #fdf3e7;
+  --ok: #1f7a4a;
+  --off: #8a959b;
+  --off-fill: #eef1f2;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-head: "IBM Plex Sans Condensed", "IBM Plex Sans", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101518; --paper: #161d21; --fg: #e3e9ec; --muted: #9aa8af; --line: #34424a;
+    --band: #1b2429; --band-id: #2a2219; --accent: #f0a450; --accent-tint: #2c2216;
+    --ok: #4cc488; --off: #6d7a81; --off-fill: #1a2125; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101518; --paper: #161d21; --fg: #e3e9ec; --muted: #9aa8af; --line: #34424a;
+  --band: #1b2429; --band-id: #2a2219; --accent: #f0a450; --accent-tint: #2c2216;
+  --ok: #4cc488; --off: #6d7a81; --off-fill: #1a2125; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 40px; }
+header { display: grid; gap: 10px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-head); font-size: clamp(28px, 4vw, 42px); line-height: 1.1; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--font-head); font-size: 24px; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--font-head); font-size: 18px; margin: 0; }
+p { margin: 0; max-width: 72ch; }
+section { display: grid; gap: 16px; min-width: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: var(--muted); align-items: center; }
+.legend span { display: inline-flex; gap: 8px; align-items: center; }
+.sw { width: 26px; height: 16px; border-radius: 4px; border: 1.5px solid var(--fg); background: var(--paper); flex: none; }
+.sw.off { border: 1.5px dashed var(--off); background: var(--off-fill); }
+.sw.new { border: 1.5px dashed var(--accent); background: var(--accent-tint); }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); flex: none; }
+figure { margin: 0; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 0; min-width: 0; }
+.scroll { overflow-x: auto; padding: 16px; }
+figure svg { display: block; width: 100%; height: auto; min-width: 980px; color: var(--fg); font-family: var(--font-body); }
+figcaption { border-top: 1px solid var(--line); padding: 14px 16px; font-size: 14px; color: var(--muted); }
+figcaption strong { color: var(--fg); }
+
+/* SVG-Elemente, gesteuert ueber Seiten-Tokens */
+.frame { fill: none; stroke: var(--fg); stroke-width: 1.5; }
+.bandr { fill: var(--band); }
+.bandr.id { fill: var(--band-id); stroke: var(--accent); stroke-width: 1; }
+.blabel { font-family: var(--font-head); font-weight: 700; font-size: 14px; fill: var(--fg); }
+.bsub { font-size: 11px; fill: var(--muted); }
+.colh { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; fill: var(--muted); }
+.n rect { fill: var(--paper); stroke: var(--fg); stroke-width: 1.2; }
+.n.off rect { fill: var(--off-fill); stroke: var(--off); stroke-dasharray: 5 4; }
+.n.new rect { fill: var(--accent-tint); stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.t { font-size: 13px; font-weight: 600; fill: var(--fg); text-anchor: middle; }
+.n.off .t { fill: var(--muted); }
+.p { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); text-anchor: middle; }
+.n.new .p { fill: var(--accent); }
+.tag { font-family: var(--font-mono); font-size: 10px; font-weight: 500; fill: var(--accent); }
+.run { fill: var(--ok); }
+.inner { fill: var(--band); stroke: none; }
+.it { font-size: 12.5px; fill: var(--fg); }
+.e { fill: none; stroke: var(--fg); stroke-width: 1.4; }
+.e.plan { stroke: var(--accent); stroke-dasharray: 6 4; }
+.el { font-size: 11px; fill: var(--muted); }
+.el.plan { fill: var(--accent); }
+.ah { fill: var(--fg); }
+.ah.plan { fill: var(--accent); }
+
+table { border-collapse: collapse; width: 100%; font-size: 14px; background: var(--paper); }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+th { font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--band); }
+tr:last-child td { border-bottom: 0; }
+td code, p code { font-family: var(--font-mono); font-size: 12.5px; }
+.pill { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.ok { color: var(--ok); } .pill.new { color: var(--accent); } .pill.off { color: var(--off); }
+.phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.phase { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.phase .when { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
+.phase ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.note { border-left: 3px solid var(--accent); padding: 10px 14px; background: var(--accent-tint); border-radius: 0 8px 8px 0; font-size: 14px; max-width: 90ch; }
+.src { font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+.src a { color: var(--fg); }
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">AI-OS · Homelab · Stand 27.11.2026</div>
+  <h1>Gesamtarchitektur mit IAM, IGA und Audit</h1>
+  <p>Alles, was heute im Homelab läuft, plus die Vorschläge für Identitäten (IAM), Berechtigungs-Lebenszyklus
+  (IGA: Eintritt, Wechsel, Austritt) und Audit. Status der Docker-Container geprüft am 27.11.2026.
+  Native Python-Dienste ohne Statuspunkt wurden nicht geprüft.</p>
+  <div class="legend" aria-label="Legende">
+    <span><i class="sw"></i>vorhanden</span>
+    <span><i class="dot"></i>Container läuft</span>
+    <span><i class="sw off"></i>vorhanden, gestoppt</span>
+    <span><i class="sw new"></i>NEU vorgeschlagen / geplant</span>
+  </div>
+</header>
+
+<!-- ========== FIGUR 1: GESAMTARCHITEKTUR ========== -->
+<section>
+  <h2>1. Gesamtbild: Zugänge, Netz, Server, Sicherheitsebene</h2>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 1440 1050" role="img" aria-label="Gesamtarchitektur: Zugänge über Tailscale, Cloudflare und MCP führen zum Laptop-Server mit acht Schichten; Identität, GRC und Audit bilden eine eigene Schicht; LLM-Anfragen gehen an Cloud und Pi4; Umzug auf N5 Pro mit Proxmox und OPNsense geplant.">
+      <defs>
+        <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+        <marker id="a1p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah plan"/></marker>
+      </defs>
+
+      <!-- Spaltenkoepfe -->
+      <text x="20" y="40" class="colh">ZUGÄNGE</text>
+      <text x="260" y="40" class="colh">NETZ &amp; RAND</text>
+
+      <!-- Spalte A: Zugaenge -->
+      <g class="n"><rect x="20" y="70" width="200" height="64" rx="6"/><text x="120" y="97" class="t">CEO</text><text x="120" y="116" class="p">Laptop · Handy</text></g>
+      <g class="n"><rect x="20" y="150" width="200" height="64" rx="6"/><text x="120" y="177" class="t">AI-Clients</text><text x="120" y="196" class="p">Claude Desktop · Hermes</text></g>
+      <g class="n"><rect x="20" y="300" width="200" height="64" rx="6"/><text x="120" y="327" class="t">Kunden &amp; Besucher</text><text x="120" y="346" class="p">Internet</text></g>
+
+      <!-- Spalte B: Netz -->
+      <g class="n"><rect x="260" y="70" width="210" height="64" rx="6"/><text x="365" y="97" class="t">Tailscale-VPN</text><text x="365" y="116" class="p">tailed32d1 · Fernzugriff</text></g>
+      <g class="n"><rect x="260" y="260" width="210" height="56" rx="6"/><text x="365" y="284" class="t">Cloudflare Worker</text><text x="365" y="302" class="p">vuxuantiep.de · Shop</text></g>
+      <g class="n"><rect x="260" y="330" width="210" height="56" rx="6"/><text x="365" y="354" class="t">Cloudflare-Tunnel</text><text x="365" y="372" class="p">cloudflared</text><circle cx="458" cy="342" r="4.5" class="run"/></g>
+      <g class="n"><rect x="260" y="440" width="210" height="56" rx="6"/><text x="365" y="464" class="t">FritzBox</text><text x="365" y="482" class="p">Hauptrouter Heimnetz</text></g>
+      <g class="n new"><rect x="260" y="510" width="210" height="64" rx="6"/><text x="365" y="535" class="t">OPNsense</text><text x="365" y="554" class="p">Lab-Firewall · VLANs</text><text x="268" y="524" class="tag">GEPLANT</text></g>
+
+      <!-- Host-Rahmen -->
+      <rect x="510" y="50" width="910" height="850" rx="10" class="frame"/>
+      <text x="524" y="70" class="colh">TIEP-LAPTOP · WINDOWS 11 · DOCKER DESKTOP · HEUTIGER SERVER</text>
+
+      <!-- Baender -->
+      <rect x="524" y="80" width="882" height="84" rx="8" class="bandr"/>
+      <rect x="524" y="172" width="882" height="84" rx="8" class="bandr"/>
+      <rect x="524" y="264" width="882" height="84" rx="8" class="bandr"/>
+      <rect x="524" y="356" width="882" height="84" rx="8" class="bandr"/>
+      <rect x="524" y="448" width="882" height="84" rx="8" class="bandr"/>
+      <rect x="524" y="540" width="882" height="84" rx="8" class="bandr"/>
+      <rect x="524" y="632" width="882" height="160" rx="8" class="bandr id"/>
+      <rect x="524" y="800" width="882" height="84" rx="8" class="bandr"/>
+
+      <text x="540" y="126" class="blabel">Oberfläche</text><text x="540" y="143" class="bsub">Interface</text>
+      <text x="540" y="218" class="blabel">Orchestrierung</text><text x="540" y="235" class="bsub">Abläufe</text>
+      <text x="540" y="310" class="blabel">Agenten</text><text x="540" y="327" class="bsub">Multi-Agent</text>
+      <text x="540" y="402" class="blabel">Wissen &amp; KI</text><text x="540" y="419" class="bsub">RAG · Modelle</text>
+      <text x="540" y="500" class="blabel">Business-Apps</text><text x="540" y="517" class="bsub">Produkte</text>
+      <text x="540" y="586" class="blabel">Hilfsdienste</text><text x="540" y="603" class="bsub">Suche · IoT</text>
+      <text x="540" y="700" class="blabel" fill="currentColor">Identität ·</text>
+      <text x="540" y="718" class="blabel">GRC · Audit</text><text x="540" y="736" class="bsub">IAM · IGA · SIEM</text>
+      <text x="540" y="846" class="blabel">Betrieb</text><text x="540" y="863" class="bsub">Überwachung · Backup</text>
+
+      <!-- Band 1 -->
+      <g class="n"><rect x="712" y="92" width="160" height="60" rx="6"/><text x="792" y="118" class="t">Dashboard</text><text x="792" y="137" class="p">:5000</text></g>
+      <g class="n"><rect x="884" y="92" width="160" height="60" rx="6"/><text x="964" y="118" class="t">API Gateway</text><text x="964" y="137" class="p">:5100</text></g>
+      <g class="n"><rect x="1056" y="92" width="160" height="60" rx="6"/><text x="1136" y="118" class="t">MCP-Server</text><text x="1136" y="137" class="p">:5001</text></g>
+      <g class="n"><rect x="1228" y="92" width="160" height="60" rx="6"/><text x="1308" y="118" class="t">Hermes-Dashboard</text><text x="1308" y="137" class="p">:9119</text><circle cx="1376" cy="104" r="4.5" class="run"/></g>
+      <!-- Band 2 -->
+      <g class="n"><rect x="712" y="184" width="160" height="60" rx="6"/><text x="792" y="210" class="t">Workflow Engine</text><text x="792" y="229" class="p">:5200 · DAG</text></g>
+      <g class="n"><rect x="884" y="184" width="160" height="60" rx="6"/><text x="964" y="210" class="t">LangGraph</text><text x="964" y="229" class="p">:5500 · Scrum-Graph</text></g>
+      <g class="n off"><rect x="1056" y="184" width="160" height="60" rx="6"/><text x="1136" y="210" class="t">OpenHands</text><text x="1136" y="229" class="p">:3000 · gestoppt</text></g>
+      <!-- Band 3 -->
+      <g class="n"><rect x="712" y="276" width="160" height="60" rx="6"/><text x="792" y="302" class="t">Agent-System</text><text x="792" y="321" class="p">:5300 · 7 Rollen</text></g>
+      <g class="n"><rect x="884" y="276" width="160" height="60" rx="6"/><text x="964" y="302" class="t">Cal · Bubble · Video</text><text x="964" y="321" class="p">:5301–5303</text></g>
+      <g class="n"><rect x="1056" y="276" width="160" height="60" rx="6"/><text x="1136" y="302" class="t">Research-Agent</text><text x="1136" y="321" class="p">:5320</text></g>
+      <!-- Band 4 -->
+      <g class="n"><rect x="712" y="368" width="160" height="60" rx="6"/><text x="792" y="394" class="t">RAG + Second Brain</text><text x="792" y="413" class="p">:5002</text></g>
+      <g class="n"><rect x="884" y="368" width="160" height="60" rx="6"/><text x="964" y="394" class="t">Qdrant</text><text x="964" y="413" class="p">Vektoren</text><circle cx="1032" cy="380" r="4.5" class="run"/></g>
+      <g class="n"><rect x="1056" y="368" width="160" height="60" rx="6"/><text x="1136" y="394" class="t">Ollama</text><text x="1136" y="413" class="p">:11434 · lokal</text></g>
+      <g class="n"><rect x="1228" y="368" width="160" height="60" rx="6"/><text x="1308" y="394" class="t">LiteLLM</text><text x="1308" y="413" class="p">:4000 · ein Endpunkt</text></g>
+      <!-- Band 5 -->
+      <g class="n"><rect x="712" y="460" width="160" height="60" rx="6"/><text x="792" y="486" class="t">IT-Werkbank</text><text x="792" y="505" class="p">:8090 · live</text><circle cx="860" cy="472" r="4.5" class="run"/></g>
+      <g class="n"><rect x="884" y="460" width="160" height="60" rx="6"/><text x="964" y="486" class="t">LeadPilot CRM</text><text x="964" y="505" class="p">:5330</text></g>
+      <g class="n"><rect x="1056" y="460" width="160" height="60" rx="6"/><text x="1136" y="486" class="t">KI-Avatar Board</text><text x="1136" y="505" class="p">:5310</text></g>
+      <g class="n"><rect x="1228" y="460" width="160" height="60" rx="6"/><text x="1308" y="486" class="t">Hermes Backend</text><text x="1308" y="505" class="p">:8000 + Agent</text><circle cx="1376" cy="472" r="4.5" class="run"/></g>
+      <!-- Band 6 -->
+      <g class="n"><rect x="712" y="552" width="160" height="60" rx="6"/><text x="792" y="578" class="t">SearXNG</text><text x="792" y="597" class="p">:8888 · Suche</text><circle cx="860" cy="564" r="4.5" class="run"/></g>
+      <g class="n"><rect x="884" y="552" width="160" height="60" rx="6"/><text x="964" y="578" class="t">Mosquitto</text><text x="964" y="597" class="p">:1883 · MQTT</text><circle cx="1032" cy="564" r="4.5" class="run"/></g>
+      <g class="n off"><rect x="1056" y="552" width="160" height="60" rx="6"/><text x="1136" y="578" class="t">Node-RED</text><text x="1136" y="597" class="p">:1880 · gestoppt</text></g>
+      <!-- Band 7: Identitaet / GRC / Audit -->
+      <g class="n off"><rect x="712" y="644" width="160" height="60" rx="6"/><text x="792" y="670" class="t">Keycloak (IAM)</text><text x="792" y="689" class="p">:8180 · v26.1 · aus</text></g>
+      <g class="n"><rect x="884" y="644" width="160" height="60" rx="6"/><text x="964" y="670" class="t">CISO Assistant</text><text x="964" y="689" class="p">:8443 · GRC</text><circle cx="1032" cy="656" r="4.5" class="run"/></g>
+      <g class="n new"><rect x="1056" y="644" width="160" height="60" rx="6"/><text x="1136" y="670" class="t">midPoint (IGA)</text><text x="1136" y="689" class="p">Join · Move · Leave</text><text x="1062" y="656" class="tag">NEU</text></g>
+      <g class="n new"><rect x="1228" y="644" width="160" height="60" rx="6"/><text x="1308" y="670" class="t">Wazuh (SIEM)</text><text x="1308" y="689" class="p">Audit-Logs · FIM</text><text x="1234" y="656" class="tag">NEU</text></g>
+      <g class="n new"><rect x="712" y="724" width="160" height="60" rx="6"/><text x="792" y="750" class="t">LLDAP</text><text x="792" y="769" class="p">Verzeichnis</text><text x="718" y="736" class="tag">NEU</text></g>
+      <g class="n new"><rect x="884" y="724" width="160" height="60" rx="6"/><text x="964" y="750" class="t">Vaultwarden</text><text x="964" y="769" class="p">Passwörter · Tresor</text><text x="890" y="736" class="tag">NEU</text></g>
+      <g class="n new"><rect x="1056" y="724" width="160" height="60" rx="6"/><text x="1136" y="750" class="t">Lynis · Trivy</text><text x="1136" y="769" class="p">Härtung · Images</text><text x="1062" y="736" class="tag">NEU</text></g>
+      <g class="n new"><rect x="1228" y="724" width="160" height="60" rx="6"/><text x="1308" y="750" class="t">Greenbone</text><text x="1308" y="769" class="p">Schwachstellen</text><text x="1234" y="736" class="tag">SPÄTER</text></g>
+      <!-- Band 8 -->
+      <g class="n"><rect x="712" y="812" width="160" height="60" rx="6"/><text x="792" y="838" class="t">Checkmk</text><text x="792" y="857" class="p">:8080 · Überwachung</text><circle cx="860" cy="824" r="4.5" class="run"/></g>
+      <g class="n"><rect x="884" y="812" width="160" height="60" rx="6"/><text x="964" y="838" class="t">Monitoring</text><text x="964" y="857" class="p">:5400 · Health</text></g>
+      <g class="n"><rect x="1056" y="812" width="160" height="60" rx="6"/><text x="1136" y="838" class="t">RAM-Guard</text><text x="1136" y="857" class="p">Warnung 90 · Stopp 91 %</text></g>
+      <g class="n"><rect x="1228" y="812" width="160" height="60" rx="6"/><text x="1308" y="838" class="t">Backup</text><text x="1308" y="857" class="p">ZIP · täglich 03:00</text></g>
+
+      <!-- Unterste Reihe -->
+      <g class="n"><rect x="40" y="940" width="300" height="90" rx="6"/><text x="190" y="968" class="t">Raspberry Pi 4 · pi-ki-tiep</text><text x="190" y="990" class="p">Hermes-Agent (Docker)</text><text x="190" y="1010" class="p">Tagesimpuls · ntfy · Wiki</text></g>
+      <g class="n new"><rect x="380" y="940" width="320" height="90" rx="6"/><text x="540" y="968" class="t">Minisforum N5 Pro</text><text x="540" y="990" class="p">Proxmox VE 9.2 · ZFS · ECC</text><text x="540" y="1010" class="p">Ziel für midPoint, Wazuh, OPNsense</text><text x="388" y="954" class="tag">GEPLANT</text></g>
+      <g class="n"><rect x="760" y="940" width="300" height="90" rx="6"/><text x="910" y="968" class="t">Cloud-LLMs</text><text x="910" y="990" class="p">OpenRouter · HuggingFace</text><text x="910" y="1010" class="p">GitHub Models</text></g>
+      <g class="n"><rect x="1100" y="940" width="300" height="90" rx="6"/><text x="1250" y="968" class="t">GitHub</text><text x="1250" y="990" class="p">Repo AI-OS</text><text x="1250" y="1010" class="p">Versionierung · Rücksetzen</text></g>
+
+      <!-- Kanten -->
+      <line x1="220" y1="102" x2="258" y2="102" class="e" marker-end="url(#a1)"/>
+      <polyline points="470,102 710,102" class="e" marker-end="url(#a1)"/>
+      <polyline points="220,182 490,182 490,168 1136,168 1136,154" class="e" marker-end="url(#a1)"/>
+      <text x="300" y="176" class="el">MCP-Werkzeuge</text>
+      <line x1="220" y1="318" x2="258" y2="292" class="e" marker-end="url(#a1)"/>
+      <line x1="220" y1="346" x2="258" y2="358" class="e" marker-end="url(#a1)"/>
+      <polyline points="470,358 495,358 495,474 710,474" class="e" marker-end="url(#a1)"/>
+      <text x="580" y="468" class="el">it-avatar.vuxuantiep.de</text>
+      <line x1="365" y1="496" x2="365" y2="508" class="e plan" marker-end="url(#a1p)"/>
+      <!-- SSO -->
+      <polyline points="712,690 700,690 700,124 710,124" class="e plan" marker-end="url(#a1p)"/>
+      <text x="694" y="420" class="el plan" transform="rotate(-90 694 420)" text-anchor="middle">OIDC-Login für alle Web-Apps</text>
+      <!-- LLM -->
+      <polyline points="1388,398 1432,398 1432,920 190,920" class="e"/>
+      <line x1="910" y1="920" x2="910" y2="938" class="e" marker-end="url(#a1)"/>
+      <line x1="190" y1="920" x2="190" y2="938" class="e" marker-end="url(#a1)"/>
+      <text x="960" y="914" class="el">LLM-Anfragen · Cloud-first bis Umzug</text>
+      <text x="200" y="914" class="el">PI_LLM_URL über Tailscale</text>
+      <!-- Umzug + OPNsense -->
+      <line x1="600" y1="900" x2="600" y2="938" class="e plan" marker-end="url(#a1p)"/>
+      <text x="608" y="934" class="el plan">Umzug (Runbook)</text>
+      <line x1="440" y1="574" x2="440" y2="938" class="e plan" marker-end="url(#a1p)"/>
+      <text x="448" y="760" class="el plan">läuft als VM</text>
+      <line x1="1250" y1="900" x2="1250" y2="938" class="e" marker-end="url(#a1)"/>
+      <text x="1258" y="934" class="el">git push</text>
+    </svg>
+    </div>
+    <figcaption><strong>Was das Bild zeigt:</strong> Drei Wege führen ins Homelab: Fernzugriff per Tailscale, öffentliche Seiten über Cloudflare (Worker und Tunnel zur IT-Werkbank) und AI-Clients über den MCP-Server. Auf dem Laptop liegen acht Schichten übereinander. Die orange Schicht ist die neue Sicherheitsebene: Keycloak meldet künftig alle Web-Apps an (gestrichelte Linie), midPoint steuert die Konten, Wazuh sammelt die Protokolle, CISO Assistant hält die Nachweise. Die schweren neuen Dienste (midPoint, Wazuh) und die OPNsense-VM gehören auf den N5 Pro, nicht auf den Laptop. Hinweis: Port 5000 ist am 27.11. von einem fremden Prozess (Universal.Server) belegt, das Dashboard läuft deshalb gerade nicht.</figcaption>
+  </figure>
+</section>
+
+<!-- ========== VORSCHLAEGE ========== -->
+<section>
+  <h2>2. Was fehlt: Vorschläge für IAM, IGA und Audit</h2>
+  <p>Bisher gibt es Keycloak (Anmeldung, aber gestoppt und veraltet) und seit heute CISO Assistant (Nachweise). Es fehlen eine
+  <strong>Identitätsquelle</strong>, ein <strong>Lebenszyklus für Berechtigungen</strong> und eine <strong>zentrale Protokollsammlung</strong>.</p>
+  <div class="tbl">
+  <table>
+    <thead><tr><th>Bereich</th><th>Heute</th><th>Lücke</th><th>Vorschlag (Open Source)</th><th>Wofür im Audit</th></tr></thead>
+    <tbody>
+      <tr><td><strong>IAM / SSO</strong></td><td>Keycloak <code>26.1.1</code> <span class="pill off">gestoppt</span></td><td>Veraltet (aktuell 26.8.2), keine App hängt daran</td><td><strong>Keycloak auf 26.8 heben</strong>, MFA (TOTP/Passkey) an, Dashboard + CISO + Werkbank per OIDC anbinden. Neu seit 26.6: Workflows für Konto-Lebenszyklus, seit 26.8: SCIM offiziell unterstützt</td><td>Login- und Admin-Events, MFA-Nachweis</td></tr>
+      <tr><td><strong>Verzeichnis</strong></td><td><span class="pill off">fehlt</span></td><td>Keine zentrale Quelle für Konten und Gruppen</td><td><strong>LLDAP</strong> (sehr leicht, sofort auf dem Laptop). Für kundennahes Üben später <strong>Samba AD</strong> als Windows-ähnliche Domäne</td><td>Wer hat welches Konto, in welcher Gruppe</td></tr>
+      <tr><td><strong>IGA (Join / Move / Leave)</strong></td><td><span class="pill off">fehlt</span></td><td>Konten entstehen und verschwinden von Hand</td><td><strong>midPoint</strong> (Evolveum): liest eine HR-Quelle, vergibt Rollen automatisch, sperrt beim Austritt, Rezertifizierung, Funktionstrennung (SoD)</td><td>Lückenloser Änderungsverlauf, Rezertifizierungs-Berichte</td></tr>
+      <tr><td><strong>HR-Quelle</strong></td><td><span class="pill off">fehlt</span></td><td>Kein „führendes System“ für Personen</td><td>Anfangs eine einfache <code>personal.csv</code>. Später optional OrangeHRM</td><td>Zeigt: Rechte folgen dem Arbeitsvertrag, nicht Zurufen</td></tr>
+      <tr><td><strong>Geheimnisse / PAM</strong></td><td>Ordner <code>Geheimnisse/</code> + <code>.env</code></td><td>Keine Freigabe, kein Verlauf, wer was sah</td><td><strong>Vaultwarden</strong> (Bitwarden-kompatibel) mit Organisationen und Sammlungen. Später OpenBao für Maschinen-Geheimnisse</td><td>Zugriffsprotokoll auf Admin-Passwörter</td></tr>
+      <tr><td><strong>SIEM / Protokolle</strong></td><td>Checkmk + Monitoring :5400 (Verfügbarkeit)</td><td>Keine Sicherheits-Ereignisse, keine Dateiintegrität</td><td><strong>Wazuh</strong> <code>4.14.x</code>: sammelt Logs von Keycloak, OPNsense, Proxmox, Windows; FIM, CIS-Prüfungen</td><td>Zentrale, unveränderbare Ereignis-Spur</td></tr>
+      <tr><td><strong>Härtung &amp; Schwachstellen</strong></td><td><span class="pill off">fehlt</span></td><td>Niemand prüft Images und Systeme</td><td><strong>Lynis</strong> (Linux-Härtung), <strong>Trivy</strong> (Docker-Images, auch CISO-Images), später <strong>Greenbone/OpenVAS</strong></td><td>Regelmäßige Scan-Berichte als Nachweis</td></tr>
+      <tr><td><strong>GRC</strong></td><td>CISO Assistant <span class="pill ok">läuft</span></td><td>Noch leer</td><td>ISO 27001:2022 laden, Assessment „Homelab“, Belege aus allen Zeilen oben anhängen</td><td>Das Audit selbst</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ========== FIGUR 2: JML ========== -->
+<section>
+  <h2>3. Ablauf Eintritt, Wechsel, Austritt mit Audit-Spur</h2>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 1200 600" role="img" aria-label="Join-Move-Leave: Eine Änderung in der HR-Quelle wird von midPoint importiert, midPoint provisioniert, ändert oder sperrt Konten in LLDAP, Keycloak, Proxmox, OPNsense, Vaultwarden und Entra-Lab; Keycloak meldet die Apps per OIDC an; Logs gehen an Wazuh, Berichte und Wazuh-Ergebnisse landen als Nachweis im CISO Assistant.">
+      <defs>
+        <marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+        <marker id="b1p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah plan"/></marker>
+      </defs>
+      <text x="20" y="30" class="colh">AUSLÖSER</text>
+      <text x="280" y="30" class="colh">STEUERUNG</text>
+      <text x="700" y="30" class="colh">ZIELSYSTEME</text>
+      <text x="980" y="30" class="colh">NUTZUNG &amp; NACHWEIS</text>
+
+      <!-- Ausloeser -->
+      <g class="n"><rect x="20" y="60" width="190" height="130" rx="6"/>
+        <text x="115" y="86" class="t">Ereignis</text>
+        <text x="32" y="114" class="it">Join: neue Zeile</text>
+        <text x="32" y="140" class="it">Move: Abteilung neu</text>
+        <text x="32" y="166" class="it">Leave: Status „aus“</text></g>
+      <line x1="115" y1="190" x2="115" y2="228" class="e" marker-end="url(#b1)"/>
+      <text x="123" y="214" class="el">trägt ein</text>
+      <g class="n new"><rect x="20" y="230" width="190" height="110" rx="6"/><text x="115" y="262" class="t">HR-Quelle</text><text x="115" y="284" class="p">personal.csv</text><text x="115" y="304" class="p">später OrangeHRM</text><text x="28" y="246" class="tag">NEU</text></g>
+
+      <!-- midPoint -->
+      <g class="n new"><rect x="280" y="110" width="330" height="350" rx="8"/><text x="445" y="142" class="t">midPoint (IGA)</text><text x="288" y="126" class="tag">NEU</text></g>
+      <rect x="300" y="160" width="290" height="44" rx="5" class="inner"/><text x="314" y="187" class="it">1 · Abgleich &amp; Zuordnung Person ↔ Konto</text>
+      <rect x="300" y="214" width="290" height="44" rx="5" class="inner"/><text x="314" y="241" class="it">2 · Rollen (RBAC) + Grundrechte je Abteilung</text>
+      <rect x="300" y="268" width="290" height="44" rx="5" class="inner"/><text x="314" y="295" class="it">3 · Antrag → Freigabe für Sonderrechte</text>
+      <rect x="300" y="322" width="290" height="44" rx="5" class="inner"/><text x="314" y="349" class="it">4 · Funktionstrennung (SoD) prüfen</text>
+      <rect x="300" y="376" width="290" height="44" rx="5" class="inner"/><text x="314" y="403" class="it">5 · Rezertifizierung jedes Quartal</text>
+      <text x="445" y="446" class="p">jede Änderung im Audit-Trail</text>
+
+      <line x1="210" y1="285" x2="278" y2="285" class="e plan" marker-end="url(#b1p)"/>
+      <text x="244" y="276" class="el plan" text-anchor="middle">Import</text>
+      <text x="244" y="302" class="el plan" text-anchor="middle">alle 15 min</text>
+
+      <!-- Bus zu Zielsystemen -->
+      <polyline points="610,285 650,285" class="e plan"/>
+      <line x1="650" y1="95" x2="650" y2="495" class="e plan"/>
+      <line x1="650" y1="95" x2="698" y2="95" class="e plan" marker-end="url(#b1p)"/>
+      <line x1="650" y1="195" x2="698" y2="195" class="e plan" marker-end="url(#b1p)"/>
+      <line x1="650" y1="295" x2="698" y2="295" class="e plan" marker-end="url(#b1p)"/>
+      <line x1="650" y1="395" x2="698" y2="395" class="e plan" marker-end="url(#b1p)"/>
+      <line x1="650" y1="495" x2="698" y2="495" class="e plan" marker-end="url(#b1p)"/>
+      <text x="640" y="290" class="el plan" transform="rotate(-90 640 290)" text-anchor="middle">anlegen · ändern · sperren</text>
+
+      <!-- Ziele -->
+      <g class="n new"><rect x="700" y="60" width="230" height="70" rx="6"/><text x="815" y="90" class="t">LLDAP / Samba AD</text><text x="815" y="110" class="p">Konten · Gruppen</text><text x="708" y="74" class="tag">NEU</text></g>
+      <g class="n off"><rect x="700" y="160" width="230" height="70" rx="6"/><text x="815" y="190" class="t">Keycloak</text><text x="815" y="210" class="p">SSO · MFA · Sitzungen</text></g>
+      <g class="n new"><rect x="700" y="260" width="230" height="70" rx="6"/><text x="815" y="290" class="t">Proxmox · OPNsense</text><text x="815" y="310" class="p">Admin-Rollen</text><text x="708" y="274" class="tag">GEPLANT</text></g>
+      <g class="n new"><rect x="700" y="360" width="230" height="70" rx="6"/><text x="815" y="390" class="t">Vaultwarden</text><text x="815" y="410" class="p">Tresor-Freigaben</text><text x="708" y="374" class="tag">NEU</text></g>
+      <g class="n new"><rect x="700" y="460" width="230" height="70" rx="6"/><text x="815" y="490" class="t">Entra-ID-Lab</text><text x="815" y="510" class="p">TRACE Enterprise Lab</text><text x="708" y="474" class="tag">GEPLANT</text></g>
+      <line x1="815" y1="130" x2="815" y2="158" class="e" marker-end="url(#b1)"/>
+      <text x="823" y="149" class="el">LDAP-Föderation</text>
+
+      <!-- Nutzung & Nachweis -->
+      <g class="n"><rect x="980" y="140" width="200" height="70" rx="6"/><text x="1080" y="170" class="t">Web-Apps</text><text x="1080" y="190" class="p">Dashboard · CISO · Werkbank</text></g>
+      <line x1="930" y1="180" x2="978" y2="180" class="e plan" marker-end="url(#b1p)"/>
+      <text x="954" y="172" class="el plan" text-anchor="middle">OIDC</text>
+
+      <g class="n new"><rect x="980" y="320" width="200" height="70" rx="6"/><text x="1080" y="350" class="t">Wazuh (SIEM)</text><text x="1080" y="370" class="p">sammelt Ereignisse</text><text x="988" y="334" class="tag">NEU</text></g>
+      <polyline points="930,215 955,215 955,355 978,355" class="e plan" marker-end="url(#b1p)"/>
+      <line x1="930" y1="295" x2="955" y2="295" class="e plan"/>
+      <text x="966" y="262" class="el plan" transform="rotate(-90 966 262)" text-anchor="middle">Login- &amp; Admin-Logs</text>
+
+      <g class="n"><rect x="980" y="460" width="200" height="70" rx="6"/><text x="1080" y="490" class="t">CISO Assistant</text><text x="1080" y="510" class="p">Kontrolle + Nachweis</text><circle cx="1168" cy="472" r="4.5" class="run"/></g>
+      <line x1="1080" y1="390" x2="1080" y2="458" class="e plan" marker-end="url(#b1p)"/>
+      <text x="1088" y="428" class="el plan">Alarme · Berichte</text>
+      <polyline points="445,460 445,572 1120,572 1120,532" class="e plan" marker-end="url(#b1p)"/>
+      <text x="460" y="565" class="el plan">Rezertifizierungs- und Änderungsberichte</text>
+    </svg>
+    </div>
+    <figcaption><strong>Was das Bild zeigt:</strong> Rechte folgen der HR-Quelle, nicht Zurufen. midPoint liest jede Änderung und setzt sie in allen Zielsystemen um: neues Konto, Rollenwechsel oder Sperre. Keycloak meldet die Apps an und gibt seine Login-Ereignisse an Wazuh. Am Ende landen Wazuh-Alarme und midPoint-Berichte als Beleg im CISO Assistant. Das ist der Kreislauf, den ein Auditor sehen will: Regel, Umsetzung, Protokoll, Nachweis.</figcaption>
+  </figure>
+
+  <div class="tbl">
+  <table>
+    <thead><tr><th>Fall</th><th>Auslöser</th><th>midPoint macht</th><th>Beleg für das Audit</th><th>Übung im Lab</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Join</strong> (Eintritt)</td><td>Neue Zeile in <code>personal.csv</code></td><td>Konto in LLDAP, Gruppe nach Abteilung, Keycloak-Login mit MFA-Pflicht, Tresor-Sammlung</td><td>Änderungsprotokoll mit Zeitstempel und Rolle</td><td>Testperson „Anna Muster, Empfang“ anlegen und Login prüfen</td></tr>
+      <tr><td><strong>Move</strong> (Wechsel)</td><td>Abteilung geändert</td><td>Neue Rolle dazu, <strong>alte Rolle entfernen</strong> (sonst sammeln sich Rechte an)</td><td>Vorher-/Nachher-Rechte</td><td>Anna wechselt in die Buchhaltung: Empfangs-Gruppe muss verschwinden</td></tr>
+      <tr><td><strong>Leave</strong> (Austritt)</td><td>Status „ausgetreten“</td><td>Konten sperren, Keycloak-Sitzungen beenden, Tresor-Zugriff weg, nach Frist löschen</td><td>Sperrzeitpunkt, Abstand zum Austrittsdatum</td><td>Sperre messen: Ziel unter 15 Minuten</td></tr>
+      <tr><td><strong>Rezertifizierung</strong></td><td>Jedes Quartal</td><td>Verantwortliche bestätigen oder entziehen Rechte</td><td>Unterschriebene Kampagne</td><td>Eine Kampagne für Admin-Rollen durchspielen</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ========== REIHENFOLGE ========== -->
+<section>
+  <h2>4. Reihenfolge</h2>
+  <div class="phases">
+    <div class="phase"><div class="when">Phase 1 · jetzt auf dem Laptop · leicht</div><h3>Anmeldung und Tresor</h3>
+      <ul><li>Keycloak auf 26.8 heben, MFA an</li><li>LLDAP als Verzeichnis, an Keycloak koppeln</li><li>CISO Assistant und Dashboard per OIDC an Keycloak</li><li>Vaultwarden für Admin-Passwörter</li><li>Trivy-Scan aller Docker-Images</li></ul></div>
+    <div class="phase"><div class="when">Phase 2 · auf dem N5 Pro · schwerer</div><h3>Lebenszyklus und Protokolle</h3>
+      <ul><li>midPoint + PostgreSQL als eigene VM</li><li>HR-CSV, Rollen, Join/Move/Leave-Tests</li><li>Wazuh als eigene VM, Agenten auf Laptop, Pi, Proxmox</li><li>OPNsense-Logs an Wazuh</li></ul></div>
+    <div class="phase"><div class="when">Phase 3 · Audit-Reife</div><h3>Nachweis-Kreislauf</h3>
+      <ul><li>Assessment ISO 27001:2022 „Homelab“ im CISO Assistant</li><li>Erste Rezertifizierungskampagne</li><li>Greenbone-Scan monatlich</li><li>Entra-ID-Lab als zweites Zielsystem</li></ul></div>
+  </div>
+  <p class="note"><strong>Speicher beachten:</strong> midPoint (Java + Datenbank) und Wazuh (Indexer + Manager + Oberfläche) brauchen zusammen mehrere Gigabyte RAM. Auf dem Laptop greift sonst der RAM-Guard. Deshalb kommen sie erst mit dem N5 Pro. Genaue Mindestwerte vor der Installation in der Herstellerdoku prüfen.</p>
+</section>
+
+<section class="src" aria-label="Quellen">
+  <h3>Quellen (abgerufen 27.11.2026)</h3>
+  <a href="https://www.keycloak.org/2026/11/keycloak-2682-released">Keycloak 26.8.2 released</a>
+  <a href="https://www.keycloak.org/2026/10/keycloak-2680-released">Keycloak 26.8.0: SCIM unterstützt</a>
+  <a href="https://www.keycloak.org/2026/04/keycloak-2660-released">Keycloak 26.6.0: Workflows für Lebenszyklus</a>
+  <a href="https://lists.evolveum.com/pipermail/midpoint/2026-June/008780.html">midPoint Wartungsreleases 4.8.12 / 4.9.7 / 4.10.3 (Juni 2026)</a>
+  <a href="https://docs.evolveum.com/midpoint/release/4.11/">midPoint 4.11 (geplant Oktober 2026)</a>
+  <a href="https://documentation.wazuh.com/4.14/release-notes/release-4-14-10.html">Wazuh 4.14.10 Release Notes (5. November 2026)</a>
+</section>
+</div>

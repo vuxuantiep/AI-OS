@@ -162,6 +162,22 @@ Eine unkritische Hyper-V-VM exportieren (VHDX), in Proxmox importieren (`qm impo
 **E. Audit-Kreislauf (Lernziel: GRC-Plattform praktisch)**
 In CISO Assistant: Assessment „Homelab nach ISO 27001:2022“ anlegen → Anforderungen durchgehen → für Netztrennung, Backup und Fernzugriff die Belege aus A–D anhängen → Restrisiken bewerten. Das ist genau der Ablauf, den eine GRC-Firma verkauft.
 
+## 5a. IAM, IGA und Audit (Ergänzung 27.11.2026)
+
+Gesamtarchitektur als Bilddiagramm mit allen Diensten und der neuen Sicherheitsebene:
+`04_Infrastruktur/Dokumentation/Architektur/AI-OS_Homelab_Gesamtarchitektur.html`
+(online: https://claude.ai/artifact/ML936M3Zm7NTTxnK9WdbfN).
+
+| Bereich | Vorschlag | Wo |
+|---|---|---|
+| IAM/SSO | Keycloak 26.1.1 → **26.8** (Workflows ab 26.6, SCIM ab 26.8), MFA, OIDC für Dashboard/CISO/Werkbank | Laptop, Phase 1 |
+| Verzeichnis | **LLDAP**, später **Samba AD** für Kunden-nahes Üben | Laptop, Phase 1 |
+| Geheimnisse | **Vaultwarden**, später OpenBao | Laptop, Phase 1 |
+| IGA (Join/Move/Leave) | **midPoint** + HR-Quelle `personal.csv` | N5 Pro, Phase 2 |
+| SIEM/Audit | **Wazuh 4.14.x** (Logs von Keycloak, OPNsense, Proxmox, Windows) | N5 Pro, Phase 2 |
+| Härtung/Scans | **Lynis, Trivy**, später **Greenbone** | Phase 1–3 |
+| Nachweise | CISO Assistant: ISO-27001-Assessment „Homelab“ | Phase 3 |
+
 ## 6. Offene Entscheidungen
 - [ ] OPNsense als VM (Lernen) oder später eigene Hardware (Hauptnetz)?
 - [ ] Backup-Ziel für PBS: Pi4-SSD, USB-Platte oder extern?
