@@ -6,6 +6,21 @@
 
 ---
 
+## 2026-11-27 — Homelab-Wissen: Open Source, Proxmox VE, OPNsense
+
+**Was:** Neue Notiz [[2026-11-27_Homelab-Open-Source-Proxmox-OPNsense]] mit fünf Kapiteln:
+Prinzip Open Source (Lizenzen, Geschäftsmodell), Vor- und Nachteile, Proxmox VE (VM vs. LXC, ZFS,
+PBS, Repositories), OPNsense (Funktionen, VM oder eigene Hardware) und Empfehlungen mit fünf
+Praxisbeispielen. Mit Mermaid-Zielbild: FritzBox bleibt Hauptrouter, OPNsense-VM schützt nur das Lab
+und trennt es per VLAN (Server / TRACE-Lab / Management). CISO Assistant dient als Audit-Ebene.
+
+**Gelernt / aktuell geprüft:** Proxmox VE 8.4 bekommt seit August 2026 keine Updates mehr → nur
+noch 9.2 installieren. OPNsense: Community 26.7.x, Business Edition 26.10 (28.10.2026). Die
+Lizenzen unterscheiden sich: Proxmox und CISO Assistant sind AGPL (Copyleft), OPNsense ist BSD
+(freizügig).
+
+---
+
 ## 2026-11-27 — CISO Assistant (GRC-Plattform) in die Serverumgebung aufgenommen
 
 **Was:** Die Open-Source-GRC-Plattform **CISO Assistant** (intuitem, Community, AGPLv3) läuft als

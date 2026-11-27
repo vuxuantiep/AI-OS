@@ -2,6 +2,7 @@
 
 > Entwurf v0.1 · 25.11.2026 · Status: **KONZEPT, Hardware noch nicht gekauft**
 > Bezug: [[TRACE_Leitkonzept_Nachhaltige_Infrastruktur]], [[productized-service-pflicht-digitalisierung]]
+> Grundlagen Open Source / Proxmox / OPNsense: [[2026-11-27_Homelab-Open-Source-Proxmox-OPNsense]]
 > Konzeptarbeit ist vom Wirtschaftlichkeits-Gate ausgenommen. **Wird eine Idee zum verkauften Produkt, braucht sie vorher ihr eigenes Gate** (CLAUDE.md Regel 4).
 
 #idee #trace-ai #infrastruktur #automatisierung #wichtig
