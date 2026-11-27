@@ -1,0 +1,138 @@
+# CISO Assistant Community (intuitem) - GRC-Plattform im AI-OS
+# Governance, Risk & Compliance: Risikoregister, Kontrollen, Nachweise, Audits,
+# Normen-Mapping (ISO 27001, NIS2, DSGVO, BSI ...).
+#
+# Basis: offizielle docker-compose.yml aus github.com/intuitem/ciso-assistant-community
+# (Stand 27.11.2026). Lizenz: AGPLv3 (Community Edition).
+#
+# Anpassungen fuers AI-OS (Warum siehe README.md daneben):
+#  - container_name mit Praefix "ciso-" statt generischem "backend"/"frontend"/
+#    "qdrant"/"caddy" -> keine Kollision mit anderen Containern, eindeutig im
+#    Dashboard (docker start/stop per Name).
+#  - Datenbank + Caddy-Zertifikate in benannten Docker-Volumes statt ./db-Bind-
+#    Mount: SQLite auf einem Windows-Bind-Mount macht Locking-Probleme, und die
+#    Daten landen so nie versehentlich im Git-Repo.
+#  - Qdrant ohne Host-Port (nur intern im Compose-Netz) -> kein Konflikt mit
+#    Port 6333 anderer Qdrant-Instanzen im AI-OS.
+#  - MCP-Profil (deprecated, PAT-basiert) weggelassen.
+#  - Nur an 127.0.0.1 gebunden: nicht aus dem LAN/Tailnet erreichbar.
+#
+# Start:  docker compose -p ciso-assistant up -d   (oder Dashboard -> Dienste)
+# URL:    https://localhost:8443  (selbstsigniertes Zertifikat von Caddy)
+
+name: ciso-assistant
+
+x-backend-env: &backend-env
+  ALLOWED_HOSTS: backend,localhost
+  CISO_ASSISTANT_URL: https://localhost:8443
+  AUTH_TOKEN_TTL: "7200"
+  HOME: /tmp
+  XDG_CACHE_HOME: /tmp/.cache
+  XDG_CONFIG_HOME: /tmp/.config
+  XDG_DATA_HOME: /tmp/.local/share
+  QDRANT_URL: http://qdrant:6333
+
+x-hardening: &hardening
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  tmpfs: ["/tmp:rw,noexec,nosuid,nodev"]
+
+services:
+  # Einmal-Job: ein neues benanntes Volume gehoert root, das Backend laeuft aber
+  # als 1001:1001 -> ohne diesen Schritt "sqlite3.OperationalError: unable to
+  # open database file" (beim ersten Start 27.11.2026 so passiert). Ersetzt das
+  # chown aus dem Upstream-Skript docker-compose.sh.
+  db-init:
+    container_name: ciso-db-init
+    image: alpine:3.20
+    user: "0:0"
+    command: ["sh", "-c", "chown -R 1001:1001 /code/db"]
+    volumes:
+      - ciso-db:/code/db
+    restart: "no"
+
+  backend:
+    <<: *hardening
+    container_name: ciso-backend
+    image: ghcr.io/intuitem/ciso-assistant-community/backend:latest
+    restart: unless-stopped
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    environment:
+      <<: *backend-env
+      DJANGO_DEBUG: "True"   # wie upstream; Backend ist nur intern (hinter Caddy) erreichbar
+    volumes:
+      - ciso-db:/code/db
+    user: "1001:1001"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://backend:8000/api/health/', timeout=5)"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 150s
+
+  huey:
+    <<: *hardening
+    container_name: ciso-huey
+    image: ghcr.io/intuitem/ciso-assistant-community/backend:latest
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      <<: *backend-env
+      DJANGO_DEBUG: "False"
+    volumes:
+      - ciso-db:/code/db
+    entrypoint: ["/bin/sh", "-c", "python manage.py run_huey -w 2 --scheduler-interval 60"]
+    user: "1001:1001"
+
+  frontend:
+    <<: *hardening
+    container_name: ciso-frontend
+    image: ghcr.io/intuitem/ciso-assistant-community/frontend:latest
+    environment:
+      PUBLIC_BACKEND_API_URL: http://backend:8000/api
+      PUBLIC_BACKEND_API_EXPOSED_URL: https://localhost:8443/api
+      PROTOCOL_HEADER: x-forwarded-proto
+      HOST_HEADER: x-forwarded-host
+      ADDRESS_HEADER: x-forwarded-for
+      XFF_DEPTH: "1"
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  qdrant:
+    container_name: ciso-qdrant
+    image: qdrant/qdrant:v1.19.1
+    restart: unless-stopped
+    volumes:
+      - ciso-qdrant:/qdrant/storage
+
+  caddy:
+    container_name: ciso-caddy
+    image: caddy:2.11.4
+    environment:
+      CISO_ASSISTANT_URL: https://localhost:8443
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:8443:8443
+    volumes:
+      - ciso-caddy:/data/caddy
+    command: |
+      sh -c 'echo $$CISO_ASSISTANT_URL "{
+      reverse_proxy /api/* backend:8000
+      reverse_proxy /* frontend:3000
+      tls internal
+      }" > Caddyfile && caddy run'
+
+volumes:
+  ciso-db:
+  ciso-qdrant:
+  ciso-caddy:

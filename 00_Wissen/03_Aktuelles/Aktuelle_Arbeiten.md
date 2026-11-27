@@ -6,6 +6,41 @@
 
 ---
 
+## 2026-11-27 — CISO Assistant (GRC-Plattform) in die Serverumgebung aufgenommen
+
+**Was:** Die Open-Source-GRC-Plattform **CISO Assistant** (intuitem, Community, AGPLv3) läuft als
+Docker-Stack in `07_Sicherheit/GRC-CISO-Assistant/`, erreichbar unter https://localhost:8443.
+Sie deckt Audit, Sicherheit und Compliance ab: Risikoregister, Kontrollen + Nachweise, Assessments
+gegen ISO 27001 / NIS2 / DSGVO / BSI. Im Dashboard-Tab **Dienste** gibt es dafür die Karte „CISO
+Assistant (GRC)“ mit Start/Stopp. Anlass: Bewerbungsrichtung GRC-Plattform, das Homelab deckte
+bisher nur den Betriebsteil ab.
+
+**Warum CISO Assistant statt Eramba:** läuft komplett offline (Eramba Community braucht Verbindung zu
+`support-v3.eramba.org`), schlanker (Eramba verlangt 4 GB RAM + 10 GB Swap), viele Normen eingebaut.
+
+**Code / Konfiguration:**
+- `07_Sicherheit/GRC-CISO-Assistant/docker-compose.yml`: Upstream-Datei angepasst
+  (`ciso-*`-Containernamen, benannte Volumes, Qdrant ohne Host-Port, MCP-Profil raus, nur 127.0.0.1)
+- `ai_os_dashboard.py`: `docker_container` darf jetzt eine **Liste** sein → neuer Helfer
+  `_docker_names(svc)`; Start/Stopp/Autostart schalten alle Container eines Dienstes gemeinsam,
+  Stopp in umgekehrter Reihenfolge. Neues Feld `open_scheme: "https"` für den Öffnen-Button.
+  Health-Check per TCP (HTTP-Check würde am selbstsignierten Zertifikat scheitern).
+  CISO steht im RAM-Guard weit vorne in der Auto-Stopp-Reihenfolge (direkt nach Keycloak).
+- Zugangsdaten: `01_Verbindungen/APIs/Geheimnisse/ciso-assistant.txt` (nicht im Git).
+
+**Stolpersteine / gelernt:**
+- **Rechte auf benannten Volumes:** Ein neues Docker-Volume gehört `root`. Das Backend läuft gehärtet
+  als Nutzer `1001` → `sqlite3.OperationalError: unable to open database file`. Upstream löst das per
+  `chown` im Shell-Skript auf dem Host-Ordner `./db`. Bei einem benannten Volume geht das nicht vom
+  Host aus → Einmal-Container `db-init` (alpine, `chown -R 1001:1001`) und
+  `depends_on: condition: service_completed_successfully`.
+- **Warum benanntes Volume statt `./db`:** SQLite auf Windows-Bind-Mounts hat Locking-Probleme, und
+  GRC-Daten (Risiken, Lücken!) dürfen nie versehentlich ins Git-Repo.
+- **Backup-Lücke:** Das ZIP-Backup (09_Backup-Recovery) sichert keine Docker-Volumes. Befehl für eine
+  manuelle Sicherung steht in der README.
+
+---
+
 ## 2026-11-14 (2) — Local AI Studio: Architekturbild und Programmablaufplan
 
 **Was:** Eine HTML-Seite mit zwei Zeichnungen zum Projekt `ai-studio-local`:
